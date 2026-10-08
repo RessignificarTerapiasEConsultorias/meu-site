@@ -1,0 +1,55 @@
+SITE MAURICIO PINHO | RESSIGNIFICAR
+===================================
+
+O QUE TEM NA PASTA
+  index.html  -> a página (abra este arquivo para ver no navegador)
+  img/        -> logo e foto
+  midia/      -> vídeos, capas dos vídeos e áudio
+  Não renomeie nem separe as pastas: o index.html procura os arquivos nelas.
+
+
+PUBLICAR NO NETLIFY (recomendado)
+  1. Acesse https://app.netlify.com/drop
+  2. Arraste a PASTA INTEIRA (não só o index.html).
+  3. Para os formulários ficarem salvos no painel do Netlify:
+     Site configuration > Forms > ative "Form detection" e publique de novo.
+     Os leads aparecem em Forms > "sessao-estrategica".
+     Para receber cada lead por e-mail: Forms > Form notifications.
+  Mesmo sem isso, o formulário sempre abre o seu WhatsApp com as respostas.
+
+
+PUBLICAR NO GITHUB PAGES
+  1. Crie um repositório e envie todos os arquivos mantendo as pastas.
+  2. Settings > Pages > Branch "main", pasta "/ (root)".
+  No GitHub o formulário continua mandando para o WhatsApp, só não fica
+  registrado em painel (isso é exclusivo do Netlify).
+
+
+DOMÍNIO E CANVA
+  Para o celular, o melhor é o domínio apontar direto para o Netlify ou GitHub.
+  Colocar o site dentro de uma página do Canva (incorporado) costuma criar
+  rolagem dupla e atrapalhar a barra fixa de agendamento no celular.
+  Confirme com o Canva se o domínio comprado lá pode ser apontado para fora.
+
+
+O QUE VOCÊ PODE EDITAR SEM MEXER NO RESTO
+  No final do index.html, no bloco "CONFIGURAÇÃO":
+    whatsapp   -> número com DDI e DDD, só dígitos
+    linkGoogle -> link das suas avaliações no Google
+    instagram  -> link do seu perfil
+    cnpj       -> deixe vazio até o CNPJ estar pronto
+
+
+ACOMPANHAR DE ONDE VÊM OS LEADS
+  A mensagem que o cliente envia no WhatsApp sai limpa, sem códigos.
+  A origem de cada lead (qual botão foi usado e a campanha, se o link tiver
+  ?utm_campaign=nome) fica registrada no painel do Netlify, no campo "origem".
+  O site também envia eventos prontos para Google Tag Manager e Meta Pixel quando
+  você instalar: clique_whatsapp, quiz_aberto, quiz_iniciado,
+  formulario_enviado, video_depoimento e audio_depoimento.
+
+
+SOBRE OS VÍDEOS
+  Os vídeos de fundo e as animações rodam mesmo quando o Windows ou o celular
+  está com "efeitos de animação" desligados. Era isso que travava o vídeo antes.
+  Se um vídeo não aparecer, confira se a pasta "midia" está junto do index.html.
