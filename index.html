@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mauricio Pinho | Ressignificar Terapias &amp; Consultorias</title>
+<meta name="description" content="Gestão Mente &amp; Empresa: Mauricio Pinho une gestão (DRE, caixa, processos, vendas e marketing) ao trabalho emocional com neuropsicanálise, PNL e hipnoterapia. Sessão estratégica gratuita, online ou presencial.">
+<meta name="theme-color" content="#06142A">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mauricio Pinho | Ressignificar Terapias &amp; Consultorias">
+<meta property="og:description" content="Quando quem lidera se esgota, a empresa sente. Gestão e trabalho emocional no mesmo acompanhamento.">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/logo.png">
+<link rel="preload" as="image" href="midia/topo-celular.jpg" media="(max-width:640px)">
+<link rel="preload" as="image" href="midia/topo-desktop.jpg" media="(min-width:641px)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ================= BASE ================= */
+:root{
+  --deep:#06142A; --navy:#0B1F3A; --navy2:#13294B;
+  --gold:#C9A24A; --gold2:#E3C477; --goldtxt:#8A6A22;
+  --sand:#F4EFE5; --paper:#FFFDF8; --ink:#16203A; --muted:#4C5670; --line:#E3DCCD;
+  --wa:#1FA855;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --barra:0px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:76px;-webkit-text-size-adjust:100%}
+html.trava{overflow:hidden}
+body{font:400 16.5px/1.6 var(--sans);color:var(--ink);background:var(--sand);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,video{max-width:100%;display:block}
+button{font:inherit;color:inherit}
+a{color:inherit}
+h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.12;letter-spacing:-.01em}
+h2{font-size:clamp(29px,6.6vw,46px);margin-bottom:14px;text-wrap:balance}
+h3{font-size:21px}
+.w{max-width:1140px;margin:0 auto;padding:0 20px}
+section{padding:68px 0}
+.lead{font-size:17.5px;color:var(--muted);max-width:640px;margin-bottom:32px}
+:focus-visible{outline:3px solid var(--gold2);outline-offset:3px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media(min-width:761px){body{font-size:17px}section{padding:92px 0}.lead{font-size:19px;margin-bottom:40px}}
+
+/* ================= BOTÕES ================= */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;font:700 16px/1.25 var(--sans);text-decoration:none;text-align:center;border:0;cursor:pointer;padding:15px 26px;border-radius:12px;background:var(--gold);color:var(--deep);box-shadow:0 10px 26px rgba(201,162,74,.28);transition:background .2s,transform .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+.btn:hover{background:var(--gold2)}
+.btn:active{transform:scale(.98)}
+@media(hover:hover){.btn:hover{transform:translateY(-2px)}}
+.btn svg{width:20px;height:20px;flex-shrink:0}
+.btn.ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.5);box-shadow:none}
+.btn.ghost:hover{border-color:#fff;background:rgba(255,255,255,.08)}
+.btn.line{background:transparent;color:var(--navy);border:2px solid var(--navy);box-shadow:none}
+.btn.line:hover{background:var(--navy);color:#fff}
+.btn.wa{background:var(--wa);color:#fff;box-shadow:0 10px 24px rgba(31,168,85,.28)}
+.btn.wa:hover{background:#178A45}
+.textlink{display:inline-flex;gap:8px;align-items:center;font-weight:700;color:var(--navy);text-decoration:none;border-bottom:2px solid var(--gold);padding-bottom:2px;margin-top:30px;background:none;border-top:0;border-left:0;border-right:0;cursor:pointer;font-size:16.5px}
+.sobre .textlink,.faq .textlink{color:var(--gold2)}
+
+/* ================= TOPO FIXO ================= */
+.topo{position:fixed;inset:0 0 auto;z-index:50;background:linear-gradient(180deg,rgba(6,20,42,.82) 0%,rgba(6,20,42,0) 100%);padding-top:env(safe-area-inset-top,0px);border-bottom:1px solid transparent;transition:background-color .3s,border-color .3s}
+.topo.solido{background:rgba(6,20,42,.93);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom-color:rgba(227,196,119,.14)}
+.topo .w{display:flex;align-items:center;justify-content:space-between;height:64px;gap:12px}
+.marca{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;min-width:0}
+.marca img{width:40px;height:40px;border-radius:50%}
+.marca b{display:block;font:600 19px/1 var(--serif)}
+.marca small{display:none;font-size:12.5px;color:#C7D0E2;margin-top:4px}
+.menu{display:flex;gap:24px;align-items:center}
+.menu .link{display:none;color:#DCE3F1;text-decoration:none;font-weight:500;font-size:15px}
+.menu .link:hover{color:#fff}
+.menu .btn{min-height:42px;padding:10px 16px;font-size:14.5px;box-shadow:none;white-space:nowrap}
+@media(max-width:380px){.marca b{font-size:17px}.marca img{width:36px;height:36px}.menu .btn{padding:9px 12px;font-size:14px}}
+@media(min-width:961px){.topo .w{height:72px}.marca img{width:44px;height:44px}.marca b{font-size:21px}.marca small{display:block}.menu .link{display:inline}}
+
+/* ================= HERO (vídeo de fundo) ================= */
+.hero{position:relative;background:var(--deep);color:#fff;overflow:hidden;padding:calc(min(100vw,50vh) - 96px) 0 40px}
+.hero-media{position:absolute;top:0;left:0;right:0;height:min(100vw,50vh);background:var(--deep)}
+.hero-media img,.hero-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 28%}
+.hero-media video{opacity:0;transition:opacity 1s ease}
+.hero-media video.rodando{opacity:1}
+.hero-media::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,20,42,.55) 0%,rgba(6,20,42,0) 20%,rgba(6,20,42,0) 48%,rgba(6,20,42,.82) 78%,var(--deep) 100%)}
+.hero .w{position:relative;z-index:2}
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.tag{font-size:12.5px;font-weight:600;line-height:1.3;padding:5px 11px;border-radius:999px;background:rgba(6,20,42,.6);border:1px solid rgba(227,196,119,.5);color:var(--gold2)}
+.tag.metodo{background:var(--gold);color:var(--deep);border-color:var(--gold)}
+.tag.so-desk,.sub .so-desk{display:none}
+.hero h1{font-size:clamp(30px,8vw,64px);margin-bottom:12px;text-wrap:balance}
+.hero .sub{font-size:16.5px;color:#E1E7F2;margin-bottom:20px;max-width:580px}
+.cta-row{display:flex;flex-direction:column;gap:10px}
+.cta-row .btn{width:100%}
+.prova-linha{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:18px;font-size:14px;color:#D5DCEA}
+.prova-linha span{display:inline-flex;align-items:center;gap:6px}
+.estrelas{color:var(--gold2);letter-spacing:1px}
+@media(min-width:641px){
+  .hero{padding:calc(56vh - 80px) 0 56px}
+  .hero-media{height:56vh}
+  .tag.so-desk,.sub .so-desk{display:inline}
+  .sub .so-cel{display:none}
+  .tags{margin-bottom:16px}.hero h1{margin-bottom:14px}.hero .sub{margin-bottom:24px}
+  .cta-row{flex-direction:row;flex-wrap:wrap}
+  .cta-row .btn{width:auto}
+  .hero .sub{font-size:18.5px}
+}
+@media(min-width:961px){
+  .hero{min-height:min(94vh,900px);display:flex;align-items:center;padding:120px 0 80px}
+  .hero .w{width:100%}
+  .hero-media{left:auto;right:0;bottom:0;height:auto;width:66%;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 36%);mask-image:linear-gradient(90deg,transparent 0,#000 36%)}
+  .hero-media::after{background:linear-gradient(180deg,rgba(6,20,42,.4) 0,transparent 22%,transparent 72%,rgba(6,20,42,.9) 100%)}
+  .hero-copy{max-width:660px}
+  .tag{font-size:14px;padding:7px 14px}
+  .prova-linha{font-size:15px;margin-top:24px}
+}
+
+/* ================= NÚMEROS (contador + brilho) ================= */
+.nums{background:var(--deep);color:#fff;border-top:1px solid rgba(227,196,119,.3)}
+.nums .w{display:grid;grid-template-columns:1fr 1fr;padding:0}
+.num{position:relative;isolation:isolate;padding:26px 18px;border-top:1px solid rgba(255,255,255,.08)}
+.num:nth-child(1){border-right:1px solid rgba(255,255,255,.08)}
+.num:nth-child(n+3){grid-column:span 2}
+.num:nth-child(n+3) b{white-space:nowrap}
+.num b{position:relative;display:inline-block;font:600 clamp(21px,5.6vw,31px)/1.15 var(--serif);color:var(--gold2);margin-bottom:6px;font-variant-numeric:tabular-nums}
+.num b::after{content:"";position:absolute;left:50%;top:50%;width:170px;height:170px;margin:-85px 0 0 -85px;z-index:-1;border-radius:50%;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg,rgba(227,196,119,.95) 0deg 2.5deg,transparent 2.5deg 30deg);
+  -webkit-mask:radial-gradient(circle,transparent 26%,#000 30%,#000 46%,transparent 68%);mask:radial-gradient(circle,transparent 26%,#000 30%,#000 46%,transparent 68%);
+  opacity:0;transform:scale(.3)}
+.num b.estouro::after{animation:estouro 1.1s ease-out}
+@keyframes estouro{0%{opacity:0;transform:scale(.3) rotate(0)}30%{opacity:1}100%{opacity:0;transform:scale(1.3) rotate(18deg)}}
+.num span{display:block;font-size:14px;color:#C7D0E2;line-height:1.45}
+@media(min-width:961px){
+  .nums .w{grid-template-columns:.8fr .8fr 1.2fr 1.2fr;padding:0 20px}
+  .num b{font-size:clamp(22px,2.1vw,29px)}
+  .num{padding:34px 22px;border-top:0;border-right:0;border-left:1px solid rgba(255,255,255,.1)}
+  .num:nth-child(1){border-right:0}
+  .num:nth-child(n+3){grid-column:auto}
+  .num b{white-space:nowrap}
+  .num:first-child{border-left:0}
+  .num span{font-size:15px}
+}
+
+/* ================= DOR E CAUSA (spotlight) ================= */
+.pares{display:grid;gap:12px}
+.par{position:relative;isolation:isolate;display:grid;background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:border-color .35s,box-shadow .35s;--mx:50%;--my:40%}
+.par::before{content:"";position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .4s;background:radial-gradient(380px circle at var(--mx) var(--my),rgba(201,162,74,.22),transparent 62%)}
+.par.aceso,.par:hover{border-color:var(--gold);box-shadow:0 14px 34px rgba(11,31,58,.12)}
+.par.aceso::before,.par:hover::before{opacity:1}
+.par>div{padding:20px 22px}
+.visto{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;align-items:start}
+.visto .ic{grid-row:span 2;width:42px;height:42px;border-radius:11px;background:var(--navy);display:grid;place-items:center;transition:background .35s}
+.par.aceso .ic,.par:hover .ic{background:var(--deep)}
+.visto .ic svg{width:22px;height:22px;stroke:var(--gold2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.par small{display:block;font-size:13px;font-weight:700;color:var(--goldtxt);margin-bottom:3px}
+.par h3{font-size:19.5px}
+.porque{background:rgba(239,231,214,.75);border-top:1px solid var(--line)}
+.porque p{color:#2B3550;font-size:16px}
+.fecho{margin-top:30px;font-family:var(--serif);font-size:clamp(21px,5vw,28px);line-height:1.3;max-width:780px}
+@media(min-width:761px){.par{grid-template-columns:1fr 1fr}.porque{border-top:0;border-left:1px solid var(--line)}.par>div{padding:24px 28px}.par h3{font-size:21px}}
+
+/* ================= SOBRE + FIO DOURADO (foto -> tags) ================= */
+.sobre{background:var(--deep);color:#fff}
+.sobre .lead{color:#C7D0E2}
+.fio{position:relative;display:grid;gap:40px;margin-top:6px}
+.fio svg.linhas{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
+.fio svg path{fill:none;stroke:var(--gold);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px rgba(227,196,119,.55))}
+.fio svg circle{fill:var(--gold2);opacity:0;transition:opacity .35s}
+.fio svg circle.on{opacity:1}
+.foto{position:relative;z-index:1;width:min(240px,66%);margin:0 auto}
+.foto img{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;border-radius:16px;border:3px solid var(--gold);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+.foto figcaption{position:absolute;left:50%;bottom:-15px;transform:translateX(-50%);white-space:nowrap;background:var(--navy);border:1px solid rgba(227,196,119,.55);color:#fff;font-size:13px;font-weight:600;padding:7px 14px;border-radius:8px}
+.papeis{position:relative;z-index:1;display:grid;gap:14px;padding-left:40px;list-style:none}
+.papel{padding:17px 19px;border-radius:14px;background:rgba(19,41,75,.72);border:1.5px solid rgba(227,196,119,.2);transition:border-color .6s,box-shadow .6s,background .6s,transform .7s cubic-bezier(.2,.8,.2,1),opacity .7s}
+.fio.anima .papel{transform:translateX(18px);opacity:.55}
+.fio.anima .papel.on{transform:none;opacity:1}
+.papel b{display:block;font:600 24px/1.15 var(--serif);color:rgba(255,255,255,.5);margin-bottom:6px;transition:color .6s}
+.papel p{color:#9FAAC0;font-size:15.5px;transition:color .6s}
+.papel.on{border-color:var(--gold);background:rgba(19,41,75,.96);box-shadow:0 0 0 1px rgba(227,196,119,.2),0 10px 30px rgba(201,162,74,.16)}
+.papel.on b{color:var(--gold2)}
+.papel.on p{color:#DCE3F1}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:40px}
+.chip{font-size:14px;font-weight:600;padding:7px 13px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:#DCE3F1}
+.chip.ouro{background:var(--gold);color:var(--deep);border-color:var(--gold)}
+.honesto{margin-top:22px;padding:16px 20px;border-radius:14px;background:rgba(255,255,255,.06);border-left:3px solid var(--gold);color:#C7D0E2;font-size:15px;max-width:820px}
+@media(min-width:961px){
+  .fio{grid-template-columns:340px 1fr;gap:110px;align-items:center}
+  .foto{width:100%;margin:0}
+  .foto figcaption{font-size:14px}
+  .papeis{padding-left:0}
+  .papel{padding:20px 24px}
+  .papel b{font-size:27px}
+}
+
+/* ================= COMO FUNCIONA + TRILHA DE 3 MESES ================= */
+.como{background:var(--paper)}
+.passos{display:grid;gap:12px;margin-bottom:52px;list-style:none}
+.passo{padding:22px;border-radius:16px;background:var(--sand);border:1px solid var(--line)}
+.passo .n{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--navy);color:var(--gold2);font:700 16px var(--sans);margin-bottom:12px}
+.passo h3{margin-bottom:6px}
+.passo p{color:var(--muted);font-size:16px}
+.meses-h{font-size:clamp(23px,5.4vw,32px);margin-bottom:18px;max-width:640px}
+.meses{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.mes{background:none;border:0;cursor:pointer;padding:10px 4px 12px;text-align:center;color:var(--muted);border-radius:10px}
+.mes b{display:block;font:600 20px/1.1 var(--serif);color:var(--navy);margin-bottom:3px}
+.mes span{font-size:13.5px;line-height:1.3;display:block}
+.mes[aria-selected="true"] b{color:var(--goldtxt)}
+.mes[aria-selected="true"] span{color:var(--ink);font-weight:600}
+.trilha{position:relative;height:8px;border-radius:8px;background:#E6DDC9;margin:14px 0 30px;cursor:pointer}
+.trilha::before{content:"";position:absolute;left:0;right:0;top:-18px;bottom:-18px}
+.trilha .enche{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:8px;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .7s cubic-bezier(.2,.7,.2,1)}
+.ponto{position:absolute;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border:0;background:none;padding:0;cursor:pointer;z-index:2;-webkit-tap-highlight-color:transparent}
+.ponto::before{content:"";position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;box-sizing:border-box;border-radius:50%;background:var(--paper);border:3px solid #CFC6B3;transition:border-color .4s,background .4s,transform .2s}
+.ponto:hover::before{transform:scale(1.18)}
+.ponto.on::before{border-color:var(--gold);background:var(--gold2)}
+.ponto.atual::before{box-shadow:0 0 0 6px rgba(201,162,74,.22)}
+.dica-mes{font-size:14px;color:var(--muted);margin:-18px 0 18px}
+.pane{display:none;padding:24px 22px;border-radius:16px;background:var(--navy);color:#fff}
+.pane.on{display:block;animation:entra .35s ease}
+@keyframes entra{from{opacity:0;transform:translateY(6px)}}
+.pane h3{color:var(--gold2);margin-bottom:12px;font-size:23px}
+.pane ul{list-style:none;display:grid;gap:10px}
+.pane li{padding-left:22px;position:relative;color:#E1E7F2}
+.pane li::before{content:"";position:absolute;left:0;top:10px;width:9px;height:9px;border-radius:50%;background:var(--gold)}
+@media(min-width:761px){.passos{grid-template-columns:repeat(3,1fr);gap:18px}.passo{padding:28px}.mes span{font-size:15px}.pane{padding:30px}}
+
+/* ================= PRINCÍPIOS + 4 PILARES ================= */
+.principios{display:grid;gap:12px;margin:-8px 0 34px;max-width:860px}
+.principios p{padding:16px 18px;border-left:3px solid var(--gold);background:var(--sand);border-radius:0 12px 12px 0;color:#2B3550;font-size:16px}
+.principios b{font-family:var(--serif);font-size:19px;color:var(--navy)}
+@media(min-width:761px){.principios{grid-template-columns:1fr 1fr;gap:16px}}
+.pilares{background:var(--navy);color:#fff}
+.pilares .lead{color:#C7D0E2;max-width:760px}
+.pilar-grid{display:grid;gap:12px}
+.pilar{position:relative;padding:22px;border-radius:16px;background:var(--navy2);border:1px solid rgba(255,255,255,.1);border-top:3px solid var(--gold)}
+.pilar .ic{display:grid;place-items:center;width:44px;height:44px;border-radius:11px;background:rgba(227,196,119,.12);margin-bottom:14px}
+.pilar .ic svg{width:24px;height:24px;stroke:var(--gold2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.pilar h3{color:#fff;margin-bottom:8px}
+.pilar p{color:#C7D0E2;font-size:16px;margin-bottom:14px}
+.ferr{display:inline-block;font-size:13.5px;font-weight:700;color:var(--deep);background:var(--gold2);padding:5px 11px;border-radius:999px}
+.pop{margin-top:22px;padding:22px;border-radius:16px;background:rgba(255,255,255,.05);border:1px dashed rgba(227,196,119,.45);max-width:860px}
+.pop h3{color:var(--gold2);margin-bottom:8px}
+.pop p{color:#D5DCEA;font-size:16px}
+.pilares .textlink{color:var(--gold2)}
+@media(min-width:761px){.pilar-grid{grid-template-columns:1fr 1fr;gap:18px}.pilar{padding:28px}.pop{padding:26px 30px}}
+@media(min-width:1100px){.pilar-grid{grid-template-columns:repeat(4,1fr)}}
+
+/* ================= CAMINHOS ================= */
+.switch{display:grid;grid-template-columns:1fr 1fr;padding:5px;border-radius:14px;background:#E8E0CF;margin-bottom:24px;gap:4px;max-width:620px}
+.switch button{font:700 15px/1.25 var(--sans);border:0;background:transparent;color:var(--navy);padding:12px 10px;border-radius:10px;cursor:pointer;min-height:50px}
+.switch button[aria-selected="true"]{background:var(--navy);color:#fff}
+.paths{display:none;gap:14px}
+.paths.on{display:grid}
+.path{display:flex;flex-direction:column;gap:12px;padding:24px 22px;border-radius:18px;background:var(--paper);border:1px solid var(--line);transition:transform .25s,box-shadow .25s,border-color .25s}
+@media(hover:hover){.path:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 18px 40px rgba(11,31,58,.12)}}
+.path .para{font-size:14px;font-weight:700;color:var(--goldtxt)}
+.path p{color:var(--muted);font-size:16px}
+.path ul{list-style:none;display:grid;gap:7px;font-size:15.5px;color:#2B3550;flex:1}
+.path li{padding-left:18px;position:relative}
+.path li::before{content:"";position:absolute;left:0;top:10px;width:7px;height:7px;border-radius:2px;background:var(--gold)}
+.path .btn{margin-top:6px;width:100%}
+.path.destaque{background:var(--navy);color:#fff;border-color:var(--navy)}
+.path.destaque p,.path.destaque li{color:#D5DCEA}
+.path.destaque .para{color:var(--gold2)}
+.mini-link{font-size:15px;font-weight:700;color:var(--goldtxt);text-decoration:underline;text-underline-offset:3px}
+.rede{display:grid;gap:16px;margin-top:22px;padding:22px;border-radius:18px;background:var(--paper);border:1px dashed #CDBF9E}
+.rede h3{margin-bottom:6px}
+.rede p{color:var(--muted);font-size:16px;max-width:760px}
+.rede .btn{width:100%}
+@media(min-width:761px){.rede{grid-template-columns:1fr auto;align-items:center;padding:26px 30px}.rede .btn{width:auto}}
+@media(min-width:761px){.paths.on{grid-template-columns:repeat(3,1fr);gap:18px}.paths.dois.on{grid-template-columns:1.3fr 1fr}.path{padding:30px}.path .btn{width:auto;align-self:flex-start}}
+
+/* ================= RESULTADOS ================= */
+.resultados{background:var(--paper)}
+.cases{display:grid;gap:12px;margin-bottom:48px}
+.case{padding:24px;border-radius:18px;background:var(--navy);color:#fff}
+.case small{color:var(--gold2);font-weight:700;font-size:14px}
+.case b{display:block;font:600 clamp(28px,7vw,42px)/1.05 var(--serif);color:var(--gold2);margin:6px 0 12px;font-variant-numeric:tabular-nums}
+.case p{color:#D5DCEA;font-size:16px}
+.midias{display:grid;gap:14px;margin-bottom:14px}
+.vcard{background:var(--deep);border-radius:18px;overflow:hidden;color:#fff}
+.vbox{position:relative;background:#000;cursor:pointer}
+.vbox video{width:100%;height:100%;object-fit:cover}
+.vcard.larga .vbox{aspect-ratio:16/9}
+.vcard.alta .vbox{aspect-ratio:4/5}
+.vcard.chamada .vbox{aspect-ratio:600/340}
+.vcard.com-som .vbox{cursor:default}
+.som{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:9px;padding:12px 18px 12px 14px;border-radius:999px;border:0;background:rgba(6,20,42,.85);color:#fff;font:700 15px/1 var(--sans);cursor:pointer;white-space:nowrap;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 0 0 1.5px rgba(227,196,119,.65),0 8px 22px rgba(0,0,0,.4)}
+.som svg{width:20px;height:20px;fill:var(--gold2)}
+.som::after{content:"";position:absolute;inset:-1.5px;border-radius:999px;box-shadow:0 0 0 0 rgba(227,196,119,.6);animation:onda 2s infinite}
+@keyframes onda{70%{box-shadow:0 0 0 14px rgba(227,196,119,0)}100%{box-shadow:0 0 0 0 rgba(227,196,119,0)}}
+.vcard.com-som .som{display:none}
+.vcard.falhou .som::after{display:none}
+.vcard .cap{padding:14px 18px}
+.vcard .cap b{display:block;font-size:16.5px}
+.vcard .cap span{font-size:14.5px;color:#C7D0E2}
+.audio{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;padding:20px;border-radius:18px;background:#DCF3E4;border:1px solid #BFE6CC;margin:14px 0 56px}
+.audio .ic{width:46px;height:46px;border-radius:50%;background:var(--wa);display:grid;place-items:center;flex-shrink:0}
+.audio .ic svg{width:23px;height:23px;fill:#fff}
+.audio div b{display:block;font-size:16.5px;color:#123222}
+.audio div span{font-size:14.5px;color:#2F5A40}
+.audio audio{width:100%;min-width:0}
+.g-topo{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:16px;margin-bottom:22px}
+.g-nota{display:flex;align-items:center;gap:14px}
+.g-nota b{font:600 50px/1 var(--serif);color:var(--navy)}
+.g-nota span{font-size:15px;color:var(--muted)}
+.avals{display:grid;gap:12px}
+.av{padding:20px;border-radius:16px;background:#fff;border:1px solid var(--line)}
+.av.extra{display:none}
+.avals.todas .av.extra{display:block}
+.av header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.av .ini{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:700 15px var(--sans);color:#fff;flex-shrink:0}
+.av header b{display:block;font-size:15.5px;line-height:1.25}
+.av header .estrelas{font-size:14px;color:#B98A1F}
+.av p{font-size:16px;color:#2B3550}
+.ver-mais{margin-top:14px;width:100%}
+.fonte{font-size:13.5px;color:var(--muted);margin-top:12px}
+@media(min-width:761px){
+  .cases{grid-template-columns:1fr 1fr;gap:18px;margin-bottom:60px}.case{padding:30px}
+  .midias{grid-template-columns:2.2fr 1fr;gap:18px;align-items:start}
+  .vcard.chamada .vbox{aspect-ratio:1280/396}
+  .audio{padding:22px 24px}.audio audio{flex:1;width:auto;min-width:260px}
+  .avals{display:block;columns:2;column-gap:16px}
+  .av{break-inside:avoid;margin-bottom:16px}
+  .ver-mais{width:auto}
+}
+@media(min-width:1000px){.avals{columns:3}}
+
+/* ================= FAQ ================= */
+.faq{background:var(--navy);color:#fff}
+.faq .w{max-width:860px}
+.faq details{border-bottom:1px solid rgba(255,255,255,.16)}
+.faq summary{list-style:none;cursor:pointer;padding:20px 44px 20px 0;font:600 18px/1.35 var(--sans);position:relative;min-height:56px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:4px;top:13px;font-size:30px;color:var(--gold2);font-weight:400}
+.faq details[open] summary::after{content:"\2013"}
+.faq details p{padding:0 0 22px;color:#D5DCEA;max-width:720px}
+.faq details a{color:var(--gold2)}
+
+/* ================= CHAMADA FINAL (vídeo 2 + formulário) ================= */
+.final{position:relative;background:var(--deep);color:#fff;overflow:hidden;padding:0 0 64px}
+.final-media{position:relative;height:min(100vw,440px);background:var(--deep)}
+.final-media img,.final-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 25%}
+.final-media video{opacity:0;transition:opacity 1s}
+.final-media video.rodando{opacity:1}
+.final-media::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,20,42,.2) 0%,rgba(6,20,42,0) 35%,rgba(6,20,42,.8) 75%,var(--deep) 100%)}
+.final .w{position:relative;z-index:2;margin-top:-120px;display:grid;gap:26px}
+.final h2{color:#fff}
+.final .lead{color:#C7D0E2;margin-bottom:0}
+.cartao-quiz{background:var(--paper);color:var(--ink);border-radius:20px;padding:22px 18px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.direto{font-size:15px;color:#C7D0E2;margin-top:4px}
+.direto a{color:var(--gold2);font-weight:700}
+@media(min-width:961px){
+  .final{padding:100px 0}
+  .final-media{position:absolute;top:0;bottom:0;left:0;height:auto;width:56%;-webkit-mask-image:linear-gradient(90deg,#000 55%,transparent 100%);mask-image:linear-gradient(90deg,#000 55%,transparent 100%)}
+  .final-media::after{background:linear-gradient(90deg,rgba(6,20,42,.15),rgba(6,20,42,.35))}
+  .final .w{margin-top:0;grid-template-columns:1fr 1fr;gap:40px}
+  .final .bloco{grid-column:2}
+  .cartao-quiz{padding:30px}
+}
+
+/* ================= QUIZ (formulário em etapas) ================= */
+.quiz-topo{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.quiz-passo{font-size:13.5px;font-weight:700;color:var(--goldtxt);white-space:nowrap}
+.quiz-barra{flex:1;height:6px;border-radius:6px;background:#E8E0CF;overflow:hidden}
+.quiz-barra span{display:block;height:100%;background:var(--gold);border-radius:6px;transition:width .35s}
+.quiz-q{font-size:23px;line-height:1.2;margin-bottom:14px;outline:none}
+.quiz-ops{display:grid;gap:9px}
+.quiz-op{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:54px;padding:13px 16px;text-align:left;font:600 16px/1.3 var(--sans);color:var(--navy);background:#fff;border:1.5px solid #D9D0BD;border-radius:12px;cursor:pointer;transition:border-color .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.quiz-op::after{content:"";width:8px;height:8px;border-right:2px solid var(--gold);border-top:2px solid var(--gold);transform:rotate(45deg);flex-shrink:0}
+.quiz-op:hover{border-color:var(--navy)}
+.quiz-op[aria-pressed="true"]{border-color:var(--gold);background:#FBF3DF}
+.quiz-rodape{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-top:14px;gap:8px 14px}
+.quiz-voltar{background:none;border:0;color:var(--muted);font-weight:600;cursor:pointer;padding:8px 0;text-decoration:underline;text-underline-offset:3px;font-size:15px}
+.quiz-direto{font-size:14px;color:var(--muted);padding:8px 0}
+.quiz label{display:grid;gap:6px;font-weight:600;font-size:15px;margin-bottom:12px}
+.quiz .opc{font-weight:400;color:var(--muted)}
+.quiz label.quiz-check{display:flex;align-items:flex-start;gap:10px;font-weight:500;font-size:15px;line-height:1.35;cursor:pointer}
+.quiz label.quiz-check input{width:22px;height:22px;flex-shrink:0;margin-top:0;accent-color:var(--navy)}
+.quiz input{font:400 16px var(--sans);padding:14px;border-radius:10px;border:1.5px solid #CFC6B3;background:#fff;color:var(--ink);width:100%}
+.quiz input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(11,31,58,.15)}
+.quiz .btn{width:100%;margin-top:4px}
+.quiz-erro{color:#A3261B;font-size:14.5px;font-weight:600;margin:-4px 0 10px}
+.quiz-nota{font-size:13.5px;color:var(--muted);margin-top:10px;text-align:center}
+.quiz-ok{text-align:center;padding:6px 0}
+.quiz-ok .ok-ic{width:56px;height:56px;border-radius:50%;background:var(--wa);display:grid;place-items:center;margin:0 auto 14px}
+.quiz-ok .ok-ic svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.quiz-ok p{color:var(--muted);margin-bottom:16px}
+.quiz-modal{position:fixed;inset:0;z-index:100;display:flex;align-items:flex-end;justify-content:center}
+.quiz-modal[hidden]{display:none}
+.quiz-veu{position:absolute;inset:0;background:rgba(6,20,42,.66);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:aparece .25s}
+.quiz-caixa{position:relative;width:100%;max-height:92vh;max-height:92dvh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:var(--paper);color:var(--ink);border-radius:22px 22px 0 0;padding:14px 18px calc(20px + env(safe-area-inset-bottom,0px));animation:sobe .32s cubic-bezier(.2,.8,.2,1)}
+.quiz-caixa::before{content:"";display:block;width:44px;height:5px;border-radius:5px;background:#D9D0BD;margin:0 auto 14px}
+.quiz-cab{display:flex;align-items:center;gap:12px;padding-right:44px;margin-bottom:16px}
+.quiz-cab img{width:42px;height:42px;border-radius:50%}
+.quiz-cab b{display:block;font:600 19px/1.15 var(--serif)}
+.quiz-cab span{font-size:13.5px;color:var(--muted)}
+.quiz-x{position:absolute;top:14px;right:10px;width:44px;height:44px;border:0;background:none;font-size:30px;line-height:1;cursor:pointer;color:var(--muted);border-radius:50%}
+@keyframes aparece{from{opacity:0}}
+@keyframes sobe{from{transform:translateY(60px);opacity:0}}
+@media(min-width:641px){.quiz-modal{align-items:center;padding:20px}.quiz-caixa{max-width:540px;border-radius:22px;padding:26px 30px 30px}.quiz-caixa::before{display:none}}
+
+/* ================= RODAPÉ + BOTÕES FIXOS ================= */
+footer{background:var(--deep);color:#AEB8CC;padding:44px 0 calc(100px + env(safe-area-inset-bottom,0px));font-size:14.5px;border-top:1px solid rgba(255,255,255,.08)}
+footer .w{display:grid;gap:14px}
+footer b{color:#fff}
+footer a{color:var(--gold2)}
+.disc{max-width:820px;font-size:13.5px;line-height:1.6}
+.barra-cel{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;gap:10px;padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(6,20,42,.95);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid rgba(227,196,119,.25);transform:translateY(110%);transition:transform .35s}
+.barra-cel.show{transform:none}
+.barra-cel .btn{flex:1;min-height:50px;box-shadow:none;padding:12px 14px}
+.barra-cel .wa-ic{width:56px;flex-shrink:0;border-radius:12px;background:var(--wa);display:grid;place-items:center}
+.barra-cel .wa-ic svg{width:26px;height:26px;fill:#fff}
+.float{position:fixed;right:22px;bottom:22px;z-index:60;display:none;align-items:center;gap:10px;background:var(--wa);color:#fff;text-decoration:none;font-weight:700;padding:14px 20px;border-radius:999px;box-shadow:0 10px 28px rgba(0,0,0,.35);transform:translateY(160%);transition:transform .35s}
+.float.show{transform:none}
+.float svg{width:22px;height:22px;fill:#fff}
+@media(min-width:961px){.barra-cel{display:none}.float{display:flex}footer{padding-bottom:44px}}
+
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="w">
+    <a class="marca" href="#inicio" aria-label="Ressignificar, voltar ao início">
+      <img src="img/logo.png" alt="" width="44" height="44">
+      <span><b>Ressignificar</b><small>Terapias &amp; Consultorias</small></span>
+    </a>
+    <nav class="menu" aria-label="Seções">
+      <a class="link" href="#como-funciona">Como funciona</a>
+      <a class="link" href="#resultados">Resultados</a>
+      <a class="link" href="#perguntas">Perguntas</a>
+      <button class="btn" type="button" data-quiz data-ref="menu">Agendar sessão</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- 1. TOPO COM VÍDEO -->
+<section class="hero" id="inicio">
+  <div class="hero-media" aria-hidden="true">
+    <picture>
+      <source media="(max-width:640px)" srcset="midia/topo-celular.jpg">
+      <img src="midia/topo-desktop.jpg" alt="" fetchpriority="high">
+    </picture>
+    <video id="heroVideo" muted loop playsinline autoplay preload="auto"
+           data-desk="midia/topo-desktop.mp4" data-mob="midia/topo-celular.mp4"></video>
+  </div>
+  <script>
+  (function(){
+    var v=document.getElementById("heroVideo");
+    /* toca sempre: não depende da configuração de animações do Windows/celular */
+    v.muted=true;
+    v.src=window.matchMedia("(max-width:640px)").matches?v.dataset.mob:v.dataset.desk;
+    v.addEventListener("playing",function(){v.classList.add("rodando");});
+    v.addEventListener("error",function(){if(v.parentNode)v.parentNode.removeChild(v);});
+    var tenta=function(){var p=v.play();if(p&&p.catch)p.catch(function(){});};
+    v.addEventListener("canplay",tenta);tenta();
+    ["touchstart","pointerdown","scroll"].forEach(function(ev){
+      document.addEventListener(ev,function f(){tenta();document.removeEventListener(ev,f);},{passive:true});
+    });
+  })();
+  </script>
+  <div class="w">
+    <div class="hero-copy">
+      <div class="tags">
+        <span class="tag metodo">Gestão Mente &amp; Empresa</span>
+        <span class="tag so-desk">Neuropsicanálise, PNL e hipnoterapia</span>
+        <span class="tag">Online e presencial</span>
+      </div>
+      <h1>Quando quem lidera se esgota, a empresa sente. Eu cuido dos dois.</h1>
+      <p class="sub"><span class="so-desk">Sou Mauricio Pinho. Analiso os números do seu negócio (DRE, caixa, processos, equipe e vendas) e trabalho o lado emocional que trava suas decisões, para a empresa parar de depender do seu desgaste.</span><span class="so-cel">Sou Mauricio Pinho. Cuido dos números do seu negócio e do lado emocional que trava suas decisões, para a empresa parar de depender do seu desgaste.</span></p>
+      <div class="cta-row">
+        <button class="btn" type="button" data-quiz data-ref="topo" id="heroCta">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7Zm12 8H5v10h14V10Zm-9 2h4v4h-4v-4Z"/></svg>
+          Agendar sessão estratégica gratuita
+        </button>
+        <a class="btn ghost" href="#como-funciona">Ver como funciona</a>
+      </div>
+      <div class="prova-linha">
+        <span><span class="estrelas" aria-hidden="true">★★★★★</span> 4,9 no Google, 17 avaliações</span>
+        <span>Sigilo total</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. NÚMEROS -->
+<div class="nums" aria-label="Números">
+  <div class="w">
+    <div class="num"><b>+10 anos</b><span>como gestor nacional em grandes redes de varejo</span></div>
+    <div class="num"><b>+100 líderes</b><span>formados e promovidos ao longo da carreira</span></div>
+    <div class="num"><b>R$ 40 mi → R$ 500 mil</b><span>perdas anuais de uma operação, reduzidas em 5 anos</span></div>
+    <div class="num"><b>R$ 80 mil → R$ 140 mil</b><span>faturamento mensal de uma loja de moda em 5 meses</span></div>
+  </div>
+</div>
+
+<!-- 3. DOR E CAUSA -->
+<section id="o-que-eu-faco">
+  <div class="w">
+    <h2>O problema que aparece raramente é o problema de verdade</h2>
+    <p class="lead">Em mais de dez anos dentro de empresas, vi o mesmo padrão: o caixa, as vendas e a equipe mostram o sintoma, mas a causa costuma estar no cansaço e nas defesas de quem decide.</p>
+    <div class="pares">
+      <div class="par">
+        <div class="visto"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span><small>O que aparece</small><h3>Decisões adiadas, compras por impulso, caixa sem controle</h3></div>
+        <div class="porque"><small>O que costuma estar por trás</small><p>Fadiga de decisão. Depois de centenas de escolhas no dia, o cérebro busca alívio rápido e foge do que exige esforço, como olhar os números.</p></div>
+      </div>
+      <div class="par">
+        <div class="visto"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 7l3 3M17 7l-3 3M7 17l3-3M17 17l-3-3"/></svg></span><small>O que aparece</small><h3>Tudo passa por você e a equipe não anda sozinha</h3></div>
+        <div class="porque"><small>O que costuma estar por trás</small><p>Falta de processos claros e medo de errar. Sem rotina definida, controlar tudo vira a única forma de se sentir seguro.</p></div>
+      </div>
+      <div class="par">
+        <div class="visto"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 21V3M3 21h18"/><path d="M7 8l4 4 3-3 6 6"/><path d="M20 11v4h-4"/></svg></span><small>O que aparece</small><h3>Você paga agência e tráfego, mas não sabe o que volta em venda</h3></div>
+        <div class="porque"><small>O que costuma estar por trás</small><p>Ninguém do seu lado acompanhando. Sem metas e indicadores combinados (custo por contato, conversão, venda), não dá para saber se o problema está no anúncio, no atendimento ou no preço.</p></div>
+      </div>
+      <div class="par">
+        <div class="visto"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5Z"/><path d="M12 8v5M10.5 9.2c0-.7.7-1.2 1.5-1.2s1.5.4 1.5 1.1c0 1.3-3 .9-3 2.3 0 .7.7 1.1 1.5 1.1s1.5-.5 1.5-1.2"/></svg></span><small>O que aparece</small><h3>Dificuldade de cobrar, vender ou se expor</h3></div>
+        <div class="porque"><small>O que costuma estar por trás</small><p>Crenças antigas sobre dinheiro e valor. Um dia elas protegeram você; hoje só atrapalham.</p></div>
+      </div>
+      <div class="par">
+        <div class="visto"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="17" height="10" rx="2"/><path d="M22 11v2M6 10v4"/></svg></span><small>O que aparece</small><h3>Descanso e planilha nova não resolvem</h3></div>
+        <div class="porque"><small>O que costuma estar por trás</small><p>Mudar só um lado. A rotina, a cabeça e a gestão precisam mudar juntas, ou o padrão volta.</p></div>
+      </div>
+    </div>
+    <p class="fecho">Por isso eu não separo a gestão do emocional. Os números mostram onde a empresa perde; o trabalho emocional mostra por que isso continua acontecendo. É isso que eu chamo de Gestão Mente &amp; Empresa.</p>
+    <a class="textlink" href="#" data-wa="Olá, Mauricio! Me identifiquei com o que li no site e quero entender se o seu trabalho serve para o meu caso." data-ref="dor">Falar com o Mauricio sobre o meu caso</a>
+  </div>
+</section>
+
+<!-- 4. QUEM CONDUZ: FIO DOURADO DA FOTO ATÉ AS TAGS -->
+<section class="sobre" id="sobre">
+  <div class="w">
+    <h2>Quem vai conduzir o seu processo</h2>
+    <p class="lead">Passei mais de uma década como gestor nacional no varejo, formando líderes e reduzindo perdas. Lá aprendi que nenhum processo se sustenta quando a cabeça de quem lidera está no limite. Hoje junto as duas coisas.</p>
+    <div class="fio">
+      <svg class="linhas" aria-hidden="true"></svg>
+      <figure class="foto">
+        <img src="img/mauricio.jpg" alt="Mauricio Pinho, de camisa branca, olhando para a câmera" width="640" height="640" loading="lazy">
+        <figcaption>Mauricio Pinho · Fundador</figcaption>
+      </figure>
+      <ul class="papeis">
+        <li class="papel"><b>Eu audito</b><p>Leio a DRE, o fluxo de caixa e os processos para achar onde o dinheiro escapa.</p></li>
+        <li class="papel"><b>Eu cuido do emocional</b><p>Com neuropsicanálise, PNL e hipnoterapia, trabalho a ansiedade do dia a dia, a procrastinação e os padrões que levam a decidir mal.</p></li>
+        <li class="papel"><b>Eu formo pessoas</b><p>Formei mais de 100 líderes, muitos promovidos mais de quatro vezes. Hoje também formo terapeutas na Mentoria 4ª Onda e coordeno uma rede de terapeutas parceiros.</p></li>
+        <li class="papel"><b>Eu supervisiono</b><p>Acompanho o seu processo de vendas e a sua agência de marketing: tráfego pago, social selling e os números que mostram se o investimento vira cliente.</p></li>
+      </ul>
+    </div>
+    <div class="chips" aria-label="Formação e credenciais">
+      <span class="chip">Neuropsicanálise</span>
+      <span class="chip">PNL</span>
+      <span class="chip">Hipnoterapia ericksoniana</span>
+      <span class="chip">Green Belt em redução de perdas</span>
+      <span class="chip">Gestão de segurança</span>
+      <span class="chip">Marketing, tráfego e social selling</span>
+      <span class="chip ouro">Atendimento internacional online</span>
+    </div>
+    <p class="honesto">Para ser transparente: não sou psicólogo nem médico. Atuo com neuropsicanálise, PNL e hipnoterapia, e com consultoria de gestão. Quando um caso precisa de acompanhamento psicológico ou médico, eu oriento a procurar.</p>
+  </div>
+</section>
+
+<!-- 5. COMO FUNCIONA -->
+<section class="como" id="como-funciona">
+  <div class="w">
+    <h2>Como funciona, do primeiro contato ao plano</h2>
+    <p class="lead">Você não precisa decidir nada antes de conversar. O primeiro passo é entender o seu caso.</p>
+    <div class="principios">
+      <p><b>Decisão.</b> Ninguém muda sem antes decidir mudar. Por isso o processo começa com uma conversa, sem compromisso, para você decidir com clareza.</p>
+      <p><b>Comunicação.</b> Na empresa e na família, boa parte dos problemas melhora quando as pessoas passam a se entender. Trabalho isso com você, com a equipe e, quando faz sentido, com quem convive com você.</p>
+    </div>
+    <ol class="passos">
+      <li class="passo"><span class="n">1</span><h3>Respostas rápidas</h3><p>Você responde algumas perguntas e elas chegam prontas no meu WhatsApp.</p></li>
+      <li class="passo"><span class="n">2</span><h3>Sessão estratégica gratuita</h3><p>Cerca de 50 minutos, online ou presencial. Se você tem sócio ou cônjuge, ele pode participar. Saímos com o retrato do problema e o caminho indicado.</p></li>
+      <li class="passo"><span class="n">3</span><h3>Plano de acompanhamento</h3><p>Se fizer sentido para os dois, apresento o plano e o investimento. Sem pressão.</p></li>
+    </ol>
+
+    <h3 class="meses-h">O acompanhamento de 3 meses: 12 encontros de 1 hora, um por semana</h3>
+    <p class="dica-mes" style="margin:-8px 0 18px">Se o seu caso pedir, combinamos mais de um encontro por semana. Isso é definido na sessão estratégica.</p>
+    <div class="meses" role="tablist" aria-label="Meses do acompanhamento">
+      <button class="mes" role="tab" aria-selected="true" aria-controls="m1" id="t1"><b>Mês 1</b><span>Entender</span></button>
+      <button class="mes" role="tab" aria-selected="false" aria-controls="m2" id="t2" tabindex="-1"><b>Mês 2</b><span>Mudar o padrão</span></button>
+      <button class="mes" role="tab" aria-selected="false" aria-controls="m3" id="t3" tabindex="-1"><b>Mês 3</b><span>Nova rotina</span></button>
+    </div>
+    <div class="trilha" id="trilha"><span class="enche" id="trilhaBar"></span><button class="ponto" type="button" tabindex="-1" data-mes="0" style="left:16.67%" aria-label="Ver mês 1"></button><button class="ponto" type="button" tabindex="-1" data-mes="1" style="left:50%" aria-label="Ver mês 2"></button><button class="ponto" type="button" tabindex="-1" data-mes="2" style="left:83.33%" aria-label="Ver mês 3"></button></div>
+    <p class="dica-mes">Toque nos meses, nas bolinhas ou arraste o quadro para o lado.</p>
+    <div class="pane on" role="tabpanel" id="m1" aria-labelledby="t1">
+      <h3>Entender antes de mudar</h3>
+      <ul>
+        <li>Onde você está hoje e onde quer chegar, em termos concretos</li>
+        <li>Quais padrões se repetem e o que eles protegem</li>
+        <li>De onde vem a trava que mais pesa agora</li>
+        <li>No lado da empresa: leitura dos números e dos processos</li>
+      </ul>
+    </div>
+    <div class="pane" role="tabpanel" id="m2" aria-labelledby="t2" hidden>
+      <h3>Trocar respostas automáticas por escolhas</h3>
+      <ul>
+        <li>Técnicas de PNL para reduzir reações de pânico e travamento</li>
+        <li>Hipnoterapia para trabalhar medo de exposição e sensação de impostor</li>
+        <li>Revisão de crenças sobre dinheiro, cobrança e merecimento</li>
+        <li>Ensaio das novas atitudes antes de colocá-las em prática</li>
+      </ul>
+    </div>
+    <div class="pane" role="tabpanel" id="m3" aria-labelledby="t3" hidden>
+      <h3>Deixar a mudança de pé sem depender de mim</h3>
+      <ul>
+        <li>Organização da rotina, do ambiente e das relações que drenam energia</li>
+        <li>Hábitos de sono, alimentação e movimento que sustentam o foco</li>
+        <li>Prioridades claras entre vida pessoal e empresa</li>
+        <li>Um combinado de autoliderança para seguir depois do processo</li>
+      </ul>
+    </div>
+    <button class="textlink" type="button" data-quiz data-ref="jornada">Quero começar pela sessão gratuita</button>
+  </div>
+</section>
+
+<!-- 6. NA EMPRESA: OS 4 PILARES -->
+<section class="pilares" id="gestao">
+  <div class="w">
+    <h2>Na empresa: como eu tiro o negócio das suas costas</h2>
+    <p class="lead">Na maioria dos negócios que acompanho, o dono gera boa parte do faturamento, muitas vezes perto de 70%. Funciona enquanto ele aguenta. Basta uma doença, um problema na família ou um período de cansaço para o caixa cair junto. A estruturação existe para a empresa continuar de pé mesmo quando você precisa se afastar.</p>
+    <div class="pilar-grid">
+      <article class="pilar">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
+        <h3>Profissionalização da gestão</h3>
+        <p>Rotinas de gestão que não dependem da sua memória: metas, indicadores e reuniões curtas acompanhadas toda semana.</p>
+        <span class="ferr">Com treinamento de líderes</span>
+      </article>
+      <article class="pilar">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M12 6v12M7 10h1M16 14h1"/></svg></span>
+        <h3>Desvinculação financeira</h3>
+        <p>Separar o dinheiro da empresa do seu dinheiro pessoal e enxergar o resultado real, mês a mês, sem depender do quanto você atende.</p>
+        <span class="ferr">Com DRE e fluxo de caixa</span>
+      </article>
+      <article class="pilar">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.8 6 5.5"/></svg></span>
+        <h3>Desenvolvimento da equipe</h3>
+        <p>Recepção, atendimento e profissionais treinados para resolver o dia a dia com autonomia, sem passar tudo por você.</p>
+        <span class="ferr">Com treinamento de equipe</span>
+      </article>
+      <article class="pilar">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6V3Z"/><path d="M14 3v5h5M9 12h7M9 16h5"/></svg></span>
+        <h3>Redução da dependência operacional</h3>
+        <p>Eu desenho os processos da empresa: cada tarefa escrita passo a passo, com quem faz e como conferir. Assim o trabalho sai igual mesmo quando você não está.</p>
+        <span class="ferr">Com POP (Procedimento Operacional Padrão)</span>
+      </article>
+    </div>
+    <div class="pop">
+      <h3>O que é um POP, na prática?</h3>
+      <p>É um manual curto, em linguagem simples, que mostra como fazer uma tarefa do começo ao fim. Por exemplo: como agendar e confirmar um cliente, como abrir e fechar o caixa, como responder um orçamento. Com os POPs, um funcionário novo aprende mais rápido, os erros diminuem e você deixa de ser a única pessoa que sabe como as coisas funcionam.</p>
+    </div>
+    <button class="textlink" type="button" data-quiz data-ref="pilares" data-desafio="Gestão, caixa e números da empresa">Quero estruturar a minha empresa</button>
+  </div>
+</section>
+
+<!-- 7. CAMINHOS -->
+<section id="caminhos">
+  <div class="w">
+    <h2>Escolha o caminho que combina com você</h2>
+    <p class="lead">Todos começam pela sessão estratégica gratuita. Escolha o seu perfil para ver o que eu faço nele.</p>
+    <div class="switch" role="tablist" aria-label="Perfil">
+      <button role="tab" aria-selected="true" aria-controls="p-emp" id="s-emp">Sou empresário ou líder</button>
+      <button role="tab" aria-selected="false" aria-controls="p-ter" id="s-ter" tabindex="-1">Sou terapeuta ou prestador de serviço</button>
+    </div>
+
+    <div class="paths on" id="p-emp" role="tabpanel" aria-labelledby="s-emp">
+      <article class="path destaque">
+        <span class="para">Para quem está no limite</span>
+        <h3>Reorganização pessoal e emocional</h3>
+        <p>Acompanhamento de 3 meses para recuperar clareza, rotina e capacidade de decidir.</p>
+        <ul><li>12 encontros de 1 hora, um por semana</li><li>Mais de um encontro na semana, se o caso pedir</li><li>Neuropsicanálise, PNL e hipnoterapia</li><li>Você pode falar comigo pelo WhatsApp entre os encontros</li></ul>
+        <button class="btn" type="button" data-quiz data-ref="reorganizacao" data-desafio="Esgotamento, ansiedade ou travas emocionais">Agendar sessão gratuita</button>
+      </article>
+      <article class="path">
+        <span class="para">Para quem não enxerga os números</span>
+        <h3>Gestão e estruturação da empresa</h3>
+        <p>Organização que funciona no dia a dia, sem burocracia.</p>
+        <ul><li>Criação e acompanhamento da DRE</li><li>Fluxo de caixa e separação entre CPF e CNPJ</li><li>Desenho dos processos: cada tarefa escrita passo a passo (POP)</li><li>Auditoria de rotinas</li><li>Treinamento de equipe e de líderes</li></ul>
+        <a class="mini-link" href="#gestao">Ver os 4 pilares da estruturação</a>
+        <button class="btn line" type="button" data-quiz data-ref="gestao" data-desafio="Gestão, caixa e números da empresa">Agendar sessão gratuita</button>
+      </article>
+      <article class="path">
+        <span class="para">Para quem investe e não vê retorno</span>
+        <h3>Vendas e marketing sob supervisão</h3>
+        <p>Eu acompanho o seu comercial e a sua agência de perto, para o investimento em marketing virar cliente.</p>
+        <ul><li>Supervisão da agência: metas, relatórios e o que vira venda</li><li>Tráfego pago no Meta e no Google e social selling</li><li>Script de atendimento e treinamento de vendedores</li><li>Precificação e proposta clara</li><li>Equipe própria para site, redes e vídeo, se precisar</li></ul>
+        <button class="btn line" type="button" data-quiz data-ref="vendas" data-desafio="Vendas, marketing ou agência sem retorno">Agendar sessão gratuita</button>
+      </article>
+    </div>
+
+    <div class="paths dois" id="p-ter" role="tabpanel" aria-labelledby="s-ter" hidden>
+      <article class="path destaque">
+        <span class="para">Mentoria de 6 meses</span>
+        <h3>4ª Onda Gestão Ressignificar</h3>
+        <p>Para terapeutas, mentores e prestadores de serviço que querem sair das horas avulsas e montar um negócio previsível.</p>
+        <ul><li>Mês 1: posicionamento, cliente ideal e serviço principal</li><li>Mês 2: atração com redes, Google, tráfego e WhatsApp</li><li>Mês 3: atendimento e conversão</li><li>Mês 4: retenção, indicações e novos produtos</li><li>Mês 5: finanças, processos e delegação</li><li>Mês 6: parcerias e expansão</li><li>Plataforma online com as aulas gravadas</li><li>Encontros ao vivo toda semana e individuais a cada 15 dias</li><li>Suporte pelo WhatsApp</li></ul>
+        <button class="btn" type="button" data-quiz data-ref="mentoria" data-perfil="Terapeuta ou prestador(a) de serviço" data-desafio="Montar meu negócio de terapia (Mentoria 4ª Onda)">Quero saber sobre a mentoria</button>
+      </article>
+      <article class="path">
+        <span class="para">Para quem já atende</span>
+        <h3>Rede de terapeutas parceiros</h3>
+        <p>Coordeno uma rede de terapeutas com supervisão de casos. Se você quer fazer parte ou precisa de apoio na condução de casos, vamos conversar.</p>
+        <a class="btn line" href="#" data-wa="Olá, Mauricio! Sou terapeuta e quero saber sobre a rede de terapeutas parceiros." data-ref="rede">Falar sobre a rede</a>
+      </article>
+    </div>
+    <div class="rede">
+      <div>
+        <h3>Rede de profissionais parceiros</h3>
+        <p>Indico psicólogos, online ou presencial conforme a sua cidade e a especialidade que o caso pede, e neuropsicólogos para avaliação. Nós não emitimos laudos; quando o caso precisa, encaminho para quem faz. Os terapeutas parceiros também atendem em planos mensais, com valor acessível.</p>
+      </div>
+      <a class="btn line" href="#" data-wa="Olá! Vim pelo site e gostaria de uma indicação da rede de profissionais parceiros." data-ref="indicacao">Pedir indicação</a>
+    </div>
+  </div>
+</section>
+
+<!-- 7. RESULTADOS E DEPOIMENTOS -->
+<section class="resultados" id="resultados">
+  <div class="w">
+    <h2>Resultados e relatos reais</h2>
+    <p class="lead">Números de empresas que acompanhei e o que dizem as pessoas que passaram pelo processo.</p>
+    <div class="cases">
+      <div class="case"><small>Varejo, como gestor nacional</small><b>R$ 40 mi → R$ 500 mil</b><p>Perdas anuais de uma operação reduzidas em 5 anos, com procedimentos padrão, controle de fraudes, DRE e treinamento das equipes.</p></div>
+      <div class="case"><small>Loja de moda, consultoria</small><b>R$ 80 mil → R$ 140 mil</b><p>Faturamento mensal em 5 meses, com caixa separado entre pessoa física e empresa, inventário refeito, compras controladas e nova cultura de equipe.</p></div>
+    </div>
+
+    <div class="midias">
+      <figure class="vcard larga" data-nome="ceissa">
+        <div class="vbox">
+          <video playsinline muted preload="none" poster="midia/depoimento-ceissa.jpg" data-src="midia/depoimento-ceissa.mp4"></video>
+          <button class="som" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Assistir com som</span></button>
+        </div>
+        <figcaption class="cap"><b>Ceissa Viana, psicoterapeuta</b><span>Aluna da Mentoria 4ª Onda. Conta como organizou o próprio negócio.</span></figcaption>
+      </figure>
+      <figure class="vcard alta" data-nome="whatsapp">
+        <div class="vbox">
+          <video playsinline muted preload="none" poster="midia/depoimento-whatsapp.jpg" data-src="midia/depoimento-whatsapp.mp4"></video>
+          <button class="som" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Assistir com som</span></button>
+        </div>
+        <figcaption class="cap"><b>Relato enviado por WhatsApp</b><span>Cliente de terapia, nome preservado</span></figcaption>
+      </figure>
+    </div>
+    <figure class="vcard chamada" data-nome="suzeli">
+      <div class="vbox">
+        <video playsinline muted preload="none" poster="midia/depoimento-suzeli.jpg" data-poster-cel="midia/depoimento-suzeli-celular.jpg" data-src="midia/depoimento-suzeli.mp4" data-src-cel="midia/depoimento-suzeli-celular.mp4"></video>
+        <button class="som" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Assistir com som</span></button>
+      </div>
+      <figcaption class="cap"><b>Suzeli Leite</b><span>Depoimento gravado em chamada de vídeo com o Mauricio</span></figcaption>
+    </figure>
+
+    <div class="audio">
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2Z"/></svg></span>
+      <div><b>Áudio de uma cliente</b><span>Mensagem enviada por WhatsApp, nome preservado</span></div>
+      <audio controls preload="none" src="midia/audio-depoimento.mp3"></audio>
+    </div>
+
+    <div class="g-topo">
+      <div class="g-nota"><b>4,9</b><div><span class="estrelas" style="color:#B98A1F;font-size:20px" aria-hidden="true">★★★★★</span><br><span>17 avaliações no Google</span></div></div>
+      <a class="btn line" id="googleLink" href="#" target="_blank" rel="noopener" hidden>Ver todas no Google</a>
+    </div>
+    <div class="avals" id="avals">
+      <article class="av"><header><span class="ini" style="background:#1F5FA8">R</span><div><b>Rodrigo Alves</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Eu quase que morria. Eu estava em um momento muito difícil na vida, se eu contar ninguém acredita. Quando ninguém mais olhava por mim, a equipe da ressignificar me acolheu, me deu a orientação que eu precisava e agora eu estou digitando isso e chorando, pois eu lembro oque eu passei e onde estou agora. Deus foi muito bom comigo por ter indicado essas pessoas!”</p></article>
+      <article class="av"><header><span class="ini" style="background:#8E5A7A">M</span><div><b>Maria Cëissa Psicoterapeuta</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Essa clinica é maravilhosa, foi um divisor de aguas na minha vida de vdd! A clínica me acolheu de uma forma única, transmitindo paz e confiança desde o primeiro contato. O ambiente é leve e transmite segurança, e o terapeuta demonstra uma sensibilidade rara, capaz de ouvir e compreender profundamente. Cada sessão é um momento de cuidado genuíno, que transforma e fortalece. É um espaço onde me sinto verdadeiramente valorizada e apoiada”</p></article>
+      <article class="av"><header><span class="ini" style="background:#0F8C86">C</span><div><b>Cinara Delfino</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Trabalho de altíssima qualidade, trazendo uma abordagem humana diferenciada, com foco na resolução de situações críticas, seja de caráter financeiro, profissional, emocional, sentimental ou outros. Super recomendo.”</p></article>
+      <article class="av"><header><span class="ini" style="background:#5B3E8F">B</span><div><b>Barbara Vieira</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“O atendimento é acolhedor e o tratamento é conduzido de forma clara, objetiva e muito profissional. O programa terapêutico é de extrema qualidade, trazendo segurança e confiança durante todo o processo. Recomendo para quem busca um cuidado sério e humanizado.”</p></article>
+      <article class="av"><header><span class="ini" style="background:#6B8E23">L</span><div><b>Lidiane Melato</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Clínica com profissionais excelentes, atendimento acolhedor e muito humano, transmite confiança desde o primeiro contato. Recomendo muito pelo cuidado e atenção com cada pessoa.”</p></article>
+      <article class="av"><header><span class="ini" style="background:#B24C6A">B</span><div><b>Beatriz Barros</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Experiência incrível!! Consegui me curar de alguns traumas que eu tinha, e hoje me encontro muito bem graças a equipe da ressignificar! Sou muito grata por tudo!! Indico demais, profissionais de excelente qualidade.”</p></article>
+      <article class="av extra"><header><span class="ini" style="background:#5C6B7A">N</span><div><b>Neidmar Nascimento</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“A clínica Ressignificar é ótima tem ajudado muitas pessoas a romper com ciclos danosos e ressignificar a própria história para ter uma vida melhor.”</p></article>
+      <article class="av extra"><header><span class="ini" style="background:#6B7A3A">I</span><div><b>Ivanete Santos</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Não existe palavras que alcance o que é ser acolhido,com respeito, carinho e paciência.Ou seja amor pelo próximo”</p></article>
+      <article class="av extra"><header><span class="ini" style="background:#8A5A44">S</span><div><b>Suzeli Leite</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Experiência de muito acolhimento,e segurança,onde consegui saber as travas e bloqueios que tanto me indicam ao alcançar meus objetivos.”</p></article>
+      <article class="av extra"><header><span class="ini" style="background:#C2185B">C</span><div><b>Camille Araujo</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Clínica maravilhosa , que nos ajuda a seguir com mais aceitação e compreensão!!”</p></article>
+      <article class="av extra"><header><span class="ini" style="background:#2E7D32">M</span><div><b>Michele Gomes de Jesus</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Super recomendo.Atendimento personalizado.”</p></article>
+      <article class="av extra"><header><span class="ini" style="background:#455A8C">C</span><div><b>Cassio Costa</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Profissionais muito competentes”</p></article>
+      <article class="av extra"><header><span class="ini" style="background:#B2552B">J</span><div><b>Jéssica Albano</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Profissional incrível, clinica excelente!”</p></article>
+      <article class="av extra"><header><span class="ini" style="background:#7E57C2">R</span><div><b>Raissa Ketilyn</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Tive uma experiência incrível e indico demais.”</p></article>
+      <article class="av extra"><header><span class="ini" style="background:#8A3FA0">I</span><div><b>Ivone Ribeiro</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Profissional competente e muito acolhedor!”</p></article>
+      <article class="av extra"><header><span class="ini" style="background:#E07B39">G</span><div><b>Graciana Rocha</b><span class="estrelas" aria-label="5 estrelas">★★★★★</span></div></header><p>“Foi muito boa,super recomendo.”</p></article>
+      <article class="av extra"><header><span class="ini" style="background:#7A5A3A">V</span><div><b>Vanuza Cabelos</b><span class="estrelas" aria-label="4 estrelas">★★★★☆</span></div></header><p>“fui atendida on-line e super recomendo”</p></article>
+    </div>
+    <button class="btn line ver-mais" type="button" id="verMais" aria-expanded="false" aria-controls="avals">Ver as outras 11 avaliações</button>
+    <p class="fonte">Textos copiados das avaliações públicas no Google, sem edição.</p>
+    <button class="textlink" type="button" data-quiz data-ref="prova">Quero ter um resultado assim</button>
+  </div>
+</section>
+
+<!-- 8. PERGUNTAS -->
+<section class="faq" id="perguntas">
+  <div class="w">
+    <h2>Perguntas frequentes</h2>
+    <details><summary>Isso é terapia ou consultoria?</summary><p>Pode ser um, outro ou os dois. Na sessão estratégica vemos se o seu caso pede mais gestão, mais trabalho emocional ou a combinação, que é o que a maioria dos empresários precisa.</p></details>
+    <details><summary>Você é psicólogo?</summary><p>Não. Sou neuropsicanalista, com formação em PNL e hipnoterapia, e consultor de gestão. Meu trabalho é de desenvolvimento emocional e não substitui acompanhamento psicológico ou psiquiátrico. Tenho uma rede de psicólogos e neuropsicólogos parceiros e, se o seu caso pedir, eu indico.</p></details>
+    <details><summary>Posso trazer meu sócio ou meu cônjuge?</summary><p>Pode, e é recomendado, porque decisões da empresa e da família costumam envolver os dois. Se a agenda não permitir, fazemos a primeira sessão só com você e depois uma segunda sessão gratuita com o sócio ou o cônjuge.</p></details>
+    <details><summary>Posso procurar ajuda para outra pessoa da família?</summary><p>Sim. É comum um marido procurar ajuda para a esposa, ou os pais para um filho. Converso primeiro com quem me procurou e depois com a pessoa, porque o processo só funciona quando ela também decide querer.</p></details>
+    <details><summary>Você trabalha junto com a minha agência de marketing?</summary><p>Sim. Posso supervisionar a agência que você já tem: combinamos metas e indicadores, acompanho relatórios e campanhas e confiro se o atendimento está transformando os contatos em vendas. Se precisar, tenho equipe própria para tráfego, site e redes.</p></details>
+    <details><summary>O que é POP?</summary><p>POP é o Procedimento Operacional Padrão: um manual curto, em linguagem simples, que mostra como fazer uma tarefa do começo ao fim, quem faz e como conferir. É o nome usado no Brasil por empresas, clínicas e pela vigilância sanitária. Com os POPs, a equipe resolve o dia a dia sem depender de você.</p></details>
+    <details><summary>Quanto custa?</summary><p>Depende do caminho: acompanhamento de 3 meses, plano mensal ou consultoria para a empresa. O investimento é apresentado depois da sessão estratégica, quando eu já entendi o seu caso. A sessão é gratuita.</p></details>
+    <details><summary>Quanto tempo leva?</summary><p>O acompanhamento pessoal tem 3 meses, com 12 encontros de 1 hora, um por semana. Quando o caso pede, combinamos mais de um encontro na semana. A Mentoria 4ª Onda tem 6 meses. Consultorias de empresa variam conforme o diagnóstico.</p></details>
+    <details><summary>Atende online e fora do Brasil?</summary><p>Sim. Atendo online clientes no Brasil e no exterior, e presencialmente no meu consultório em Pernambuco. Também faço atendimento no local, quando o caso pede.</p></details>
+    <details><summary>O que eu conto fica entre nós?</summary><p>Sim. Tudo o que você compartilha nas sessões e no WhatsApp é tratado com sigilo.</p></details>
+    <details><summary>E se eu só quiser algumas dicas?</summary><p>A sessão estratégica é para quem quer mudar a situação agora. Se você ainda está pensando, acompanhe meus conteúdos no <a id="igLink" href="#" target="_blank" rel="noopener">Instagram</a> e me chame quando estiver pronto.</p></details>
+  </div>
+</section>
+
+<!-- 9. CHAMADA FINAL + FORMULÁRIO EM ETAPAS -->
+<section class="final" id="agendar">
+  <div class="final-media" aria-hidden="true">
+    <picture>
+      <source media="(max-width:640px)" srcset="midia/final-celular.jpg">
+      <img src="midia/final-desktop.jpg" alt="" loading="lazy">
+    </picture>
+    <video id="finalVideo" muted loop playsinline preload="none" data-desk="midia/final-desktop.mp4" data-mob="midia/final-celular.mp4"></video>
+  </div>
+  <div class="w">
+    <div class="bloco">
+      <h2>Vamos olhar o seu caso juntos?</h2>
+      <p class="lead">Responda algumas perguntas rápidas (menos de 1 minuto). As respostas chegam prontas no meu WhatsApp e, se fizer sentido, marcamos a sua sessão estratégica gratuita. As vagas dependem da agenda da semana.</p>
+    </div>
+    <div class="bloco">
+      <div class="cartao-quiz"><div class="quiz" id="quizInline"></div></div>
+      <p class="direto">Prefere conversar direto? <a href="#" data-wa="Olá, Mauricio! Vim pelo site e quero agendar a Sessão Estratégica gratuita." data-ref="final-direto">Chamar no WhatsApp</a></p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="w">
+    <p><b>Ressignificar Terapias &amp; Consultorias</b>, conduzida por Mauricio Pinho. <span id="cnpj"></span></p>
+    <p>Contato: <a href="#" data-wa="Olá, Mauricio! Vim pelo site." data-ref="rodape">WhatsApp</a> · <a id="igFoot" href="#" target="_blank" rel="noopener">Instagram</a></p>
+    <p class="disc">Os atendimentos de neuropsicanálise, PNL e hipnoterapia são de desenvolvimento emocional e não substituem acompanhamento médico, psicológico ou psiquiátrico. Em situação de crise, ligue 188 (CVV, 24 horas) ou procure o serviço de saúde mais próximo. Resultados variam de pessoa para pessoa e dependem do comprometimento de cada um.</p>
+    <p class="disc">O formulário abre o WhatsApp com a sua mensagem pronta. © <span id="ano">2026</span> Ressignificar.</p>
+  </div>
+</footer>
+
+<!-- Botões fixos: barra no celular, botão redondo no computador -->
+<div class="barra-cel" id="barraCel">
+  <button class="btn" type="button" data-quiz data-ref="barra-celular">Agendar sessão gratuita</button>
+  <a class="wa-ic" href="#" data-wa="Olá, Mauricio! Vim pelo site e quero agendar a Sessão Estratégica gratuita." data-ref="barra-whatsapp" aria-label="Falar no WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.5-.3Z"/></svg></a>
+</div>
+<a class="float" id="floatWa" href="#" data-wa="Olá, Mauricio! Vim pelo site e quero agendar a Sessão Estratégica gratuita." data-ref="flutuante" aria-label="Falar no WhatsApp">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.5-.3Z"/></svg>
+  <span>WhatsApp</span>
+</a>
+
+<!-- Janela do formulário em etapas -->
+<div class="quiz-modal" id="quizModal" hidden>
+  <div class="quiz-veu" data-fechar></div>
+  <div class="quiz-caixa" role="dialog" aria-modal="true" aria-label="Agendar sessão estratégica gratuita">
+    <button class="quiz-x" type="button" data-fechar aria-label="Fechar">×</button>
+    <div class="quiz-cab"><img src="img/logo.png" alt="" width="42" height="42"><div><b>Sessão estratégica gratuita</b><span>Leva menos de 1 minuto</span></div></div>
+    <div class="quiz" id="quizModalCorpo"></div>
+  </div>
+</div>
+
+<!-- Formulário oculto para o Netlify registrar os leads (só funciona hospedado no Netlify) -->
+<form name="sessao-estrategica" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="hidden" name="form-name" value="sessao-estrategica">
+  <input name="nome"><input name="cidade"><input name="perfil"><input name="desafio">
+  <input name="faturamento"><input name="quando"><input name="socio"><input name="origem"><input name="bot-field">
+</form>
+
+<script>
+/* ===== CONFIGURAÇÃO: edite só esta parte ===== */
+var CONFIG = {
+  whatsapp: "5581992531561",   // DDI + DDD + número, só dígitos
+  linkGoogle: "https://share.google/9r6NkjV0CTtKJt7k8",
+  instagram: "https://www.instagram.com/mauriciopinhooficial/",
+  cnpj: "",                    // ex.: "CNPJ 00.000.000/0001-00" (fica oculto enquanto vazio)
+  salvarLeadsNoNetlify: true   // registra cada formulário no painel do Netlify (Forms)
+};
+/* ============================================= */
+
+(function(){
+  var params = new URLSearchParams(location.search);
+  var campanha = params.get("utm_campaign") || params.get("ref") || "";
+  var celular = window.matchMedia("(max-width:640px)");
+  var reduz = false; /* efeitos e vídeos sempre ativos, mesmo com "animações" desligadas no sistema */
+  var economia = !!(navigator.connection && navigator.connection.saveData);
+  var temIO = "IntersectionObserver" in window;
+  var MSG_PADRAO = "Olá, Mauricio! Vim pelo site e quero agendar a Sessão Estratégica gratuita.";
+
+  function rastrear(evento, dados){
+    window.dataLayer = window.dataLayer || [];
+    var o = {event: evento}; for (var k in dados) o[k] = dados[k];
+    window.dataLayer.push(o);
+  }
+  function waLink(msg){
+    return "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(msg);
+  }
+  function abrirWa(url){
+    var w = window.open(url, "_blank");
+    if (w) { try { w.opener = null; } catch(e){} } else { location.href = url; }
+  }
+  function esc(t){ return String(t).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+  /* ---------- links diretos de WhatsApp ---------- */
+  document.querySelectorAll("[data-wa]").forEach(function(a){
+    a.href = waLink(a.dataset.wa, a.dataset.ref || "site");
+    a.target = "_blank"; a.rel = "noopener";
+    a.addEventListener("click", function(){
+      var ref = a.dataset.ref || "site";
+      rastrear("clique_whatsapp", {origem: ref});
+      if (window.fbq) fbq("track", "Contact", {content_name: ref});
+      if (window.gtag) gtag("event", "clique_whatsapp", {origem: ref});
+    });
+  });
+
+  var g = document.getElementById("googleLink");
+  if (CONFIG.linkGoogle){ g.href = CONFIG.linkGoogle; g.hidden = false; }
+  ["igLink","igFoot"].forEach(function(id){ var el = document.getElementById(id); if (el) el.href = CONFIG.instagram; });
+  if (CONFIG.cnpj) document.getElementById("cnpj").textContent = CONFIG.cnpj + ".";
+  document.getElementById("ano").textContent = new Date().getFullYear();
+
+  /* ---------- formulário em etapas (quiz) ---------- */
+  var PASSOS = [
+    {id:"perfil", q:"O que melhor descreve você?", ops:["Empresário(a) ou gestor(a)","Profissional liberal ou autônomo(a)","Terapeuta ou prestador(a) de serviço","Quero cuidar de mim"]},
+    {id:"desafio", q:"O que você quer resolver primeiro?", ops:["Esgotamento, ansiedade ou travas emocionais","Gestão, caixa e números da empresa","Vendas, marketing ou agência sem retorno","Montar meu negócio de terapia (Mentoria 4ª Onda)"]},
+    {id:"faturamento", q:"Quanto o seu negócio fatura por mês, em média?", ops:["Até R$ 20 mil","De R$ 20 mil a R$ 100 mil","Acima de R$ 100 mil","Ainda não faturo"], pular:function(r){ return r.perfil === "Quero cuidar de mim"; }},
+    {id:"quando", q:"Quando você quer começar?", ops:["Agora, é urgente","Nas próximas semanas","Ainda estou pesquisando"]},
+    {id:"contato"}
+  ];
+  var ROTULOS = {perfil:"Perfil", desafio:"Quero resolver", faturamento:"Faturamento mensal", quando:"Quando quero começar"};
+  var ICONE_OK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  var ICONE_WA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.5-.3Z"/></svg>';
+
+  function salvarNetlify(r, ref){
+    if (!CONFIG.salvarLeadsNoNetlify || !window.fetch) return;
+    var d = {"form-name":"sessao-estrategica", nome:r.nome||"", cidade:r.cidade||"", perfil:r.perfil||"", desafio:r.desafio||"", faturamento:r.faturamento||"", quando:r.quando||"", socio: r.socio ? "sim" : "não", origem: ref + (campanha ? "/" + campanha : "")};
+    var corpo = Object.keys(d).map(function(k){ return encodeURIComponent(k) + "=" + encodeURIComponent(d[k]); }).join("&");
+    try { fetch("/", {method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body:corpo, keepalive:true}).catch(function(){}); } catch(e){}
+  }
+
+  function Quiz(raiz, ref, inline){
+    this.raiz = raiz; this.ref = ref; this.inline = inline;
+    this.uid = "q" + Math.random().toString(36).slice(2,7);
+    this.iniciar({}, ref);
+  }
+  Quiz.prototype.iniciar = function(pre, ref){
+    this.r = {}; this.fixos = {}; this.feito = false; this.i = 0;
+    for (var k in pre){ this.r[k] = pre[k]; this.fixos[k] = 1; }
+    if (ref) this.ref = ref;
+    this.render(false);
+  };
+  Quiz.prototype.seq = function(){
+    var r = this.r, f = this.fixos;
+    return PASSOS.filter(function(p){ return !f[p.id] && !(p.pular && p.pular(r)); });
+  };
+  Quiz.prototype.render = function(foco){
+    var self = this, h = "";
+    if (this.feito){
+      h = '<div class="quiz-ok"><div class="ok-ic">' + ICONE_OK + '</div>' +
+          '<h3 class="quiz-q" tabindex="-1">Pronto, ' + esc(this.r.nome.split(" ")[0]) + '!</h3>' +
+          '<p>Abrimos o WhatsApp com as suas respostas. Falta só tocar em enviar.</p>' +
+          '<a class="btn wa" href="' + this.url + '" target="_blank" rel="noopener">' + ICONE_WA + 'Abrir o WhatsApp de novo</a>' +
+          '<div class="quiz-rodape" style="justify-content:center"><button type="button" class="quiz-voltar" data-recomecar>Responder de novo</button></div></div>';
+    } else {
+      var s = this.seq(), p = s[this.i], n = s.length;
+      h += '<div class="quiz-topo"><span class="quiz-passo">Passo ' + (this.i + 1) + ' de ' + n + '</span><div class="quiz-barra"><span style="width:' + Math.round((this.i + 1) / n * 100) + '%"></span></div></div>';
+      if (p.id !== "contato"){
+        h += '<h3 class="quiz-q" tabindex="-1" id="' + this.uid + 't">' + esc(p.q) + '</h3><div class="quiz-ops" role="group" aria-labelledby="' + this.uid + 't">';
+        p.ops.forEach(function(o){ h += '<button type="button" class="quiz-op" aria-pressed="' + (self.r[p.id] === o) + '" data-v="' + esc(o) + '">' + esc(o) + '</button>'; });
+        h += '</div>';
+      } else {
+        h += '<h3 class="quiz-q" tabindex="-1">Última etapa: como você se chama?</h3>' +
+             '<form class="quiz-form" novalidate>' +
+             '<label>Seu nome<input name="nome" autocomplete="name" maxlength="60" required value="' + esc(this.r.nome || "") + '"></label>' +
+             '<label><span>Cidade ou país <span class="opc">(opcional)</span></span><input name="cidade" autocomplete="address-level2" maxlength="60" placeholder="Ex.: Recife ou Lisboa" value="' + esc(this.r.cidade || "") + '"></label>' +
+             '<label class="quiz-check"><input type="checkbox" name="socio"' + (this.r.socio ? ' checked' : '') + '><span>Tenho sócio(a) ou cônjuge que pode participar da sessão</span></label>' +
+             '<p class="quiz-erro" role="alert" hidden>Escreva o seu nome para o Mauricio saber com quem está falando.</p>' +
+             '<button class="btn wa" type="submit">' + ICONE_WA + 'Enviar e abrir o WhatsApp</button>' +
+             '<p class="quiz-nota">Suas respostas chegam prontas no WhatsApp do Mauricio. Sigilo total.</p></form>';
+      }
+      h += '<div class="quiz-rodape">' + (this.i > 0 ? '<button type="button" class="quiz-voltar">Voltar</button>' : '<span></span>') +
+           '<a class="quiz-direto" href="' + waLink(MSG_PADRAO, this.ref + "-direto") + '" target="_blank" rel="noopener">Prefiro falar direto no WhatsApp</a></div>';
+    }
+    this.raiz.innerHTML = h;
+
+    this.raiz.querySelectorAll(".quiz-op").forEach(function(b){
+      b.addEventListener("click", function(){
+        var passo = self.seq()[self.i];
+        self.r[passo.id] = b.dataset.v;
+        self.raiz.querySelectorAll(".quiz-op").forEach(function(x){ x.setAttribute("aria-pressed", x === b); });
+        if (self.i === 0) rastrear("quiz_iniciado", {origem: self.ref});
+        setTimeout(function(){ self.i++; self.render(true); }, 170);
+      });
+    });
+    var volta = this.raiz.querySelector(".quiz-voltar:not([data-recomecar])");
+    if (volta) volta.addEventListener("click", function(){ self.i = Math.max(0, self.i - 1); self.render(true); });
+    var rec = this.raiz.querySelector("[data-recomecar]");
+    if (rec) rec.addEventListener("click", function(){ var pre = {}; for (var k in self.fixos) pre[k] = self.r[k]; self.iniciar(pre); self.foco(); });
+    var dir = this.raiz.querySelector(".quiz-direto");
+    if (dir) dir.addEventListener("click", function(){ rastrear("clique_whatsapp", {origem: self.ref + "-direto"}); });
+    var form = this.raiz.querySelector(".quiz-form");
+    if (form) form.addEventListener("submit", function(e){
+      e.preventDefault();
+      var nome = form.nome.value.trim();
+      if (!nome){ form.querySelector(".quiz-erro").hidden = false; form.nome.focus(); return; }
+      self.r.nome = nome; self.r.cidade = form.cidade.value.trim(); self.r.socio = form.socio.checked;
+      self.enviar();
+    });
+    if (foco) this.foco();
+  };
+  Quiz.prototype.foco = function(){
+    var t = this.raiz.querySelector(".quiz-form input") || this.raiz.querySelector(".quiz-q");
+    if (this.inline){
+      var topo = this.raiz.getBoundingClientRect().top;
+      if (topo < 80) window.scrollBy({top: topo - 96, behavior: reduz ? "auto" : "smooth"});
+    }
+    if (t && !(this.inline && t.tagName === "INPUT" && celular.matches)) { try { t.focus({preventScroll:true}); } catch(e){ t.focus(); } }
+  };
+  Quiz.prototype.enviar = function(){
+    var r = this.r, linhas = ["Olá, Mauricio! Vim pelo site e quero a Sessão Estratégica gratuita.", "Nome: " + r.nome];
+    if (r.cidade) linhas.push("Cidade/país: " + r.cidade);
+    ["perfil","desafio","faturamento","quando"].forEach(function(k){ if (r[k]) linhas.push(ROTULOS[k] + ": " + r[k]); });
+    if (r.socio) linhas.push("Sócio(a) ou cônjuge pode participar da sessão");
+    this.url = waLink(linhas.join("\n"), this.ref);
+    abrirWa(this.url);
+    salvarNetlify(r, this.ref);
+    rastrear("formulario_enviado", {origem:this.ref, perfil:r.perfil||"", desafio:r.desafio||"", faturamento:r.faturamento||"", quando:r.quando||""});
+    if (window.fbq) fbq("track", "Lead");
+    if (window.gtag) gtag("event", "generate_lead", {origem: this.ref});
+    this.feito = true; this.render(true);
+  };
+
+  var quizInline = new Quiz(document.getElementById("quizInline"), "formulario-final", true);
+  var modal = document.getElementById("quizModal");
+  var caixa = modal.querySelector(".quiz-caixa");
+  var quizModal = new Quiz(document.getElementById("quizModalCorpo"), "quiz", false);
+  var gatilho = null;
+
+  function abrirQuiz(btn){
+    gatilho = btn;
+    var pre = {};
+    if (btn.dataset.perfil) pre.perfil = btn.dataset.perfil;
+    if (btn.dataset.desafio) pre.desafio = btn.dataset.desafio;
+    quizModal.iniciar(pre, "quiz-" + (btn.dataset.ref || "site"));
+    modal.hidden = false;
+    document.documentElement.classList.add("trava");
+    caixa.scrollTop = 0;
+    rastrear("quiz_aberto", {origem: btn.dataset.ref || "site"});
+    var primeiro = caixa.querySelector(".quiz-op");
+    if (primeiro) { try { primeiro.focus({preventScroll:true}); } catch(e){} }
+  }
+  function fecharQuiz(){
+    modal.hidden = true;
+    document.documentElement.classList.remove("trava");
+    if (gatilho) { try { gatilho.focus({preventScroll:true}); } catch(e){} }
+  }
+  document.querySelectorAll("[data-quiz]").forEach(function(b){
+    b.addEventListener("click", function(e){ e.preventDefault(); abrirQuiz(b); });
+  });
+  modal.addEventListener("click", function(e){ if (e.target.closest("[data-fechar]")) fecharQuiz(); });
+  document.addEventListener("keydown", function(e){
+    if (modal.hidden) return;
+    if (e.key === "Escape") { fecharQuiz(); return; }
+    if (e.key === "Tab"){
+      var f = Array.prototype.filter.call(caixa.querySelectorAll("button,a[href],input"), function(x){ return x.offsetParent !== null; });
+      if (!f.length) return;
+      if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length-1].focus(); }
+      else if (!e.shiftKey && document.activeElement === f[f.length-1]) { e.preventDefault(); f[0].focus(); }
+    }
+  });
+
+  /* ---------- cabeçalho: transparente sobre o vídeo, sólido ao rolar ---------- */
+  var topo = document.querySelector(".topo"), agendado = false;
+  function checaTopo(){ agendado = false; topo.classList.toggle("solido", window.scrollY > 30); }
+  window.addEventListener("scroll", function(){ if (!agendado){ agendado = true; requestAnimationFrame(checaTopo); } }, {passive:true});
+  checaTopo();
+
+  /* ---------- vídeo do topo: pausa fora da tela ---------- */
+  var hv = document.getElementById("heroVideo");
+  if (hv && temIO){
+    new IntersectionObserver(function(es){
+      if (!document.body.contains(hv)) return;
+      if (es[0].isIntersecting){ var p = hv.play(); if (p && p.catch) p.catch(function(){}); } else hv.pause();
+    }).observe(document.getElementById("inicio"));
+  }
+
+  /* ---------- vídeo da chamada final: carrega só quando chegar perto ---------- */
+  var fv = document.getElementById("finalVideo");
+  if (fv){
+    if (!temIO){ fv.muted = true; fv.src = celular.matches ? fv.dataset.mob : fv.dataset.desk; fv.autoplay = true; fv.classList.add("rodando"); }
+    else {
+      new IntersectionObserver(function(es){
+        if (!document.body.contains(fv)) return;
+        if (es[0].isIntersecting){
+          if (!fv.getAttribute("src")){
+            fv.muted = true;
+            fv.addEventListener("playing", function(){ fv.classList.add("rodando"); });
+            fv.addEventListener("error", function(){ if (fv.parentNode) fv.parentNode.removeChild(fv); });
+            fv.src = celular.matches ? fv.dataset.mob : fv.dataset.desk;
+          }
+          var p = fv.play(); if (p && p.catch) p.catch(function(){});
+        } else if (fv.getAttribute("src")) fv.pause();
+      }, {rootMargin: "250px 0px"}).observe(document.getElementById("agendar"));
+    }
+  }
+
+  /* ---------- vídeos de depoimento: prévia sem som + "toque para ouvir" ---------- */
+  var cards = Array.prototype.slice.call(document.querySelectorAll(".vcard"));
+  var midiasComSom = [];
+  function fonte(v){ return (celular.matches && v.dataset.srcCel) ? v.dataset.srcCel : v.dataset.src; }
+  function pausarOutros(atual){
+    midiasComSom.forEach(function(m){ if (m !== atual && !m.paused) m.pause(); });
+  }
+  cards.forEach(function(card){
+    var v = card.querySelector("video"), b = card.querySelector(".som"), rot = b.querySelector("span");
+    if (celular.matches && v.dataset.posterCel) v.poster = v.dataset.posterCel;
+    midiasComSom.push(v);
+    v.addEventListener("error", function(){
+      /* se o navegador não conseguir tocar aqui, o botão abre o arquivo do vídeo em outra aba */
+      card.classList.add("falhou"); v.controls = false; rot.textContent = "Abrir vídeo";
+    });
+    function ativarSom(){
+      if (!v.getAttribute("src")) v.src = fonte(v);
+      card.classList.add("com-som");
+      v.loop = false; v.muted = false; v.controls = true;
+      try { v.currentTime = 0; } catch(e){}
+      var p = v.play(); if (p && p.catch) p.catch(function(){});
+      rastrear("video_depoimento", {video: card.dataset.nome});
+    }
+    b.addEventListener("click", function(e){ e.stopPropagation(); if (card.classList.contains("falhou")) { window.open(fonte(v), "_blank"); return; } ativarSom(); });
+    card.querySelector(".vbox").addEventListener("click", function(){ if (!card.classList.contains("com-som") && !card.classList.contains("falhou")) ativarSom(); });
+    v.addEventListener("play", function(){ if (!v.muted) pausarOutros(v); });
+    v.addEventListener("ended", function(){ card.classList.remove("com-som"); v.controls = false; rot.textContent = "Assistir de novo"; });
+    card._rot = rot;
+  });
+  var aud = document.querySelector(".audio audio");
+  if (aud){ midiasComSom.push(aud); aud.addEventListener("play", function(){ pausarOutros(aud); rastrear("audio_depoimento", {}); }); }
+
+  if (!economia && !reduz && temIO){
+    var obV = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        var card = e.target, v = card.querySelector("video");
+        if (card.classList.contains("falhou")) return;
+        if (card.classList.contains("com-som")){ if (!e.isIntersecting) v.pause(); return; }
+        if (e.isIntersecting){
+          if (!v.getAttribute("src")) v.src = fonte(v);
+          v.muted = true; v.loop = true;
+          var p = v.play();
+          if (p && p.then) p.then(function(){ card._rot.textContent = "Toque para ouvir"; card.querySelector(".som svg").innerHTML = '<path d="M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4Zm-2.5-9.8v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6Z"/>'; }).catch(function(){});
+        } else if (v.getAttribute("src")) v.pause();
+      });
+    }, {threshold: .55});
+    cards.forEach(function(c){ obV.observe(c); });
+  }
+
+  /* ---------- abas (meses e perfis) ---------- */
+  function abas(lista, aoTrocar){
+    var btns = Array.prototype.slice.call(lista.querySelectorAll('[role="tab"]'));
+    function sel(b){
+      var idx = btns.indexOf(b);
+      btns.forEach(function(x){
+        var on = x === b;
+        x.setAttribute("aria-selected", on); x.tabIndex = on ? 0 : -1;
+        var p = document.getElementById(x.getAttribute("aria-controls"));
+        p.hidden = !on; p.classList.toggle("on", on);
+      });
+      if (aoTrocar) aoTrocar(idx);
+    }
+    btns.forEach(function(b, i){
+      b.addEventListener("click", function(){ sel(b); });
+      b.addEventListener("keydown", function(e){
+        if (e.key === "ArrowRight" || e.key === "ArrowLeft"){
+          var n = btns[(i + (e.key === "ArrowRight" ? 1 : btns.length - 1)) % btns.length];
+          sel(n); n.focus();
+        }
+      });
+    });
+    return sel;
+  }
+  var barra = document.getElementById("trilhaBar"), marcas = document.querySelectorAll(".ponto");
+  var POS = ["16.67%","50%","100%"], trilhaVista = false, mesAtual = 0;
+  function pintarTrilha(i){
+    mesAtual = i;
+    if (!trilhaVista) return;
+    barra.style.width = POS[i];
+    marcas.forEach(function(m, k){ m.classList.toggle("on", k <= i); m.classList.toggle("atual", k === i); });
+  }
+  var selMes = abas(document.querySelector(".meses"), pintarTrilha);
+  var tabsMes = document.querySelectorAll(".meses .mes");
+  marcas.forEach(function(p){ p.addEventListener("click", function(e){ e.stopPropagation(); selMes(tabsMes[+p.dataset.mes]); }); });
+  document.getElementById("trilha").addEventListener("click", function(e){
+    var r = this.getBoundingClientRect();
+    selMes(tabsMes[Math.min(2, Math.max(0, Math.floor((e.clientX - r.left) / r.width * 3)))]);
+  });
+  /* arrastar o quadro do mês para o lado (celular) */
+  document.querySelectorAll(".como .pane").forEach(function(pane){
+    var x0 = null, y0 = null;
+    pane.addEventListener("touchstart", function(e){ x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive:true});
+    pane.addEventListener("touchend", function(e){
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5){
+        var n = Math.min(2, Math.max(0, mesAtual + (dx < 0 ? 1 : -1)));
+        if (n !== mesAtual) selMes(tabsMes[n]);
+      }
+    }, {passive:true});
+  });
+  abas(document.querySelector(".switch"));
+  if (temIO && !reduz){
+    var obT = new IntersectionObserver(function(es){
+      if (es[0].isIntersecting){ trilhaVista = true; pintarTrilha(mesAtual); obT.disconnect(); }
+    }, {threshold: .6});
+    obT.observe(document.querySelector(".trilha"));
+  } else { trilhaVista = true; pintarTrilha(0); }
+
+  /* ---------- avaliações: mostrar mais ---------- */
+  var vm = document.getElementById("verMais"), lista = document.getElementById("avals");
+  vm.addEventListener("click", function(){
+    var aberto = lista.classList.toggle("todas");
+    vm.setAttribute("aria-expanded", aberto);
+    vm.textContent = aberto ? "Mostrar menos" : "Ver as outras 11 avaliações";
+    if (!aberto) lista.scrollIntoView({block:"start"});
+  });
+
+  /* ---------- barra fixa (celular) e botão flutuante (computador) ---------- */
+  var barraCel = document.getElementById("barraCel"), fl = document.getElementById("floatWa");
+  var heroVis = true, finVis = false;
+  function atualizaFixos(){ var mostra = !heroVis && !finVis; barraCel.classList.toggle("show", mostra); fl.classList.toggle("show", mostra); }
+  if (temIO){
+    new IntersectionObserver(function(e){ heroVis = e[0].isIntersecting; atualizaFixos(); }).observe(document.getElementById("heroCta"));
+    new IntersectionObserver(function(e){ finVis = e[0].isIntersecting; atualizaFixos(); }, {threshold: .15}).observe(document.getElementById("agendar"));
+  } else { barraCel.classList.add("show"); fl.classList.add("show"); }
+
+  /* ================= EFEITOS ================= */
+
+  /* contador dos números + brilho dourado ao terminar */
+  function contar(el, comBrilho){
+    var alvo = el.textContent, dur = 1300, ini = null;
+    if (!/\d/.test(alvo)) return;
+    function passo(t){
+      if (ini === null) ini = t;
+      var k = Math.min((t - ini) / dur, 1), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = (k === 1) ? alvo : alvo.replace(/\d+/g, function(n){ return Math.round(parseInt(n, 10) * e).toString(); });
+      if (k < 1) requestAnimationFrame(passo);
+      else if (comBrilho){ el.classList.add("estouro"); }
+    }
+    requestAnimationFrame(passo);
+  }
+  if (temIO && !reduz){
+    var obN = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if (e.isIntersecting){ contar(e.target, e.target.closest(".num")); obN.unobserve(e.target); } });
+    }, {threshold: .7});
+    document.querySelectorAll(".num b, .case b").forEach(function(el){ obN.observe(el); });
+  }
+
+  /* spotlight nos cards de dor: segue o mouse no computador, acende no centro da tela no celular */
+  var pares = document.querySelectorAll(".par");
+  if (window.matchMedia("(hover:hover)").matches){
+    pares.forEach(function(c){
+      c.addEventListener("pointermove", function(e){
+        var r = c.getBoundingClientRect();
+        c.style.setProperty("--mx", (e.clientX - r.left) + "px");
+        c.style.setProperty("--my", (e.clientY - r.top) + "px");
+      });
+    });
+  } else if (temIO){
+    var obP = new IntersectionObserver(function(es){
+      es.forEach(function(e){ e.target.classList.toggle("aceso", e.isIntersecting); });
+    }, {rootMargin: "-38% 0px -42% 0px"});
+    pares.forEach(function(c){ obP.observe(c); });
+  }
+
+  /* fio dourado: sai da foto e vai acendendo cada tag */
+  var fio = document.querySelector(".fio");
+  if (fio){
+    var NS = "http://www.w3.org/2000/svg";
+    var svg = fio.querySelector("svg.linhas"), foto = fio.querySelector(".foto img"), legenda = fio.querySelector(".foto figcaption");
+    var papeis = Array.prototype.slice.call(fio.querySelectorAll(".papel"));
+    var ativos = papeis.map(function(){ return false; });
+    var origem = document.createElementNS(NS, "circle"); origem.setAttribute("r", "5");
+    var linhas = papeis.map(function(){
+      var p = document.createElementNS(NS, "path"), c = document.createElementNS(NS, "circle");
+      c.setAttribute("r", "4.5"); svg.appendChild(p); svg.appendChild(c);
+      return {p: p, c: c, len: 0};
+    });
+    svg.appendChild(origem);
+    var animar = temIO && !reduz;
+    if (animar) fio.classList.add("anima");
+
+    function desenhar(){
+      var b = fio.getBoundingClientRect(), f = foto.getBoundingClientRect();
+      if (!b.width || !f.width) return;
+      var lado = window.matchMedia("(min-width:961px)").matches;
+      svg.setAttribute("viewBox", "0 0 " + b.width + " " + b.height);
+      var ox, oy;
+      if (lado){ ox = f.right - b.left; oy = f.top - b.top + f.height / 2; }
+      else { var lb = legenda.getBoundingClientRect(); ox = f.left - b.left + f.width / 2; oy = Math.max(f.bottom, lb.bottom) - b.top + 2; }
+      origem.setAttribute("cx", ox); origem.setAttribute("cy", oy);
+      origem.style.display = lado ? "none" : "";
+      papeis.forEach(function(el, i){
+        var r = el.getBoundingClientRect(), tx = r.left - b.left, ty = r.top - b.top + Math.min(r.height / 2, 32), d;
+        if (lado){
+          var sy = Math.max(f.top - b.top + 28, Math.min(f.bottom - b.top - 28, ty)), meio = (tx - ox) * .5;
+          d = "M" + ox + "," + sy + " C" + (ox + meio) + "," + sy + " " + (tx - meio) + "," + ty + " " + (tx - 2) + "," + ty;
+        } else {
+          var sx = 14;
+          d = "M" + ox + "," + oy + " L" + ox + "," + (oy + 10) +
+              " C" + ox + "," + (oy + 34) + " " + sx + "," + (oy + 12) + " " + sx + "," + (oy + 40) +
+              " L" + sx + "," + (ty - 12) + " Q" + sx + "," + ty + " " + (sx + 12) + "," + ty + " L" + (tx - 2) + "," + ty;
+        }
+        var L = linhas[i]; L.p.setAttribute("d", d);
+        L.c.setAttribute("cx", tx - 2); L.c.setAttribute("cy", ty);
+        L.len = L.p.getTotalLength();
+        L.p.style.transition = "none";
+        if (L.feito || !animar){ L.p.style.strokeDasharray = "none"; L.p.style.strokeDashoffset = "0"; }
+        else { L.p.style.strokeDasharray = L.len; L.p.style.strokeDashoffset = L.len; }
+      });
+      origem.classList.add("on");
+    }
+    function acender(i, atraso){
+      if (ativos[i]) return;
+      ativos[i] = true;
+      var L = linhas[i], el = papeis[i];
+      setTimeout(function(){
+        L.feito = true;
+        L.p.style.strokeDasharray = L.len; L.p.style.strokeDashoffset = L.len;
+        L.p.getBoundingClientRect();
+        L.p.style.transition = "stroke-dashoffset 1.1s cubic-bezier(.45,0,.2,1)";
+        L.p.style.strokeDashoffset = "0";
+        setTimeout(function(){ el.classList.add("on"); L.c.classList.add("on"); }, 850);
+      }, atraso);
+    }
+    desenhar();
+    if (!animar){ papeis.forEach(function(el, i){ el.classList.add("on"); linhas[i].c.classList.add("on"); ativos[i] = true; }); }
+    else {
+      var obF = new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if (!e.isIntersecting) return;
+          var i = papeis.indexOf(e.target), atraso = 0;
+          for (var j = 0; j <= i; j++){ if (!ativos[j]){ acender(j, atraso); atraso += 320; } }
+          obF.unobserve(e.target);
+        });
+      }, {rootMargin: "0px 0px -30% 0px"});
+      papeis.forEach(function(el){ obF.observe(el); });
+    }
+    var tmr;
+    function redesenhar(){ clearTimeout(tmr); tmr = setTimeout(desenhar, 120); }
+    window.addEventListener("resize", redesenhar);
+    window.addEventListener("load", desenhar);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(desenhar);
+    if ("ResizeObserver" in window) new ResizeObserver(redesenhar).observe(fio);
+    foto.addEventListener("load", desenhar);
+  }
+})();
+</script>
+</body>
+</html>
