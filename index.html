@@ -768,12 +768,6 @@ footer a.membros-rodape svg{width:18px;height:18px}
       <figcaption class="cap"><b>Suzeli Leite</b><span>Depoimento gravado em chamada de vídeo com o Mauricio</span></figcaption>
     </figure>
 
-    <div class="audio">
-      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2Z"/></svg></span>
-      <div><b>Áudio de uma cliente</b><span>Mensagem enviada por WhatsApp, nome preservado</span></div>
-      <audio controls preload="none" src="midia/audio-depoimento.mp3"></audio>
-    </div>
-
     <div class="g-topo">
       <div class="g-nota"><b>4,9</b><div><span class="estrelas" style="color:#B98A1F;font-size:20px" aria-hidden="true">★★★★★</span><br><span>17 avaliações no Google</span></div></div>
       <a class="btn line" id="googleLink" href="#" target="_blank" rel="noopener" hidden>Ver todas no Google</a>
@@ -1150,9 +1144,6 @@ var d = {"form-name":"sessao-estrategica", nome:r.nome||"", cidade:r.cidade||"",
     v.addEventListener("ended", function(){ card.classList.remove("com-som"); v.controls = false; rot.textContent = "Assistir de novo"; });
     card._rot = rot;
   });
-  var aud = document.querySelector(".audio audio");
-  if (aud){ midiasComSom.push(aud); aud.addEventListener("play", function(){ pausarOutros(aud); rastrear("audio_depoimento", {}); }); }
-
   if (!economia && !reduz && temIO){
     var obV = new IntersectionObserver(function(es){
       es.forEach(function(e){
