@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minha conta | Ressignificar</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+<div class="carregando" id="carregando">Carregando...</div>
+<div id="painel" hidden>
+  <header class="topo-painel">
+    <div class="marca"><img src="img/logo.png" alt=""><b>Ressignificar</b></div>
+    <div class="usuario">
+      <span data-nome-usuario></span>
+      <button class="sair" data-sair>Sair</button>
+    </div>
+  </header>
+  <main class="conteudo-painel">
+    <a class="voltar" id="voltar" href="index.html">← Voltar ao meu painel</a>
+    <h1>Minha conta</h1>
+    <p class="sub" id="meuEmail"></p>
+    <div class="cartao">
+      <h2>Seu nome</h2>
+      <form id="formNome" class="f" novalidate>
+        <label for="nome">Como você quer ser chamado(a)</label>
+        <input id="nome" maxlength="80" required>
+        <div class="acoes"><button class="btn auto" type="submit">Salvar nome</button></div>
+      </form>
+    </div>
+    <div class="cartao" id="cartaoDados" hidden>
+      <h2>Meus dados</h2>
+      <p class="ajuda">Informações opcionais do seu cadastro. Preencha só o que quiser.</p>
+      <form id="formDados" class="f" novalidate>
+        <div><label for="dEndereco">Endereço</label><input id="dEndereco" maxlength="300" placeholder="Rua, número, bairro, cidade e estado"></div>
+        <div class="grade g3" style="margin-top:12px">
+          <div><label for="dCpf">CPF</label><input id="dCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00"></div>
+          <div><label for="dProf">Profissão</label><input id="dProf" maxlength="120"></div>
+          <div><label for="dEc">Estado civil</label><select id="dEc"><option value="">Não informar</option><option value="solteiro">Solteiro(a)</option><option value="casado">Casado(a)</option><option value="uniao_estavel">União estável</option><option value="separado">Separado(a)</option><option value="divorciado">Divorciado(a)</option><option value="viuvo">Viúvo(a)</option></select></div>
+        </div>
+        <div class="acoes"><button class="btn auto" type="submit">Salvar meus dados</button></div>
+      </form>
+    </div>
+    <div class="cartao">
+      <h2>E-mail de acesso</h2>
+      <p class="ajuda">Este é o e-mail que você usa para entrar. Ao trocar, o login muda na hora.</p>
+      <form id="formEmail" class="f" novalidate>
+        <label for="emailNovo">Novo e-mail</label>
+        <input id="emailNovo" type="email" maxlength="120" required placeholder="nome@exemplo.com">
+        <div class="acoes"><button class="btn auto" type="submit">Salvar e-mail</button></div>
+      </form>
+    </div>
+    <div class="cartao">
+      <h2>Lembretes por e-mail</h2>
+      <p class="ajuda">Avisos de pagamento, de ações com prazo vencido e de DRE sem lançamento.</p>
+      <div class="checks"><label><input type="checkbox" id="querLembretes"> Quero receber lembretes por e-mail</label></div>
+    </div>
+    <div class="cartao">
+      <h2>Trocar a senha</h2>
+      <p class="ajuda">Use pelo menos 8 caracteres. Misturar letras, números e símbolos deixa a senha mais forte.</p>
+      <form id="formSenha" class="f" novalidate>
+        <div class="grade g3">
+          <div><label for="atual">Senha atual</label><input id="atual" type="password" autocomplete="current-password" required></div>
+          <div><label for="nova">Nova senha</label><input id="nova" type="password" autocomplete="new-password" minlength="8" required></div>
+          <div><label for="nova2">Repita a nova senha</label><input id="nova2" type="password" autocomplete="new-password" minlength="8" required></div>
+        </div>
+        <div class="acoes"><button class="btn auto" type="submit">Trocar senha</button></div>
+      </form>
+    </div>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/meus-dados.js"></script>
+<script>
+(async function () {
+  const eu = await protegerPagina(["master", "suporte", "cliente", "vendedor"]);
+  if (!eu) return;
+  document.getElementById("voltar").href = PAINEL_DO_PAPEL[eu.papel];
+  document.getElementById("meuEmail").textContent = "Acesso: " + eu.email;
+  document.getElementById("nome").value = eu.nome;
+
+  const rp = await supa().from("preferencias").select("dados").eq("perfil_id", eu.id).maybeSingle();
+  let prefs = (rp.data && rp.data.dados) || {};
+  const ql = document.getElementById("querLembretes");
+  ql.checked = prefs.lembretes !== false;
+  ql.addEventListener("change", async function () {
+    prefs = Object.assign({}, prefs, { lembretes: ql.checked });
+    const { error } = await supa().from("preferencias").upsert({ perfil_id: eu.id, dados: prefs, atualizado_em: new Date().toISOString() }, { onConflict: "perfil_id" });
+    if (error) { aviso("Não foi possível salvar.", true); ql.checked = !ql.checked; return; }
+    aviso(ql.checked ? "Você vai receber os lembretes por e-mail." : "Lembretes por e-mail desligados.");
+  });
+
+  document.getElementById("formNome").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const nome = document.getElementById("nome").value.trim();
+    if (nome.length < 2) { aviso("Escreva um nome com pelo menos 2 letras.", true); return; }
+    const r = await chamarServidor({ acao: "meu_nome", nome: nome });
+    if (!r.ok) { aviso(r.erro, true); return; }
+    document.querySelectorAll("[data-nome-usuario]").forEach(function (el) { el.textContent = nome; });
+    aviso("Nome salvo.");
+  });
+
+  document.getElementById("emailNovo").value = eu.email || "";
+  document.getElementById("formEmail").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const email = document.getElementById("emailNovo").value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { aviso("E-mail inválido.", true); return; }
+    if (email === eu.email) { aviso("Esse já é o seu e-mail."); return; }
+    if (!confirm("Trocar o e-mail de acesso para " + email + "?\nVocê vai usar esse e-mail no próximo login.")) return;
+    const b = this.querySelector("[type=submit]"); b.disabled = true;
+    const r = await chamarServidor({ acao: "meu_email", email: email });
+    b.disabled = false;
+    if (!r.ok) { aviso(r.erro, true); return; }
+    aviso("E-mail trocado! Use o novo no próximo login.");
+    document.getElementById("meuEmail").textContent = email;
+  });
+
+  document.getElementById("formSenha").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const atual = document.getElementById("atual").value;
+    const nova = document.getElementById("nova").value;
+    const nova2 = document.getElementById("nova2").value;
+    if (nova.length < 8) { aviso("A nova senha precisa ter pelo menos 8 caracteres.", true); return; }
+    if (nova !== nova2) { aviso("As duas novas senhas não estão iguais.", true); return; }
+    const conf = await supa().auth.signInWithPassword({ email: eu.email, password: atual });
+    if (conf.error) { aviso("A senha atual está incorreta.", true); return; }
+    const { error } = await supa().auth.updateUser({ password: nova });
+    if (error) { aviso("Não foi possível trocar a senha. Tente uma senha diferente.", true); return; }
+    this.reset();
+    aviso("Senha trocada com sucesso.");
+  });
+})();
+</script>
+</body>
+</html>
