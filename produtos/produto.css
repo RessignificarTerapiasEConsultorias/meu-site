@@ -82,9 +82,6 @@
 .compra-abas{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--sand);border-radius:14px;padding:5px;margin-bottom:18px}
 .compra-abas button{min-height:48px;border:0;border-radius:10px;background:transparent;font:700 15.5px var(--sans);color:var(--muted);cursor:pointer}
 .compra-abas button[aria-selected=true]{background:#fff;color:var(--navy);box-shadow:0 2px 8px rgba(11,31,58,.1)}
-.ja-cliente{display:none;margin:0 0 14px;padding:14px;border-radius:12px;background:#FFF6DD;border:1px solid #EAD9A5;color:#5C4500;font-size:15.5px}
-.ja-cliente.on{display:block}
-.ja-cliente b{display:block;font-size:16.5px;margin-bottom:4px}
 .ja-cliente button{margin-top:10px;border:0;border-radius:10px;background:var(--navy);color:#fff;font:700 15px var(--sans);padding:11px 16px;cursor:pointer}
 .logada{display:flex;gap:12px;align-items:center;background:var(--sand);border-radius:14px;padding:14px;margin-bottom:16px}
 .logada .ini{width:44px;height:44px;border-radius:50%;background:var(--navy);color:var(--gold2);display:flex;align-items:center;justify-content:center;font:600 18px var(--serif);flex:none}

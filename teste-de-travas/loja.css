@@ -135,3 +135,8 @@ footer a{color:#DCE3F1}
 .link-previa{margin-top:6px;font-size:14.5px;color:var(--muted);word-break:break-all}
 .link-previa.livre{color:#1D5B37;font-weight:600}
 .link-previa.ocupado{color:var(--erro);font-weight:600}
+
+/* aviso "você já é cliente" (compras pelo site) */
+.ja-cliente{display:none;margin:0 0 14px;padding:14px;border-radius:12px;background:#FFF6DD;border:1px solid #EAD9A5;color:#5C4500;font-size:15.5px}
+.ja-cliente.on{display:block}
+.ja-cliente b{display:block;font-size:16.5px;margin-bottom:4px}

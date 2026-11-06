@@ -82,6 +82,7 @@
       <h2 style="text-align:center">Garanta o seu teste</h2>
       <p class="lead" style="text-align:center;margin:0 auto 22px">Preencha os dados abaixo e você vai para a página de pagamento. O e-mail será o seu login.</p>
       <form id="formCompra" novalidate>
+        <div class="ja-cliente" id="cJaCliente" role="status"><b>Você já é cliente da Ressignificar!</b><span id="cJaTxt"></span></div>
         <div class="campo">
           <label for="cNome">Nome completo</label>
           <input type="text" id="cNome" name="nome" autocomplete="name" required maxlength="80">
@@ -174,6 +175,36 @@
     var d = this.value.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "").slice(0, 11);
     this.value = d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d.length > 2 ? "(" + d.slice(0, 2) + ") " + d.slice(2) : d;
   });
+
+  /* já é cliente? avisa que o teste entra na conta que ela já tem (mesmo e-mail, mesma senha) */
+  var ultimaChecagem = "";
+  function checarCliente() {
+    var email = $("#cEmail").value.trim().toLowerCase(), zap = $("#cZap").value.replace(/\D/g, "");
+    var chave = email + "|" + zap;
+    if (chave === ultimaChecagem || (!/@.+\./.test(email) && zap.length < 10)) return;
+    ultimaChecagem = chave;
+    fetch(FUNCAO.replace("travas-loja", "loja"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ acao: "checar", email: email, whatsapp: zap }) })
+      .then(function (r) { return r.json(); }).then(function (j) {
+        var box = $("#cJaCliente");
+        if (!j || !j.cliente) { box.classList.remove("on"); return; }
+        $("#cJaTxt").textContent = j.por === "email"
+          ? " O teste vai entrar na sua conta (" + j.email_mascarado + "). Depois do pagamento, é só entrar com a mesma senha de sempre."
+          : " Este WhatsApp já é de uma conta da Ressignificar (" + j.email_mascarado + "). Use o e-mail dessa conta para o teste entrar nela, sem criar outra.";
+        box.classList.add("on");
+      }).catch(function () {});
+  }
+  $("#cEmail").addEventListener("blur", checarCliente);
+  $("#cZap").addEventListener("blur", checarCliente);
+  /* veio logada da Área de Membros (mesma aba)? já preenche nome e e-mail */
+  try {
+    var ses = JSON.parse(sessionStorage.getItem("sb-gobjhepmnijoceirwgow-auth-token") || "null");
+    var u = ses && (ses.user || (ses.currentSession && ses.currentSession.user));
+    if (u && u.email) {
+      $("#cEmail").value = u.email;
+      if (u.user_metadata && u.user_metadata.nome) $("#cNome").value = u.user_metadata.nome;
+      checarCliente();
+    }
+  } catch (e) {}
 
   var aviso = $("#aviso");
   function erro(msg, campo) { aviso.textContent = msg; aviso.classList.add("on"); if (campo) campo.focus(); }
