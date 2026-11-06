@@ -26,7 +26,7 @@
   const zapLink = function (t) { let d = soDig(t); if (d.length === 10 || d.length === 11) d = "55" + d; return d.length >= 12 ? "https://wa.me/" + d : ""; };
   const valorTxt = function (v) { return v == null || v === "" ? "" : brl(v).replace(/^R\$\s?/, "R$ "); };
   const lerV = function (s) { const v = lerValor(s); return isFinite(v) ? v : null; };
-  const diaLongo = function (iso) { const d = new Date(iso + "T12:00:00"); return d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" }); };
+  const diaLongo = function (iso) { const t = new Date(iso + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }); return t.charAt(0).toUpperCase() + t.slice(1); };
   const aReceber = function (s) { return s.status === "realizada" && !s.pago && Number(s.valor) > 0; };
 
   async function carregar() {

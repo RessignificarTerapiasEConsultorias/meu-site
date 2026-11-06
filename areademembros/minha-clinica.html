@@ -31,7 +31,7 @@
 .mc-st{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle}
 .mc-st.ativo{background:#E7F4EC;color:#1D5B37}.mc-st.pausado{background:#FFF1BF;color:#5C4500}.mc-st.encerrado{background:#ECECEC;color:#555}
 .mc-st.teste{background:#F3E9D2;color:#6B5216}
-.mc-dia{margin:16px 0 8px;font:600 15px var(--sans);color:var(--goldtxt);text-transform:capitalize}
+.mc-dia{margin:16px 0 8px;font:600 15px var(--sans);color:var(--goldtxt)}
 .mc-ses{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
 .mc-ses .h{font:600 17px var(--serif);color:var(--navy);min-width:52px}
 .mc-ses .q{flex:1;min-width:160px}
@@ -50,6 +50,8 @@
 .mc-imp{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
 .mc-imp small{display:block;color:var(--muted);font-size:13px}
 .mc-bloqueio{max-width:620px}
+#formSessao .grade{grid-template-columns:1fr 1fr}
+@media(min-width:720px){#formSessao .grade{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
 <body>
