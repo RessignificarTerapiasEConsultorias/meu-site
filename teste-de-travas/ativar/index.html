@@ -115,7 +115,7 @@
             <input type="password" id="fSenha2" minlength="8" autocomplete="new-password">
           </div>
         </div>
-        <p class="aviso ok on" id="contaExiste" hidden>Você já tem acesso à Área de Membros com o e-mail <b id="emailLogin2"></b>. Use a mesma senha de sempre.</p>
+        <p class="aviso ok on" id="contaExiste" hidden><b>Você não precisa criar senha.</b> O e-mail <b id="emailLogin2"></b> já tem acesso à Área de Membros da Ressignificar, então o seu teste vai usar a mesma senha que você já tem. <a href="#" data-wa="Olá, Mauricio! Comprei o Teste de Travas e não lembro a senha da minha Área de Membros. Meu e-mail: ">Não lembra a senha? Fale com a gente</a>.</p>
 
         <div class="aviso" id="aviso" role="alert"></div>
         <button class="btn" type="submit" id="btnCriar" style="width:100%">Criar o meu teste</button>
@@ -130,7 +130,7 @@
         <a class="btn" id="btnAbrir" href="#" style="width:100%">Abrir o meu teste</a>
         <ol class="passos-uso">
           <li>No rodapé do seu teste, toque em <b>Área <span id="daPrim">da terapeuta</span></b>.</li>
-          <li>Entre com a sua senha. O login é o e-mail <b id="emailLogin3"></b>.</li>
+          <li>Entre com a sua senha<span id="senhaAntiga" hidden> (a mesma que você já usa na Área de Membros)</span>. O login é o e-mail <b id="emailLogin3"></b>.</li>
           <li>Toque em <b>gerar código</b> para cada cliente e envie pelo WhatsApp. O resultado volta para você.</li>
         </ol>
         <p style="margin-top:18px"><a href="#" data-wa="Olá, Mauricio! Acabei de ativar o meu Teste de Travas Mentais e queria uma ajuda para começar.">Precisa de ajuda? Fale com o suporte no WhatsApp</a></p>
@@ -187,6 +187,7 @@
   function pronto(link, email, genero, nome) {
     $("#linkTeste").value = link; $("#btnAbrir").href = link;
     $("#emailLogin3").textContent = email || "";
+    $("#senhaAntiga").hidden = !(pedido && pedido.conta_existente);
     var prim = (nome || "").split(" ")[0];
     $("#daPrim").textContent = prim ? (genero === "m" ? "do " : "da ") + prim : "da terapeuta";
     mostrar("ePronto");
