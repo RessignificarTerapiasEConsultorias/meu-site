@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minha Clínica | Ressignificar</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilo.css">
+<style>
+.mc-topo{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:6px}
+.mc-sigilo{display:flex;gap:10px;align-items:flex-start;background:#EEF3FA;border:1px solid #CFDBEC;border-radius:12px;padding:11px 14px;font-size:14.5px;color:#13294B;margin:10px 0 20px}
+.mc-sigilo svg{flex-shrink:0;margin-top:2px}
+.mc-kpis{display:grid;gap:12px;grid-template-columns:1fr 1fr;margin-bottom:20px}
+@media(min-width:760px){.mc-kpis{grid-template-columns:repeat(4,1fr)}}
+.mc-busca{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.mc-busca input{flex:1;min-width:200px;padding:12px;border-radius:10px;border:1.5px solid #CFC6B3;font-size:16px;background:#fff}
+.mc-filtros{display:flex;gap:6px;flex-wrap:wrap}
+.mc-filtro{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font:600 14px var(--sans);color:var(--muted);cursor:pointer}
+.mc-filtro[aria-pressed=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.mc-lista{display:grid;gap:10px}
+@media(min-width:760px){.mc-lista{grid-template-columns:1fr 1fr}}
+.mc-cli{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;text-align:left;width:100%;cursor:pointer;font:inherit;color:inherit}
+.mc-cli:hover{border-color:var(--gold)}
+.mc-ini{width:44px;height:44px;border-radius:50%;background:var(--navy);color:var(--gold2);display:flex;align-items:center;justify-content:center;font:600 18px var(--serif);flex-shrink:0}
+.mc-cli b{display:block;font-size:16px;color:var(--navy)}
+.mc-cli small{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.mc-cli .mc-dir{margin-left:auto;text-align:right;font-size:13px;color:var(--muted);white-space:nowrap}
+.mc-cli .mc-dir b{font-size:14px}
+.mc-st{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle}
+.mc-st.ativo{background:#E7F4EC;color:#1D5B37}.mc-st.pausado{background:#FFF1BF;color:#5C4500}.mc-st.encerrado{background:#ECECEC;color:#555}
+.mc-st.teste{background:#F3E9D2;color:#6B5216}
+.mc-dia{margin:16px 0 8px;font:600 15px var(--sans);color:var(--goldtxt);text-transform:capitalize}
+.mc-ses{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.mc-ses .h{font:600 17px var(--serif);color:var(--navy);min-width:52px}
+.mc-ses .q{flex:1;min-width:160px}
+.mc-ses .q b{color:var(--navy)}
+.mc-ses .q small{display:block;color:var(--muted);font-size:13px}
+.mc-acoes{display:flex;gap:6px;flex-wrap:wrap}
+.mc-ficha-topo{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.mc-ficha-topo h2{margin:0!important}
+.mc-sec{border-top:1px solid var(--line);padding-top:14px;margin-top:16px}
+.mc-sec h3{font-size:18px;margin-bottom:10px}
+.mc-hist{display:grid;gap:8px;margin-top:12px}
+.mc-hist .mc-ses{margin:0}
+.mc-nota{width:100%;margin-top:8px;min-height:64px;padding:10px;border-radius:10px;border:1.5px dashed #CDBF9E;background:#FBF7EE;font:400 15px var(--sans);color:var(--ink)}
+.mc-trava{background:var(--navy);color:#fff;border-radius:12px;padding:12px 14px;font-size:14.5px}
+.mc-trava b{color:var(--gold2)}
+.mc-imp{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.mc-imp small{display:block;color:var(--muted);font-size:13px}
+.mc-bloqueio{max-width:620px}
+</style>
+</head>
+<body>
+<div class="carregando" id="carregando">Carregando...</div>
+<div id="painel" hidden>
+  <header class="topo-painel">
+    <div class="marca"><img src="img/logo.png" alt=""><b>Ressignificar</b></div>
+    <div class="usuario">
+      <span data-nome-usuario></span>
+      <a class="lnk" href="conta.html">Minha conta</a>
+      <button class="sair" data-sair>Sair</button>
+    </div>
+  </header>
+  <main class="conteudo-painel largo">
+    <a class="voltar" id="voltar" href="painel-cliente.html">← Voltar ao painel</a>
+
+    <div class="cartao mc-bloqueio" id="semAcesso" hidden>
+      <h2>A Clínica Otimizada ainda não está na sua conta</h2>
+      <p class="ajuda">Com ela você organiza os seus clientes, as sessões, os pagamentos e as anotações em um só lugar, e traz quem respondeu o seu Teste de Travas como cliente ativo.</p>
+      <div class="acoes"><a class="btn auto" href="../produtos/clinica/">Conhecer a Clínica Otimizada</a></div>
+    </div>
+
+    <div id="area" hidden>
+      <div class="mc-topo">
+        <div><h1>Minha Clínica</h1><p class="sub" style="margin:0">Seus clientes, sessões e pagamentos em um só lugar.</p></div>
+        <button class="btn auto" type="button" id="btNovo">+ Novo cliente</button>
+      </div>
+      <div class="mc-sigilo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Só você vê estes registros. Nenhum outro profissional, nem a equipe Ressignificar, tem acesso aos seus clientes e anotações.</span></div>
+
+      <div class="mc-kpis" id="kpis"></div>
+
+      <div class="abas" id="abas" role="tablist">
+        <button class="aba" type="button" data-aba="clientes" aria-selected="true">Clientes</button>
+        <button class="aba" type="button" data-aba="agenda">Agenda</button>
+        <button class="aba" type="button" data-aba="testes">Trazer dos testes <span class="selo ouro" id="qtdTestes" hidden></span></button>
+      </div>
+
+      <section data-painel="clientes">
+        <div class="mc-busca">
+          <input type="search" id="busca" placeholder="Buscar pelo nome" aria-label="Buscar cliente pelo nome">
+          <div class="mc-filtros" role="group" aria-label="Filtrar por situação">
+            <button type="button" class="mc-filtro" data-f="ativo" aria-pressed="true">Ativos</button>
+            <button type="button" class="mc-filtro" data-f="pausado" aria-pressed="false">Pausados</button>
+            <button type="button" class="mc-filtro" data-f="encerrado" aria-pressed="false">Encerrados</button>
+            <button type="button" class="mc-filtro" data-f="todos" aria-pressed="false">Todos</button>
+          </div>
+        </div>
+        <div class="mc-lista" id="listaClientes"></div>
+      </section>
+
+      <section data-painel="agenda" hidden>
+        <div class="cartao" id="pendentesCartao" hidden>
+          <h2>Sessões que já passaram</h2>
+          <p class="ajuda">Marque como foi: realizada ou falta. Assim o seu "a receber" fica certo.</p>
+          <div id="pendentes"></div>
+        </div>
+        <div class="cartao" style="margin-top:14px">
+          <h2>Próximas sessões</h2>
+          <div id="agenda"></div>
+        </div>
+      </section>
+
+      <section data-painel="testes" hidden>
+        <div class="cartao">
+          <h2>Quem respondeu os seus testes</h2>
+          <p class="ajuda">Traga para a sua clínica, como cliente ativo, quem fez o seu Teste de Travas ou outros testes. O resultado fica ligado à ficha.</p>
+          <div class="acoes" style="margin:0 0 12px"><button class="btn peq" type="button" id="btImportarTodos" hidden>Trazer todos</button></div>
+          <div id="listaTestes"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<dialog class="janela" id="janelaNovo">
+  <h2>Novo cliente</h2>
+  <form class="f" id="formNovo">
+    <div class="grade g2">
+      <div style="grid-column:1/-1"><label for="nNome">Nome</label><input id="nNome" required maxlength="120" autocomplete="off"></div>
+      <div><label for="nZap">WhatsApp</label><input id="nZap" inputmode="tel" maxlength="20" placeholder="(81) 99999-9999"></div>
+      <div><label for="nEmail">E-mail</label><input id="nEmail" type="email" maxlength="120"></div>
+      <div><label for="nNasc">Nascimento</label><input id="nNasc" type="date"></div>
+      <div><label for="nValor">Valor da sessão</label><input id="nValor" inputmode="decimal" placeholder="R$ 150,00"></div>
+      <div style="grid-column:1/-1"><label for="nQueixa">O que trouxe a pessoa até você?</label><textarea id="nQueixa" rows="3" maxlength="2000"></textarea></div>
+    </div>
+    <div class="acoes"><button class="btn auto" type="submit">Salvar cliente</button><button class="btn auto contorno" type="button" data-fechar>Cancelar</button></div>
+  </form>
+</dialog>
+
+<dialog class="janela janela-larga" id="janelaFicha">
+  <div class="mc-ficha-topo"><div class="mc-ini" id="fIni"></div><h2 id="fNome">Cliente</h2></div>
+  <div id="fTrava"></div>
+  <form class="f" id="formFicha">
+    <div class="grade g3">
+      <div><label for="fStatus">Situação</label><select id="fStatus"><option value="ativo">Ativo</option><option value="pausado">Pausado</option><option value="encerrado">Encerrado</option></select></div>
+      <div><label for="fZap">WhatsApp</label><input id="fZap" inputmode="tel" maxlength="20"></div>
+      <div><label for="fEmail">E-mail</label><input id="fEmail" type="email" maxlength="120"></div>
+      <div><label for="fNasc">Nascimento</label><input id="fNasc" type="date"></div>
+      <div><label for="fValor">Valor da sessão</label><input id="fValor" inputmode="decimal"></div>
+      <div style="align-self:end"><a class="btn peq contorno" id="fChamar" href="#" target="_blank" rel="noopener" style="min-height:46px;width:100%">Chamar no WhatsApp</a></div>
+    </div>
+    <div class="grade g2" style="margin-top:12px">
+      <div><label for="fQueixa">Queixa principal</label><textarea id="fQueixa" rows="4" maxlength="2000"></textarea></div>
+      <div><label for="fAnot">Anotações privadas</label><textarea id="fAnot" rows="4" maxlength="8000" placeholder="Histórico, medicamentos, combinados..."></textarea></div>
+    </div>
+    <div class="acoes"><button class="btn auto" type="submit">Salvar ficha</button></div>
+  </form>
+  <div class="mc-sec">
+    <h3>Sessões</h3>
+    <form class="f" id="formSessao">
+      <div class="grade g4">
+        <div><label for="sData">Data</label><input id="sData" type="date" required></div>
+        <div><label for="sHora">Hora</label><input id="sHora" type="time"></div>
+        <div><label for="sValor">Valor</label><input id="sValor" inputmode="decimal"></div>
+        <div><label for="sStatus">Situação</label><select id="sStatus"><option value="agendada">Agendada</option><option value="realizada">Realizada</option><option value="faltou">Faltou</option><option value="cancelada">Cancelada</option></select></div>
+      </div>
+      <div class="acoes" style="margin-top:10px"><label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="sPago" style="width:auto"> Já está paga</label><button class="btn peq" type="submit">Adicionar sessão</button></div>
+    </form>
+    <div class="mc-hist" id="fSessoes"></div>
+  </div>
+  <div class="acoes" style="justify-content:space-between"><button class="btn auto contorno" type="button" data-fechar>Fechar</button><button class="btn peq contorno" type="button" id="fExcluir" style="border-color:#B3261E;color:#B3261E">Excluir cliente</button></div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+<script src="js/minha-clinica.js"></script>
+</body>
+</html>
