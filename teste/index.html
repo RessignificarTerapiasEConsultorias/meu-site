@@ -525,7 +525,10 @@ html.t-erro .t-girar{display:none}
 .vit-teaser b{font-size:15.5px}
 .vit-teaser span{font-size:14.5px;line-height:1.45}
 .vit-teaser small{font-size:13.5px;font-weight:700;color:var(--argila)}
-.vit-teaser.vit-nome-d{border-left-color:#C62828;box-shadow:none}
+.vit-teaser.vit-nome-d{border-left-color:#C62828;box-shadow:none}a.vit-teaser{text-decoration:none}
+.vit-teaser span{font-family:'Fraunces',serif;font-size:17px;line-height:1.35;font-weight:600}
+.vit-teaser small{display:inline-flex;align-self:flex-start;margin-top:4px;background:var(--argila);color:#fff;border-radius:999px;padding:6px 12px}
+
 </style>
 </head>
 <body>
@@ -1065,7 +1068,7 @@ async function carregarVitrine() {
     if (!data || !data.session) { caixa.innerHTML = ""; return; }
     const uid = data.session.user.id;
     const [rp, ri, rc] = await Promise.all([
-      c.from("catalogo_produtos").select("id,nome,chamada,descricao,inclui,preco_texto,link_pagamento,destaque").eq("ativo", true).order("destaque", { ascending: false }).order("ordem"),
+      c.from("catalogo_produtos").select("id,nome,chamada,pagina,descricao,inclui,preco_texto,link_pagamento,destaque").eq("ativo", true).order("destaque", { ascending: false }).order("ordem"),
       c.from("interesses").select("produto_id").eq("perfil_id", uid),
       c.from("cliente_produtos").select("produto_id").eq("perfil_id", uid).eq("situacao", "adquirido")
     ]);
@@ -1089,7 +1092,7 @@ async function carregarVitrine() {
       '<span class="vit-sub">Produtos e serviços do Mauricio Pinho</span></div>' +
       '<a class="vit-link" href="' + AREA_MEMBROS + '">Abrir minha Área de Membros →</a></div>';
     caixa.innerHTML = topoVit + (prods.length
-      ? '<div class="vit-teasers">' + prods.map(p => '<button type="button" class="vit-teaser' + (p.destaque ? " vit-nome-d" : "") + '" data-vit-teaser="' + p.id + '"><b>' + escV(p.nome) + '</b>' + (p.chamada ? '<span>' + escV(p.chamada) + '</span>' : '') + '<small>' + (p.preco_texto ? escV(p.preco_texto) + ' · ' : '') + 'Quero saber mais →</small></button>').join("") + '</div><div class="vit-resumo">' + botaoAlerta("vitDetalhe", "Ver detalhes e valores") + "</div>" +
+      ? '<div class="vit-teasers">' + prods.map(p => (p.pagina ? '<a class="vit-teaser' + (p.destaque ? " vit-nome-d" : "") + '" href="' + escV(p.pagina) + '?de=teste" data-vit-pagar="' + p.id + '">' : '<button type="button" class="vit-teaser' + (p.destaque ? " vit-nome-d" : "") + '" data-vit-teaser="' + p.id + '">') + '<b>' + escV(p.nome) + '</b>' + (p.chamada ? '<span>' + escV(p.chamada) + '</span>' : '') + '<small>' + (p.preco_texto ? escV(p.preco_texto) + ' · ' : '') + 'Saber mais →</small>' + (p.pagina ? '</a>' : '</button>')).join("") + '</div>' + (prods.some(p => !p.pagina) ? '<div class="vit-resumo">' + botaoAlerta("vitDetalhe", "Ver detalhes e valores") + "</div>" : "")" +
         '<div class="vit-detalhe" id="vitDetalhe" hidden><div class="vit-grade">' + prods.map(card).join("") + '</div><button type="button" class="vit-fechar" data-vit-fechar="vitDetalhe">Recolher ↑</button></div>'
       : '<p class="vit-vazio">Em breve novas ofertas por aqui.</p>');
     await carregarFinanceiroVit(c, uid, caixa);
@@ -1109,7 +1112,7 @@ document.addEventListener("click", function (e) {
     pg.dataset.registrado = "1";
     clienteMembros().auth.getSession().then(function (r) {
       const s = r && r.data && r.data.session; if (!s) return;
-      clienteMembros().from("interesses").insert({ perfil_id: s.user.id, produto_id: pg.dataset.vitPagar, status: "novo", mensagem: "Clicou em \"" + pg.textContent + "\" na área do teste e foi para o pagamento" }).then(function () {});
+      clienteMembros().from("interesses").insert({ perfil_id: s.user.id, produto_id: pg.dataset.vitPagar, status: "novo", mensagem: pg.classList.contains("vit-teaser") ? "Abriu a página do produto pela área do teste" : "Clicou em \"" + pg.textContent + "\" na área do teste e foi para o pagamento" }).then(function () {});
     });
   }
 });

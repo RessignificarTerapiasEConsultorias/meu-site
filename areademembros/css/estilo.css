@@ -496,12 +496,17 @@ tr.sub>td{background:#FBF7EE;padding:10px 14px}
 
 /* ofertas: chamada curta antes dos detalhes */
 .ofertas-nomes{display:grid;gap:10px;margin:8px 0 14px}
-.oferta-teaser{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer}
-.oferta-teaser:hover{border-color:var(--gold)}
-.oferta-teaser.destaque{border-left-color:#C62828}
-.oferta-teaser b{font-size:15.5px;color:var(--navy)}
-.oferta-teaser .teaser-chamada{font-size:14.5px;line-height:1.45;color:var(--ink)}
-.oferta-teaser .teaser-mais{font-size:13.5px;font-weight:700;color:var(--goldtxt)}
+.ofertas-nomes{display:grid;gap:12px}
+@media(min-width:760px){.ofertas-nomes{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}}
+.oferta-teaser{position:relative;display:flex;flex-direction:column;gap:8px;text-decoration:none;background:radial-gradient(120% 120% at 100% 0%,#1B3766 0%,var(--navy) 60%,var(--deep) 100%);border-radius:16px;padding:18px 18px 16px;color:#fff;box-shadow:0 12px 28px rgba(6,20,42,.18);transition:transform .15s,box-shadow .15s;overflow:hidden}
+.oferta-teaser::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;border:1px solid rgba(227,196,119,.25)}
+.oferta-teaser:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(6,20,42,.26)}
+.oferta-teaser:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.oferta-teaser .teaser-nome{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold2)}
+.oferta-teaser .teaser-chamada{font:600 clamp(19px,2.4vw,22px)/1.3 var(--serif);color:#fff;text-wrap:balance}
+.oferta-teaser .teaser-rodape{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.oferta-teaser .teaser-preco{font-size:14px;color:#C9D2E4}
+.oferta-teaser .teaser-mais{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:999px;background:var(--gold);color:var(--deep);font-weight:700;font-size:14.5px}
 
 /* ===== Avisos de cobrança por e-mail (Financeiro) ===== */
 .av-erro{color:#8C2016;font-weight:600}

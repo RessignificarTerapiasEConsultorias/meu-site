@@ -35,11 +35,14 @@
       <div class="acoes"><a class="btn auto" id="travasArea" href="#">Abrir minha área do teste</a><a class="btn auto contorno" id="travasVer" href="#" target="_blank" rel="noopener">Ver como o cliente vê</a></div>
     </div>
     <div class="cartao" id="cartaoOfertas" hidden>
-      <h2>Ofertas da Ressignificar para você</h2>
-      <p class="ajuda">Produtos e serviços do Mauricio Pinho.</p>
+      <h2>Feito para o seu momento</h2>
+      <p class="ajuda">Ferramentas que o Mauricio usa com os clientes dele, agora prontas para você.</p>
       <div class="ofertas-nomes" id="ofertasNomes"></div>
-      <button type="button" class="btn-alerta" id="ofertasAbrir" aria-expanded="false" aria-controls="ofertasDetalhe"><span class="ponto-pisca" aria-hidden="true"></span><span class="txt-alerta">Ver detalhes e valores</span></button>
-      <div id="ofertasDetalhe" hidden><div class="ofertas-grade" id="ofertasGrade"></div><button type="button" class="btn contorno recolher-fim" id="ofertasFechar">Recolher ofertas ↑</button></div>
+    </div>
+    <div class="cartao" id="cartaoClinicaOt" hidden>
+      <h2>Sua Clínica Otimizada</h2>
+      <p class="ajuda">Seus clientes, sessões, pagamentos e anotações em um só lugar. Só você vê.</p>
+      <div class="acoes"><a class="btn auto" href="minha-clinica.html">Abrir minha clínica</a><a class="btn auto contorno" href="minha-clinica.html#testes">Trazer quem fez o teste</a></div>
     </div>
     <div class="cartao" id="cartaoPag" hidden>
       <h2>Seus pagamentos</h2>
@@ -145,7 +148,6 @@
     bt.innerHTML = '<span class="ponto-pisca" aria-hidden="true"></span><span></span>'; bt.lastChild.textContent = rotulo;
     bt.addEventListener("click", function () {
       const alvo = document.getElementById(alvoId); if (!alvo) return;
-      if (alvoId === "cartaoOfertas") { const det = document.getElementById("ofertasDetalhe"); if (det.hidden) document.getElementById("ofertasAbrir").click(); }
       alvo.scrollIntoView({ behavior: "smooth", block: "start" }); alvo.classList.remove("piscar-cartao"); void alvo.offsetWidth; alvo.classList.add("piscar-cartao");
     });
     d.appendChild(t); d.appendChild(bt);
@@ -174,71 +176,39 @@
     }
   } catch (e) { /* sem teste, sem problema */ }
 
-  /* ---------- ofertas (catálogo de produtos) ---------- */
+  /* ---------- ofertas (catálogo de produtos): só a chamada curta + "Saber mais", que leva à página do produto ---------- */
   try {
     const [rp, ri, rcp] = await Promise.all([
-      supa().from("catalogo_produtos").select("id,nome,chamada,descricao,inclui,preco_texto,link_pagamento,destaque").eq("ativo", true).order("destaque", { ascending: false }).order("ordem"),
+      supa().from("catalogo_produtos").select("id,nome,chave,chamada,preco_texto,pagina,link_pagamento,destaque").eq("ativo", true).order("destaque", { ascending: false }).order("ordem"),
       supa().from("interesses").select("produto_id").eq("perfil_id", eu.id),
       supa().from("cliente_produtos").select("produto_id").eq("perfil_id", eu.id).eq("situacao", "adquirido")
     ]);
     const jaTem = new Set((rcp.data || []).map(function (x) { return x.produto_id; }));
+    if ((rp.data || []).some(function (x) { return x.chave === "clinica" && jaTem.has(x.id); })) document.getElementById("cartaoClinicaOt").hidden = false;
     /* não oferece o que a pessoa já comprou (nem o Teste de Travas para quem já tem o teste) */
-    const prods = (rp.data || []).filter(function (x) { return !jaTem.has(x.id) && !(temTravas && /travas/i.test(x.nome)); }), pedidos = new Set((ri.data || []).map(function (i) { return i.produto_id; }));
+    const prods = (rp.data || []).filter(function (x) { return !jaTem.has(x.id) && !(temTravas && x.chave === "travas"); }), pedidos = new Set((ri.data || []).map(function (i) { return i.produto_id; }));
     if (prods.length) {
       const nomes = document.getElementById("ofertasNomes"); nomes.innerHTML = "";
       prods.forEach(function (x) {
-        /* primeiro só a chamada curta, que desperta curiosidade; o resto aparece em "Ver detalhes" */
-        const t = document.createElement("button"); t.type = "button"; t.className = "oferta-teaser" + (x.destaque ? " destaque" : ""); t.dataset.oferta = x.id;
-        const b = document.createElement("b"); b.textContent = x.nome; t.appendChild(b);
-        if (x.chamada) { const c = document.createElement("span"); c.className = "teaser-chamada"; c.textContent = x.chamada; t.appendChild(c); }
-        const m = document.createElement("span"); m.className = "teaser-mais"; m.textContent = (x.preco_texto ? x.preco_texto + " · " : "") + "Quero saber mais →"; t.appendChild(m);
+        const destino = x.pagina ? "../" + x.pagina.replace(/^\/+/, "") + "?de=painel" : x.link_pagamento;
+        if (!destino) return;
+        const t = document.createElement("a"); t.className = "oferta-teaser" + (x.destaque ? " destaque" : ""); t.href = destino;
+        if (!x.pagina) { t.target = "_blank"; t.rel = "noopener noreferrer"; }
+        const n = document.createElement("small"); n.className = "teaser-nome"; n.textContent = x.nome; t.appendChild(n);
+        const c = document.createElement("span"); c.className = "teaser-chamada"; c.textContent = x.chamada || x.nome; t.appendChild(c);
+        const r = document.createElement("span"); r.className = "teaser-rodape";
+        if (x.preco_texto) { const pr = document.createElement("span"); pr.className = "teaser-preco"; pr.textContent = x.preco_texto.split("·")[0].trim(); r.appendChild(pr); }
+        const m = document.createElement("span"); m.className = "teaser-mais"; m.textContent = "Saber mais →"; r.appendChild(m);
+        t.appendChild(r);
         t.addEventListener("click", function () {
-          const det = document.getElementById("ofertasDetalhe"); if (det.hidden) document.getElementById("ofertasAbrir").click();
-          const alvo = document.getElementById("oferta-" + x.id); if (alvo) { alvo.scrollIntoView({ behavior: "smooth", block: "start" }); alvo.classList.remove("piscar-cartao"); void alvo.offsetWidth; alvo.classList.add("piscar-cartao"); }
+          if (pedidos.has(x.id)) return; pedidos.add(x.id);
+          supa().from("interesses").insert({ perfil_id: eu.id, produto_id: x.id, mensagem: "Abriu a página do produto pelo painel" }).then(function () {});
         });
         nomes.appendChild(t);
       });
-      const grade = document.getElementById("ofertasGrade"); grade.innerHTML = "";
-      prods.forEach(function (x) {
-        const card = document.createElement("article"); card.className = "oferta-card" + (x.destaque ? " destaque" : ""); card.id = "oferta-" + x.id;
-        if (x.destaque) { const sd = document.createElement("span"); sd.className = "selo ouro selo-dest"; sd.textContent = "Destaque"; card.appendChild(sd); }
-        const h = document.createElement("h3"); h.textContent = x.nome; card.appendChild(h);
-        if (x.descricao) { const d = document.createElement("p"); d.className = "ajuda"; d.textContent = x.descricao; card.appendChild(d); }
-        const itens = (x.inclui || "").split(/\n+/).map(function (t) { return t.trim(); }).filter(Boolean);
-        if (itens.length) { const ul = document.createElement("ul"); itens.forEach(function (t) { const li = document.createElement("li"); li.textContent = t; ul.appendChild(li); }); card.appendChild(ul); }
-        if (x.preco_texto) { const pr = document.createElement("p"); pr.className = "preco"; pr.textContent = x.preco_texto; card.appendChild(pr); }
-        const ac = document.createElement("div"); ac.className = "acoes";
-        const bi = document.createElement("button"); bi.type = "button"; bi.className = "btn peq";
-        if (pedidos.has(x.id)) { bi.textContent = "Interesse enviado ✓"; bi.disabled = true; }
-        else { bi.textContent = "Tenho interesse"; bi.addEventListener("click", async function () {
-          bi.disabled = true; bi.textContent = "Enviando...";
-          const r = await supa().from("interesses").insert({ perfil_id: eu.id, produto_id: x.id });
-          if (r.error) { bi.disabled = false; bi.textContent = "Tenho interesse"; aviso("Não foi possível enviar. Tente de novo.", true); return; }
-          bi.textContent = "Interesse enviado ✓"; aviso("Recebi o seu interesse. O Mauricio entra em contato.");
-        }); }
-        ac.appendChild(bi);
-        if (x.link_pagamento && /^https:\/\//.test(x.link_pagamento)) {
-          const a = document.createElement("a"); a.className = "btn peq contorno"; a.href = x.link_pagamento; a.target = "_blank"; a.rel = "noopener noreferrer";
-          a.textContent = /m[eê]s|mensal/i.test(x.preco_texto || "") ? "Assinar agora" : "Comprar agora";
-          a.addEventListener("click", function () {
-            if (pedidos.has(x.id)) return;
-            pedidos.add(x.id);
-            supa().from("interesses").insert({ perfil_id: eu.id, produto_id: x.id, mensagem: "Clicou em \"" + a.textContent + "\" e foi para o pagamento" }).then(function () {});
-          });
-          ac.appendChild(a);
-        }
-        card.appendChild(ac); grade.appendChild(card);
-      });
-      document.getElementById("ofertasAbrir").addEventListener("click", function () {
-        const det = document.getElementById("ofertasDetalhe"), abrir = det.hidden; det.hidden = !abrir;
-        this.setAttribute("aria-expanded", String(abrir)); this.classList.toggle("aberto", abrir); this.querySelector(".txt-alerta").textContent = abrir ? "Recolher" : "Ver detalhes e valores";
-      });
-      document.getElementById("ofertasFechar").addEventListener("click", function () {
-        const ab = document.getElementById("ofertasAbrir"); ab.click(); ab.scrollIntoView({ behavior: "smooth", block: "center" });
-      });
       document.getElementById("cartaoOfertas").hidden = false;
       const novas = prods.filter(function (x) { return !pedidos.has(x.id); });
-      if (novas.length) alertar("ofertas", "Importante: ofertas para você", novas.length + (novas.length === 1 ? " oferta" : " ofertas") + " do Mauricio para você ler.", "Ver ofertas", "cartaoOfertas");
+      if (novas.length) alertar("ofertas", "Novidade para você", novas.length + (novas.length === 1 ? " ferramenta nova" : " ferramentas novas") + " do Mauricio para conhecer.", "Ver agora", "cartaoOfertas");
     }
   } catch (e) { /* sem ofertas, sem problema */ }
 
