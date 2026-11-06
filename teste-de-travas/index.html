@@ -133,13 +133,9 @@
   var FUNCAO = "https://gobjhepmnijoceirwgow.supabase.co/functions/v1/travas-loja";
   var ZAP = "5581992531561";
   var $ = function (s) { return document.querySelector(s); };
-  /* modo de teste (link secreto ?teste=...): o servidor confere o código e cobra o valor de teste */
+  /* ?teste=... só vale se houver um código de teste ligado no servidor (travas_config.loja_codigo_teste); hoje está desligado */
   var TESTE = (new URLSearchParams(location.search).get("teste") || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 60);
-  var TXT_BOTAO = TESTE ? "Ir para o pagamento · TESTE R$ 1" : "Ir para o pagamento · R$ 147";
-  if (TESTE) {
-    document.body.insertAdjacentHTML("afterbegin", '<div style="background:#B23A2F;color:#fff;text-align:center;font-weight:700;padding:10px 14px;font-size:15px">MODO TESTE · este link cobra R$ 1,00</div>');
-    $("#btnPagar").textContent = TXT_BOTAO;
-  }
+  var TXT_BOTAO = "Ir para o pagamento · R$ 147";
   function evento(nome, dados) {
     window.dataLayer = window.dataLayer || []; window.dataLayer.push(Object.assign({ event: nome }, dados || {}));
     if (window.gtag) gtag("event", nome, dados || {});
