@@ -1038,6 +1038,16 @@ html.t-erro .t-girar{display:none}
   var soltar = function () { if (liberado) return; liberado = true; fila.splice(0).forEach(rodar); };
   var q = new URLSearchParams(location.search);
   var slug = (q.get("t") || "").toLowerCase().replace(/[^a-z0-9.-]/g, "");
+  /* link antigo sem o endereço da terapeuta (/teste/?c=CODIGO): descobre a página pelo prefixo do código e recarrega */
+  var codigoSolto = (q.get("c") || q.get("ct") || "").toUpperCase().replace(/[^A-Z0-9-]/g, "");
+  if (!slug && /^[A-Z0-9]{2}-/.test(codigoSolto)) {
+    fetch(URL_BASE + "/rest/v1/rpc/travas_slug_por_codigo", {
+      method: "POST", headers: { apikey: CHAVE, Authorization: "Bearer " + CHAVE, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_codigo: codigoSolto })
+    }).then(function (r) { return r.json(); }).then(function (s) {
+      if (typeof s === "string" && s) { q.set("t", s); location.replace(location.pathname + "?" + q.toString() + location.hash); }
+    }).catch(function () {});
+  }
   var esc = function (t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
   function falha(msg) {
     var e = document.getElementById("t-estado");
