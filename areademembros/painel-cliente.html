@@ -28,12 +28,18 @@
       <h2>Seus serviços</h2>
       <div id="meusServicos"><p class="vazio">Carregando...</p></div>
     </div>
+    <div class="cartao" id="cartaoTravas" hidden>
+      <h2>Seu Teste de Travas Mentais</h2>
+      <p class="ajuda">Este é o link que você envia para os seus clientes. Na sua área do teste você gera os códigos e vê as respostas.</p>
+      <div class="link-teste"><input type="text" id="travasLink" readonly aria-label="Link do seu teste"><button type="button" class="btn peq" id="travasCopiar">Copiar</button></div>
+      <div class="acoes"><a class="btn auto" id="travasArea" href="#">Abrir minha área do teste</a><a class="btn auto contorno" id="travasVer" href="#" target="_blank" rel="noopener">Ver como o cliente vê</a></div>
+    </div>
     <div class="cartao" id="cartaoOfertas" hidden>
       <h2>Ofertas da Ressignificar para você</h2>
       <p class="ajuda">Produtos e serviços do Mauricio Pinho.</p>
       <div class="ofertas-nomes" id="ofertasNomes"></div>
       <button type="button" class="btn-alerta" id="ofertasAbrir" aria-expanded="false" aria-controls="ofertasDetalhe"><span class="ponto-pisca" aria-hidden="true"></span><span class="txt-alerta">Importante: leia e clique para expandir</span></button>
-      <div id="ofertasDetalhe" hidden><div class="ofertas-grade" id="ofertasGrade"></div></div>
+      <div id="ofertasDetalhe" hidden><div class="ofertas-grade" id="ofertasGrade"></div><button type="button" class="btn contorno recolher-fim" id="ofertasFechar">Recolher ofertas ↑</button></div>
     </div>
     <div class="cartao" id="cartaoPag" hidden>
       <h2>Seus pagamentos</h2>
@@ -146,13 +152,38 @@
     if (chave === "pagamentos") faixa.insertBefore(d, faixa.firstChild); else faixa.appendChild(d);   // o financeiro aparece primeiro
   }
 
+  /* ---------- Teste de Travas Mentais (comprado pela loja do site) ---------- */
+  let temTravas = false;
+  try {
+    const [rt, rpg] = await Promise.all([
+      supa().from("travas_terapeutas").select("perfil_id").eq("perfil_id", eu.id).maybeSingle(),
+      supa().from("travas_paginas").select("slug").eq("terapeuta_id", eu.id).maybeSingle()
+    ]);
+    temTravas = !!rt.data;
+    if (rpg.data && rpg.data.slug) {
+      const linkTeste = "https://ressignificarterapiaseconsultorias.com/teste/?t=" + encodeURIComponent(rpg.data.slug);
+      document.getElementById("travasLink").value = linkTeste;
+      document.getElementById("travasVer").href = linkTeste;
+      document.getElementById("travasArea").href = linkTeste + "#admin";      // mesma aba: entra sem pedir a senha de novo
+      document.getElementById("travasCopiar").addEventListener("click", function () {
+        const b = this, i = document.getElementById("travasLink");
+        (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.reject()).catch(function () { i.select(); document.execCommand("copy"); })
+          .then(function () { b.textContent = "Copiado ✓"; setTimeout(function () { b.textContent = "Copiar"; }, 2000); });
+      });
+      document.getElementById("cartaoTravas").hidden = false;
+    }
+  } catch (e) { /* sem teste, sem problema */ }
+
   /* ---------- ofertas (catálogo de produtos) ---------- */
   try {
-    const [rp, ri] = await Promise.all([
+    const [rp, ri, rcp] = await Promise.all([
       supa().from("catalogo_produtos").select("id,nome,descricao,inclui,preco_texto,link_pagamento,destaque").eq("ativo", true).order("destaque", { ascending: false }).order("ordem"),
-      supa().from("interesses").select("produto_id").eq("perfil_id", eu.id)
+      supa().from("interesses").select("produto_id").eq("perfil_id", eu.id),
+      supa().from("cliente_produtos").select("produto_id").eq("perfil_id", eu.id).eq("situacao", "adquirido")
     ]);
-    const prods = rp.data || [], pedidos = new Set((ri.data || []).map(function (i) { return i.produto_id; }));
+    const jaTem = new Set((rcp.data || []).map(function (x) { return x.produto_id; }));
+    /* não oferece o que a pessoa já comprou (nem o Teste de Travas para quem já tem o teste) */
+    const prods = (rp.data || []).filter(function (x) { return !jaTem.has(x.id) && !(temTravas && /travas/i.test(x.nome)); }), pedidos = new Set((ri.data || []).map(function (i) { return i.produto_id; }));
     if (prods.length) {
       const nomes = document.getElementById("ofertasNomes"); nomes.innerHTML = "";
       prods.forEach(function (x) { const s = document.createElement("span"); s.className = "oferta-nome" + (x.destaque ? " destaque" : ""); s.textContent = x.nome; nomes.appendChild(s); });
@@ -181,6 +212,9 @@
       document.getElementById("ofertasAbrir").addEventListener("click", function () {
         const det = document.getElementById("ofertasDetalhe"), abrir = det.hidden; det.hidden = !abrir;
         this.setAttribute("aria-expanded", String(abrir)); this.classList.toggle("aberto", abrir); this.querySelector(".txt-alerta").textContent = abrir ? "Recolher" : "Importante: leia e clique para expandir";
+      });
+      document.getElementById("ofertasFechar").addEventListener("click", function () {
+        const ab = document.getElementById("ofertasAbrir"); ab.click(); ab.scrollIntoView({ behavior: "smooth", block: "center" });
       });
       document.getElementById("cartaoOfertas").hidden = false;
       const novas = prods.filter(function (x) { return !pedidos.has(x.id); });
@@ -214,7 +248,14 @@
     tb.innerHTML = (resumo.length ? resumo : cobs.slice(-4)).map(linha).join("");
     const bt = document.getElementById("verTodosPag");
     bt.hidden = cobs.length <= resumo.length;
-    bt.addEventListener("click", function () { tb.innerHTML = cobs.slice().reverse().map(linha).join(""); bt.hidden = true; });
+    let historicoAberto = false;
+    bt.addEventListener("click", function () {      /* abre e fecha: o mesmo botão volta para o resumo */
+      historicoAberto = !historicoAberto;
+      tb.innerHTML = (historicoAberto ? cobs.slice().reverse() : (resumo.length ? resumo : cobs.slice(-4))).map(linha).join("");
+      bt.textContent = historicoAberto ? "Recolher histórico ↑" : "Ver histórico completo";
+      bt.setAttribute("aria-expanded", String(historicoAberto));
+      if (!historicoAberto) document.getElementById("cartaoPag").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     document.getElementById("cartaoPag").hidden = false;
     if (atras.length || prox.length) {
       const partes = [];

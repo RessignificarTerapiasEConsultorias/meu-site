@@ -464,3 +464,8 @@ tr.sub>td{background:#FBF7EE;padding:10px 14px}
 .topo-painel .voltar:hover{background:rgba(255,255,255,.16)}
 .topo-painel{flex-wrap:wrap}
 .topo-painel .marca{flex:1 1 auto;min-width:0}
+
+/* Teste de Travas no painel e botão "Recolher" no fim das áreas que expandem */
+.link-teste{display:flex;gap:8px;align-items:stretch}
+.link-teste input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--navy);font:600 14.5px var(--sans)}
+.recolher-fim{margin-top:16px}

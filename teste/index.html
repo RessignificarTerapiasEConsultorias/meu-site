@@ -513,6 +513,9 @@ html.t-pronto #t-estado{display:none}
 html.t-erro .t-girar{display:none}
 .moldura .t-ini{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:3/4;border-radius:999px 999px 24px 24px;background:var(--ardosia);color:var(--areia);font-family:'Fraunces',serif;font-size:96px;box-shadow:var(--sombra)}
 @media (prefers-reduced-motion:reduce){.t-girar{animation:none}}
+/* botão "Recolher" no fim das áreas que expandem */
+.vit-fechar{display:flex;align-items:center;justify-content:center;width:100%;margin-top:14px;min-height:46px;border-radius:12px;border:1.4px solid var(--borda);background:var(--papel);color:var(--tinta);font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.vit-fechar:hover{background:var(--areia-escura)}
 </style>
 </head>
 <body>
@@ -980,10 +983,10 @@ html.t-erro .t-girar{display:none}
 const EMAIL_MEMBROS = window.__T.email;
 const MEMBROS_URL = "https://gobjhepmnijoceirwgow.supabase.co";
 const MEMBROS_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmpoZXBtbmlqb2NlaXJ3Z293Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyODgyMDQsImV4cCI6MjEwNzg2NDIwNH0.XPGLdSyG9rwg4VD0hlVAFFWdNeiJom86CSsqnMtMgx4";
-const AREA_MEMBROS = "https://ressignificarterapiaseconsultorias.github.io/ressignificar-membros/";
+const AREA_MEMBROS = "https://ressignificarterapiaseconsultorias.com/areademembros/";
 function clienteMembros() {
   if (!window.__membros) window.__membros = window.supabase.createClient(MEMBROS_URL, MEMBROS_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, storage: window.sessionStorage, storageKey: "ressignificar-membros" }
+    auth: { persistSession: true, autoRefreshToken: true, storage: window.sessionStorage }
   });
   return window.__membros;
 }
@@ -991,6 +994,14 @@ async function validarComMembros(senha) {
   const { error } = await clienteMembros().auth.signInWithPassword({ email: EMAIL_MEMBROS, password: senha });
   if (error) throw new Error("Senha incorreta.");
   carregarVitrine();
+}
+/* Quem chega da Área de Membros do site, na mesma aba, já está logada: só confere se é a dona deste teste */
+async function sessaoDaAreaDeMembros() {
+  try {
+    const { data } = await clienteMembros().auth.getSession();
+    const em = (data && data.session && data.session.user && data.session.user.email || "").toLowerCase();
+    return !!em && em === String(EMAIL_MEMBROS || "").toLowerCase();
+  } catch (e) { return false; }
 }
 async function sairMembros() {
   try { await clienteMembros().auth.signOut(); } catch (e) {}
@@ -1001,6 +1012,8 @@ function botaoAlerta(alvo, texto) {
   return '<button type="button" class="vit-alerta" data-vit-abrir="' + alvo + '" data-txt="' + escV(texto) + '" aria-expanded="false" aria-controls="' + alvo + '"><span class="vit-ponto" aria-hidden="true"></span><span class="vit-alerta-txt">' + escV(texto) + '</span></button>';
 }
 document.addEventListener("click", function (e) {
+  const f = e.target.closest && e.target.closest("[data-vit-fechar]");
+  if (f) { const ab = document.querySelector('[data-vit-abrir="' + f.dataset.vitFechar + '"]'); if (ab) { ab.click(); ab.scrollIntoView({ behavior: "smooth", block: "center" }); } return; }
   const b = e.target.closest && e.target.closest("[data-vit-abrir]"); if (!b) return;
   const alvo = document.getElementById(b.dataset.vitAbrir); if (!alvo) return;
   const abrir = alvo.hidden; alvo.hidden = !abrir;
@@ -1026,7 +1039,7 @@ async function carregarFinanceiroVit(c, uid, caixa) {
       (pen.length ? '<span class="fin-chip pendente">' + pen.length + (pen.length > 1 ? " vencimentos próximos" : " vencimento próximo") + "</span>" : "") + (fut.length ? '<span class="fin-chip proxima">' + fut.length + (fut.length > 1 ? " próximas" : " próxima") + "</span>" : "") + "</div>" + botaoAlerta("finDetalhe", "Importante: confira valores e datas de pagamento") + "</div>" +
       '<div class="vit-detalhe" id="finDetalhe" hidden><div class="fin-rolagem"><table class="fin-tabela"><thead><tr><th>Pagamento</th><th>Vencimento</th><th class="n">Valor</th><th>Situação</th></tr></thead><tbody>' +
       lista.map(x => "<tr><td>" + escV(x.descricao) + "</td><td>" + dataBR(x.vencimento) + '</td><td class="n">' + brl(x.valor) + "</td><td>" + chip(x) + "</td></tr>").join("") + "</tbody></table></div>" +
-      '<p class="fin-aviso">' + (atr.length ? "Há pagamento em atraso. Se você já pagou, envie o comprovante ao Mauricio. Se precisar, fale com ele para combinar." : "Fique de olho nas datas de vencimento. Qualquer dúvida, fale com o Mauricio.") + "</p></div>";
+      '<p class="fin-aviso">' + (atr.length ? "Há pagamento em atraso. Se você já pagou, envie o comprovante ao Mauricio. Se precisar, fale com ele para combinar." : "Fique de olho nas datas de vencimento. Qualquer dúvida, fale com o Mauricio.") + '</p><button type="button" class="vit-fechar" data-vit-fechar="finDetalhe">Recolher ↑</button></div>';
   } catch (e) { fin.innerHTML = ""; }
 }
 async function carregarVitrine() {
@@ -1059,10 +1072,10 @@ async function carregarVitrine() {
     };
     const topoVit = '<div class="vit-topo"><div><b class="vit-titulo">Ofertas da Ressignificar para você</b>' +
       '<span class="vit-sub">Produtos e serviços do Mauricio Pinho</span></div>' +
-      '<a class="vit-link" href="' + AREA_MEMBROS + '?email=' + encodeURIComponent(EMAIL_MEMBROS) + '" target="_blank" rel="noopener">Abrir minha Área de Membros →</a></div>';
+      '<a class="vit-link" href="' + AREA_MEMBROS + '">Abrir minha Área de Membros →</a></div>';
     caixa.innerHTML = topoVit + (prods.length
       ? '<div class="vit-resumo"><div class="vit-nomes">' + prods.map(p => '<span class="vit-nome' + (p.destaque ? " vit-nome-d" : "") + '">' + escV(p.nome) + "</span>").join("") + "</div>" + botaoAlerta("vitDetalhe", "Importante: leia e clique para expandir") + "</div>" +
-        '<div class="vit-detalhe" id="vitDetalhe" hidden><div class="vit-grade">' + prods.map(card).join("") + "</div></div>"
+        '<div class="vit-detalhe" id="vitDetalhe" hidden><div class="vit-grade">' + prods.map(card).join("") + '</div><button type="button" class="vit-fechar" data-vit-fechar="vitDetalhe">Recolher ↑</button></div>'
       : '<p class="vit-vazio">Em breve novas ofertas por aqui.</p>');
     await carregarFinanceiroVit(c, uid, caixa);
   } catch (e) { caixa.innerHTML = ""; }
@@ -1583,7 +1596,7 @@ function compLigarLista(){
   }));
 }
 /* abrir direto a área da terapeuta: endereço-do-site#admin (usado pelo botão do site com vários testes) */
-aoCarregar(() => { if(location.hash === '#admin'){ const la = $('#link-admin'); if(la) la.click(); } });
+aoCarregar(async () => { if(location.hash === '#admin'){ const la = $('#link-admin'); if(la) la.click(); if(await sessaoDaAreaDeMembros()){ entrarNoPainel(); carregarVitrine(); } } });
 /* ============================================================================
    FIM DO TESTE: urgência de 60 s, WhatsApp que se fecha, NOTIFICAÇÃO e indicador de interesse
    ============================================================================ */
@@ -2155,6 +2168,9 @@ $('#btn-senha').addEventListener('click', async ()=>{
   const b = $('#btn-senha'); b.disabled = true; const txtOriginal = b.textContent; b.textContent = 'Entrando…';
   try{ await validarComMembros($('#campo-senha').value); }
   catch(e){ avisar('#aviso-senha','Senha incorreta.'); b.disabled = false; b.textContent = txtOriginal; return; }
+  entrarNoPainel();
+});
+function entrarNoPainel(){
   avisar('#aviso-senha','');
   $('#campo-senha').value=''; $('#btn-senha').disabled=true; $('#btn-senha').textContent='Digite a senha';
   $('#porta-admin').style.display='none';
@@ -2162,7 +2178,7 @@ $('#btn-senha').addEventListener('click', async ()=>{
   $('#aviso-modo-local').style.display = modoLocal() ? 'block':'none';
   resetarAbas();
   carregarRespostas(); carregarCodigos();
-});
+}
 $('#btn-sair').addEventListener('click', ()=>{
   $('#painel-admin').classList.remove('ver');
   $('#porta-admin').style.display='block';
