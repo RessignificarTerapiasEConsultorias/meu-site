@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sua compra · Ressignificar</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0B1F3A">
+<link rel="icon" href="../../img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../teste-de-travas/loja.css">
+</head>
+<body>
+<header class="topo">
+  <div class="w">
+    <a class="marca" href="../../" aria-label="Ressignificar, ir para o site">
+      <img src="../../img/logo.png" alt="" width="36" height="36">
+      <span><b>Ressignificar</b><small>Terapias &amp; Consultorias</small></span>
+    </a>
+  </div>
+</header>
+<main>
+<section>
+  <div class="w">
+    <div class="caixa">
+      <div id="eCarregando" class="passo-estado" role="status"><div class="girar" aria-hidden="true"></div><p id="txtCarregando">Confirmando o seu pagamento…</p></div>
+
+      <div id="ePronto" class="pronto" hidden>
+        <div class="icone">✓</div>
+        <h2 id="prontoTitulo" style="font-size:28px">Pronto!</h2>
+        <p class="lead" id="prontoTxt" style="margin:10px auto 18px"></p>
+        <a class="btn" id="prontoBtn" href="../../areademembros/" style="width:100%">Abrir agora</a>
+        <p class="dica" id="prontoDica" style="margin-top:12px"></p>
+      </div>
+
+      <div id="eAguardando" class="passo-estado" hidden>
+        <h2 style="font-size:26px">O pagamento ainda não foi concluído</h2>
+        <p class="lead" style="margin:8px auto 18px">Se você já pagou, aguarde alguns segundos e toque em "Conferir de novo". Se não, volte para o pagamento.</p>
+        <a class="btn" id="btnVoltarPagar" href="#" style="width:100%;margin-bottom:10px" hidden>Voltar para o pagamento</a>
+        <button class="btn line" type="button" id="btnConferir" style="width:100%">Conferir de novo</button>
+      </div>
+
+      <div id="eErro" class="passo-estado" hidden>
+        <h2 style="font-size:26px">Não encontramos esta compra</h2>
+        <p class="lead" style="margin:8px auto 18px" id="erroTxt">Confira se o link está completo, ou fale direto com o Mauricio que ele resolve na hora.</p>
+        <a class="btn wa" href="#" data-wa="Olá, Mauricio! Fiz uma compra no site e preciso de ajuda para acessar." style="width:100%">Falar no WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+<footer style="padding-bottom:30px"><div class="w"><p><b>Ressignificar Terapias &amp; Consultorias</b> · <a href="../../politica-de-privacidade.html">Política de Privacidade</a></p></div></footer>
+<script>
+(function () {
+  var FUNCAO = "https://gobjhepmnijoceirwgow.supabase.co/functions/v1/loja";
+  var ZAP = "5581992531561";
+  var $ = function (s) { return document.getElementById(s); };
+  var q = new URLSearchParams(location.search);
+  var token = (q.get("p") || "").toLowerCase();
+  if (!token) { try { token = localStorage.getItem("loja_pedido_dre") || localStorage.getItem("loja_pedido_clinica") || ""; } catch (e) {} }
+  var retorno = { transaction_nsu: q.get("transaction_nsu") || "", slug: q.get("slug") || "" };
+  var veioPago = !!retorno.transaction_nsu, tentativas = 0;
+  document.addEventListener("click", function (ev) {
+    var w = ev.target.closest && ev.target.closest("[data-wa]"); if (!w) return;
+    ev.preventDefault(); window.open("https://wa.me/" + ZAP + "?text=" + encodeURIComponent(w.getAttribute("data-wa")), "_blank", "noopener");
+  });
+  function mostrar(id) { ["eCarregando", "ePronto", "eAguardando", "eErro"].forEach(function (x) { $(x).hidden = x !== id; }); }
+  function conferir() {
+    mostrar("eCarregando");
+    fetch(FUNCAO, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ acao: "confirmar", token: token, transaction_nsu: retorno.transaction_nsu, slug: retorno.slug }) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j.ok) { mostrar("eErro"); return; }
+        if (j.status === "ativado" && j.destino) {
+          try { localStorage.removeItem("loja_pedido_" + j.produto_chave); } catch (e) {}
+          $("prontoTitulo").textContent = "Pronto" + (j.nome ? ", " + j.nome : "") + "!";
+          $("prontoTxt").textContent = (j.produto || "O seu produto") + " já está liberado na sua Área de Membros.";
+          $("prontoBtn").href = j.destino;
+          $("prontoBtn").textContent = j.produto_chave === "clinica" ? "Abrir a minha clínica" : "Abrir a minha DRE";
+          $("prontoDica").textContent = "Se pedir login, entre com " + j.email + " e a sua senha. Também mandamos um e-mail com o link.";
+          mostrar("ePronto");
+          return;
+        }
+        if ((j.status === "pago" || veioPago) && tentativas < 12) {   // pagamento feito: a liberação leva alguns segundos
+          tentativas++; $("txtCarregando").textContent = "Pagamento recebido! Liberando o seu acesso…";
+          setTimeout(conferir, 3500); return;
+        }
+        if (j.status === "aguardando") {
+          if (j.checkout_url) { $("btnVoltarPagar").href = j.checkout_url; $("btnVoltarPagar").hidden = false; }
+          mostrar("eAguardando"); return;
+        }
+        $("erroTxt").textContent = "O seu pagamento foi recebido, mas a liberação não terminou. Fale com o Mauricio que ele libera na hora.";
+        mostrar("eErro");
+      })
+      .catch(function () { if (tentativas++ < 3) setTimeout(conferir, 3000); else mostrar("eErro"); });
+  }
+  $("btnConferir").addEventListener("click", function () { tentativas = 0; conferir(); });
+  if (!/^[0-9a-f-]{36}$/.test(token)) { mostrar("eErro"); return; }
+  conferir();
+})();
+</script>
+</body>
+</html>
