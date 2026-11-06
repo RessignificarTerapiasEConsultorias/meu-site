@@ -516,3 +516,5 @@ tr.sub>td{background:#FBF7EE;padding:10px 14px}
 .av-linha{display:flex;gap:8px;margin-top:5px;align-items:stretch}
 .av-linha input{flex:1;min-width:0}
 .av-linha .btn{flex:none}
+.link-venda{margin-top:10px;padding:12px;border-radius:12px;background:#FBF7EE;border:1px dashed #CDBF9E}
+.link-venda .rotulo{margin-bottom:6px}

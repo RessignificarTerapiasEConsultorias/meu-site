@@ -10,6 +10,13 @@
   let produtos = [], perfis = [], vinculos = [], interesses = [], filtro = "abertos", editId = null;
   const pessoa = function (id) { return perfis.find(function (p) { return p.id === id; }) || { nome: "?", id: id }; };
   const produto = function (id) { return produtos.find(function (p) { return p.id === id; }) || { nome: "Produto removido" }; };
+  const SITE = "https://ressignificarterapiaseconsultorias.com";
+  /* o link que vai para o cliente: a página de vendas (se houver) ou o link de pagamento */
+  const linkVenda = function (p) {
+    const pg = String(p.pagina || "").trim();
+    if (pg) return /^https?:\/\//i.test(pg) ? pg : SITE + (pg.charAt(0) === "/" ? "" : "/") + pg;
+    return p.link_pagamento || "";
+  };
 
   async function carregar() {
     const [rp, rf, rv, ri] = await Promise.all([
@@ -67,8 +74,10 @@
       const link = document.getElementById("pLink").value.trim();
       if (nome.length < 2) { aviso("Escreva o nome do produto.", true); return; }
       if (link && !/^https:\/\//i.test(link)) { aviso("O link de pagamento precisa começar com https://", true); return; }
+      const pag = document.getElementById("pPagina").value.trim();
+      if (pag && !/^(https:\/\/|\/)/i.test(pag)) { aviso("A página de vendas precisa começar com https:// ou com /", true); return; }
       const reg = { nome: nome, servico: document.getElementById("pServ").value || null, preco_texto: document.getElementById("pPreco").value.trim() || null,
-        chamada: document.getElementById("pChamada").value.trim() || null, descricao: document.getElementById("pDesc").value.trim() || null, inclui: document.getElementById("pInclui").value.trim() || null, link_pagamento: link || null,
+        chamada: document.getElementById("pChamada").value.trim() || null, pagina: document.getElementById("pPagina").value.trim() || null, descricao: document.getElementById("pDesc").value.trim() || null, inclui: document.getElementById("pInclui").value.trim() || null, link_pagamento: link || null,
         publico: document.getElementById("pPub").value, ordem: parseInt(document.getElementById("pOrdem").value, 10) || 0,
         destaque: document.getElementById("pDestaque").checked, ativo: document.getElementById("pAtivo").checked };
       const r = editId ? await supa().from("catalogo_produtos").update(reg).eq("id", editId) : await supa().from("catalogo_produtos").insert(reg);
@@ -87,18 +96,28 @@
       '<span class="selo">' + (p.publico === "todos" ? "Todos veem" : "Só oferecidos") + "</span></span></div>" +
       (p.preco_texto ? "<b>" + esc(p.preco_texto) + "</b>" : "") + (p.descricao ? "<p>" + esc(p.descricao) + "</p>" : "") +
       '<span class="acao-info">' + tem + (tem === 1 ? " cliente tem" : " clientes têm") + " · oferecido a " + of + " · " + ints + (ints === 1 ? " interesse" : " interesses") + (p.link_pagamento ? " · com link de pagamento" : "") + "</span>" +
+      (linkVenda(p) ? '<div class="link-venda"><span class="rotulo">' + (p.pagina ? "Link de vendas" : "Link de pagamento") + ' para enviar</span>' +
+        '<div class="link-teste"><input type="text" readonly value="' + esc(linkVenda(p)) + '" aria-label="Link de vendas de ' + esc(p.nome) + '"><button type="button" class="btn peq" data-copiar="' + p.id + '">Copiar</button></div>' +
+        '<div class="acoes" style="margin-top:8px"><button type="button" class="btn peq" style="background:#1FA855;color:#fff" data-enviar="' + p.id + '">Enviar no WhatsApp ou e-mail</button>' +
+        (p.pagina ? '<a class="btn peq contorno" href="' + esc(linkVenda(p)) + '" target="_blank" rel="noopener">Ver a página de vendas</a>' : "") + "</div></div>" : "") +
       (master ? '<div class="acoes" style="margin-top:4px"><button class="btn peq contorno" type="button" data-ed="' + p.id + '">Editar</button><button class="btn peq perigo" type="button" data-del="' + p.id + '">Apagar</button></div>' : "") + "</div>";
   }
   function desenharCatalogo() {
     document.getElementById("listaProd").innerHTML = produtos.length ? produtos.map(cartaoProduto).join("") : '<div class="cartao"><p class="vazio">Nenhum produto no catálogo ainda.</p></div>';
   }
   document.getElementById("listaProd").addEventListener("click", async function (e) {
-    const be = e.target.closest("[data-ed]"), bd = e.target.closest("[data-del]");
+    const be = e.target.closest("[data-ed]"), bd = e.target.closest("[data-del]"), bc = e.target.closest("[data-copiar]"), bv = e.target.closest("[data-enviar]");
+    if (bc) {
+      const url = linkVenda(produto(bc.dataset.copiar)), inp = bc.parentNode.querySelector("input");
+      try { await navigator.clipboard.writeText(url); } catch (err) { inp.select(); document.execCommand("copy"); }
+      bc.textContent = "Copiado ✓"; setTimeout(function () { bc.textContent = "Copiar"; }, 2000); return;
+    }
+    if (bv) { abrirEnvio(produto(bv.dataset.enviar)); return; }
     if (be) {
       const p = produto(be.dataset.ed); editId = p.id;
       document.getElementById("pNome").value = p.nome; document.getElementById("pServ").value = p.servico || "";
       document.getElementById("pPreco").value = p.preco_texto || ""; document.getElementById("pDesc").value = p.descricao || ""; document.getElementById("pChamada").value = p.chamada || "";
-      document.getElementById("pInclui").value = p.inclui || ""; document.getElementById("pLink").value = p.link_pagamento || "";
+      document.getElementById("pInclui").value = p.inclui || ""; document.getElementById("pLink").value = p.link_pagamento || ""; document.getElementById("pPagina").value = p.pagina || "";
       document.getElementById("pPub").value = p.publico; document.getElementById("pOrdem").value = p.ordem;
       document.getElementById("pDestaque").checked = p.destaque; document.getElementById("pAtivo").checked = p.ativo;
       document.getElementById("tituloProd").textContent = "Editando: " + p.nome; document.getElementById("pSalvar").textContent = "Salvar alteração";
@@ -111,6 +130,57 @@
       if (error) { aviso("Não foi possível apagar.", true); return; }
       await carregar(); desenharTudo();
     }
+  });
+
+  /* ================= ENVIAR O LINK (WhatsApp ou e-mail) ================= */
+  const jEnv = document.getElementById("janelaEnviar");
+  let envProd = null, msgEditada = false;
+  const soDig = function (t) { return String(t || "").replace(/\D/g, ""); };
+  function mensagemPadrao() {
+    const cli = pessoa(document.getElementById("envCliente").value), prim = document.getElementById("envCliente").value ? cli.nome.split(" ")[0] : "";
+    return (prim ? "Olá, " + prim + "! Tudo bem?" : "Olá! Tudo bem?") + "\n\nSeparei para você: " + envProd.nome + "." +
+      (envProd.chamada ? "\n\n" + envProd.chamada : "") + "\n\nVeja como funciona e garanta o seu acesso aqui:\n" + linkVenda(envProd) + "\n\nMauricio Pinho · Ressignificar";
+  }
+  function abrirEnvio(p) {
+    envProd = p; msgEditada = false;
+    document.getElementById("envTitulo").textContent = "Enviar: " + p.nome;
+    document.getElementById("envCliente").innerHTML = '<option value="">Digitar o contato abaixo</option>' + perfis.filter(function (x) { return x.ativo && x.papel !== "master"; })
+      .map(function (x) { return '<option value="' + x.id + '">' + esc(x.nome) + "</option>"; }).join("");
+    document.getElementById("envZap").value = ""; document.getElementById("envEmail").value = "";
+    document.getElementById("envMsg").value = mensagemPadrao();
+    jEnv.showModal();
+  }
+  document.getElementById("envMsg").addEventListener("input", function () { msgEditada = true; });
+  document.getElementById("envCliente").addEventListener("change", function () {
+    const cli = this.value ? pessoa(this.value) : null;
+    document.getElementById("envZap").value = cli && cli.telefone ? cli.telefone : "";
+    document.getElementById("envEmail").value = cli && cli.email ? cli.email : "";
+    if (!msgEditada) document.getElementById("envMsg").value = mensagemPadrao();
+  });
+  document.getElementById("envFechar").addEventListener("click", function () { jEnv.close(); });
+  function registrarEnvio(canal) {
+    const pid = document.getElementById("envCliente").value; if (!pid || !envProd) return;
+    supa().from("interesses").insert({ perfil_id: pid, produto_id: envProd.id, status: "em_conversa", mensagem: "Link de vendas enviado por " + canal + " pelo Mauricio" }).then(function () {});
+  }
+  document.getElementById("envZapBtn").addEventListener("click", function () {
+    let d = soDig(document.getElementById("envZap").value);
+    if (d.length === 10 || d.length === 11) d = "55" + d;
+    if (d && (d.length < 12 || d.length > 13)) { aviso("Confira o WhatsApp: escreva com DDD.", true); return; }
+    window.open("https://wa.me/" + d + "?text=" + encodeURIComponent(document.getElementById("envMsg").value), "_blank", "noopener");
+    registrarEnvio("WhatsApp");
+  });
+  document.getElementById("envEmailBtn").addEventListener("click", async function () {
+    const para = document.getElementById("envEmail").value.trim().toLowerCase(), msg = document.getElementById("envMsg").value;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(para)) { aviso("Escreva um e-mail válido.", true); return; }
+    const assunto = envProd.nome + " · Ressignificar", b = this;
+    b.disabled = true; b.textContent = "Enviando...";
+    const r = await supa().functions.invoke("catalogo-enviar", { body: { produto_id: envProd.id, para: para, mensagem: msg } });
+    b.disabled = false; b.textContent = "Enviar por e-mail";
+    if (r.data && r.data.ok) { aviso("E-mail enviado pelo contato@ para " + para + "."); registrarEnvio("e-mail"); return; }
+    if (!confirm("Não consegui enviar pelo contato@ agora. Quer abrir o e-mail já escrito no seu programa de e-mail?")) return;
+    /* sem envio automático: abre o e-mail já escrito no programa de e-mail */
+    location.href = "mailto:" + encodeURIComponent(para) + "?subject=" + encodeURIComponent(assunto) + "&body=" + encodeURIComponent(msg);
+    registrarEnvio("e-mail");
   });
 
   /* ================= POR CLIENTE ================= */
