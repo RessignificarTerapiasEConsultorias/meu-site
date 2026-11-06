@@ -126,3 +126,12 @@ footer a{color:#DCE3F1}
 .passos-uso li{position:relative;padding-left:40px;color:var(--ink)}
 .passos-uso li::before{counter-increment:p;content:counter(p);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--navy);color:var(--gold2);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.girar{animation:none}}
+
+/* final do link escolhido pela terapeuta */
+.link-prefixo{display:flex;align-items:stretch;border:1.5px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}
+.link-prefixo:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,74,.22)}
+.link-prefixo span{display:flex;align-items:center;padding:0 4px 0 12px;color:var(--muted);font-size:15px;white-space:nowrap;background:#FAF7F0}
+.link-prefixo input{flex:1;min-width:0;border:0!important;box-shadow:none!important;min-height:50px;padding:12px 12px 12px 6px;font:600 17px var(--sans);color:var(--navy);outline:none}
+.link-previa{margin-top:6px;font-size:14.5px;color:var(--muted);word-break:break-all}
+.link-previa.livre{color:#1D5B37;font-weight:600}
+.link-previa.ocupado{color:var(--erro);font-weight:600}

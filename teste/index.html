@@ -904,7 +904,7 @@ html.t-erro .t-girar{display:none}
   window.aoCarregar = function (fn) { if (liberado) rodar(fn); else fila.push(fn); };
   var soltar = function () { if (liberado) return; liberado = true; fila.splice(0).forEach(rodar); };
   var q = new URLSearchParams(location.search);
-  var slug = (q.get("t") || "").toLowerCase().replace(/[^a-z0-9-]/g, "");
+  var slug = (q.get("t") || "").toLowerCase().replace(/[^a-z0-9.-]/g, "");
   var esc = function (t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
   function falha(msg) {
     var e = document.getElementById("t-estado");

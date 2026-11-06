@@ -62,6 +62,12 @@
           <input type="text" id="fNome" maxlength="80" autocomplete="name" required>
         </div>
         <div class="campo">
+          <label for="fLink">Final do link do seu teste</label>
+          <div class="link-prefixo"><span>…/teste/?t=</span><input type="text" id="fLink" maxlength="40" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="rafaela-terapeuta"></div>
+          <div class="dica" id="linkDica">Ex.: <b>rafaela-terapeuta</b> ou <b>rafaela.terapeuta</b>. Só letras, números, ponto e traço.</div>
+          <div class="link-previa" id="linkPrevia"></div>
+        </div>
+        <div class="campo">
           <span class="rotulo" id="rotGen">Como os seus clientes te chamam</span>
           <div class="generos" role="radiogroup" aria-labelledby="rotGen">
             <label class="opcao"><input type="radio" name="genero" value="f" checked><span>a terapeuta</span></label>
@@ -226,6 +232,7 @@
     $("#emailLogin").textContent = j.email; $("#emailLogin2").textContent = j.email;
     $("#blocoSenha").hidden = !!j.conta_existente; $("#contaExiste").hidden = !j.conta_existente;
     atualizaInicial();
+    sugerirLink();
     mostrar("eForm");
     if (!sessionStorage.getItem("travas_compra_" + token)) {
       try { sessionStorage.setItem("travas_compra_" + token, "1"); } catch (e) {}
@@ -234,6 +241,42 @@
       if (window.fbq) fbq("track", "Purchase", { value: 147, currency: "BRL" });
     }
   }
+
+  /* ---------- final do link: a pessoa escolhe; conferimos na hora se está livre ---------- */
+  var SITE_TESTE = "ressignificarterapiaseconsultorias.com/teste/?t=";
+  var linkEditado = false, linkOk = false, linkTimer = null, linkSeq = 0;
+  function limparLink(v) {
+    return String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+      .replace(/\s+/g, "-").replace(/[^a-z0-9.-]/g, "").replace(/([.-])[.-]+/g, "$1").replace(/^[.-]+/, "").slice(0, 40);
+  }
+  function sugerirLink() {
+    if (linkEditado) return;
+    var prim = limparLink(($("#fNome").value.trim().split(" ")[0]) || "");
+    $("#fLink").value = prim ? prim + "-terapeuta" : "";
+    conferirLink();
+  }
+  function conferirLink() {
+    var v = limparLink($("#fLink").value).replace(/[.-]+$/, ""), prev = $("#linkPrevia");
+    linkOk = false; clearTimeout(linkTimer);
+    if (v.length < 3) { prev.className = "link-previa"; prev.textContent = v ? "Use pelo menos 3 letras ou números." : ""; return; }
+    prev.className = "link-previa"; prev.textContent = "Conferindo " + SITE_TESTE + v + "…";
+    var meu = ++linkSeq;
+    linkTimer = setTimeout(function () {
+      chamar({ acao: "link_livre", link: v }).then(function (j) {
+        if (meu !== linkSeq) return;
+        linkOk = !!j.livre;
+        prev.className = "link-previa " + (j.livre ? "livre" : "ocupado");
+        prev.textContent = j.livre ? "✓ Disponível: " + SITE_TESTE + j.link : "✗ " + (j.erro || "Indisponível.");
+      }).catch(function () { prev.textContent = ""; linkOk = true; });
+    }, 450);
+  }
+  $("#fLink").addEventListener("input", function () {
+    linkEditado = true;
+    var pos = this.selectionStart, antes = this.value, depois = limparLink(antes);
+    if (depois !== antes) { this.value = depois; try { this.setSelectionRange(pos - (antes.length - depois.length), pos - (antes.length - depois.length)); } catch (e) {} }
+    conferirLink();
+  });
+  $("#fNome").addEventListener("input", sugerirLink);
 
   function atualizaInicial() {
     var p = $("#fotoPrev");
@@ -270,6 +313,9 @@
     if (nome.length < 3) return erro("Escreva o seu nome.", $("#fNome"));
     if (!$("#fTitulo").value.trim()) return erro("Escreva como você se apresenta. Ex.: Terapeuta integrativa.", $("#fTitulo"));
     if (zap.length < 10) return erro("Confira o WhatsApp, com DDD.", $("#fZap"));
+    var link = limparLink($("#fLink").value).replace(/[.-]+$/, "");
+    if (link.length < 3) return erro("Escolha o final do link do seu teste (pelo menos 3 letras).", $("#fLink"));
+    if (!linkOk && /✗/.test($("#linkPrevia").textContent)) return erro("Esse final de link não está disponível. Escolha outro.", $("#fLink"));
     var senha = $("#fSenha").value;
     if (!pedido.conta_existente) {
       if (senha.length < 8) return erro("Crie uma senha com pelo menos 8 caracteres.", $("#fSenha"));
@@ -278,12 +324,12 @@
     var b = $("#btnCriar"); b.disabled = true; b.textContent = "Criando o seu teste…";
     chamar({ acao: "ativar", token: token, nome: nome, genero: genero, titulo: $("#fTitulo").value, registro: $("#fRegistro").value,
              frase: $("#fFrase").value, whatsapp: zap, instagram: $("#fInsta").value, foto: fotoDados, paleta: paleta,
-             senha: pedido.conta_existente ? "" : senha })
+             senha: pedido.conta_existente ? "" : senha, link: link })
       .then(function (j) {
         if (!j.ok) throw new Error(j.erro || "Não foi possível criar o teste.");
         pronto(j.pagina, j.email, genero, nome);
       })
-      .catch(function (err) { b.disabled = false; b.textContent = "Criar o meu teste"; erro(err.message); });
+      .catch(function (err) { b.disabled = false; b.textContent = "Criar o meu teste"; erro(err.message, /link/i.test(err.message) ? $("#fLink") : null); if (/link/i.test(err.message)) conferirLink(); });
   });
 
   $("#btnCopiar").addEventListener("click", function () {
