@@ -1,0 +1,106 @@
+/* Devolutiva do Teste de Caráter Comportamental: tela e PDF (A4) */
+.dv{background:#fff;border:1px solid var(--borda);border-radius:18px;padding:22px 18px;margin:14px 0 18px;color:var(--tinta);font-size:15.5px;line-height:1.55;text-align:left}
+@media(min-width:720px){.dv{padding:30px 32px}}
+.dv p{margin:0 0 10px}
+.dv h1,.dv h3,.dv h4{font-family:'Fraunces',serif;color:var(--ardosia)}
+.dv-topo{display:grid;gap:12px;background:var(--areia);border-left:6px solid var(--argila);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+@media(min-width:720px){.dv-topo{grid-template-columns:1.1fr 1fr;align-items:center}}
+.dv-topo h1{font-size:clamp(22px,4.6vw,28px);line-height:1.15;margin:0;text-transform:uppercase;letter-spacing:.01em}
+.dv-topo p{margin:4px 0 0;color:var(--tinta-suave)}
+.dv-olho{display:block;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--argila);margin-bottom:4px}
+.dv-casal .dv-topo h1{text-transform:none;font-size:clamp(24px,5vw,32px)}
+.dv-topo dl{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;margin:0;font-size:14px}
+.dv-topo dt{font-weight:800;color:var(--argila)}
+.dv-topo dd{margin:0}
+.dv-caixa{background:var(--papel);border:1px solid var(--borda);border-radius:12px;padding:14px 16px;margin:12px 0}
+.dv-caixa h3{font-size:17px;margin:0 0 8px}
+.dv-caixa ol{margin:0;padding-left:20px}
+.dv-caixa li{margin-bottom:8px}
+.dv-h2{font:800 15px 'Karla',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--argila);border-bottom:2px solid var(--argila);padding-bottom:6px;margin:26px 0 12px}
+.dv-tabela{overflow-x:auto;margin:6px 0}
+.dv-tabela table{width:100%;border-collapse:collapse;font-size:14.5px}
+.dv-tabela th{background:var(--areia-escura);color:var(--ardosia);text-align:left;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;padding:8px}
+.dv-tabela td{border-bottom:1px solid var(--borda);padding:8px;vertical-align:top}
+.dv-tabela tr.pico td,.dv-tabela td.pico{background:#FBF0E8;font-weight:700}
+.dv-matriz td:first-child{white-space:nowrap}
+.dv-dist{display:grid;gap:14px;align-items:center}
+@media(min-width:860px){.dv-dist{grid-template-columns:1.25fr 1fr}}
+.dv-teia{margin:0}
+.dv-teia-img{display:block;max-width:330px;width:100%;margin:0 auto}
+.dv-2col{display:grid;gap:12px}
+@media(min-width:760px){.dv-2col{grid-template-columns:1fr 1fr}}
+.dv-pico,.dv-card{background:var(--papel);border:1px solid var(--borda);border-top:4px solid var(--argila);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.dv-pico-topo{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;border-bottom:1px dashed var(--borda);padding-bottom:6px;margin-bottom:8px}
+.dv-pico-topo b{color:var(--ardosia)}
+.dv-pico-topo span{font-size:12.5px;font-weight:700;background:var(--argila-clara);color:var(--ardosia);border-radius:999px;padding:2px 10px}
+.dv-pico p{font-size:14.5px;margin-bottom:6px}
+.dv-card h3{font-size:18px;margin:0 0 8px}
+.dv-card ul{margin:0;padding-left:18px}
+.dv-card li{margin-bottom:6px}
+.dv-card.dv-a{border-top-color:#A8542B}
+.dv-card.dv-b{border-top-color:#2C6E8A}
+.dv-sintese,.dv-destaque{background:var(--areia);border-left:5px solid var(--argila);border-radius:10px;padding:14px 16px}
+.dv-destaque h3{font-size:17px;margin:0 0 6px}
+.dv-plano{display:grid;gap:10px}
+@media(min-width:760px){.dv-plano{grid-template-columns:1fr 1fr}.dv-plano .dv-acao:last-child:nth-child(odd){grid-column:1/-1}}
+.dv-acao{background:var(--papel);border:1px solid var(--borda);border-radius:12px;padding:12px 14px}
+.dv-acao h4{font-size:16.5px;margin:0 0 6px;border-bottom:1px solid var(--borda);padding-bottom:6px}
+.dv-acao p{font-size:14.5px;margin-bottom:5px}
+.dv-perguntas{background:var(--areia);border-radius:12px;padding:14px 16px 14px 34px;margin:0}
+.dv-perguntas li{margin-bottom:6px;color:var(--ardosia);font-weight:600}
+.dv-final{background:var(--papel);border:1px solid var(--borda);border-radius:12px;padding:14px 16px}
+.dv-ass{text-align:right;font-weight:800;color:var(--argila);margin-top:8px}
+.dv-nota{font-size:14px;color:var(--tinta-suave)}
+.dv-acordo{background:#FFF7F0;border:1.5px dashed var(--salvia);border-radius:12px;padding:14px 16px;margin:12px 0}
+.dv-acordo h3{font-size:17px;margin:0 0 6px}
+.dv-assinaturas{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:30px;text-align:center;font-weight:700;font-size:14px}
+.dv-assinaturas span{border-top:1.5px solid var(--tinta);padding-top:6px}
+.dv-cta{background:var(--ardosia);color:#fff;border-radius:12px;padding:14px 16px;margin-top:18px}
+.dv-cta b{color:var(--salvia)}
+.dv-aviso{font-size:12.5px;color:var(--tinta-suave);margin-top:10px}
+.dv-so-print{display:none}
+.dv-clinica{background:#F1F5F9;border:1.5px solid #CBD5E1;border-radius:12px;padding:14px 16px;margin-top:16px;color:#1E293B}
+.dv-clinica h3{font-size:17px;margin:0 0 8px;color:#1E293B}
+.dv-clinica h3 small{font:600 13px 'Karla',sans-serif;color:#64748B}
+.dv-clinica ul{margin:0 0 8px;padding-left:18px}
+.dv-barra{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 4px}
+.dv-trat{display:inline-flex;gap:6px;align-items:center;font-size:14px;color:var(--tinta-suave)}
+.dv-trat select{padding:6px 8px;border-radius:8px;border:1.4px solid var(--borda);background:#fff;font:inherit}
+.dv-editando{outline:3px dashed var(--salvia);outline-offset:4px}
+.dv-genero{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dv-genero label{display:flex;align-items:center;justify-content:center;min-height:46px;border:1.5px solid var(--borda);border-radius:12px;background:var(--papel);font-weight:700;font-size:15px;cursor:pointer;text-align:center;padding:6px}
+.dv-genero label{position:relative}
+.dv-genero input{position:absolute;opacity:0;pointer-events:none;width:1px!important;height:1px!important;min-height:0!important;left:0;top:0;margin:0;padding:0}
+.dv-genero input:checked+span{color:#fff}
+.dv-genero label:has(input:checked){background:var(--argila);border-color:var(--argila);color:#fff}
+
+/* celular: as tabelas viram fichas empilhadas */
+@media screen and (max-width:620px){
+  .dv-tabela thead{display:none}
+  .dv-tabela table,.dv-tabela tbody,.dv-tabela tr,.dv-tabela td{display:block;width:100%}
+  .dv-tabela tr{border:1px solid var(--borda);border-radius:10px;margin-bottom:8px;padding:8px 12px;background:#fff}
+  .dv-tabela td{border:0;padding:2px 0}
+  .dv-tabela td[data-r]::before{content:attr(data-r) ": ";font-weight:800;color:var(--argila);font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  .dv-tabela tr.pico{background:#FBF0E8}
+  .dv-tabela td.pico{background:none;color:var(--argila)}
+  .dv-matriz td:first-child{white-space:normal}
+}
+/* PDF: só a devolutiva, em A4 */
+#dv-impressao{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  body.dv-imprimindo > *:not(#dv-impressao){display:none!important}
+  body.dv-imprimindo #dv-impressao{display:block!important}
+  body.dv-imprimindo{background:#fff!important;padding:0!important}
+  #dv-impressao .dv{border:0;padding:0;margin:0;font-size:11.5pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #dv-impressao .dv-sem-print{display:none!important}
+  #dv-impressao .dv-so-print{display:inline}
+  #dv-impressao .dv-pico,#dv-impressao .dv-card,#dv-impressao .dv-acao,#dv-impressao .dv-sintese,#dv-impressao .dv-destaque,#dv-impressao .dv-final,#dv-impressao .dv-acordo,#dv-impressao tr{break-inside:avoid}
+  #dv-impressao .dv-h2{break-after:avoid}
+  #dv-impressao .dv-2col,#dv-impressao .dv-plano{grid-template-columns:1fr 1fr}
+  #dv-impressao .dv-dist{grid-template-columns:1fr}
+  #dv-impressao .dv-tabela{overflow:visible}
+  #dv-impressao .dv-teia-img{max-width:270px}
+  #dv-impressao .dv-topo{grid-template-columns:1.1fr 1fr}
+}
+.rotulo-campo{display:block;font-weight:700;font-size:16px;margin-bottom:8px;color:var(--tinta)}
