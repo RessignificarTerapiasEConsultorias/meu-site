@@ -36,9 +36,11 @@
 
       <!-- 1b. pagamento ainda não confirmado -->
       <div id="eEsperando" class="passo-estado" hidden>
-        <h2 style="font-size:26px">Ainda não recebemos a confirmação</h2>
-        <p class="lead" style="margin:8px auto 18px">Se você pagou por Pix, pode levar alguns minutos. Guarde o link desta página: assim que o pagamento cair, é só voltar aqui.</p>
-        <button class="btn" type="button" id="btnDeNovo" style="width:100%">Conferir de novo</button>
+        <h2 style="font-size:26px" id="espTitulo">Ainda não recebemos a confirmação</h2>
+        <p class="lead" style="margin:8px auto 18px" id="espTexto">Se você pagou por Pix, pode levar alguns minutos. Guarde o link desta página: assim que o pagamento cair, é só voltar aqui.</p>
+        <a class="btn" id="btnVoltarPagar" href="#" style="width:100%;margin-bottom:10px" hidden>Voltar para o pagamento</a>
+        <button class="btn line" type="button" id="btnDeNovo" style="width:100%">Já paguei · conferir de novo</button>
+        <p style="margin-top:14px"><a href="../" id="novaCompra">Começar uma nova compra</a></p>
         <p style="margin-top:14px"><a href="#" data-wa="Olá, Mauricio! Paguei o Teste de Travas Mentais, mas a página ainda não liberou. Meu e-mail: ">Já paguei e não liberou · falar no WhatsApp</a></p>
       </div>
 
@@ -153,6 +155,7 @@
   var token = (q.get("p") || lerLocal("travas_pedido") || "").toLowerCase();
   var retorno = { transaction_nsu: q.get("transaction_nsu") || "", slug: q.get("slug") || "" };
   var pedido = null, fotoDados = null, tentativas = 0;
+  var veioDoPagamento = !!retorno.transaction_nsu;     // a InfinitePay só manda isso quando o pagamento foi feito
 
   /* paletas prontas: cada uma troca as cores do teste inteiro */
   var PALETAS = [
@@ -197,13 +200,25 @@
       if (j.status === "pago" || j.status === "ativando") { abrirForm(j); return; }
       if (j.status === "cancelado") { mostrar("eInvalido"); return; }
       tentativas++;
-      if (tentativas < 40) { mostrar("eConferindo"); setTimeout(conferir, 4000); } else mostrar("eEsperando");
+      if (tentativas < (veioDoPagamento ? 40 : 2)) { mostrar("eConferindo"); setTimeout(conferir, 4000); } else esperando(j);
     }).catch(function () {
       tentativas++;
       if (tentativas < 40) setTimeout(conferir, 5000); else mostrar("eEsperando");
     });
   }
-  $("#btnDeNovo").addEventListener("click", function () { tentativas = 30; mostrar("eConferindo"); conferir(); });
+  function esperando(j) {
+    var link = j && j.checkout_url;
+    if (!veioDoPagamento) {
+      $("#espTitulo").textContent = "O pagamento ainda não foi concluído";
+      $("#espTexto").textContent = link
+        ? "Toque abaixo para voltar à página de pagamento e terminar. Assim que o pagamento for aprovado, o seu teste é liberado aqui."
+        : "Se você já pagou, aguarde alguns minutos e confira de novo.";
+    }
+    var b = $("#btnVoltarPagar"); if (link) { b.href = link; b.hidden = false; } else b.hidden = true;
+    mostrar("eEsperando");
+  }
+  $("#btnDeNovo").addEventListener("click", function () { tentativas = veioDoPagamento ? 30 : 0; mostrar("eConferindo"); conferir(); });
+  $("#novaCompra").addEventListener("click", function () { try { localStorage.removeItem("travas_pedido"); } catch (e) {} });
 
   function abrirForm(j) {
     $("#fNome").value = j.nome || ""; $("#fZap").value = zapFormatado(j.whatsapp);
