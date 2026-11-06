@@ -104,3 +104,5 @@
   #dv-impressao .dv-topo{grid-template-columns:1.1fr 1fr}
 }
 .rotulo-campo{display:block;font-weight:700;font-size:16px;margin-bottom:8px;color:var(--tinta)}
+.dv-acoes{display:grid;gap:10px;margin:18px 0}
+.dv-acoes .btn{margin:0}

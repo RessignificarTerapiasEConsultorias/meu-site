@@ -444,3 +444,108 @@ function dvLigar(raiz, aoTrocarGenero){
   });
   const gs = raiz.querySelector('[data-dv-genero]'); if(gs && aoTrocarGenero) gs.addEventListener('change', () => aoTrocarGenero(gs.value));
 }
+
+/* ============================================================================
+   AÇÕES DA TERAPEUTA no resultado do Caráter Comportamental (iguais às do Teste de Travas):
+   WhatsApp, e-mail (para ela e para o cliente), apresentação, copiar a ficha e PDF.
+   ============================================================================ */
+/* textos da "Gerar apresentação" quando ela vem do Caráter Comportamental */
+const DV_VOC = { pct:true, teste:'Teste de Caráter Comportamental', item:'traço', itens:'traços',
+  capaTit:'o seu mapa de caráter e o caminho para o equilíbrio.', capaSub:'Plano para trabalhar os traços que mais pesam em você hoje.',
+  mapaTit:'Os seus 5 traços de caráter', caminhoTit:'Como vamos trabalhar os seus traços',
+  fase1:'Começamos pelo seu pico primário. Como trabalhamos: ', fase2:'Seguimos para o pico secundário, integrando os dois. Como trabalhamos: ',
+  evol:'Cada teste mostra, em números, como os seus traços estão se equilibrando.',
+  altoTxt:'em pico: os traços que mais comandam o seu jeito de ser hoje.', baixoTxt:'traços de suporte: recursos que já sustentam você.',
+  destaque:'É o seu pico primário, o primeiro a ser trabalhado.',
+  dica:'Tudo o que aparece na apresentação (os traços, as porcentagens e os picos) vem do teste desta pessoa.',
+  objDinheiro:'O que se paga em padrões que se repetem costuma custar mais, todos os dias.',
+  objTentei:'Trabalhamos os traços que mais pesam em você, um de cada vez.' };
+const DV_LIB = {
+  esquizoide:{ x:'pertencimento', y:'capacidade', resumo:'A sua mente cria e enxerga longe, mas o medo de incomodar faz você se recolher e guardar as ideias.', custo:'Ideias que não saem do papel e a sensação de não pertencer, mesmo perto de quem você ama.', imagine:['Você coloca as suas ideias no mundo sem pedir licença.', 'Estar com as pessoas deixa de cansar e passa a nutrir.'] },
+  oral:{ x:'nutrição interna', y:'força', resumo:'Você cuida de todos com o coração, mas busca fora o afeto que ainda não aprendeu a se dar.', custo:'Cansaço, carência e a sensação de dar muito e receber pouco.', imagine:['Você pede o que precisa, com clareza e sem culpa.', 'A sua energia volta, porque você também se cuida.'] },
+  psicopata:{ x:'confiança', y:'competência', resumo:'Você lidera e resolve, mas o medo de ser passado para trás faz você controlar tudo e esconder a fragilidade.', custo:'Tensão constante, sobrecarga e relações em que é difícil baixar a guarda.', imagine:['Você delega sem perder o sono.', 'Mostrar o que sente deixa de parecer fraqueza.'] },
+  masoquista:{ x:'leveza', y:'força', resumo:'Você sustenta tudo com lealdade e resistência, mas engole o que sente e carrega o peso dos outros.', custo:'Corpo tenso, mágoas guardadas e dificuldade de dizer "não".', imagine:['Você diz "não" sem culpa, e o corpo agradece.', 'O prazer volta a ter espaço na sua rotina.'] },
+  rigido:{ x:'permissão', y:'desempenho', resumo:'Você realiza muito e com qualidade, mas se cobra perfeição e tem dificuldade de relaxar.', custo:'Exaustão, autocrítica constante e a sensação de nunca ser suficiente.', imagine:['Você celebra o que fez antes de olhar o que falta.', 'Descansar deixa de ser culpa e vira parte do resultado.'] }
+};
+const DV_TEC = {
+  esquizoide:'trazer você de volta para o corpo e para as relações, com segurança, para que as suas ideias ganhem o mundo.',
+  oral:'fortalecer a sua nutrição interna e o pedido claro, para você receber sem precisar se esvaziar.',
+  psicopata:'construir confiança sem controle e espaço para a vulnerabilidade, sem perder a sua força.',
+  masoquista:'soltar o que está guardado no corpo, aprender a dizer "não" e abrir espaço para o prazer.',
+  rigido:'flexibilizar a autocobrança e ensinar o corpo a descansar, mantendo a sua excelência.'
+};
+function dvQuem(){ return typeof T_A !== 'undefined' ? T_A : 'a ' + PRIM_TER; }
+/* a devolutiva em texto, para e-mail e para copiar (tudo = inclui a leitura da terapeuta) */
+function dvTexto(raiz, tudo){
+  const dv = raiz && raiz.querySelector('[data-dv]'); if(!dv) return '';
+  const c = dv.cloneNode(true);
+  if(!tudo) c.querySelectorAll('.dv-sem-print').forEach(x => x.remove());
+  c.querySelectorAll('canvas,.teia,.legenda,.dv-so-print').forEach(x => x.remove());
+  c.querySelectorAll('h2').forEach(x => x.insertAdjacentText('beforebegin', '\n'));
+  c.querySelectorAll('li').forEach(x => x.insertAdjacentText('afterbegin', '• '));
+  c.querySelectorAll('td,th').forEach(x => x.insertAdjacentText('afterend', ' | '));
+  c.querySelectorAll('h1,h2,h3,h4,p,li,tr,dt,dd,.dv-pico-topo,.dv-assinaturas span').forEach(x => x.insertAdjacentText('afterend', '\n'));
+  return c.textContent.replace(/[ \t]+/g, ' ').replace(/ ?\n ?/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+function dvZapNum(t){ let d = String(t || '').replace(/\D/g, ''); if(d.length === 10 || d.length === 11) d = '55' + d; return d.length >= 12 && d.length <= 13 ? d : ''; }
+function dvFone(t){ const d = String(t || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, ''); return d.length >= 10 ? '(' + d.slice(0, 2) + ') ' + d.slice(2, d.length - 4) + '-' + d.slice(-4) : ''; }
+/* o = { pessoas:[{nome, whatsapp, email, genero, calc}], codigo, data, casal, area (onde está a devolutiva) } */
+function dvAcoes(el, o){
+  if(!el) return;
+  const ps = o.pessoas, prim = p => tcPrim(p.nome), casal = !!o.casal;
+  const svg = (document.querySelector('#btn-zap-resultado svg, .btn-zap svg') || {}).outerHTML || '';
+  let h = '<div class="dv-acoes dv-sem-print">';
+  ps.forEach((p, i) => { h += `<a class="btn btn-zap" data-dv-zap="${i}" href="#" target="_blank" rel="noopener">${svg}<span class="duas">Falar com ${escV(prim(p))} no WhatsApp<small>${escV(dvFone(p.whatsapp) || 'escolher contato')} · mensagem já escrita</small></span></a>`; });
+  h += `<button type="button" class="btn btn-argila" data-dv-email="eu"><span class="duas">Enviar para o meu e-mail<small>${escV(CONFIG.emailTerapeuta || '')}</small></span></button>`;
+  ps.forEach((p, i) => { if(p.email) h += `<button type="button" class="btn btn-contorno" data-dv-email="${i}"><span class="duas">Enviar para ${escV(prim(p))}<small>${escV(p.email)}</small></span></button>`; });
+  ps.forEach((p, i) => { h += `<button type="button" class="btn btn-argila" data-dv-apres="${i}"><span class="duas">Gerar apresentação<small>plano de acompanhamento para ${escV(prim(p))}</small></span></button>`; });
+  h += '<button type="button" class="btn btn-contorno" data-dv-copiar>Copiar a ficha completa</button><button type="button" class="btn btn-contorno" data-dv-imprimir>Salvar em PDF ou imprimir</button></div>';
+  el.innerHTML = h;
+  const nomes = ps.map(p => p.nome).join(' e ');
+  el.querySelectorAll('[data-dv-zap]').forEach(a => {
+    const p = ps[+a.dataset.dvZap], c = p.calc, par = DV_PARES[dvPar(c.ordem[0].id, c.ordem[1].id)];
+    const msg = casal
+      ? ['Oi, ' + prim(p) + '! Aqui é ' + dvQuem() + '.', '', 'A devolutiva de vocês dois do ' + TC_NOME + ' está pronta. Ela mostra como os traços de cada um se encontram na relação e o caminho para vocês se entenderem melhor.', '', 'Quero apresentar com calma o que ela mostra. Qual o melhor horário para conversarmos?'].join('\n')
+      : ['Oi, ' + prim(p) + '! Aqui é ' + dvQuem() + '.', '', 'A sua devolutiva do ' + TC_NOME + ' está pronta. Os seus dois picos são ' + c.ordem[0].nome + ' (' + tcPct(c.ordem[0].pct) + ') e ' + c.ordem[1].nome + ' (' + tcPct(c.ordem[1].pct) + '): um perfil de ' + par.arquetipo + '.', '', 'Quero te apresentar com calma o que isso significa e os próximos passos. Qual o melhor horário para conversarmos?'].join('\n');
+    a.href = 'https://wa.me/' + dvZapNum(p.whatsapp) + '?text=' + encodeURIComponent(msg);
+  });
+  el.querySelectorAll('[data-dv-email]').forEach(b => b.addEventListener('click', async () => {
+    const eu = b.dataset.dvEmail === 'eu', destino = eu ? CONFIG.emailTerapeuta : ps[+b.dataset.dvEmail].email;
+    const corpo = dvTexto(o.area, eu), assunto = TC_NOME + ' — ' + nomes + (o.data ? ' (' + dvData(o.data) + ')' : '');
+    const rotulo = b.innerHTML; b.disabled = true; b.textContent = 'Enviando...';
+    let ok = false;
+    try{ if(typeof modoLocal !== 'function' || !modoLocal()){ const r = await api(ACOES.enviarEmail, { destino, assunto, corpo, codigo:o.codigo }); ok = !!(r && r.ok !== false); } }catch(e){ ok = false; }
+    b.disabled = false;
+    if(ok){ b.textContent = 'E-mail enviado para ' + destino; setTimeout(() => { b.innerHTML = rotulo; }, 3000); return; }
+    b.innerHTML = rotulo;
+    location.href = 'mailto:' + encodeURIComponent(destino) + '?subject=' + encodeURIComponent(assunto) + '&body=' + encodeURIComponent(corpo.slice(0, 1800));
+  }));
+  el.querySelectorAll('[data-dv-apres]').forEach(b => b.addEventListener('click', () => {
+    const p = ps[+b.dataset.dvApres];
+    apresAbrir({ nome:p.nome, prim:prim(p), genero:p.genero || '', idade:'', motivo:'', dor:'', olhar:'', atencao:0,
+      travas:p.calc.ordem.map((x, i) => ({ id:x.id, nome:x.nome, nota:x.pct, nivel:i < 2 ? 'alta' : 'baixa' })) }, { lib:DV_LIB, tec:DV_TEC, voc:DV_VOC });
+  }));
+  const cp = el.querySelector('[data-dv-copiar]');
+  cp.addEventListener('click', async () => {
+    try{ await navigator.clipboard.writeText(dvTexto(o.area, true)); cp.textContent = 'Ficha copiada!'; }catch(e){ cp.textContent = 'Não consegui copiar'; }
+    setTimeout(() => { cp.textContent = 'Copiar a ficha completa'; }, 2200);
+  });
+  el.querySelector('[data-dv-imprimir]').addEventListener('click', () => dvImprimir(o.area));
+}
+
+/* ============================================================================
+   PÁGINA INICIAL com os dois testes (Travas + Caráter Comportamental)
+   ============================================================================ */
+function dvCapaDoisTestes(){
+  const capa = document.getElementById('tela-capa'); if(!capa || capa.dataset.doisTestes) return;
+  capa.dataset.doisTestes = '1';
+  const quem = dvQuem(), lt = capa.querySelector('.lado-texto') || capa;
+  const selo = lt.querySelector('.selo'); if(selo) selo.textContent = 'Teste de Travas Mentais · Teste de Caráter Comportamental';
+  const h1 = lt.querySelector('h1'); if(h1) h1.textContent = 'O que te trava hoje, e como a sua história moldou o seu jeito de ser?';
+  const ps = lt.querySelectorAll('.texto-capa');
+  if(ps[1]) ps[1].innerHTML = 'Aqui você encontra dois testes. O <b>Teste de Travas Mentais</b> mapeia 10 travas e mostra, em números, quais estão mais ativas em você hoje. O <b>Teste de Caráter Comportamental</b> identifica os 5 traços de caráter que se formaram na sua história e como eles aparecem no seu dia a dia. Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d' + escV(quem) + '.';
+  const ul = lt.querySelector('.lista-leve');
+  if(ul) ul.innerHTML = '<li>Teste de Travas Mentais: 50 perguntas, de 10 a 15 minutos</li><li>Teste de Caráter Comportamental: 40 afirmações, de 8 a 12 minutos, individual ou casal</li>' +
+    '<li>O código que você recebeu já abre o teste certo</li><li>O resultado vai direto para ' + escV(quem) + ', para vocês conversarem a partir dele</li>';
+  document.title = 'Teste de Travas Mentais e Teste de Caráter Comportamental' + (window.T_NOME ? ' · ' + T_NOME : '');
+}

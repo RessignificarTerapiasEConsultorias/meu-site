@@ -723,15 +723,15 @@ html.t-erro .t-girar{display:none}
 <section class="tela" id="tela-dados2">
   <button class="voltar" id="voltar-dados1">← Voltar</button>
   <div class="passo-form">Etapa 2 de 3</div>
-  <h1 style="font-size:30px;margin:0 0 10px">A sua história</h1>
-  <p style="color:var(--tinta-suave)">Escreva do seu jeito. É isso que {{A}} lê antes de falar com você.</p>
+  <h1 style="font-size:30px;margin:0 0 10px">Um pouco sobre você</h1>
+  <p style="color:var(--tinta-suave)">Escreva do seu jeito. Isso ajuda {{A}} a entender o seu resultado com mais cuidado.</p>
   <div class="cartao">
     <div class="campo" id="c-motivo">
-      <label for="campo-motivo">O que te levou a procurar por terapia? <span class="opc">(opcional)</span></label>
+      <label for="campo-motivo">O que te levou a fazer este teste? <span class="opc">(opcional)</span></label>
       <textarea id="campo-motivo" placeholder="Pode escrever à vontade"></textarea>
     </div>
     <div class="campo" id="c-dor">
-      <label for="campo-dor">Qual é a sua maior dor e quando essa dor começou?</label>
+      <label for="campo-dor">O que mais tem pesado para você hoje, e desde quando?</label>
       <textarea id="campo-dor" placeholder="Conte com as suas palavras"></textarea>
       <div class="erro"></div>
     </div>
@@ -1521,7 +1521,7 @@ async function validarCodigo(codigo){
   if(!modoLocal()){
     const r = await api(ACOES.validarCodigo,{codigo});
     if(r && r.ok === false && r.erro) return {ok:false, msg:'Não consegui verificar agora. Confira a sua internet e tente de novo.'};
-    if(r && (r.valido === true || r.ok === true)) return {ok:true, mostrar: r.mostrar_resultado !== false, urgencia: r.urgencia !== false, cliente: r.cliente || '', compartilhado: r.compartilhado === true, duracao: r.duracao_min || 30};
+    if(r && (r.valido === true || r.ok === true)) return {ok:true, teste: r.teste || 'travas', tipo: r.tipo || 'individual', mostrar: r.mostrar_resultado !== false, urgencia: r.urgencia !== false, cliente: r.cliente || '', compartilhado: r.compartilhado === true, duracao: r.duracao_min || 30};
     return {ok:false, msg:(r && r.msg) || 'Esse código não está valendo. Ele já foi usado ou foi digitado diferente.'};
   }
   const lista = ler(CHAVE_CODIGOS, []);
@@ -2219,7 +2219,7 @@ function textoResultado(r){
     'RESUMO: ' + r.altas + ' travas altas, ' + r.medias + ' médias, ' + r.baixas + ' baixas.\n\n' +
     'NOTAS (1 a 10):\n' + ord.map(l => '- ' + l.nome + ': ' + num(l.nota) + ' (' + nomeNivel(l.nivel).toLowerCase() + ')').join('\n') +
     '\n\nMOTIVO DA BUSCA POR TERAPIA:\n' + (estado.motivo || '(não respondeu)') +
-    '\n\nMAIOR DOR:\n' + estado.dor +
+    '\n\nO QUE MAIS TEM PESADO:\n' + estado.dor +
     '\n\nCOMO SE VÊ HOJE:\n' + estado.olhar;
 }
 
@@ -2647,7 +2647,7 @@ function textoFicha(r){
     'NOTAS (1 a 10):\n' + ord.map(l=>'- ' + l.nome + ': ' + num(l.nota) + ' (' + nomeNivel(nivelDe(l.nota)).toLowerCase() + ')').join('\n') +
     textoAtencao(r) +
     '\n\nMOTIVO DA BUSCA POR TERAPIA:\n' + (r.motivo||'(não respondeu)') +
-    '\n\nMAIOR DOR:\n' + (r.dor||'') +
+    '\n\nO QUE MAIS TEM PESADO:\n' + (r.dor||'') +
     '\n\nCOMO SE VÊ HOJE:\n' + (r.olhar||'');
 }
 
@@ -2690,7 +2690,7 @@ window.addEventListener('message', async e => {
   if(m.tipo === 'salvar'){ const r = await apresSalvarPadrao(m.dados); fr.contentWindow.postMessage({ tipo:'salvou', id:m.id, ok: !!(r && r.ok) }, '*'); }
 });
 const AP_DELICADO = /(morrer|morte|suic[ií]d|me matar|tirar (a )?minha vida|acabar com tudo|n[aã]o quero mais viver|sem for[cç]as para viver|desaparecer)/i;
-async function apresAbrir(lead){
+async function apresAbrir(lead, extra){
   if(AP_DELICADO.test([lead.motivo, lead.dor, lead.olhar].join(' '))){
     if(!confirm('O relato desta pessoa menciona temas delicados (como luto ou vontade de morrer). Antes de apresentar um plano comercial, vale priorizar o acolhimento. Quer continuar mesmo assim?')) return;
   }
@@ -2705,6 +2705,7 @@ async function apresAbrir(lead){
     terap: { nome: CONFIG.terapeuta, zap: CONFIG.whatsappNumero, insta, papel, foto },
     tec: Object.fromEntries(TRAVAS.map(t => [t.id, t.tecnica]))
   };
+  if(extra) Object.assign(cfg, extra);   // Caráter Comportamental: textos e biblioteca dos traços
   const html = document.getElementById('ap-src').textContent.split('<\\/script>').join('<' + '/script>');
   const url = URL.createObjectURL(new Blob([html], { type:'text/html' }));
   const o = document.getElementById('ap-overlay'); o.innerHTML = '';
@@ -2757,8 +2758,8 @@ function abrirDetalhe(r){
         <dt>Renda</dt><dd>${escH(r.renda||'—')}</dd>
       </dl>
       <div class="aberta">
-        <h4>O que a levou a procurar terapia</h4><p>${r.motivo ? escH(r.motivo) : '<i>não respondeu</i>'}</p>
-        <h4>Maior dor e quando começou</h4><p>${escH(r.dor||'—')}</p>
+        <h4>O que levou a fazer o teste</h4><p>${r.motivo ? escH(r.motivo) : '<i>não respondeu</i>'}</p>
+        <h4>O que mais tem pesado, e desde quando</h4><p>${escH(r.dor||'—')}</p>
         <h4>O que vê e sente ao olhar para si</h4><p>${escH(r.olhar||'—')}</p>
       </div>
     </div>
@@ -3580,13 +3581,14 @@ function tcDetalheIndividual(r){
   tcAbrirDetalhe(`<h2 style="font-size:24px;margin:6px 0 4px">${escV(r.nome)}</h2>
     <p class="secao-sub">${escV(r.codigo)} · ${tcQuando(r.criado_em)}${d.duracaoMin != null ? ' · ' + d.duracaoMin + ' min' : ''}<br>${escV(d.email || '')}${d.whatsapp ? ' · ' + escV(d.whatsapp) : ''}</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${zap ? `<a class="mini-btn" style="display:inline-flex;align-items:center;text-decoration:none" href="https://wa.me/${zap}" target="_blank" rel="noopener">WhatsApp</a>` : ''}<button type="button" class="mini-btn" id="tc-copiar-resumo">Copiar o resumo</button></div>
-    <div id="dv-area"></div>${tcTabelaRespostas(d.respostas)}`);
+    <div id="dv-area"></div><div id="dv-acoes"></div>${tcTabelaRespostas(d.respostas)}`);
   const desenharDv = gen => {
     const area = $('#dv-area');
     area.innerHTML = dvBarra(true, gen) + dvIndividual({ nome:r.nome, genero:gen, data:String(r.criado_em || '').slice(0, 10), calc, respostas:d.respostas, terapeuta:true });
     tcLigarTeia(area, tcSeries1(calc)); dvLigar(area, desenharDv);
   };
   desenharDv(d.genero || '');
+  dvAcoes($('#dv-acoes'), { pessoas:[{ nome:r.nome, whatsapp:d.whatsapp, email:d.email, genero:d.genero, calc }], codigo:r.codigo, data:String(r.criado_em || '').slice(0, 10), area:$('#dv-area') });
   $('#tc-copiar-resumo').addEventListener('click', async e => { try{ await navigator.clipboard.writeText(tcResumoTexto(r.nome, calc)); e.target.textContent = 'Copiado!'; }catch(err){ e.target.textContent = 'Não consegui'; } setTimeout(() => { e.target.textContent = 'Copiar o resumo'; }, 1800); });
 }
 async function tcDetalheCasal(codigo){
@@ -3604,7 +3606,7 @@ async function tcDetalheCasal(codigo){
   $('#tc-detalhe-conteudo').innerHTML = `<h2 style="font-size:24px;margin:6px 0 4px">${escV(n1)} e ${escV(n2)}</h2>
     <p class="secao-sub">Casal · ${codigo} · ${data.modo === 'juntos' ? 'responderam juntos, no mesmo aparelho' : 'cada um no seu aparelho'} · concluído em ${tcQuando(data.concluido_em)}</p>
     <button type="button" class="mini-btn" id="tc-copiar-resumo-c" style="margin-bottom:14px">Copiar o resumo do casal</button>
-    <div id="dv-area"></div><h2 class="secao-titulo">Contatos e respostas de cada um</h2>${ficha(p1, 1, k.p1)}${ficha(p2, 2, k.p2)}`;
+    <div id="dv-area"></div><div id="dv-acoes"></div><h2 class="secao-titulo">Contatos e respostas de cada um</h2>${ficha(p1, 1, k.p1)}${ficha(p2, 2, k.p2)}`;
   const g1 = (p1.dados && p1.dados.genero) || '', g2 = (p2.dados && p2.dados.genero) || '';
   const desenharDvC = (ga, gb) => {
     const area = $('#dv-area');
@@ -3617,6 +3619,8 @@ async function tcDetalheCasal(codigo){
     area.querySelector('[data-dv-gb]').addEventListener('change', e => desenharDvC(ga, e.target.value));
   };
   desenharDvC(g1, g2);
+  dvAcoes($('#dv-acoes'), { casal:true, codigo, data:String(data.concluido_em || '').slice(0, 10), area:$('#dv-area'),
+    pessoas:[{ nome:p1.nome, whatsapp:p1.telefone, email:p1.email, genero:g1, calc:k.p1 }, { nome:p2.nome, whatsapp:p2.telefone, email:p2.email, genero:g2, calc:k.p2 }] });
   $('#tc-copiar-resumo-c').addEventListener('click', async e => { try{ await navigator.clipboard.writeText(tcResumoTexto(p1.nome, k.p1) + '\n\n' + tcResumoTexto(p2.nome, k.p2)); e.target.textContent = 'Copiado!'; }catch(err){ e.target.textContent = 'Não consegui'; } setTimeout(() => { e.target.textContent = 'Copiar o resumo do casal'; }, 1800); });
 }
 
@@ -3627,6 +3631,8 @@ async function tcDetalheCasal(codigo){
     if(t) tcAbrirCapa(t);
   }catch(e){}
 })();
+/* página inicial fala dos dois testes (no domínio, só para quem tem o Caráter Comportamental liberado) */
+(function(){ const d = window.__T && window.__T.dados; if(!d || (Array.isArray(d.testes) && d.testes.indexOf('tracos') > -1)) dvCapaDoisTestes(); })();
 /* O Teste de Caráter Comportamental só aparece na área de quem tem o teste liberado (travas_paginas.dados.testes) */
 (function(){ const d = window.__T && __T.dados, ok = !!(d && Array.isArray(d.testes) && d.testes.indexOf('tracos') > -1);
   if(!ok){ const c = $('#alt-teste'); if(c && c.closest('.campo')) c.closest('.campo').style.display = 'none'; } })();
@@ -3960,7 +3966,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--f-cor);outline-o
   </div>
 </div>
 
-<script type="text/x-app">
+<script>
 /* ============================ utilidades ============================ */
 const $ = (s, r=document) => r.querySelector(s), $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const brl = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
@@ -3975,7 +3981,7 @@ const lum = h => { const [r,g,b]=rgb(h).map(v=>{v/=255;return v<=.03928?v/12.92:
 const pt = n => (n===1 ? '1' : String(n));
 
 /* ============================ biblioteca de textos por trava ============================ */
-const LIB = {"autoestima": {"x": "autoimagem", "y": "capacidade", "resumo": "Você se enxerga menor do que é, e a primeira voz que aparece diz que você não dá conta.", "custo": "Decisões adiadas e oportunidades que passam enquanto você duvida de si.", "imagine": ["Você decide sem pedir licença à dúvida.", "A primeira voz que aparece passa a ser de apoio."]}, "escassez": {"x": "mentalidade de escassez", "y": "oportunidade", "resumo": "Por dentro, nunca é suficiente: a mente trabalha com a conta de que tudo pode faltar.", "custo": "Uma vida em alerta, em que descansar e receber parecem perigosos.", "imagine": ["Você recebe, compartilha e descansa sem culpa.", "Dinheiro e tempo deixam de parecer uma ameaça."]}, "aprovacao": {"x": "aprovação", "y": "timidez", "resumo": "A sua decisão passa primeiro pelo olhar dos outros, e o seu valor depende do retorno que recebe.", "custo": "Escolhas que não são suas e muita energia gasta tentando agradar.", "imagine": ["Você diz o que pensa sem medo de perder o vínculo.", "Suas escolhas passam a ter a sua voz."]}, "pai": {"x": "vínculo com a figura paterna", "y": "passado", "resumo": "Algo da relação com a figura paterna ficou em aberto e ainda aparece nos seus vínculos.", "custo": "Relações que repetem o mesmo roteiro e uma sensação de falta difícil de explicar.", "imagine": ["Você se relaciona com mais confiança e menos defesa.", "O que ficou em aberto deixa de pesar nos seus vínculos."]}, "aprendizado": {"x": "crença sobre aprender", "y": "inteligência", "resumo": "Aprender parece difícil ou impossível, e você se sente atrás dos outros.", "custo": "Cursos, cargos e projetos que ficam de fora porque “não é para mim”.", "imagine": ["Você abre um assunto novo com curiosidade, não com medo.", "Você se vê capaz de aprender no seu ritmo."]}, "limites": {"x": "limites", "y": "coragem", "resumo": "Dizer não custa caro: você cede, se cala e depois sente o peso de ter ficado em segundo plano.", "custo": "Cansaço, ressentimento e relações em que você sempre cede.", "imagine": ["Você diz não com tranquilidade e sem culpa.", "Seus limites passam a ser respeitados."]}, "perfeccionismo": {"x": "exigência interna", "y": "esforço", "resumo": "Nada fica pronto porque nada fica perfeito, e a autocrítica segue ligada mesmo quando está tudo bem.", "custo": "Projetos que ficam no quase pronto e uma autocobrança que não desliga.", "imagine": ["Você entrega e comemora, sem esperar o perfeito.", "A autocrítica deixa de ser a voz mais alta."]}, "salvadora": {"x": "autocuidado", "y": "tempo", "resumo": "Você cuida de todo mundo e sente culpa quando precisa pedir ajuda ou pensar em si.", "custo": "Esgotamento e a sensação de que ninguém cuida de quem cuida.", "imagine": ["Você ajuda por escolha, não por obrigação.", "Pedir ajuda passa a ser natural."]}, "procrastinacao": {"x": "medo de errar", "y": "preguiça", "resumo": "Você sabe o que precisa fazer e adia, entre a culpa de não ter começado e o medo de errar.", "custo": "Prazos no limite, culpa recorrente e metas que ficam para depois.", "imagine": ["Você começa cedo, sem esperar o momento perfeito.", "A culpa dá lugar a um avanço constante."]}, "toxico": {"x": "zona de conforto", "y": "sorte", "resumo": "Você permanece onde se sente mal porque o conhecido, mesmo desconfortável, parece mais seguro que o novo.", "custo": "Anos no mesmo lugar, em ambientes e relações que não fazem bem.", "imagine": ["Você escolhe ambientes e pessoas que fazem bem.", "Mudar deixa de parecer uma ameaça."]}};
+let LIB = {"autoestima": {"x": "autoimagem", "y": "capacidade", "resumo": "Você se enxerga menor do que é, e a primeira voz que aparece diz que você não dá conta.", "custo": "Decisões adiadas e oportunidades que passam enquanto você duvida de si.", "imagine": ["Você decide sem pedir licença à dúvida.", "A primeira voz que aparece passa a ser de apoio."]}, "escassez": {"x": "mentalidade de escassez", "y": "oportunidade", "resumo": "Por dentro, nunca é suficiente: a mente trabalha com a conta de que tudo pode faltar.", "custo": "Uma vida em alerta, em que descansar e receber parecem perigosos.", "imagine": ["Você recebe, compartilha e descansa sem culpa.", "Dinheiro e tempo deixam de parecer uma ameaça."]}, "aprovacao": {"x": "aprovação", "y": "timidez", "resumo": "A sua decisão passa primeiro pelo olhar dos outros, e o seu valor depende do retorno que recebe.", "custo": "Escolhas que não são suas e muita energia gasta tentando agradar.", "imagine": ["Você diz o que pensa sem medo de perder o vínculo.", "Suas escolhas passam a ter a sua voz."]}, "pai": {"x": "vínculo com a figura paterna", "y": "passado", "resumo": "Algo da relação com a figura paterna ficou em aberto e ainda aparece nos seus vínculos.", "custo": "Relações que repetem o mesmo roteiro e uma sensação de falta difícil de explicar.", "imagine": ["Você se relaciona com mais confiança e menos defesa.", "O que ficou em aberto deixa de pesar nos seus vínculos."]}, "aprendizado": {"x": "crença sobre aprender", "y": "inteligência", "resumo": "Aprender parece difícil ou impossível, e você se sente atrás dos outros.", "custo": "Cursos, cargos e projetos que ficam de fora porque “não é para mim”.", "imagine": ["Você abre um assunto novo com curiosidade, não com medo.", "Você se vê capaz de aprender no seu ritmo."]}, "limites": {"x": "limites", "y": "coragem", "resumo": "Dizer não custa caro: você cede, se cala e depois sente o peso de ter ficado em segundo plano.", "custo": "Cansaço, ressentimento e relações em que você sempre cede.", "imagine": ["Você diz não com tranquilidade e sem culpa.", "Seus limites passam a ser respeitados."]}, "perfeccionismo": {"x": "exigência interna", "y": "esforço", "resumo": "Nada fica pronto porque nada fica perfeito, e a autocrítica segue ligada mesmo quando está tudo bem.", "custo": "Projetos que ficam no quase pronto e uma autocobrança que não desliga.", "imagine": ["Você entrega e comemora, sem esperar o perfeito.", "A autocrítica deixa de ser a voz mais alta."]}, "salvadora": {"x": "autocuidado", "y": "tempo", "resumo": "Você cuida de todo mundo e sente culpa quando precisa pedir ajuda ou pensar em si.", "custo": "Esgotamento e a sensação de que ninguém cuida de quem cuida.", "imagine": ["Você ajuda por escolha, não por obrigação.", "Pedir ajuda passa a ser natural."]}, "procrastinacao": {"x": "medo de errar", "y": "preguiça", "resumo": "Você sabe o que precisa fazer e adia, entre a culpa de não ter começado e o medo de errar.", "custo": "Prazos no limite, culpa recorrente e metas que ficam para depois.", "imagine": ["Você começa cedo, sem esperar o momento perfeito.", "A culpa dá lugar a um avanço constante."]}, "toxico": {"x": "zona de conforto", "y": "sorte", "resumo": "Você permanece onde se sente mal porque o conhecido, mesmo desconfortável, parece mais seguro que o novo.", "custo": "Anos no mesmo lugar, em ambientes e relações que não fazem bem.", "imagine": ["Você escolhe ambientes e pessoas que fazem bem.", "Mudar deixa de parecer uma ameaça."]}};
 let TEC = {"perfeccionismo": "olhar para a origem dessa exigência, reduzir a autocobrança e construir uma relação mais leve com o próprio desempenho.", "autoestima": "reconhecer de onde vem a sua autoimagem, resgatar os seus recursos e construir uma visão de si mais fiel ao que você é.", "escassez": "entender a sua relação com dinheiro e perda, rever as memórias de falta e construir um lugar de merecimento.", "aprovacao": "perceber de quem você busca aprovação e por quê, fortalecer a validação interna e treinar se posicionar sem medo de perder o vínculo.", "pai": "olhar para a relação com a figura paterna, acolher o que ficou em aberto e reconstruir o vínculo interno.", "procrastinacao": "entender o medo por trás do adiamento e desenhar passos pequenos e possíveis para sair do ciclo de evitação.", "aprendizado": "revisitar as experiências de aprendizagem que marcaram você e retomar a confiança na sua capacidade.", "limites": "entender o que dificulta dizer não, lidar com a culpa e construir limites que protegem sem afastar.", "toxico": "entender o que mantém você num ambiente que adoece, lidar com o medo de mudar e traçar um caminho seguro de saída.", "salvadora": "olhar para o papel de cuidadora que você assumiu, lidar com a culpa de se priorizar e resgatar o autocuidado."};
 const PRESETS_BASE = [{nome:'Azul e dourado',principal:'#0B2347',destaque:'#D4AF37'}].concat([{"nome": "Azul-marinho e terracota", "principal": "#1F2F5A", "destaque": "#9A5A38"}, {"nome": "Verde-petróleo e sálvia", "principal": "#152D2E", "destaque": "#4E756D"}, {"nome": "Marrom e dourado", "principal": "#65311C", "destaque": "#916626"}, {"nome": "Café e ouro velho", "principal": "#6B4438", "destaque": "#8C6A1F"}, {"nome": "Azul-aço e cobre", "principal": "#44536B", "destaque": "#B06A3C"}, {"nome": "Verde-floresta e ouro", "principal": "#22362C", "destaque": "#8F6A24"}, {"nome": "Roxo e ametista", "principal": "#5E4574", "destaque": "#7B4B9A"}]);
 let PRESETS = PRESETS_BASE.slice();
@@ -3988,6 +3994,25 @@ const OBJECOES = {
 };
 
 let LEAD = null;
+/* vocabulário da apresentação: Teste de Travas (padrão) ou Teste de Caráter Comportamental (vem do site) */
+const VOC_PADRAO = { pct:false, teste:'Teste de Travas Mentais', item:'trava', itens:'travas',
+  capaTit:'o seu mapa e o caminho para destravar.', capaSub:'Plano para trabalhar as travas que mais pesam em você hoje.',
+  mapaTit:'As suas 10 travas', caminhoTit:'Como vamos trabalhar as suas travas',
+  fase1:'Começamos pela trava que mais pesa. Como trabalhamos: ', fase2:'Seguimos para as próximas travas em destaque, com os mesmos recursos. Como trabalhamos: ',
+  evol:'Cada teste mostra, em números, se as travas altas estão baixando.',
+  altoTxt:'em nível alto, ativas no seu dia a dia hoje.', baixoTxt:'travas em nível baixo: uma base que já sustenta você.',
+  destaque:'É a trava em destaque hoje, a primeira a ser afinada.',
+  dica:'Tudo o que aparece na apresentação (travas, notas e pontos de atenção) vem do teste desta pessoa.',
+  objDinheiro:'O que se paga em travas não resolvidas costuma custar mais, todos os dias.',
+  objTentei:'Trabalhamos as travas que mais pesam em você, uma de cada vez.' };
+let VOC = Object.assign({}, VOC_PADRAO);
+const NT = t => VOC.pct ? dec1(t.nota) + '%' : dec1(t.nota);
+function aplicarVoc(){
+  const d = document.querySelector('#ap-quem + .dica'); if(d) d.textContent = VOC.dica;
+  const b = document.querySelector('#i-testes + span b'); if(b) b.textContent = VOC.teste;
+  if(typeof AJUDA !== 'undefined' && AJUDA.testes) AJUDA.testes[0] = VOC.teste;
+  OBJECOES.dinheiro.l[2] = VOC.objDinheiro; OBJECOES.tentei.l[1] = VOC.objTentei;
+}
 
 /* ============================ ajuda "?" (toque no celular, passar o mouse no computador) ============================ */
 const AJUDA = {
@@ -4227,7 +4252,7 @@ function lerForm(){
   const qAuto = (q, n) => q==='imf' ? 3 : q==='c4' ? Math.max(1,Math.floor(n/4)) : q==='c8' ? Math.max(1,Math.floor(n/8)) : 1;
   const inc = [{k:'sess', nome:'Sessões individuais', detalhe:'', qtd:sess, unit:avulsa}];
   if($('#i-testes').checked){ const q = Math.max(1, parseInt($('#q-testes').value)||3);
-    inc.push({k:'testes', nome:'Teste de Travas Mentais', detalhe:(q===3 ? '3 aplicações: no início, no meio e no fim' : q+(q===1?' aplicação':' aplicações')+' ao longo do processo'), qtd:q, unit:num($('#v-testes').value)}); }
+    inc.push({k:'testes', nome:VOC.teste, detalhe:(q===3 ? '3 aplicações: no início, no meio e no fim' : q+(q===1?' aplicação':' aplicações')+' ao longo do processo'), qtd:q, unit:num($('#v-testes').value)}); }
   if($('#i-whats').checked) inc.push({k:'whats', nome:'Contato por WhatsApp durante a semana', detalhe:$('#t-whats').value.trim(), qtd:1, unit:num($('#v-whats').value)});
   if($('#i-audio').checked){ const q = Math.max(1, parseInt($('#q-audio').value)||1); inc.push({k:'audio', nome:'Áudio de destrave', detalhe:$('#t-audio').value.trim(), qtd:q, unit:num($('#v-audio').value)}); }
   estado.testes.filter(t=>t.nome.trim()).forEach(t=>{ const q = Math.max(1, parseInt(t.qtd)||qAuto(t.quando, sess));
@@ -4289,8 +4314,8 @@ function montarSlides(d){
   /* 1 · capa */
   slide('', `<div class="bola" style="width:520px;height:520px;right:-120px;top:-140px"></div>
     <div class="capa"><div>${ey('Proposta de acompanhamento')}
-      <h1>${esc(L.prim)}, o seu mapa e o caminho para destravar.</h1>
-      <div class="sub">Plano para trabalhar as travas que mais pesam em você hoje.</div>
+      <h1>${esc(L.prim)}, ${esc(VOC.capaTit)}</h1>
+      <div class="sub">${esc(VOC.capaSub)}</div>
       <div class="prep">Preparado para ${esc(L.nome)} · ${esc(Tp.nome)}</div></div>
       <div class="foto-arco">${foto}</div></div>`);
 
@@ -4303,33 +4328,34 @@ function montarSlides(d){
   /* 3 · o desafio (o mapa) */
   slide('', `${ey(d.ouvi.length ? 'O que o seu mapa confirma' : 'O que o seu mapa mostrou')}
     <h2>O desafio é de ${esc(lib1.x)}, não de ${esc(lib1.y)}.</h2>
-    <div class="g2 fit" style="max-height:400px">${prio.slice(0,4).map((t,i)=>`<div class="cd ${i===0?'dest':''}"><h3>${esc(t.nome)} · ${dec1(t.nota)}</h3><p>${esc(LIB[t.id].resumo)}</p></div>`).join('')}</div>`);
+    <div class="g2 fit" style="max-height:400px">${prio.slice(0,4).map((t,i)=>`<div class="cd ${i===0?'dest':''}"><h3>${esc(t.nome)} · ${NT(t)}</h3><p>${esc(LIB[t.id].resumo)}</p></div>`).join('')}</div>`);
 
   /* 4 · palavras da pessoa (opcional) */
   if(d.palavras && (L.motivo||L.dor||L.olhar)){
     const q = (rot, tx) => tx ? `<div class="quote fit" style="max-height:150px"><small>${rot}</small>“${esc(tx.length>230 ? tx.slice(0,227).trim()+'…' : tx)}”</div>` : '';
-    slide('alt', `${ey('Nas suas palavras')}<h2>O que você escreveu</h2>${q('O que me levou a procurar',L.motivo)}${q('A minha maior dor',L.dor)}${q('Como eu me vejo hoje',L.olhar)}`);
+    slide('alt', `${ey('Nas suas palavras')}<h2>O que você escreveu</h2>${q('O que me levou a fazer o teste',L.motivo)}${q('O que mais tem pesado',L.dor)}${q('Como eu me vejo hoje',L.olhar)}`);
   }
 
   /* 5 · custo de continuar */
   if(altas.length){
     slide('', `${ey('O custo de continuar como está')}<h2>O que acontece se nada mudar</h2>
-      <div class="g3"><div class="cd"><div class="grande">${altas.length} ${altas.length===1?'trava':'travas'}</div><p>em nível alto, ativas no seu dia a dia hoje.</p></div>
+      <div class="g3"><div class="cd"><div class="grande">${altas.length} ${altas.length===1?VOC.item:VOC.itens}</div><p>${esc(VOC.altoTxt)}</p></div>
         <div class="cd"><h3>${esc(p1.nome)}</h3><p>${esc(lib1.custo)}</p></div>
         <div class="cd"><div class="grande">Quanto?</div><p>Há quanto tempo você carrega isso? Pense nesse número.</p></div></div>
       <div class="frase">Não é falta de esforço. É um padrão que se repete.</div>`);
   } else {
     slide('', `${ey('O seu ponto de partida')}<h2>Um mapa com boa base</h2>
-      <div class="g3"><div class="cd"><div class="grande">${bai.length}</div><p>travas em nível baixo: uma base que já sustenta você.</p></div>
-        <div class="cd"><h3>${esc(p1.nome)}</h3><p>É a trava em destaque hoje, a primeira a ser afinada.</p></div>
+      <div class="g3"><div class="cd"><div class="grande">${bai.length}</div><p>${esc(VOC.baixoTxt)}</p></div>
+        <div class="cd"><h3>${esc(p1.nome)}</h3><p>${esc(VOC.destaque)}</p></div>
         <div class="cd"><h3>O acompanhamento</h3><p>Serve para manter o que está bem e aprofundar o que ainda pode ficar mais leve.</p></div></div>`);
   }
 
   /* 6 · mapa em números (gráfico de barras) */
-  slide('', `${ey('O seu mapa em números')}<h2>As suas 10 travas</h2>
-    <div class="barras-box"><div class="barras">${tr.map(t=>`<div class="barra-linha"><span class="bn">${esc(t.nome)}</span><div class="bt"><i style="width:${t.nota*10}%;background:${COR_NIVEL[t.nivel]}"></i></div><span class="bv" style="color:${COR_NIVEL[t.nivel]}">${dec1(t.nota)}</span></div>`).join('')}</div>
-      <div><div style="display:flex;gap:22px;margin-bottom:12px"><div><div class="grande" style="color:${COR_NIVEL.alta}">${altas.length}</div><span>altas</span></div><div><div class="grande" style="color:${COR_NIVEL.media}">${med.length}</div><span>médias</span></div><div><div class="grande" style="color:${COR_NIVEL.baixa}">${bai.length}</div><span>baixas</span></div></div>
-      <div class="leg"><span><i style="background:${COR_NIVEL.alta}"></i>Alta: 6 ou mais</span><span><i style="background:${COR_NIVEL.media}"></i>Média: 5 a 5,9</span><span><i style="background:${COR_NIVEL.baixa}"></i>Baixa: menos de 5</span></div>
+  slide('', `${ey('O seu mapa em números')}<h2>${esc(VOC.mapaTit)}</h2>
+    <div class="barras-box"><div class="barras">${tr.map(t=>`<div class="barra-linha"><span class="bn">${esc(t.nome)}</span><div class="bt"><i style="width:${VOC.pct ? Math.round(t.nota / tr[0].nota * 100) : t.nota*10}%;background:${COR_NIVEL[t.nivel]}"></i></div><span class="bv" style="color:${COR_NIVEL[t.nivel]}">${NT(t)}</span></div>`).join('')}</div>
+      <div>${VOC.pct ? `<div style="display:flex;gap:22px;margin-bottom:12px"><div><div class="grande" style="color:${COR_NIVEL.alta}">${altas.length}</div><span>em pico</span></div><div><div class="grande" style="color:${COR_NIVEL.baixa}">${bai.length}</div><span>de suporte</span></div></div>
+      <div class="leg"><span><i style="background:${COR_NIVEL.alta}"></i>Pico: os 2 traços mais fortes</span><span><i style="background:${COR_NIVEL.baixa}"></i>Suporte: os demais</span></div>` : `<div style="display:flex;gap:22px;margin-bottom:12px"><div><div class="grande" style="color:${COR_NIVEL.alta}">${altas.length}</div><span>altas</span></div><div><div class="grande" style="color:${COR_NIVEL.media}">${med.length}</div><span>médias</span></div><div><div class="grande" style="color:${COR_NIVEL.baixa}">${bai.length}</div><span>baixas</span></div></div>
+      <div class="leg"><span><i style="background:${COR_NIVEL.alta}"></i>Alta: 6 ou mais</span><span><i style="background:${COR_NIVEL.media}"></i>Média: 5 a 5,9</span><span><i style="background:${COR_NIVEL.baixa}"></i>Baixa: menos de 5</span></div>`}
       ${L.atencao ? `<div style="margin-top:20px"><span class="tag-at">${L.atencao} ${L.atencao===1?'ponto':'pontos'} de atenção · vamos olhar juntos</span></div>` : ''}</div></div>`);
 
   /* 7 · o acompanhamento */
@@ -4344,10 +4370,10 @@ function montarSlides(d){
   const s1 = Math.max(1, Math.round(pac.sess*.4)), s2 = Math.max(1, Math.round(pac.sess*.35)), s3 = Math.max(1, pac.sess - s1 - s2);
   const prio2 = prio.slice(1,3);
   const fase = (num, rot, rng, titulo, texto) => `<div class="cd fit" style="max-height:430px"><div class="peq">${rot} · ${rng}</div><h3>${esc(titulo)}</h3><p>${esc(texto)}</p></div>`;
-  slide('', `${ey('O caminho')}<h2>Como vamos trabalhar as suas travas</h2>
+  slide('', `${ey('O caminho')}<h2>${esc(VOC.caminhoTit)}</h2>
     <div class="g3">
-      ${fase(1,'Fase 1',`sessões 1 a ${s1}`, p1.nome, 'Começamos pela trava que mais pesa. Como trabalhamos: '+(TEC[p1.id]||''))}
-      ${fase(2,'Fase 2',`sessões ${s1+1} a ${s1+s2}`, prio2.length ? prio2.map(t=>t.nome).join(' e ') : 'Aprofundar', prio2.length ? 'Seguimos para as próximas travas em destaque, com os mesmos recursos. Como trabalhamos: '+(TEC[prio2[0].id]||'') : 'Aprofundamos o que apareceu na primeira fase e consolidamos as mudanças.')}
+      ${fase(1,'Fase 1',`sessões 1 a ${s1}`, p1.nome, VOC.fase1+(TEC[p1.id]||''))}
+      ${fase(2,'Fase 2',`sessões ${s1+1} a ${s1+s2}`, prio2.length ? prio2.map(t=>t.nome).join(' e ') : 'Aprofundar', prio2.length ? VOC.fase2+(TEC[prio2[0].id]||'') : 'Aprofundamos o que apareceu na primeira fase e consolidamos as mudanças.')}
       ${fase(3,'Fase 3',`sessões ${s1+s2+1} a ${pac.sess}`, 'Consolidar', 'Fixamos o que mudou, revemos o mapa e deixamos um plano para você continuar sozinho.')}
     </div>`);
 
@@ -4372,7 +4398,7 @@ function montarSlides(d){
     const sub = k => k===0 ? 'Sessão 1 · o ponto de partida' : k===q-1 ? `Sessão ${pac.sess} · o novo mapa` : `Sessão ${pos[k]} · o que já começou a mudar`;
     slide('', `${ey('Medimos a sua evolução')}<h2>O mapa se repete, e você vê o que mudou</h2>
       <div class="tl" style="--q:${q}">${pos.map((_,k)=>`<div class="no"><i></i><b>${rot(k)}</b><span>${sub(k)}</span></div>`).join('')}</div>
-      <div class="frase" style="margin-top:44px">Cada teste mostra, em números, se as travas altas estão baixando.</div>`);
+      <div class="frase" style="margin-top:44px">${esc(VOC.evol)}</div>`);
   }
 
   /* 11 · quem faz o quê */
@@ -4573,6 +4599,8 @@ window.APRES = {
     CFG = cfg; LEAD = cfg.lead;
     $('#ap-quem').innerHTML = `Apresentação para <b>${esc(LEAD.nome || LEAD.prim)}</b>`;
     if(cfg.tec) TEC = Object.assign({}, TEC, cfg.tec);
+    if(cfg.lib) LIB = Object.assign({}, LIB, cfg.lib);
+    VOC = Object.assign({}, VOC_PADRAO, cfg.voc || {}); aplicarVoc();
     PRESETS = [{nome:'Cores do meu site', principal:cfg.cores.principal, destaque:cfg.cores.destaque}].concat(PRESETS_BASE);
     preencherPaletas();
     const t = cfg.terap||{}; estado.fotoTerap = t.foto || null;
