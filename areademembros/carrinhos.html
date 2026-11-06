@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carrinhos e vendas | Ressignificar</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+<div class="carregando" id="carregando">Carregando...</div>
+<div id="painel" hidden>
+  <header class="topo-painel">
+    <div class="marca" style="display:flex;align-items:center;gap:14px"><a class="voltar" href="painel-master.html" style="margin:0">← Painel master</a></div>
+    <div class="usuario">
+      <span data-nome-usuario></span>
+      <button class="sair" data-sair>Sair</button>
+    </div>
+  </header>
+  <main class="conteudo-painel largo">
+    <h1>Carrinhos e vendas</h1>
+    <p class="sub">Todo mundo que começou uma compra na loja do site: quem desistiu no pagamento, quem pagou e não terminou, e quem comprou. Veja o que aconteceu, chame no WhatsApp e anote o retorno.</p>
+
+    <div class="kpis kpis-carrinho" id="kpis"></div>
+
+    <div class="abas" role="tablist" id="abas">
+      <button class="aba" type="button" data-filtro="contato" aria-selected="true">Precisa de contato <span class="selo ouro" id="nContato"></span></button>
+      <button class="aba" type="button" data-filtro="abandonado" aria-selected="false">Abandonados</button>
+      <button class="aba" type="button" data-filtro="sem_ativar" aria-selected="false">Pagou e não ativou</button>
+      <button class="aba" type="button" data-filtro="venda" aria-selected="false">Vendas</button>
+      <button class="aba" type="button" data-filtro="todos" aria-selected="false">Todos</button>
+    </div>
+    <div class="f busca-carrinho"><input type="search" id="busca" placeholder="Buscar por nome, e-mail ou WhatsApp" aria-label="Buscar"></div>
+
+    <div id="lista" class="lista-carrinhos"><p class="vazio">Carregando...</p></div>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+<script src="js/carrinhos.js"></script>
+</body>
+</html>

@@ -23,7 +23,7 @@
   </header>
   <main class="conteudo-painel largo">
     <h1>Painel master</h1>
-    <div class="acoes" style="margin:-6px 0 22px"><a class="btn auto so-master" href="orcamentos.html">Meus orçamentos</a><a class="btn auto contorno" href="catalogo.html">Produtos e ofertas</a><a class="btn auto contorno" href="contratos.html">Contratos</a><a class="btn auto contorno" href="pops.html">POPs e manuais</a><a class="btn auto contorno" href="projetos.html">Projetos de melhoria</a><a class="btn auto contorno" href="melhoria-dashboard.html">Dashboard de melhoria</a><a class="btn auto" href="chat.html">Chat <span class="selo ouro" id="chatBadge" hidden></span></a><a class="btn auto contorno" href="mentoria-lista.html">Mentoria</a><a class="btn auto" href="terapia-lista.html">Terapia</a></div>
+    <div class="acoes" style="margin:-6px 0 22px"><a class="btn auto so-master" href="orcamentos.html">Meus orçamentos</a><a class="btn auto contorno" href="catalogo.html">Produtos e ofertas</a><a class="btn auto so-master" href="carrinhos.html">Carrinhos e vendas <span class="selo" id="carrinhosBadge" hidden style="background:#C62828;color:#fff"></span></a><a class="btn auto contorno" href="contratos.html">Contratos</a><a class="btn auto contorno" href="pops.html">POPs e manuais</a><a class="btn auto contorno" href="projetos.html">Projetos de melhoria</a><a class="btn auto contorno" href="melhoria-dashboard.html">Dashboard de melhoria</a><a class="btn auto" href="chat.html">Chat <span class="selo ouro" id="chatBadge" hidden></span></a><a class="btn auto contorno" href="mentoria-lista.html">Mentoria</a><a class="btn auto" href="terapia-lista.html">Terapia</a></div>
     <p class="sub">Cadastre pessoas, dê acessos, crie empresas e acompanhe as DREs. Também é aqui que ficam as suas finanças, visíveis só para você.</p>
 
     <div class="abas" id="abas" role="tablist">
@@ -203,5 +203,22 @@
 <script src="js/i18n.js"></script>
 <script src="js/chat-badge.js"></script>
 <script src="js/gestao.js"></script>
+<script>
+/* aviso no botão "Carrinhos e vendas": quantas pessoas abandonaram ou pagaram sem ativar e ainda não foram chamadas */
+(async function () {
+  try {
+    const limite = new Date(Date.now() - 30 * 60000).toISOString();
+    const { data } = await supa().from("travas_pedidos").select("email,status,checkout_url,criado_em,contato_status,valor_centavos").limit(1000);
+    const comprou = new Set((data || []).filter(function (p) { return p.status === "ativado" || p.status === "pago"; }).map(function (p) { return p.email.toLowerCase(); }));
+    const n = (data || []).filter(function (p) {
+      if (p.contato_status !== "novo" || p.valor_centavos < 1000) return false;
+      if (p.status === "pago" || p.status === "ativando") return true;
+      const desistiu = (p.status === "aguardando" && p.criado_em < limite) || (p.status === "cancelado" && !p.checkout_url);
+      return desistiu && !comprou.has(p.email.toLowerCase());
+    }).length;
+    const b = document.getElementById("carrinhosBadge"); if (b && n) { b.textContent = n; b.hidden = false; }
+  } catch (e) {}
+})();
+</script>
 </body>
 </html>
