@@ -493,3 +493,12 @@ tr.sub>td{background:#FBF7EE;padding:10px 14px}
 .linha-tempo li{position:relative;font-size:14.5px;line-height:1.4}
 .linha-tempo li::before{content:"";position:absolute;left:-22px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--gold)}
 .linha-tempo small{display:block;color:var(--muted);font-size:12.5px}
+
+/* ofertas: chamada curta antes dos detalhes */
+.ofertas-nomes{display:grid;gap:10px;margin:8px 0 14px}
+.oferta-teaser{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer}
+.oferta-teaser:hover{border-color:var(--gold)}
+.oferta-teaser.destaque{border-left-color:#C62828}
+.oferta-teaser b{font-size:15.5px;color:var(--navy)}
+.oferta-teaser .teaser-chamada{font-size:14.5px;line-height:1.45;color:var(--ink)}
+.oferta-teaser .teaser-mais{font-size:13.5px;font-weight:700;color:var(--goldtxt)}

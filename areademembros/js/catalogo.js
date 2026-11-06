@@ -68,7 +68,7 @@
       if (nome.length < 2) { aviso("Escreva o nome do produto.", true); return; }
       if (link && !/^https:\/\//i.test(link)) { aviso("O link de pagamento precisa começar com https://", true); return; }
       const reg = { nome: nome, servico: document.getElementById("pServ").value || null, preco_texto: document.getElementById("pPreco").value.trim() || null,
-        descricao: document.getElementById("pDesc").value.trim() || null, inclui: document.getElementById("pInclui").value.trim() || null, link_pagamento: link || null,
+        chamada: document.getElementById("pChamada").value.trim() || null, descricao: document.getElementById("pDesc").value.trim() || null, inclui: document.getElementById("pInclui").value.trim() || null, link_pagamento: link || null,
         publico: document.getElementById("pPub").value, ordem: parseInt(document.getElementById("pOrdem").value, 10) || 0,
         destaque: document.getElementById("pDestaque").checked, ativo: document.getElementById("pAtivo").checked };
       const r = editId ? await supa().from("catalogo_produtos").update(reg).eq("id", editId) : await supa().from("catalogo_produtos").insert(reg);
@@ -97,7 +97,7 @@
     if (be) {
       const p = produto(be.dataset.ed); editId = p.id;
       document.getElementById("pNome").value = p.nome; document.getElementById("pServ").value = p.servico || "";
-      document.getElementById("pPreco").value = p.preco_texto || ""; document.getElementById("pDesc").value = p.descricao || "";
+      document.getElementById("pPreco").value = p.preco_texto || ""; document.getElementById("pDesc").value = p.descricao || ""; document.getElementById("pChamada").value = p.chamada || "";
       document.getElementById("pInclui").value = p.inclui || ""; document.getElementById("pLink").value = p.link_pagamento || "";
       document.getElementById("pPub").value = p.publico; document.getElementById("pOrdem").value = p.ordem;
       document.getElementById("pDestaque").checked = p.destaque; document.getElementById("pAtivo").checked = p.ativo;

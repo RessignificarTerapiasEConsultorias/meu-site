@@ -38,7 +38,7 @@
       <h2>Ofertas da Ressignificar para você</h2>
       <p class="ajuda">Produtos e serviços do Mauricio Pinho.</p>
       <div class="ofertas-nomes" id="ofertasNomes"></div>
-      <button type="button" class="btn-alerta" id="ofertasAbrir" aria-expanded="false" aria-controls="ofertasDetalhe"><span class="ponto-pisca" aria-hidden="true"></span><span class="txt-alerta">Importante: leia e clique para expandir</span></button>
+      <button type="button" class="btn-alerta" id="ofertasAbrir" aria-expanded="false" aria-controls="ofertasDetalhe"><span class="ponto-pisca" aria-hidden="true"></span><span class="txt-alerta">Ver detalhes e valores</span></button>
       <div id="ofertasDetalhe" hidden><div class="ofertas-grade" id="ofertasGrade"></div><button type="button" class="btn contorno recolher-fim" id="ofertasFechar">Recolher ofertas ↑</button></div>
     </div>
     <div class="cartao" id="cartaoPag" hidden>
@@ -177,7 +177,7 @@
   /* ---------- ofertas (catálogo de produtos) ---------- */
   try {
     const [rp, ri, rcp] = await Promise.all([
-      supa().from("catalogo_produtos").select("id,nome,descricao,inclui,preco_texto,link_pagamento,destaque").eq("ativo", true).order("destaque", { ascending: false }).order("ordem"),
+      supa().from("catalogo_produtos").select("id,nome,chamada,descricao,inclui,preco_texto,link_pagamento,destaque").eq("ativo", true).order("destaque", { ascending: false }).order("ordem"),
       supa().from("interesses").select("produto_id").eq("perfil_id", eu.id),
       supa().from("cliente_produtos").select("produto_id").eq("perfil_id", eu.id).eq("situacao", "adquirido")
     ]);
@@ -186,10 +186,21 @@
     const prods = (rp.data || []).filter(function (x) { return !jaTem.has(x.id) && !(temTravas && /travas/i.test(x.nome)); }), pedidos = new Set((ri.data || []).map(function (i) { return i.produto_id; }));
     if (prods.length) {
       const nomes = document.getElementById("ofertasNomes"); nomes.innerHTML = "";
-      prods.forEach(function (x) { const s = document.createElement("span"); s.className = "oferta-nome" + (x.destaque ? " destaque" : ""); s.textContent = x.nome; nomes.appendChild(s); });
+      prods.forEach(function (x) {
+        /* primeiro só a chamada curta, que desperta curiosidade; o resto aparece em "Ver detalhes" */
+        const t = document.createElement("button"); t.type = "button"; t.className = "oferta-teaser" + (x.destaque ? " destaque" : ""); t.dataset.oferta = x.id;
+        const b = document.createElement("b"); b.textContent = x.nome; t.appendChild(b);
+        if (x.chamada) { const c = document.createElement("span"); c.className = "teaser-chamada"; c.textContent = x.chamada; t.appendChild(c); }
+        const m = document.createElement("span"); m.className = "teaser-mais"; m.textContent = (x.preco_texto ? x.preco_texto + " · " : "") + "Quero saber mais →"; t.appendChild(m);
+        t.addEventListener("click", function () {
+          const det = document.getElementById("ofertasDetalhe"); if (det.hidden) document.getElementById("ofertasAbrir").click();
+          const alvo = document.getElementById("oferta-" + x.id); if (alvo) { alvo.scrollIntoView({ behavior: "smooth", block: "start" }); alvo.classList.remove("piscar-cartao"); void alvo.offsetWidth; alvo.classList.add("piscar-cartao"); }
+        });
+        nomes.appendChild(t);
+      });
       const grade = document.getElementById("ofertasGrade"); grade.innerHTML = "";
       prods.forEach(function (x) {
-        const card = document.createElement("article"); card.className = "oferta-card" + (x.destaque ? " destaque" : "");
+        const card = document.createElement("article"); card.className = "oferta-card" + (x.destaque ? " destaque" : ""); card.id = "oferta-" + x.id;
         if (x.destaque) { const sd = document.createElement("span"); sd.className = "selo ouro selo-dest"; sd.textContent = "Destaque"; card.appendChild(sd); }
         const h = document.createElement("h3"); h.textContent = x.nome; card.appendChild(h);
         if (x.descricao) { const d = document.createElement("p"); d.className = "ajuda"; d.textContent = x.descricao; card.appendChild(d); }
@@ -206,12 +217,21 @@
           bi.textContent = "Interesse enviado ✓"; aviso("Recebi o seu interesse. O Mauricio entra em contato.");
         }); }
         ac.appendChild(bi);
-        if (x.link_pagamento && /^https:\/\//.test(x.link_pagamento)) { const a = document.createElement("a"); a.className = "btn peq contorno"; a.href = x.link_pagamento; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = "Comprar agora"; ac.appendChild(a); }
+        if (x.link_pagamento && /^https:\/\//.test(x.link_pagamento)) {
+          const a = document.createElement("a"); a.className = "btn peq contorno"; a.href = x.link_pagamento; a.target = "_blank"; a.rel = "noopener noreferrer";
+          a.textContent = /m[eê]s|mensal/i.test(x.preco_texto || "") ? "Assinar agora" : "Comprar agora";
+          a.addEventListener("click", function () {
+            if (pedidos.has(x.id)) return;
+            pedidos.add(x.id);
+            supa().from("interesses").insert({ perfil_id: eu.id, produto_id: x.id, mensagem: "Clicou em \"" + a.textContent + "\" e foi para o pagamento" }).then(function () {});
+          });
+          ac.appendChild(a);
+        }
         card.appendChild(ac); grade.appendChild(card);
       });
       document.getElementById("ofertasAbrir").addEventListener("click", function () {
         const det = document.getElementById("ofertasDetalhe"), abrir = det.hidden; det.hidden = !abrir;
-        this.setAttribute("aria-expanded", String(abrir)); this.classList.toggle("aberto", abrir); this.querySelector(".txt-alerta").textContent = abrir ? "Recolher" : "Importante: leia e clique para expandir";
+        this.setAttribute("aria-expanded", String(abrir)); this.classList.toggle("aberto", abrir); this.querySelector(".txt-alerta").textContent = abrir ? "Recolher" : "Ver detalhes e valores";
       });
       document.getElementById("ofertasFechar").addEventListener("click", function () {
         const ab = document.getElementById("ofertasAbrir"); ab.click(); ab.scrollIntoView({ behavior: "smooth", block: "center" });
