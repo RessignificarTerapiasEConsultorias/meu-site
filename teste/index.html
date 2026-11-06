@@ -516,6 +516,9 @@ html.t-erro .t-girar{display:none}
 /* botão "Recolher" no fim das áreas que expandem */
 .vit-fechar{display:flex;align-items:center;justify-content:center;width:100%;margin-top:14px;min-height:46px;border-radius:12px;border:1.4px solid var(--borda);background:var(--papel);color:var(--tinta);font:inherit;font-size:15px;font-weight:700;cursor:pointer}
 .vit-fechar:hover{background:var(--areia-escura)}
+/* logo da marca da terapeuta, acima do selo da capa */
+.t-logo{display:block;width:72px;height:72px;object-fit:contain;margin:0 auto 14px;border-radius:16px}
+@media (min-width:860px){.capa .lado-texto .t-logo{margin-left:0}}
 </style>
 </head>
 <body>
@@ -959,6 +962,11 @@ html.t-erro .t-girar{display:none}
     if (foto) {
       if (d.foto_url) { foto.src = d.foto_url; foto.alt = d.nome + ", terapeuta"; }
       else { var ini = document.createElement("span"); ini.className = "t-ini"; ini.textContent = T_PRIM.charAt(0); foto.replaceWith(ini); }
+    }
+    /* logo da marca (opcional): aparece no topo do texto da capa */
+    if (d.logo_url && /^https:\/\//.test(d.logo_url)) {
+      var selo = document.querySelector("#tela-capa .lado-texto .selo");
+      if (selo) selo.insertAdjacentHTML("beforebegin", '<img class="t-logo" src="' + esc(d.logo_url) + '" alt="' + esc(d.nome) + '" width="72" height="72" decoding="async">');
     }
     /* Instagram no rodapé da capa */
     if (d.instagram) {
