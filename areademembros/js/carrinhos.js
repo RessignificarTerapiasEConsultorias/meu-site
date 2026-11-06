@@ -24,7 +24,8 @@
     pagamento_confirmado: "Pagamento confirmado",
     abriu_formulario: "Abriu o formulário para montar o teste",
     erro_ativacao: "Erro ao montar o teste",
-    teste_ativado: "Teste ativado"
+    teste_ativado: "Teste ativado",
+    produto_ativado: "Produto liberado na Área de Membros"
   };
   const RETORNO = { novo: "Ainda não falei", contatado: "Já chamei", recuperado: "Recuperado (comprou)", perdido: "Perdido" };
 
@@ -70,10 +71,10 @@
     (re.data || []).forEach(function (e) { (eventos[e.pedido_id] = eventos[e.pedido_id] || []).push(e); });
     /* quem comprou: e-mail -> data da compra (para não cobrar quem desistiu e depois comprou) */
     const compras = {};
-    (rp.data || []).forEach(function (p) { if (p.status === "ativado" || p.status === "pago") { const k = p.email.toLowerCase(); if (!compras[k] || p.criado_em < compras[k]) compras[k] = p.criado_em; } });
+    (rp.data || []).forEach(function (p) { if (p.status === "ativado" || p.status === "pago") { const k = p.email.toLowerCase() + "|" + (p.produto || ""); if (!compras[k] || p.criado_em < compras[k]) compras[k] = p.criado_em; } });
     pedidos = (rp.data || []).map(function (p) {
       const sit = situacao(p);
-      const c = compras[p.email.toLowerCase()];
+      const c = compras[p.email.toLowerCase() + "|" + (p.produto || "")];
       p._sit = sit;
       p._comprouDepois = sit !== "venda" && sit !== "sem_ativar" && !!c && c > p.criado_em;
       p._evs = eventos[p.id] || [];
@@ -118,11 +119,11 @@
       case "indisponivel": t = "Em " + quando + ", tentou comprar, mas o pagamento estava fora do ar (a InfinitePay não gerou o link). A pessoa viu o aviso para chamar no WhatsApp."; break;
       case "cancelado": t = "Pedido de " + quando + " cancelado."; break;
       case "sem_ativar":
-        t = "Pagou " + v + (forma(p, evs) ? " (" + forma(p, evs) + ")" : "") + " em " + dataHora(p.pago_em) + ", mas ainda não terminou de montar o teste.";
+        t = "Pagou " + v + (forma(p, evs) ? " (" + forma(p, evs) + ")" : "") + " em " + dataHora(p.pago_em) + (/travas/i.test(p.produto || "") ? ", mas ainda não terminou de montar o teste." : ", mas o acesso ainda não foi liberado. Libere pelo painel ou fale com a pessoa.");
         if (erro) t += " Último erro que apareceu para a pessoa: “" + erro.detalhe + "”.";
         else t += tem("abriu_formulario") ? " Chegou a abrir o formulário." : " Não chegou a abrir o formulário.";
         break;
-      case "venda": t = "Comprou em " + dataHora(p.pago_em || p.criado_em) + (forma(p, evs) ? " (" + forma(p, evs) + ")" : "") + " e ativou o teste em " + dataHora(p.ativado_em) + "."; break;
+      case "venda": t = "Comprou em " + dataHora(p.pago_em || p.criado_em) + (forma(p, evs) ? " (" + forma(p, evs) + ")" : "") + (/travas/i.test(p.produto || "") ? " e ativou o teste em " : " e o acesso foi liberado em ") + dataHora(p.ativado_em) + "."; break;
     }
     if (p._comprouDepois) t += " Comprou depois, em outro pedido.";
     if (p._teste) t += " (Pedido do modo teste de R$ 1.)";
@@ -130,7 +131,7 @@
   }
 
   function linkDoTeste(p) {
-    const e = p._evs.filter(function (x) { return x.tipo === "teste_ativado" && x.detalhe; }).pop();
+    const e = p._evs.filter(function (x) { return (x.tipo === "teste_ativado" || x.tipo === "produto_ativado") && x.detalhe; }).pop();
     return e ? e.detalhe : "";
   }
 
