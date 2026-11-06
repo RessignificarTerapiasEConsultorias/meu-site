@@ -527,7 +527,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611062136">
+<meta name="versao-site" content="v202611062157">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -3280,7 +3280,7 @@ async function tcCasalEntrar(){
   const st = { 1:e.p1.status, 2:e.p2.status };
   for(const s of [1, 2]) if(loc.tokens[s] && st[s] === 'em_andamento') return tcTelaComecarCasal(s);
   const feito = [1, 2].find(s => loc.tokens[s] && st[s] === 'concluido');
-  if(feito){ const o = 3 - feito; return (e.modo === 'juntos' && st[o] === 'pendente') ? tcTelaVez(o) : tcTelaEnviar(feito, st[o]); }
+  if(feito) return tcTelaEnviar(feito, st[3 - feito]);
   tcTelaQuem();
 }
 function tcTelaSetup(){
@@ -3375,26 +3375,35 @@ async function tcFinalizarParte(){
   const e = await compRpc('travas_casal_estado', { p_codigo:tc.codigo, p_token:tk });
   if(e && e.ok === true && e.existe){ tc.estado = e; if(e.concluido) return tcCasalResultado(); }
   const o = 3 - slot, stO = (e && e.ok === true && e.existe) ? e['p' + o].status : 'pendente';
-  if(tc.modo === 'juntos' && stO === 'pendente') tcTelaVez(o); else tcTelaEnviar(slot, stO);
+  tcTelaEnviar(slot, stO);
 }
-function tcTelaVez(outro){
-  const nm = tc.nomes[outro];
-  tcMostrar(`<span class="selo">Parte concluída ✔</span><h1 class="tc-h1">Suas respostas foram salvas!</h1>
-    <p>Agora é a vez de <b>${escV(nm)}</b>. Entregue o aparelho.</p><p class="nota-rodape">O resultado só aparece quando os dois terminarem.</p>
-    <button class="btn btn-primario" id="tv-ir">Sou ${escV(nm)}, quero começar</button>`);
-  $('#tv-ir').addEventListener('click', () => tcTelaDados(outro, nm));
-}
+function tcTelaVez(outro){ tcTelaEnviar(3 - outro, 'pendente'); }
+/* fim da parte de uma pessoa: a outra pode responder agora neste aparelho ou receber o link (o código é o mesmo) */
 function tcTelaEnviar(meu, statusOutro){
-  const o = 3 - meu, nmO = tc.nomes[o];
+  const o = 3 - meu, nmO = tc.nomes[o], juntos = tc.modo === 'juntos', pend = statusOutro === 'pendente';
   const msg = ['Oi, ' + nmO + '! Já fiz a minha parte do ' + TC_NOME + ' que ' + T_A + ' nos enviou.', '', 'Agora falta a sua. Toque no link abaixo; o código já vai preenchido:', tcLink(tc.codigo), '',
     'Se o link não abrir direto, o código é: *' + tc.codigo + '*', '', 'São 40 afirmações, de 8 a 12 minutos. Responda com sinceridade, pensando em como você é no seu dia a dia.'].join('\n');
-  tcMostrar(`<span class="selo">Parte concluída ✔</span><h1 class="tc-h1">Sua parte está concluída!</h1>
-    <p>${statusOutro === 'em_andamento' ? `<b>${escV(nmO)}</b> já começou a parte dele(a). Se ainda não recebeu o link, envie abaixo.` : `Envie o link abaixo para <b>${escV(nmO)}</b> fazer a parte dele(a).`} Quando ${escV(nmO)} terminar, ${tc.mostrar ? 'o resultado de vocês aparece na tela dele(a), e este mesmo link abre o resultado aqui também.' : `as respostas dos dois vão para ${escV(T_A)}.`}</p>
+  const agora = pend ? `<button class="btn btn-primario" id="tp-agora"><span class="duas">Sou ${escV(nmO)}, quero responder agora<small>neste aparelho, com o mesmo código</small></span></button>` : '';
+  const enviar = `<div class="campo" style="margin:6px 0 10px"><label for="tp-zap-num">WhatsApp de ${escV(nmO)} <span class="opc">(opcional)</span></label>
+      <input id="tp-zap-num" type="tel" inputmode="tel" autocomplete="off" placeholder="(00) 00000-0000">
+      <div class="dica">Com o número, a conversa já abre com ${escV(nmO)}. Sem ele, você escolhe o contato no WhatsApp.</div></div>
     <a class="btn btn-zap" id="te-zap" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><span class="duas">Enviar o link para ${escV(nmO)}<small>pelo WhatsApp, com a mensagem pronta</small></span></a>
-    <button class="btn btn-contorno" id="te-copiar">Copiar o link</button>
-    ${tc.mostrar ? `<button class="btn btn-contorno" id="te-ver">${escV(nmO)} já terminou? Ver o resultado</button>` : ''}`);
+    <button class="btn btn-contorno" id="te-copiar">Copiar o link</button>`;
+  const texto = statusOutro === 'em_andamento'
+    ? `<b>${escV(nmO)}</b> já começou a parte dele(a) em outro aparelho. Se ainda não recebeu o link, envie abaixo.`
+    : juntos ? `Agora é a vez de <b>${escV(nmO)}</b>. Se ${escV(nmO)} estiver aí, é só responder agora, neste aparelho. Se preferir, envie o link para ${escV(nmO)} responder no aparelho dele(a).`
+             : `Agora falta a parte de <b>${escV(nmO)}</b>. Envie o link para ${escV(nmO)} responder no aparelho dele(a). Se ${escV(nmO)} estiver aí com você, também dá para responder agora, neste aparelho.`;
+  tcMostrar(`<span class="selo">Parte concluída ✔</span><h1 class="tc-h1">Suas respostas foram salvas!</h1>
+    <p>${texto} O código é o mesmo: <b>${escV(tc.codigo)}</b>.</p>
+    ${juntos ? agora + enviar : enviar + agora}
+    ${tc.mostrar ? `<button class="btn btn-contorno" id="te-ver">${escV(nmO)} já terminou? Ver o resultado</button>` : ''}
+    <p class="nota-rodape">O resultado só aparece quando os dois terminarem.</p>`);
   tcZapSvg($('#te-zap'));
+  const num = $('#tp-zap-num'); mascaraTelefone(num);
+  const atualizarZap = () => { let d = tcDig(num.value); if(d.length === 10 || d.length === 11) d = '55' + d; $('#te-zap').href = 'https://wa.me/' + (d.length >= 12 ? d : '') + '?text=' + encodeURIComponent(msg); };
+  num.addEventListener('input', atualizarZap); num.addEventListener('change', atualizarZap);
   $('#te-copiar').addEventListener('click', async e => { try{ await navigator.clipboard.writeText(tcLink(tc.codigo)); e.target.textContent = 'Link copiado!'; }catch(err){ e.target.textContent = 'Não consegui copiar'; } setTimeout(() => { e.target.textContent = 'Copiar o link'; }, 2000); });
+  const ag = $('#tp-agora'); if(ag) ag.addEventListener('click', () => tcTelaDados(o, nmO));
   const ver = $('#te-ver');
   if(ver) ver.addEventListener('click', async () => {
     ver.disabled = true; ver.textContent = 'Verificando...';
