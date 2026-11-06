@@ -950,7 +950,7 @@ html.t-erro .t-girar{display:none}
     while ((no = andar.nextNode())) { if (no.nodeValue.indexOf("{{") !== -1 && !no.parentNode.closest("script,style")) lista.push(no); }
     lista.forEach(function (n) { n.nodeValue = n.nodeValue.replace(/\{\{[A-Z]+\}\}/g, function (k) { return marcas[k] != null ? marcas[k] : k; }); });
     var ass = document.getElementById("t-assinatura");
-    if (ass) ass.innerHTML = "Um convite " + (m ? "do" : "da") + " terapeuta <strong>" + esc(d.nome) + "</strong><br>" +
+    if (ass) ass.innerHTML = "Um convite " + (m ? "do" : "da") + " " + esc(d.papel || "terapeuta") + " <strong>" + esc(d.nome) + "</strong><br>" +
       esc(d.titulo || "") + (d.registro ? " · " + esc(d.registro) : "") + (d.frase ? "<br>" + esc(d.frase) : "");
     var cod = document.getElementById("campo-codigo"); if (cod) cod.placeholder = T.prefixo + "-0000";
 
@@ -1333,7 +1333,10 @@ async function api(acao, dados, token){
       if(error) return { ok:false, erro:String(error.message||error) };
       return { ok:true, respostas:(data||[]).map(x => Object.assign({}, x.dados, { interesse: x.interesse || {} })) };
     }
-    if(acao === ACOES.enviarEmail) return { ok:false, erro:'sem_servico_de_email' };   // o site abre o e-mail já escrito
+    if(acao === ACOES.enviarEmail){   // enviado pelo contato@ da Ressignificar; sem disparador ligado, o site abre o e-mail já escrito
+      const { data, error } = await c.rpc('travas_enviar_email', { p_para: dados.destino, p_assunto: dados.assunto, p_corpo: dados.corpo });
+      return error ? { ok:false, erro:String(error.message||error) } : data;
+    }
     return { ok:false, erro:'acao_desconhecida' };
   }catch(e){ return { ok:false, erro:String(e) }; }
 }
