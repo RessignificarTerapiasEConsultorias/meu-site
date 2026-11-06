@@ -406,7 +406,7 @@ function dvCasal(o){
   <p>A transformação do casal exigirá a disposição individual de olhar para as próprias vulnerabilidades sem culpar o outro, assumindo a responsabilidade pela parte que cabe a cada um na dinâmica do relacionamento.</p>
   <div class="dv-acordo"><h3>Acordo terapêutico de engajamento</h3>
     <p>"Comprometemo-nos a praticar a escuta empática, respeitar as pausas necessárias e acolher a vulnerabilidade um do outro no processo de renovação da nossa aliança."</p>
-    <div class="dv-assinaturas"><span>${escV(A.nome)}</span><span>${escV(B.nome)}</span></div></div>
+    <div class="dv-assinaturas">${dvCelAssinatura(o, 1, A.nome)}${dvCelAssinatura(o, 2, B.nome)}</div></div>
   <p class="dv-ass">${escV(dvAssinatura())}</p>
   ${dvCta('Esta devolutiva do casal é propositalmente resumida.')}
   ${o.terapeuta ? `<div class="dv-2col dv-sem-print">${dvLeituraClinica(A.respostas, A.nome, A.calc).replace('Leitura para a terapeuta', 'Leitura para a terapeuta · ' + escV(nA))}${dvLeituraClinica(B.respostas, B.nome, B.calc).replace('Leitura para a terapeuta', 'Leitura para a terapeuta · ' + escV(nB))}</div>` : ''}
@@ -548,4 +548,76 @@ function dvCapaDoisTestes(){
   if(ul) ul.innerHTML = '<li>Teste de Travas Mentais: 50 perguntas, de 10 a 15 minutos</li><li>Teste de Caráter Comportamental: 40 afirmações, de 8 a 12 minutos, individual ou casal</li>' +
     '<li>O código que você recebeu já abre o teste certo</li><li>O resultado vai direto para ' + escV(quem) + ', para vocês conversarem a partir dele</li>';
   document.title = 'Teste de Travas Mentais e Teste de Caráter Comportamental' + (window.T_NOME ? ' · ' + T_NOME : '');
+}
+
+
+/* ============================================================================
+   ASSINATURA DO ACORDO (casal): cada um assina a sua parte, quando quiser, pelo mesmo link
+   o.assin = { 1:{img, em}, 2:{img, em} }   o.podeAssinar = [slots que este aparelho pode assinar]
+   ============================================================================ */
+function dvCelAssinatura(o, slot, nome){
+  const a = (o.assin || {})[slot] || {}, pode = (o.podeAssinar || []).indexOf(slot) > -1;
+  const base = a.img ? `<img class="dv-ass-img" src="${escV(a.img)}" alt="Assinatura de ${escV(nome)}">` : '<div class="dv-ass-vazio"></div>';
+  const rodape = a.em ? `<small>Assinado em ${escV(dvData(String(a.em).slice(0, 10)))}</small>`
+    : pode ? `<button type="button" class="btn btn-argila dv-sem-print dv-ass-btn" data-dv-assinar="${slot}">Assinar</button>`
+    : '<small class="dv-sem-print">aguardando assinatura</small>';
+  return `<div class="dv-ass-cel">${base}<span>${escV(nome)}</span>${rodape}</div>`;
+}
+const DV_ACORDO = '"Comprometemo-nos a praticar a escuta empática, respeitar as pausas necessárias e acolher a vulnerabilidade um do outro no processo de renovação da nossa aliança."';
+/* tela de assinatura: desenhar com o dedo ou o mouse. aoConfirmar(png) devolve uma promessa */
+function dvAbrirAssinatura(nome, aoConfirmar){
+  const fundo = document.createElement('div'); fundo.className = 'dv-pad-fundo';
+  fundo.setAttribute('role', 'dialog'); fundo.setAttribute('aria-modal', 'true'); fundo.setAttribute('aria-labelledby', 'dv-pad-tit');
+  fundo.innerHTML = `<div class="dv-pad">
+      <h2 id="dv-pad-tit">Assinatura de ${escV(nome)}</h2>
+      <p class="dv-pad-acordo">${escV(DV_ACORDO)}</p>
+      <p class="dv-pad-dica">Assine com o dedo (ou com o mouse) no espaço abaixo.</p>
+      <div class="dv-pad-area"><canvas class="dv-pad-tela" aria-label="Espaço para assinar"></canvas><span class="dv-pad-x" aria-hidden="true">✕</span></div>
+      <div class="dv-pad-nome">${escV(nome)}</div>
+      <label class="dv-pad-ok"><input type="checkbox" id="dv-pad-ok"> <span>Li e concordo com o acordo acima.</span></label>
+      <p class="dv-pad-aviso" id="dv-pad-aviso" role="alert"></p>
+      <div class="dv-pad-acoes">
+        <button type="button" class="btn btn-contorno" data-pad="limpar">Limpar</button>
+        <button type="button" class="btn btn-contorno" data-pad="cancelar">Cancelar</button>
+        <button type="button" class="btn btn-primario" data-pad="ok">Confirmar assinatura</button>
+      </div></div>`;
+  document.body.appendChild(fundo); document.body.classList.add('dv-pad-aberto');
+  const cv = fundo.querySelector('canvas'), ctx = cv.getContext('2d'), aviso = fundo.querySelector('#dv-pad-aviso');
+  let tracos = 0, desenhando = false, ult = null;
+  const ajustar = () => {
+    const r = cv.getBoundingClientRect(), dpr = Math.max(1, window.devicePixelRatio || 1);
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = 2.6; ctx.strokeStyle = '#1B1B1B';
+    tracos = 0;
+  };
+  ajustar();
+  const pos = e => { const r = cv.getBoundingClientRect(); return { x:e.clientX - r.left, y:e.clientY - r.top }; };
+  cv.addEventListener('pointerdown', e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); desenhando = true; ult = pos(e); ctx.beginPath(); ctx.arc(ult.x, ult.y, 1.2, 0, Math.PI * 2); ctx.fillStyle = '#1B1B1B'; ctx.fill(); tracos++; });
+  cv.addEventListener('pointermove', e => { if(!desenhando) return; e.preventDefault(); const p = pos(e); ctx.beginPath(); ctx.moveTo(ult.x, ult.y); ctx.lineTo(p.x, p.y); ctx.stroke(); ult = p; tracos++; });
+  const parar = () => { desenhando = false; };
+  cv.addEventListener('pointerup', parar); cv.addEventListener('pointercancel', parar); cv.addEventListener('pointerleave', parar);
+  const fechar = () => { fundo.remove(); document.body.classList.remove('dv-pad-aberto'); };
+  /* recorta só o desenho, com uma pequena margem, e reduz para no máximo 600 px de largura */
+  const exportar = () => {
+    const w = cv.width, h = cv.height, px = ctx.getImageData(0, 0, w, h).data;
+    let x0 = w, y0 = h, x1 = -1, y1 = -1;
+    for(let y = 0; y < h; y++) for(let x = 0; x < w; x++) if(px[(y * w + x) * 4 + 3] > 10){ if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; }
+    if(x1 < 0) return '';
+    const m = 12; x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(w - 1, x1 + m); y1 = Math.min(h - 1, y1 + m);
+    const cw = x1 - x0 + 1, ch = y1 - y0 + 1, esc = Math.min(1, 600 / cw);
+    const out = document.createElement('canvas'); out.width = Math.max(1, Math.round(cw * esc)); out.height = Math.max(1, Math.round(ch * esc));
+    out.getContext('2d').drawImage(cv, x0, y0, cw, ch, 0, 0, out.width, out.height);
+    return out.toDataURL('image/png');
+  };
+  fundo.addEventListener('click', async e => {
+    const b = e.target.closest('[data-pad]'); if(!b) return;
+    if(b.dataset.pad === 'limpar'){ ctx.clearRect(0, 0, cv.width, cv.height); tracos = 0; aviso.textContent = ''; return; }
+    if(b.dataset.pad === 'cancelar'){ fechar(); return; }
+    if(tracos < 6){ aviso.textContent = 'Desenhe a sua assinatura no espaço acima.'; return; }
+    if(!fundo.querySelector('#dv-pad-ok').checked){ aviso.textContent = 'Para assinar, marque que você leu e concorda com o acordo.'; return; }
+    const png = exportar(); if(!png){ aviso.textContent = 'Desenhe a sua assinatura no espaço acima.'; return; }
+    b.disabled = true; b.textContent = 'Salvando...'; aviso.textContent = '';
+    try{ await aoConfirmar(png); fechar(); }
+    catch(err){ b.disabled = false; b.textContent = 'Confirmar assinatura'; aviso.textContent = (err && err.message) || 'Não consegui salvar agora. Tente de novo.'; }
+  });
 }

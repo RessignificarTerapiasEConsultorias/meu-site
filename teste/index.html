@@ -527,7 +527,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611062157">
+<meta name="versao-site" content="v202611062215">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -3170,12 +3170,6 @@ function tcTelaDados(slot, nomeSugerido){
       <div class="campo"><label for="td-nome">O seu nome completo</label><input id="td-nome" type="text" autocomplete="name" value="${escV(nomeSugerido || '')}" placeholder="Nome e sobrenome"></div>
       <div class="campo"><label for="td-tel">O seu WhatsApp (com DDD)</label><input id="td-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000"></div>
       <div class="campo"><label for="td-email">O seu e-mail</label><input id="td-email" type="email" inputmode="email" autocomplete="email" placeholder="voce@email.com"></div>
-      <div class="campo"><span class="rotulo-campo" id="td-gen-rot">Na devolutiva, como prefere ser tratado(a)?</span>
-        <div class="dv-genero" role="radiogroup" aria-labelledby="td-gen-rot">
-          <label><input type="radio" name="td-gen" value="f"><span>No feminino</span></label>
-          <label><input type="radio" name="td-gen" value="m"><span>No masculino</span></label>
-          <label><input type="radio" name="td-gen" value="" checked><span>Tanto faz</span></label>
-        </div></div>
       <div class="campo campo-check"><label class="check" for="td-consent"><input id="td-consent" type="checkbox">
         <span>Concordo que as minhas respostas sejam enviadas para ${escV(T_A)}, que vai usá-las para ${casal ? 'nos' : 'me'} atender e mantê-las em sigilo.</span></label></div>
       <div class="aviso" id="td-aviso"></div>
@@ -3426,17 +3420,29 @@ async function tcCasalResultado(digitado){
   if(r && r.ok === true && !r.oculto){
     if(contato && !tk) tcGuardar(tc.codigo, l => { l.contato = contato; });
     const n1 = tcPrim(r.p1.nome), n2 = tcPrim(r.p2.nome), k = calcularCasal(r.p1.notas, r.p2.notas);
-    const dvc = dvCasal({ a:{ nome:r.p1.nome, genero:r.p1.genero, calc:k.p1 }, b:{ nome:r.p2.nome, genero:r.p2.genero, calc:k.p2 }, k, data:String(r.concluido_em || hoje()).slice(0, 10) });
+    const loc = tcLocal(tc.codigo), assin = { 1:{ img:r.p1.assinatura, em:r.p1.assinado_em }, 2:{ img:r.p2.assinatura, em:r.p2.assinado_em } };
+    const podeAssinar = [1, 2].filter(s => !assin[s].em && ((loc.tokens || {})[s] || r.slot_contato === s));
+    const dvc = dvCasal({ a:{ nome:r.p1.nome, genero:r.p1.genero, calc:k.p1 }, b:{ nome:r.p2.nome, genero:r.p2.genero, calc:k.p2 }, k, data:String(r.concluido_em || hoje()).slice(0, 10), assin, podeAssinar });
     const msg = ['Oi, ' + PRIM_TER + '! Somos ' + n1 + ' e ' + n2 + ' e terminamos o ' + TC_NOME + ' (código ' + tc.codigo + ').', '',
       n1 + ': ' + k.p1.ordem.map(x => x.nome + ' ' + tcPct(x.pct)).join(', '), n2 + ': ' + k.p2.ordem.map(x => x.nome + ' ' + tcPct(x.pct)).join(', '), '', 'Queremos conversar sobre o nosso resultado.'].join('\n');
     $('#tc-resultado').innerHTML = `<span class="selo">${escV(TC_NOME)} · Casal</span>
       <h1 class="tc-h1">${escV(n1)} e ${escV(n2)}, esta é a devolutiva de vocês</h1>
-      <p style="color:var(--tinta-suave)">As duas partes estão concluídas e bloqueadas. Guardem este link: ele abre esta devolutiva sempre que vocês quiserem.</p>
+      <p style="color:var(--tinta-suave)">As duas partes estão concluídas e bloqueadas. Guardem este link: ele abre esta devolutiva sempre que vocês quiserem.${!assin[1].em || !assin[2].em ? ' No final, cada um assina o acordo de vocês. Quem não assinar agora pode assinar depois, por este mesmo link.' : ''}</p>
       ${dvBarra(false)}${dvc}
       <a class="btn btn-zap" id="tcr-zap" href="${tcZapTer(msg)}" target="_blank" rel="noopener"><span class="duas">Enviar o nosso resultado para ${escV(T_A)}<small>abre a conversa com ${escV(CONFIG.whatsappVisivel)}</small></span></a>`;
     tcZapSvg($('#tcr-zap'));
     mostrarTela('#tela-tc-resultado'); window.scrollTo({ top:0, behavior:'auto' });
-    tcLigarTeia($('#tc-resultado'), tcSeries2(k)); dvLigar($('#tc-resultado')); return;
+    tcLigarTeia($('#tc-resultado'), tcSeries2(k)); dvLigar($('#tc-resultado'));
+    document.querySelectorAll('#tc-resultado [data-dv-assinar]').forEach(b => b.addEventListener('click', () => {
+      const s = +b.dataset.dvAssinar, nome = s === 1 ? r.p1.nome : r.p2.nome;
+      dvAbrirAssinatura(nome, async png => {
+        const res = await compRpc('travas_casal_assinar', { p_codigo:tc.codigo, p_slot:s, p_token:(loc.tokens || {})[s] || null, p_contato:(r.slot_contato === s ? contato : null), p_assinatura:png });
+        if(!res || res.ok !== true) throw new Error((res && res.msg) || 'Não consegui salvar a assinatura agora. Confira a sua internet e tente de novo.');
+        await tcCasalResultado(digitado);
+        const ac = document.querySelector('#tc-resultado .dv-acordo'); if(ac) ac.scrollIntoView({ block:'center' });
+      });
+    }));
+    return;
   }
   if(r && r.erro === 'incompleto') return tcCasalEntrar();
   if(salvo && !digitado) tcGuardar(tc.codigo, l => { delete l.contato; });
@@ -3602,7 +3608,7 @@ function tcDetalheIndividual(r){
 }
 async function tcDetalheCasal(codigo){
   tcAbrirDetalhe('<div class="carregando">Carregando...</div>');
-  const { data, error } = await clienteMembros().from('travas_casais').select('codigo,modo,concluido_em,travas_casal_slots(slot,nome,telefone,email,status,notas,dados,concluido_em)').eq('codigo', codigo).maybeSingle();
+  const { data, error } = await clienteMembros().from('travas_casais').select('codigo,modo,concluido_em,travas_casal_slots(slot,nome,telefone,email,status,notas,dados,concluido_em,assinatura,assinado_em)').eq('codigo', codigo).maybeSingle();
   if(error || !data || !data.concluido_em){ $('#tc-detalhe-conteudo').innerHTML = tcErro('Não consegui carregar este casal agora.'); return; }
   const s = (data.travas_casal_slots || []).slice().sort((p, q) => p.slot - q.slot), p1 = s[0], p2 = s[1], n1 = tcPrim(p1.nome), n2 = tcPrim(p2.nome);
   const k = calcularCasal(p1.dados && p1.dados.respostas || p1.notas, p2.dados && p2.dados.respostas || p2.notas);
@@ -3622,7 +3628,8 @@ async function tcDetalheCasal(codigo){
     area.innerHTML = `<div class="dv-barra dv-sem-print"><button type="button" class="mini-btn" data-dv-pdf>Baixar em PDF</button><button type="button" class="mini-btn" data-dv-editar>Editar o texto</button>
       <label class="dv-trat">${escV(n1)} <select data-dv-ga><option value="">neutro</option><option value="f"${ga === 'f' ? ' selected' : ''}>feminino</option><option value="m"${ga === 'm' ? ' selected' : ''}>masculino</option></select></label>
       <label class="dv-trat">${escV(n2)} <select data-dv-gb><option value="">neutro</option><option value="f"${gb === 'f' ? ' selected' : ''}>feminino</option><option value="m"${gb === 'm' ? ' selected' : ''}>masculino</option></select></label></div>`
-      + dvCasal({ a:{ nome:p1.nome, genero:ga, calc:k.p1, respostas:p1.dados && p1.dados.respostas }, b:{ nome:p2.nome, genero:gb, calc:k.p2, respostas:p2.dados && p2.dados.respostas }, k, data:String(data.concluido_em || '').slice(0, 10), terapeuta:true });
+      + dvCasal({ a:{ nome:p1.nome, genero:ga, calc:k.p1, respostas:p1.dados && p1.dados.respostas }, b:{ nome:p2.nome, genero:gb, calc:k.p2, respostas:p2.dados && p2.dados.respostas }, k, data:String(data.concluido_em || '').slice(0, 10), terapeuta:true,
+        assin:{ 1:{ img:p1.assinatura, em:p1.assinado_em }, 2:{ img:p2.assinatura, em:p2.assinado_em } } });
     tcLigarTeia(area, tcSeries2(k)); dvLigar(area);
     area.querySelector('[data-dv-ga]').addEventListener('change', e => desenharDvC(e.target.value, gb));
     area.querySelector('[data-dv-gb]').addEventListener('change', e => desenharDvC(ga, e.target.value));
