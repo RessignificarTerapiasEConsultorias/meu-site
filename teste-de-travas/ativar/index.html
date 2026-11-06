@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ativar meu Teste de Travas · Ressignificar</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0B1F3A">
+<link rel="icon" href="../../img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../loja.css">
+</head>
+<body>
+<header class="topo">
+  <div class="w">
+    <a class="marca" href="../../" aria-label="Ressignificar, ir para o site">
+      <img src="../../img/logo.png" alt="" width="36" height="36">
+      <span><b>Ressignificar</b><small>Teste de Travas Mentais</small></span>
+    </a>
+  </div>
+</header>
+
+<main>
+<section>
+  <div class="w">
+    <div class="caixa">
+
+      <!-- 1. conferindo o pagamento -->
+      <div id="eConferindo" class="passo-estado" role="status">
+        <div class="girar" aria-hidden="true"></div>
+        <h2 style="font-size:26px">Confirmando o seu pagamento…</h2>
+        <p class="lead" style="margin:8px auto 0">Isso costuma levar poucos segundos. Não feche esta página.</p>
+      </div>
+
+      <!-- 1b. pagamento ainda não confirmado -->
+      <div id="eEsperando" class="passo-estado" hidden>
+        <h2 style="font-size:26px">Ainda não recebemos a confirmação</h2>
+        <p class="lead" style="margin:8px auto 18px">Se você pagou por Pix, pode levar alguns minutos. Guarde o link desta página: assim que o pagamento cair, é só voltar aqui.</p>
+        <button class="btn" type="button" id="btnDeNovo" style="width:100%">Conferir de novo</button>
+        <p style="margin-top:14px"><a href="#" data-wa="Olá, Mauricio! Paguei o Teste de Travas Mentais, mas a página ainda não liberou. Meu e-mail: ">Já paguei e não liberou · falar no WhatsApp</a></p>
+      </div>
+
+      <!-- 1c. link inválido -->
+      <div id="eInvalido" class="passo-estado" hidden>
+        <h2 style="font-size:26px">Não encontramos este pedido</h2>
+        <p class="lead" style="margin:8px auto 18px">Confira se o link está completo. Se você já pagou, fale com a gente que liberamos na hora.</p>
+        <a class="btn wa" href="#" data-wa="Olá, Mauricio! Comprei o Teste de Travas Mentais e preciso de ajuda para ativar.">Falar no WhatsApp</a>
+      </div>
+
+      <!-- 2. formulário de personalização -->
+      <form id="eForm" hidden novalidate>
+        <span class="selo" style="color:var(--goldtxt);border-color:var(--line)">Pagamento confirmado ✓</span>
+        <h2 style="margin-top:12px">Agora vamos montar o seu teste</h2>
+        <p class="lead" style="margin-bottom:22px">Leva 2 minutos. Tudo isso aparece para os seus clientes.</p>
+
+        <div class="campo">
+          <label for="fNome">Seu nome, como vai aparecer</label>
+          <input type="text" id="fNome" maxlength="80" autocomplete="name" required>
+        </div>
+        <div class="campo">
+          <span class="rotulo" id="rotGen">Como os seus clientes te chamam</span>
+          <div class="generos" role="radiogroup" aria-labelledby="rotGen">
+            <label class="opcao"><input type="radio" name="genero" value="f" checked><span>a terapeuta</span></label>
+            <label class="opcao"><input type="radio" name="genero" value="m"><span>o terapeuta</span></label>
+          </div>
+        </div>
+        <div class="campo">
+          <label for="fTitulo">Como você se apresenta</label>
+          <input type="text" id="fTitulo" maxlength="90" placeholder="Ex.: Terapeuta integrativa e psicanalista" required>
+        </div>
+        <div class="campo">
+          <label for="fRegistro">Registro profissional <span class="opc">(opcional)</span></label>
+          <input type="text" id="fRegistro" maxlength="40" placeholder="Ex.: CRT 00000">
+        </div>
+        <div class="campo">
+          <label for="fFrase">Uma frase sua <span class="opc">(opcional)</span></label>
+          <input type="text" id="fFrase" maxlength="120" placeholder="Ex.: Acolher para transformar">
+        </div>
+        <div class="campo">
+          <label for="fZap">WhatsApp que recebe os resultados</label>
+          <input type="tel" id="fZap" inputmode="tel" maxlength="20" placeholder="(81) 99999-9999" required>
+        </div>
+        <div class="campo">
+          <label for="fInsta">Instagram <span class="opc">(opcional)</span></label>
+          <input type="text" id="fInsta" maxlength="40" placeholder="@seuperfil" autocapitalize="off">
+        </div>
+        <div class="campo">
+          <span class="rotulo">Sua foto <span class="opc">(recomendado)</span></span>
+          <div class="foto-area">
+            <div class="foto-prev" id="fotoPrev" aria-hidden="true"></div>
+            <div>
+              <label class="foto-btn" for="fFoto">Escolher foto</label>
+              <input type="file" id="fFoto" accept="image/*">
+              <div class="dica">Foto de rosto, de preferência na vertical.</div>
+            </div>
+          </div>
+        </div>
+        <div class="campo">
+          <span class="rotulo" id="rotCor">Cores do seu teste</span>
+          <div class="paletas" role="radiogroup" aria-labelledby="rotCor" id="paletas"></div>
+        </div>
+
+        <div id="blocoSenha">
+          <div class="campo">
+            <label for="fSenha">Crie uma senha</label>
+            <input type="password" id="fSenha" minlength="8" autocomplete="new-password">
+            <div class="dica">Pelo menos 8 caracteres. Você entra com o e-mail <b id="emailLogin"></b>.</div>
+          </div>
+          <div class="campo">
+            <label for="fSenha2">Repita a senha</label>
+            <input type="password" id="fSenha2" minlength="8" autocomplete="new-password">
+          </div>
+        </div>
+        <p class="aviso ok on" id="contaExiste" hidden>Você já tem acesso à Área de Membros com o e-mail <b id="emailLogin2"></b>. Use a mesma senha de sempre.</p>
+
+        <div class="aviso" id="aviso" role="alert"></div>
+        <button class="btn" type="submit" id="btnCriar" style="width:100%">Criar o meu teste</button>
+      </form>
+
+      <!-- 3. pronto -->
+      <div id="ePronto" class="pronto" hidden>
+        <div class="icone" aria-hidden="true">✓</div>
+        <h2>Seu teste está pronto!</h2>
+        <p class="lead" style="margin:0 auto">Este é o link do seu teste. É ele que você manda para os seus clientes.</p>
+        <div class="link-caixa"><input type="text" id="linkTeste" readonly aria-label="Link do seu teste"><button type="button" id="btnCopiar">Copiar</button></div>
+        <a class="btn" id="btnAbrir" href="#" style="width:100%">Abrir o meu teste</a>
+        <ol class="passos-uso">
+          <li>No rodapé do seu teste, toque em <b>Área <span id="daPrim">da terapeuta</span></b>.</li>
+          <li>Entre com a sua senha. O login é o e-mail <b id="emailLogin3"></b>.</li>
+          <li>Toque em <b>gerar código</b> para cada cliente e envie pelo WhatsApp. O resultado volta para você.</li>
+        </ol>
+        <p style="margin-top:18px"><a href="#" data-wa="Olá, Mauricio! Acabei de ativar o meu Teste de Travas Mentais e queria uma ajuda para começar.">Precisa de ajuda? Fale com o suporte no WhatsApp</a></p>
+      </div>
+
+    </div>
+  </div>
+</section>
+</main>
+
+<footer style="padding-bottom:30px">
+  <div class="w"><p><b>Ressignificar Terapias &amp; Consultorias</b> · <a href="../../politica-de-privacidade.html">Política de Privacidade</a></p></div>
+</footer>
+
+<script>
+(function () {
+  var FUNCAO = "https://gobjhepmnijoceirwgow.supabase.co/functions/v1/travas-loja";
+  var ZAP = "5581992531561";
+  var $ = function (s) { return document.querySelector(s); };
+  var q = new URLSearchParams(location.search);
+  var lerLocal = function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  var token = (q.get("p") || lerLocal("travas_pedido") || "").toLowerCase();
+  var retorno = { transaction_nsu: q.get("transaction_nsu") || "", slug: q.get("slug") || "" };
+  var pedido = null, fotoDados = null, tentativas = 0;
+
+  /* paletas prontas: cada uma troca as cores do teste inteiro */
+  var PALETAS = [
+    { id: "azul", nome: "Azul e dourado", c: { "--areia": "#F4EFE5", "--areia-escura": "#E8E0CF", "--papel": "#FFFDF8", "--tinta": "#16203A", "--tinta-suave": "#4C5670", "--ardosia": "#0B1F3A", "--ardosia-escura": "#06142A", "--ardosia-clara": "#E3E8F2", "--argila": "#A8832F", "--argila-clara": "#F4ECD8", "--salvia": "#C9A24A", "--borda": "#E3DCCD" } },
+    { id: "verde", nome: "Verde sálvia", c: { "--areia": "#F5F5F5", "--areia-escura": "#E7EBEA", "--papel": "#FFFFFF", "--tinta": "#152D2E", "--tinta-suave": "#55706C", "--ardosia": "#152D2E", "--ardosia-escura": "#0D1F20", "--ardosia-clara": "#E3ECEA", "--argila": "#4E756D", "--argila-clara": "#E4EEEB", "--salvia": "#8DB0A7", "--borda": "#DDE4E2" } },
+    { id: "lilas", nome: "Lilás", c: { "--areia": "#F3EBEC", "--areia-escura": "#EADCF1", "--papel": "#FCF8FC", "--tinta": "#3F2A52", "--tinta-suave": "#6F4F7C", "--ardosia": "#5E4574", "--ardosia-escura": "#3F2A52", "--ardosia-clara": "#EADCF1", "--argila": "#7B4B9A", "--argila-clara": "#EFE3F6", "--salvia": "#B79CCB", "--borda": "#DFD0E0" } },
+    { id: "terracota", nome: "Terracota", c: { "--areia": "#F6EFE8", "--areia-escura": "#ECDFD2", "--papel": "#FFFCF8", "--tinta": "#3B2A22", "--tinta-suave": "#6E5A4E", "--ardosia": "#5A3A2C", "--ardosia-escura": "#3B2A22", "--ardosia-clara": "#F1E4DA", "--argila": "#A9542F", "--argila-clara": "#F6E3D9", "--salvia": "#D9A38A", "--borda": "#E7D9CC" } },
+    { id: "rosa", nome: "Rosa", c: { "--areia": "#FAF0F1", "--areia-escura": "#F0DDE0", "--papel": "#FFFBFB", "--tinta": "#4A2330", "--tinta-suave": "#7A5560", "--ardosia": "#8A3D57", "--ardosia-escura": "#5E2639", "--ardosia-clara": "#F5E1E7", "--argila": "#A84A6E", "--argila-clara": "#F8E4EC", "--salvia": "#DDA3B8", "--borda": "#EDD8DE" } },
+    { id: "petroleo", nome: "Azul petróleo", c: { "--areia": "#EFF4F5", "--areia-escura": "#DCE7E9", "--papel": "#FFFFFF", "--tinta": "#133A43", "--tinta-suave": "#4D6B72", "--ardosia": "#155563", "--ardosia-escura": "#0D3841", "--ardosia-clara": "#DDEDF0", "--argila": "#22777C", "--argila-clara": "#DCEFF0", "--salvia": "#86C0C3", "--borda": "#D3E2E5" } }
+  ];
+  $("#paletas").innerHTML = PALETAS.map(function (p, i) {
+    return '<label class="opcao paleta"><input type="radio" name="paleta" value="' + p.id + '"' + (i === 0 ? " checked" : "") + '><span><i><b style="background:' + p.c["--ardosia"] + '"></b><b style="background:' + p.c["--argila"] + '"></b><b style="background:' + p.c["--areia"] + '"></b></i>' + p.nome + "</span></label>";
+  }).join("");
+
+  function mostrar(id) { ["eConferindo", "eEsperando", "eInvalido", "eForm", "ePronto"].forEach(function (x) { $("#" + x).hidden = x !== id; }); window.scrollTo(0, 0); }
+  function chamar(corpo) {
+    return fetch(FUNCAO, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) })
+      .then(function (r) { return r.json().then(function (j) { j.__status = r.status; return j; }); });
+  }
+  function zapFormatado(d) { d = String(d || "").replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, ""); return d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d; }
+
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("[data-wa]"); if (!a) return;
+    e.preventDefault();
+    var msg = a.getAttribute("data-wa") + (pedido && /e-mail: $/.test(a.getAttribute("data-wa")) ? pedido.email : "");
+    window.open("https://wa.me/" + ZAP + "?text=" + encodeURIComponent(msg), "_blank", "noopener");
+  });
+
+  function pronto(link, email, genero, nome) {
+    $("#linkTeste").value = link; $("#btnAbrir").href = link;
+    $("#emailLogin3").textContent = email || "";
+    var prim = (nome || "").split(" ")[0];
+    $("#daPrim").textContent = prim ? (genero === "m" ? "do " : "da ") + prim : "da terapeuta";
+    mostrar("ePronto");
+  }
+
+  function conferir() {
+    chamar({ acao: "confirmar", token: token, transaction_nsu: retorno.transaction_nsu, slug: retorno.slug }).then(function (j) {
+      if (j.__status === 404 || !j.ok) { mostrar("eInvalido"); return; }
+      pedido = j;
+      if (j.status === "ativado" && j.pagina) { pronto(j.pagina, j.email, null, j.nome); return; }
+      if (j.status === "pago" || j.status === "ativando") { abrirForm(j); return; }
+      if (j.status === "cancelado") { mostrar("eInvalido"); return; }
+      tentativas++;
+      if (tentativas < 40) { mostrar("eConferindo"); setTimeout(conferir, 4000); } else mostrar("eEsperando");
+    }).catch(function () {
+      tentativas++;
+      if (tentativas < 40) setTimeout(conferir, 5000); else mostrar("eEsperando");
+    });
+  }
+  $("#btnDeNovo").addEventListener("click", function () { tentativas = 30; mostrar("eConferindo"); conferir(); });
+
+  function abrirForm(j) {
+    $("#fNome").value = j.nome || ""; $("#fZap").value = zapFormatado(j.whatsapp);
+    $("#emailLogin").textContent = j.email; $("#emailLogin2").textContent = j.email;
+    $("#blocoSenha").hidden = !!j.conta_existente; $("#contaExiste").hidden = !j.conta_existente;
+    atualizaInicial();
+    mostrar("eForm");
+    if (!sessionStorage.getItem("travas_compra_" + token)) {
+      try { sessionStorage.setItem("travas_compra_" + token, "1"); } catch (e) {}
+      window.dataLayer = window.dataLayer || []; window.dataLayer.push({ event: "compra_teste_travas", value: 147, currency: "BRL" });
+      if (window.gtag) gtag("event", "purchase", { value: 147, currency: "BRL", items: [{ item_name: "Teste de Travas Mentais" }] });
+      if (window.fbq) fbq("track", "Purchase", { value: 147, currency: "BRL" });
+    }
+  }
+
+  function atualizaInicial() {
+    var p = $("#fotoPrev");
+    if (fotoDados) { p.style.backgroundImage = "url(" + fotoDados + ")"; p.textContent = ""; }
+    else { p.style.backgroundImage = ""; p.textContent = ($("#fNome").value.trim().charAt(0) || "?").toUpperCase(); }
+  }
+  $("#fNome").addEventListener("input", atualizaInicial);
+  $("#fZap").addEventListener("input", function () { var d = this.value.replace(/\D/g, "").slice(0, 11); this.value = d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d.length > 2 ? "(" + d.slice(0, 2) + ") " + d.slice(2) : d; });
+
+  /* foto: reduz no próprio celular antes de enviar (fica leve e rápida para os clientes) */
+  $("#fFoto").addEventListener("change", function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    var url = URL.createObjectURL(f), img = new Image();
+    img.onload = function () {
+      var max = 720, esc = Math.min(1, max / Math.max(img.width, img.height));
+      var cv = document.createElement("canvas"); cv.width = Math.round(img.width * esc); cv.height = Math.round(img.height * esc);
+      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+      fotoDados = cv.toDataURL("image/jpeg", 0.85); URL.revokeObjectURL(url); atualizaInicial();
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); erro("Não conseguimos abrir essa foto. Tente outra, em JPG ou PNG."); };
+    img.src = url;
+  });
+
+  var aviso = $("#aviso");
+  function erro(msg, campo) { aviso.textContent = msg; aviso.classList.add("on"); if (campo) campo.focus(); }
+
+  $("#eForm").addEventListener("submit", function (e) {
+    e.preventDefault(); aviso.classList.remove("on");
+    var nome = $("#fNome").value.trim().replace(/\s+/g, " ");
+    var genero = (document.querySelector('input[name="genero"]:checked') || {}).value || "f";
+    var paletaId = (document.querySelector('input[name="paleta"]:checked') || {}).value;
+    var paleta = (PALETAS.filter(function (p) { return p.id === paletaId; })[0] || PALETAS[0]).c;
+    var zap = $("#fZap").value.replace(/\D/g, "");
+    if (nome.length < 3) return erro("Escreva o seu nome.", $("#fNome"));
+    if (!$("#fTitulo").value.trim()) return erro("Escreva como você se apresenta. Ex.: Terapeuta integrativa.", $("#fTitulo"));
+    if (zap.length < 10) return erro("Confira o WhatsApp, com DDD.", $("#fZap"));
+    var senha = $("#fSenha").value;
+    if (!pedido.conta_existente) {
+      if (senha.length < 8) return erro("Crie uma senha com pelo menos 8 caracteres.", $("#fSenha"));
+      if (senha !== $("#fSenha2").value) return erro("As duas senhas não são iguais.", $("#fSenha2"));
+    }
+    var b = $("#btnCriar"); b.disabled = true; b.textContent = "Criando o seu teste…";
+    chamar({ acao: "ativar", token: token, nome: nome, genero: genero, titulo: $("#fTitulo").value, registro: $("#fRegistro").value,
+             frase: $("#fFrase").value, whatsapp: zap, instagram: $("#fInsta").value, foto: fotoDados, paleta: paleta,
+             senha: pedido.conta_existente ? "" : senha })
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.erro || "Não foi possível criar o teste.");
+        pronto(j.pagina, j.email, genero, nome);
+      })
+      .catch(function (err) { b.disabled = false; b.textContent = "Criar o meu teste"; erro(err.message); });
+  });
+
+  $("#btnCopiar").addEventListener("click", function () {
+    var i = $("#linkTeste"), b = this;
+    (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.reject()).catch(function () { i.select(); document.execCommand("copy"); })
+      .then(function () { b.textContent = "Copiado ✓"; setTimeout(function () { b.textContent = "Copiar"; }, 2000); });
+  });
+
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(token)) { mostrar("eInvalido"); return; }
+  try { localStorage.setItem("travas_pedido", token); } catch (e) {}
+  conferir();
+})();
+</script>
+</body>
+</html>

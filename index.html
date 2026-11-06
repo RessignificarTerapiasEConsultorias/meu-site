@@ -425,6 +425,21 @@ footer a.membros-rodape svg{width:18px;height:18px}
 .float.show{transform:none}
 .float svg{width:22px;height:22px;fill:#fff}
 @media(min-width:961px){.barra-cel{display:none}.float{display:flex}footer{padding-bottom:44px}}
+/* PRODUTOS */
+.produtos{background:linear-gradient(180deg,var(--sand),#EFE7D6)}
+.prod{display:grid;gap:22px;align-items:center;padding:24px 20px;border-radius:22px;background:var(--navy);color:#fff;box-shadow:0 24px 50px rgba(11,31,58,.18);overflow:hidden}
+.prod h3{color:#fff;font-size:clamp(24px,5.6vw,32px);margin:8px 0 10px}
+.prod p{color:#D5DCEA;font-size:16.5px}
+.prod .para{font-size:14px;font-weight:700;color:var(--gold2)}
+.prod ul{list-style:none;display:grid;gap:7px;margin:16px 0 4px;font-size:15.5px;color:#D5DCEA}
+.prod li{padding-left:18px;position:relative}
+.prod li::before{content:"";position:absolute;left:0;top:10px;width:7px;height:7px;border-radius:2px;background:var(--gold)}
+.prod .valor{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:16px 0}
+.prod .valor b{font-family:var(--serif);font-size:38px;color:#fff;line-height:1}
+.prod .valor span{font-size:14.5px;color:#AEB9CF}
+.prod .tela{width:min(210px,56vw);margin:0 auto;border-radius:30px;padding:8px;background:#06142A;box-shadow:0 20px 40px rgba(0,0,0,.4),inset 0 0 0 2px #26365A}
+.prod .tela img{border-radius:23px;width:100%;height:auto;aspect-ratio:9/19;object-fit:cover;object-position:top}
+@media(min-width:761px){.prod{grid-template-columns:1.25fr .75fr;padding:40px 44px}.prod .btn{width:auto}}
 
 </style>
 </head>
@@ -440,6 +455,7 @@ footer a.membros-rodape svg{width:18px;height:18px}
       <a class="link" href="#como-funciona">Como funciona</a>
       <a class="link" href="#resultados">Resultados</a>
       <a class="link" href="#perguntas">Perguntas</a>
+      <a class="link" href="#produtos">Produtos</a>
       <a class="membros-topo" href="areademembros/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg>Área de Membros</a>
       <button class="btn" type="button" data-quiz data-ref="menu">Quero meu presente</button>
     </nav>
@@ -722,6 +738,7 @@ footer a.membros-rodape svg{width:18px;height:18px}
         <h3>Rede de terapeutas parceiros</h3>
         <p>Coordeno uma rede de terapeutas com supervisão de casos. Se você quer fazer parte ou precisa de apoio na condução de casos, vamos conversar.</p>
         <a class="btn line" href="#" data-wa="Olá, Mauricio! Sou terapeuta e quero saber sobre a rede de terapeutas parceiros." data-ref="rede">Falar sobre a rede</a>
+        <a class="mini-link" href="#produtos">Conheça o Teste de Travas Mentais para o seu consultório</a>
       </article>
     </div>
     <div class="rede">
@@ -731,6 +748,25 @@ footer a.membros-rodape svg{width:18px;height:18px}
       </div>
       <a class="btn line" href="#" data-wa="Olá! Vim pelo site e gostaria de uma indicação da rede de profissionais parceiros." data-ref="indicacao">Pedir indicação</a>
     </div>
+  </div>
+</section>
+
+<!-- PRODUTOS -->
+<section class="produtos" id="produtos">
+  <div class="w">
+    <h2>Produtos</h2>
+    <p class="lead">Ferramentas prontas para quem atende, para usar no mesmo dia.</p>
+    <article class="prod">
+      <div>
+        <span class="para">Para terapeutas · pronto na hora</span>
+        <h3>Teste de Travas Mentais com a sua marca</h3>
+        <p>O seu próprio teste, com o seu nome, a sua foto e as suas cores. O cliente responde pelo celular e o resultado com o mapa das 10 travas chega para você.</p>
+        <ul><li>Clientes ilimitados, sem mensalidade</li><li>Resultado por WhatsApp e por e-mail</li><li>Área para gerar códigos e ver as respostas</li></ul>
+        <div class="valor"><b>R$ 147</b><span>pagamento único · acesso vitalício</span></div>
+        <a class="btn" href="teste-de-travas/" data-ref="produto-travas">Quero o meu teste</a>
+      </div>
+      <div class="tela"><img src="teste-de-travas/previa.jpg" alt="Exemplo do Teste de Travas Mentais personalizado no celular" width="500" height="1055" loading="lazy" decoding="async"></div>
+    </article>
   </div>
 </section>
 
@@ -840,7 +876,7 @@ footer a.membros-rodape svg{width:18px;height:18px}
 <footer>
   <div class="w">
     <p><b>Ressignificar Terapias &amp; Consultorias</b>, conduzida por Mauricio Pinho. <span id="cnpj"></span></p>
-    <p>Contato: <a href="#" data-wa="Olá, Mauricio! Vim pelo site." data-ref="rodape">WhatsApp</a> · <a id="igFoot" href="#" target="_blank" rel="noopener">Instagram</a> · <a href="areademembros/">Área de Membros</a> · <a href="politica-de-privacidade.html">Política de Privacidade</a></p>
+    <p>Contato: <a href="#" data-wa="Olá, Mauricio! Vim pelo site." data-ref="rodape">WhatsApp</a> · <a id="igFoot" href="#" target="_blank" rel="noopener">Instagram</a> · <a href="areademembros/">Área de Membros</a> · <a href="teste-de-travas/">Teste de Travas para terapeutas</a> · <a href="politica-de-privacidade.html">Política de Privacidade</a></p>
     <p style="font-size:13.5px;opacity:.75;line-height:1.6;margin-top:10px">Ressignificar Terapias &amp; Consultorias · CNPJ 34.891.194/0001-84<br>Rua do Jangadeiro, 859, Apt. 01 — Candeias, Jaboatão dos Guararapes/PE, CEP 54.430-315<br><a href="mailto:contato@ressignificarterapiaseconsultorias.com" style="color:inherit">contato@ressignificarterapiaseconsultorias.com</a></p>
     <a class="membros-rodape" href="areademembros/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg>Entrar na Área de Membros</a>
     <p class="disc">Os atendimentos de neuropsicanálise, PNL e hipnoterapia são de desenvolvimento emocional e não substituem acompanhamento médico, psicológico ou psiquiátrico. Em situação de crise, ligue 188 (CVV, 24 horas) ou procure o serviço de saúde mais próximo. Resultados variam de pessoa para pessoa e dependem do comprometimento de cada um.</p>
