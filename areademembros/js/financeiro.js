@@ -899,8 +899,9 @@
   });
 
   function desenharTudo() { preencherClientes(); desenharPainel(); desenharCobrancas(); desenharClientes(); desenharContratos(); desenharCustos(); }
-  const abrirFin = ligarAbas(document.getElementById("abas"), function (nome) { abaAtual = nome; if (nome === "ganhos") carregarGanhos(); });
-  abrirFin("contratos");
+  const abrirFin = ligarAbas(document.getElementById("abas"), function (nome) { abaAtual = nome; if (nome === "ganhos") carregarGanhos(); if (nome === "avisos" && window.carregarAvisos) window.carregarAvisos(); });
+  window.financeiroAbrirPagar = abrirPagar;      // o painel "Avisos por e-mail" usa a mesma baixa (entra na DRE e manda o obrigado)
+  abrirFin(location.hash === "#avisos" ? "avisos" : "contratos");
 
   await carregar();
   await carregarContasDre(pref.dre_empresa_id);
