@@ -132,4 +132,6 @@
 .dv-pad-acoes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .dv-pad-acoes [data-pad="ok"]{grid-column:1/-1}
 @media(min-width:560px){.dv-pad-acoes{grid-template-columns:auto auto 1fr}.dv-pad-acoes [data-pad="ok"]{grid-column:auto}}
+@media(max-height:760px){.dv-pad{padding:14px 16px}.dv-pad h2{font-size:19px;margin-bottom:6px}.dv-pad-acordo{font-size:13.5px;padding:8px 10px;margin-bottom:8px}.dv-pad-dica{font-size:13px;margin-bottom:6px}.dv-pad-tela{height:170px}.dv-pad-acoes .btn{padding-top:10px;padding-bottom:10px}}
+@media(max-height:640px){.dv-pad-fundo{padding:8px}.dv-pad{padding:12px 14px}.dv-pad h2{font-size:17px}.dv-pad-acordo{font-size:12.5px;line-height:1.45}.dv-pad-dica{display:none}.dv-pad-tela{height:140px}.dv-pad-ok{font-size:14px;margin:2px 0}.dv-pad-aviso{margin:2px 0}}
 @media print{.dv-ass-btn{display:none!important}}
