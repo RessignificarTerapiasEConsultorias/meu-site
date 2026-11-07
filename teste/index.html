@@ -527,7 +527,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611071949">
+<meta name="versao-site" content="v202611072315">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -571,6 +571,8 @@ html.t-erro .t-girar{display:none}
 <script src="devolutiva-carater.js"></script>
 <link rel="stylesheet" href="devolutiva-mpcc.css">
 <script src="devolutiva-mpcc.js"></script>
+<link rel="stylesheet" href="devolutiva-miralene.css">
+<script src="devolutiva-miralene.js"></script>
 </head>
 <body>
 <div id="t-estado" role="status"><div class="t-girar" aria-hidden="true"></div><p>Carregando o teste…</p></div>
@@ -1530,6 +1532,7 @@ async function validarCodigo(codigo){
     const r = await api(ACOES.validarCodigo,{codigo});
     if(r && r.ok === false && r.erro) return {ok:false, msg:'Não consegui verificar agora. Confira a sua internet e tente de novo.'};
     if(r && (r.valido === true || r.ok === true)) return {ok:true, teste: r.teste || 'travas', tipo: r.tipo || 'individual', mostrar: r.mostrar_resultado !== false, urgencia: r.urgencia !== false, cliente: r.cliente || '', compartilhado: r.compartilhado === true, duracao: r.duracao_min || 30};
+    if(typeof miValidar === 'function' && !(r && r.esgotado)){ const m = await miValidar(codigo); if(m) return m; }   // código de um dos testes da Miralene (testes_codigos)
     return {ok:false, msg:(r && r.msg) || 'Esse código não está valendo. Ele já foi usado ou foi digitado diferente.'};
   }
   const lista = ler(CHAVE_CODIGOS, []);
@@ -1566,6 +1569,7 @@ $('#btn-entrar').addEventListener('click', async () => {
   if(!r.ok){ b.disabled=false; b.textContent='Fazer o teste agora'; avisar('#aviso-codigo', r.msg); return; }
   if(r.teste === 'tracos'){ b.disabled = false; b.textContent = 'Fazer o teste agora'; return tcEntrar(codigo, r); }
   if(r.teste === 'mpcc' && typeof mpEntrar === 'function'){ b.disabled = false; b.textContent = 'Fazer o teste agora'; return mpEntrar(codigo, r); }
+  if(typeof miLista === 'function' && miLista().indexOf(r.teste) > -1){ b.disabled = false; b.textContent = 'Fazer o teste agora'; return miEntrar(codigo, r); }
   estado.codigo = codigo;
   estado.mostrarResultado = r.mostrar !== false;
   estado.urgencia = r.urgencia !== false;
@@ -3150,6 +3154,7 @@ $('#tc-entrar').addEventListener('click', async () => {
   b.disabled = false; b.textContent = 'Fazer o teste agora';
   if(!r.ok) return avisar('#tc-aviso-codigo', r.msg);
   if(r.teste === 'mpcc' && typeof mpEntrar === 'function'){ mpEntrar(codigo, r); return; }
+  if(typeof miLista === 'function' && miLista().indexOf(r.teste) > -1){ miEntrar(codigo, r); return; }
   if(r.teste !== 'tracos'){ location.href = location.pathname + '?t=' + encodeURIComponent(T_SLUG) + '&c=' + encodeURIComponent(codigo); return; }   // é código do Teste de Travas
   tcEntrar(codigo, r);
 });
@@ -3723,16 +3728,18 @@ async function tcDetalheCasal(codigo){
   const d = window.__T && window.__T.dados, lista = d && Array.isArray(d.testes) ? d.testes : null;
   const tracos = !d || (lista && lista.indexOf('tracos') > -1), travas = !lista || lista.indexOf('travas') > -1, mpcc = !!(lista && lista.indexOf('mpcc') > -1);
   const ativos = ['travas', 'tracos', 'mpcc'].filter(k => k === 'travas' ? travas : k === 'tracos' ? tracos : mpcc);
+  const extras = typeof miLista === 'function' ? miLista() : [];   // Mente Serena, Esquemas e TDAH (só a página da Miralene)
   if(mpcc && typeof mpAjustarTestes === 'function') mpAjustarTestes(ativos);   // com o MPCC (terceiro teste)
   else{
-    if(tracos && travas) dvCapaDoisTestes();
-    if(tracos && !travas) dvSoTracos();                // comprou só o Teste de Traços de Caráter
-    if(!tracos && !travas) dvSemTeste();               // nenhum teste ativo (ex.: assinatura suspensa)
+    if(tracos && travas && !extras.length) dvCapaDoisTestes();
+    if(tracos && !travas && !extras.length) dvSoTracos();                // comprou só o Teste de Traços de Caráter
+    if(!tracos && !travas && !extras.length) dvSemTeste();               // nenhum teste ativo (ex.: assinatura suspensa)
   }
-  if((!d || d.capa_vendas !== false) && ativos.length) dvCapaVendas(ativos.length === 1 ? ativos[0] : (ativos.length === 2 && !mpcc ? 'ambos' : ativos));   // capa de vendas para todas
+  if(extras.length) miAjustarTestes(extras, ativos);
+  if((!d || d.capa_vendas !== false) && (ativos.length || extras.length)) dvCapaVendas(extras.length ? ativos.concat(extras) : (ativos.length === 1 ? ativos[0] : (ativos.length === 2 && !mpcc ? 'ambos' : ativos)));   // capa de vendas para todas
 })();
 /* O Teste de Traços de Caráter só aparece na área de quem tem o teste liberado (travas_paginas.dados.testes) */
-(function(){ const d = window.__T && __T.dados, ok = !!(d && Array.isArray(d.testes) && (d.testes.indexOf('tracos') > -1 || d.testes.indexOf('mpcc') > -1));
+(function(){ const d = window.__T && __T.dados, ok = !!(d && Array.isArray(d.testes) && (d.testes.indexOf('tracos') > -1 || d.testes.indexOf('mpcc') > -1)) || (typeof miLista === 'function' && miLista().length > 0);
   if(!ok){ const c = $('#alt-teste'); if(c && c.closest('.campo')) c.closest('.campo').style.display = 'none'; } })();
 
 </script>

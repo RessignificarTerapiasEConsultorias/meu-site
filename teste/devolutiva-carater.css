@@ -212,6 +212,7 @@ body.cv-on{overflow-x:clip}
 .cv-checks li{position:relative;padding-left:34px;font-size:17px}
 .cv-checks li::before{content:"";position:absolute;left:4px;top:7px;width:14px;height:8px;border-left:3px solid var(--verde-zap);border-bottom:3px solid var(--verde-zap);transform:rotate(-45deg)}
 .cv-nota{font-size:14px;color:var(--tinta-suave);margin:0}
+@media(min-width:860px){.cv-recebe-grade.cv-sem-img{grid-template-columns:1fr}}
 .cv-passos{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:14px}
 @media(min-width:760px){.cv-passos{grid-template-columns:repeat(4,1fr)}}
 .cv-passos li{background:var(--papel);border:1.4px solid var(--borda);border-radius:18px;padding:20px 18px}

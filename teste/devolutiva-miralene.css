@@ -1,0 +1,25 @@
+/* Testes da Miralene (Mente Serena, Esquemas e TDAH): área da terapeuta e detalhes da página.
+   Usa as cores da terapeuta (travas_paginas.dados.paleta). As telas do teste e o resultado ficam em Shadow DOM:
+   o desenho delas está dentro de devolutiva-miralene.js (feito a partir do site antigo).
+   ARQUIVO GERADO por ferramentas/montar_testes_miralene.py (fonte: ferramentas/modulo_miralene/painel.css). */
+#painel-mi{display:none}
+#painel-admin.modo-mi #painel-mi{display:block}
+#painel-admin.modo-mi .abas,#painel-admin.modo-mi .aba-conteudo,#painel-admin.modo-mi #detalhe-resposta,#painel-admin.modo-mi #aviso-modo-local,#painel-admin.modo-mi #painel-tc,#painel-admin.modo-mi #painel-mp{display:none!important}
+.mi-titulo{font-size:24px;margin:0 0 14px;color:var(--ardosia)}
+#mi-abas{display:flex;gap:8px;margin:0 0 16px}
+#mi-abas button{flex:1;border:1.4px solid var(--borda);background:var(--papel);color:var(--ardosia);border-radius:12px;padding:11px 8px;font:inherit;font-weight:700;cursor:pointer}
+#mi-abas button.ativa{background:var(--ardosia);color:#fff;border-color:var(--ardosia)}
+#painel-mi a.mini-btn{display:inline-flex;align-items:center;text-decoration:none}
+.mi-acoes-cod{display:flex;gap:8px;flex-wrap:wrap;width:100%;margin-top:8px}
+.mi-sep{border:0;border-top:1.4px solid var(--borda);margin:18px 0}
+#mi-host-detalhe{display:block}
+#tela-mi-teste .voltar,#tela-mi-fim .voltar{margin-bottom:6px}
+/* o fundo do Mente Serena (o site antigo pintava a página inteira) */
+body.mi-fundo-serena{background:radial-gradient(900px 520px at 50% -10%,#E8D8CC 0%,transparent 65%),#DCCAC0}
+/* impressão do resultado de uma resposta: só o resultado sai no papel / PDF */
+#mi-impressao{display:none}
+@media print{
+  body.mi-imprimindo > *:not(#mi-impressao){display:none!important}
+  body.mi-imprimindo #mi-impressao{display:block!important}
+  body.mi-imprimindo{background:#fff!important;padding:0!important}
+}

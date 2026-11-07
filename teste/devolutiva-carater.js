@@ -642,16 +642,20 @@ function dvBotaoArea(capa){
 const CV_ZAP_SVG ='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.2.1-1.9-.1a17 17 0 0 1-1.8-.7c-3.1-1.3-5.1-4.5-5.3-4.7-.2-.2-1.3-1.7-1.3-3.2 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .7.5l1 2.3c.1.2.1.4 0 .6l-.4.6-.5.5c-.2.2-.3.3-.1.6.2.3.8 1.4 1.8 2.2 1.2 1.1 2.3 1.4 2.6 1.6.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l2.2 1c.3.2.5.2.6.4.1.1.1.7-.1 1.3z"/></svg>';
 const mpJuntar = itens => { itens = itens.filter(Boolean); return itens.length > 1 ? itens.slice(0, -1).join(', ') + ' e ' + itens[itens.length - 1] : (itens[0] || ''); };
 function dvCapaVendas(modo){
-  /* modo: 'travas', 'tracos', 'mpcc', 'ambos' (travas + traços) ou uma lista com os testes da terapeuta */
-  const lista = Array.isArray(modo) ? modo.filter(k => k === 'travas' || k === 'tracos' || k === 'mpcc')
+  /* modo: 'travas', 'tracos', 'mpcc', 'ambos' (travas + traços) ou uma lista com os testes da terapeuta.
+     Testes extras (Mente Serena, Esquemas e TDAH da Miralene) chegam em window.CV_EXTRA, cada um com os seus textos. */
+  const EX = window.CV_EXTRA || {};
+  const lista = Array.isArray(modo) ? modo.filter(k => k === 'travas' || k === 'tracos' || k === 'mpcc' || EX[k])
     : (modo === 'travas' || modo === 'tracos' || modo === 'mpcc') ? [modo] : ['travas', 'tracos'];
   if(!lista.length) return;
   const tem = k => lista.indexOf(k) > -1;
+  const extras = lista.filter(k => EX[k]), comExtras = extras.length > 0;
+  const NUM = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito'], maius = s => s.charAt(0).toUpperCase() + s.slice(1);
   const ambos = lista.length > 1, soTravas = lista.length === 1 && tem('travas'), soTracos = lista.length === 1 && tem('tracos'), soMpcc = lista.length === 1 && tem('mpcc'), casal = tem('tracos');
   const capa = document.getElementById('tela-capa'); if(!capa || capa.classList.contains('capa-vendas')) return;
   const lt = capa.querySelector('.lado-texto'), cartao = lt && lt.querySelector('.cartao'), rodape = capa.querySelector('.rodape');
   if(!lt || !cartao || !rodape) return;
-  if(ambos && tem('travas') && tem('tracos') && !tem('mpcc')) dvCapaDoisTestes();
+  if(ambos && tem('travas') && tem('tracos') && !tem('mpcc') && !comExtras) dvCapaDoisTestes();
   capa.classList.add('capa-vendas'); document.body.classList.add('cv-on');
   dvBotaoArea(capa);
   const dd = dvCad(), prim = s => String(s || '').trim().split(' ')[0];
@@ -666,6 +670,7 @@ function dvCapaVendas(modo){
     duvida:zap('tenho uma dúvida sobre o teste.'),
     travas:zap('quero fazer o Teste de Travas Mentais. Como recebo o meu código?'), tracos:zap('quero fazer o Teste de Traços de Caráter. Como recebo o meu código?'),
     mpcc:zap('quero fazer o MPCC, o Mapa de Perfil Comportamental e Competências. Como recebo o meu código?') };
+  extras.forEach(k => { Z[k] = zap(EX[k].zap); });
   const ext = 'target="_blank" rel="noopener"';
   const bt = (cls, href, tit, sub, icone) => `<a class="btn ${cls} cv-btn" href="${href}" ${ext}>${icone ? CV_ZAP_SVG : ''}<span class="duas">${tit}<small>${sub}</small></span></a>`;
   const ctas = id => `<div class="cv-ctas" id="${id}">${bt('btn-primario', Z.ind, 'Quero fazer o meu teste', 'fale com ' + escV(comQuem) + ' e receba o seu código', true)}` +
@@ -678,7 +683,8 @@ function dvCapaVendas(modo){
                                  : 'Você sabe o que quer mudar. <em>Então por que algo sempre puxa você de volta?</em>';
   const selo = lt.querySelector('.selo');
   const ROT = { travas:'Teste de Travas Mentais', tracos:'Teste de Traços de Caráter', mpcc:'MPCC' };
-  if(selo) selo.textContent = soMpcc ? 'MPCC · Mapa de Perfil Comportamental e Competências' : lista.map(k => ROT[k]).join(' · ');
+  extras.forEach(k => { ROT[k] = EX[k].rot; });
+  if(selo) selo.textContent = soMpcc ? 'MPCC · Mapa de Perfil Comportamental e Competências' : lista.length > 3 ? maius(NUM[lista.length] || lista.length) + ' testes de autoconhecimento' : lista.map(k => ROT[k]).join(' · ');
   lt.querySelectorAll('.texto-capa, .lista-leve').forEach(x => x.remove());
   const lead = soTravas
     ? 'Quase sempre é uma trava mental: um padrão antigo que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. Em poucos minutos, você descobre <b>quais travas estão mais ativas em você hoje</b>, em números.'
@@ -686,9 +692,9 @@ function dvCapaVendas(modo){
     ? 'Desde a infância, o corpo e a mente aprendem a se proteger, e esses jeitos de se proteger viram traços que aparecem até hoje nas suas relações e decisões. Em poucos minutos, você descobre <b>como a sua história moldou o seu jeito de ser</b>. Sozinho(a) ou em casal.'
     : soMpcc
     ? 'Iniciativa, comunicação, decisão, adaptação, organização, autoconfiança: cada um de nós é mais forte em algumas áreas e mais travado em outras, quase sempre sem perceber. Em poucos minutos, você descobre <b>onde já é forte</b> e <b>onde pode crescer</b>, em um mapa de 8 dimensões.'
-    : 'Quase sempre é um padrão antigo, que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. Em poucos minutos, você descobre ' +
-      mpJuntar([tem('travas') ? '<b>o que trava você hoje</b>' : '', tem('tracos') ? '<b>como a sua história moldou o seu jeito de ser</b>' : '', tem('mpcc') ? '<b>onde você já é forte e onde pode crescer</b>' : '']) + '.' + (casal ? ' Sozinho(a) ou em casal.' : '');
-  const chips = [soTravas || soMpcc ? 'No celular, de 10 a 15 minutos' : soTracos ? 'No celular, de 8 a 12 minutos' : 'No celular, de 8 a 15 minutos',
+    : 'Quase sempre é um padrão antigo, que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. ' + (comExtras ? 'No seu tempo, você descobre ' : 'Em poucos minutos, você descobre ') +
+      mpJuntar([tem('travas') ? '<b>o que trava você hoje</b>' : '', tem('tracos') ? '<b>como a sua história moldou o seu jeito de ser</b>' : '', tem('mpcc') ? '<b>onde você já é forte e onde pode crescer</b>' : ''].concat(extras.map(k => EX[k].descobre))) + '.' + (casal ? ' Sozinho(a) ou em casal.' : '');
+  const chips = [soTravas || soMpcc ? 'No celular, de 10 a 15 minutos' : soTracos ? 'No celular, de 8 a 12 minutos' : comExtras ? 'No celular, no seu tempo' : 'No celular, de 8 a 15 minutos',
     'Só ' + escV(quem) + ' vê as suas respostas', soTravas ? 'Resultado em números' : soMpcc ? 'Mapa em gráfico radar' : casal ? 'Individual ou em casal' : 'Resultado em números e gráfico'];
   const ass = lt.querySelector('.assinatura');
   (ass || h1).insertAdjacentHTML('afterend', `<p class="cv-lead">${lead}</p><ul class="cv-chips">${chips.map(c => '<li>' + c + '</li>').join('')}</ul>`);
@@ -729,11 +735,19 @@ function dvCapaVendas(modo){
         <a class="cv-link" href="${Z.mpcc}" ${ext}>Quero fazer este teste →</a>
       </article>`
   };
+  extras.forEach(k => { const e = EX[k]; CARTOES[k] = `<article class="cv-teste">
+        <span class="cv-tag">${escV(e.tag)}</span>
+        <h3>${e.tituloHtml || escV(e.titulo)}</h3>
+        <p class="cv-pergunta">${escV(e.pergunta)}</p>
+        <p>${escV(e.texto)}</p>
+        <p class="cv-meta">${escV(e.meta)}</p>
+        <a class="cv-link" href="${Z[k]}" ${ext}>Quero fazer este teste →</a>
+      </article>`; });
   if(ambos){
     meio = `<section class="cv-faixa"><div class="cv-in">
-    <div class="cv-centro"><span class="cv-olho">Aqui você encontra ${lista.length > 2 ? 'três testes' : 'dois testes'}</span>
-    <h2>${lista.length > 2 ? 'Três olhares que mudam o jeito como você se enxerga' : 'Duas perguntas que mudam o jeito como você se enxerga'}</h2></div>
-    <div class="cv-testes${lista.length > 2 ? ' cv-testes-3' : ''}">
+    <div class="cv-centro"><span class="cv-olho">Aqui você encontra ${lista.length > 3 ? (NUM[lista.length] || lista.length) + ' testes' : lista.length > 2 ? 'três testes' : 'dois testes'}</span>
+    <h2>${lista.length > 3 ? maius(NUM[lista.length] || String(lista.length)) + ' olhares que mudam o jeito como você se enxerga' : lista.length > 2 ? 'Três olhares que mudam o jeito como você se enxerga' : 'Duas perguntas que mudam o jeito como você se enxerga'}</h2></div>
+    <div class="cv-testes${lista.length === 3 ? ' cv-testes-3' : ''}">
       ${lista.map(k => CARTOES[k]).join('\n      ')}
     </div>
     <p class="cv-sigilo">Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d${escV(quem)}.</p>
@@ -795,9 +809,11 @@ function dvCapaVendas(modo){
     ? ['Os seus 5 traços em porcentagem, com os dois mais fortes em destaque', 'Um gráfico de teia para ver o seu perfil num relance', 'O que cada traço significa e os talentos escondidos nele', 'Ações práticas para começar a mudar a partir de hoje', 'Em casal: a devolutiva de cada um e a dos dois juntos']
     : soMpcc
     ? ['O seu mapa em 8 dimensões, de 1 a 5, com o perfil geral', 'Um gráfico radar para ver os seus recursos num relance', 'Os seus 3 maiores recursos e as 3 áreas com mais espaço para crescer', 'Recomendações práticas de desenvolvimento pessoal e profissional', 'Relatório de 6 páginas em PDF e a devolutiva individual com ' + escV(comQuem)]
+    : comExtras
+    ? (tem('travas') ? ['O seu mapa das 10 travas, de 1 a 10, com as mais ativas em destaque'] : []).concat(extras.map(k => escV(EX[k].recebe(comQuem))), ['Uma conversa com ' + escV(comQuem) + ' a partir dos seus resultados'])
     : ['O seu mapa em números, com o que está mais ativo em destaque', 'Um gráfico de teia para ver o seu perfil num relance', 'O que cada resultado significa e os talentos escondidos nele', 'Ações práticas para começar a mudar a partir de hoje', 'Em casal: a devolutiva de cada um e a dos dois juntos'];
-  const imgRecebe = soTravas ? `<img src="${CV_IMG}vendas-travas.jpg" alt="Resultado do Teste de Travas com as 10 travas em números" loading="lazy" width="600" height="1200">`
-                             : soMpcc ? `<img src="${CV_IMG}vendas-mpcc.jpg" alt="Mapa de perfil do MPCC com o gráfico radar das 8 dimensões" loading="lazy" width="600" height="1200">`
+  const imgRecebe = soTravas || (comExtras && tem('travas')) ? `<img src="${CV_IMG}vendas-travas.jpg" alt="Resultado do Teste de Travas com as 10 travas em números" loading="lazy" width="600" height="1200">`
+                             : comExtras ? '' : soMpcc ? `<img src="${CV_IMG}vendas-mpcc.jpg" alt="Mapa de perfil do MPCC com o gráfico radar das 8 dimensões" loading="lazy" width="600" height="1200">`
                              : `<img src="${CV_IMG}vendas-individual.jpg" alt="Devolutiva com os traços em porcentagem e o gráfico de teia" loading="lazy" width="600" height="1200">`;
   const faq = soTravas ? [
       pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre o teste.'),
@@ -824,9 +840,11 @@ function dvCapaVendas(modo){
       casal ? pq('Como funciona em casal? Precisamos estar juntos?', 'Não precisam. Cada um responde no próprio celular, quando puder, com o mesmo código. Se preferirem, dá para responder juntos, no mesmo aparelho, um de cada vez. Cada um recebe a sua devolutiva individual, e vocês recebem a do casal.') : '',
       pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '.' + (casal ? ' No casal, cada um responde sozinho(a), sem ver as respostas do outro.' : '')),
       casal ? pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.') : '',
-      tem('mpcc') ? pq('O MPCC é um teste psicológico?', 'Não. É uma ferramenta de autoconhecimento e desenvolvimento pessoal, que mostra tendências de comportamento neste momento. Não é diagnóstico.') : '',
-      pq('Quanto tempo leva?', 'De 8 a 15 minutos por teste, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
-    ].filter(Boolean);
+      tem('mpcc') ? pq('O MPCC é um teste psicológico?', 'Não. É uma ferramenta de autoconhecimento e desenvolvimento pessoal, que mostra tendências de comportamento neste momento. Não é diagnóstico.') : ''
+    ].concat(extras.map(k => pq.apply(null, EX[k].faq(escV(comQuem)))), [
+      comExtras ? pq('Quanto tempo leva?', 'Depende do teste: ' + (tem('travas') ? ['o Teste de Travas, de 10 a 15 minutos'] : []).concat(extras.map(k => EX[k].tempo)).join('; ') + '. Escolha um momento tranquilo e responda com sinceridade.')
+        : pq('Quanto tempo leva?', 'De 8 a 15 minutos por teste, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
+    ]).filter(Boolean);
 
   rodape.insertAdjacentHTML('beforebegin', `<div class="cv">
   <section class="cv-faixa cv-areia"><div class="cv-in cv-estreito">
@@ -849,13 +867,13 @@ function dvCapaVendas(modo){
   ${secCasal}
 
   <section class="cv-faixa cv-areia"><div class="cv-in">
-    <div class="cv-recebe-grade">
-      <figure class="cv-cel">${imgRecebe}</figure>
+    <div class="cv-recebe-grade${imgRecebe ? '' : ' cv-sem-img'}">
+      ${imgRecebe ? '<figure class="cv-cel">' + imgRecebe + '</figure>' : ''}
       <div>
         <span class="cv-olho">O que você recebe</span>
         <h2>Um resultado claro, para você se enxergar por inteiro</h2>
         <ul class="cv-checks">${checks.map(c => '<li>' + c + '</li>').join('')}</ul>
-        <p class="cv-nota">Telas reais do resultado, com nomes fictícios.</p>
+        ${imgRecebe ? '<p class="cv-nota">' + (comExtras ? 'Tela real do resultado do Teste de Travas, com nome fictício.' : 'Telas reais do resultado, com nomes fictícios.') + '</p>' : ''}
       </div>
     </div>
   </div></section>
@@ -865,7 +883,7 @@ function dvCapaVendas(modo){
     <ol class="cv-passos">
       ${passo(1, 'Fale com ' + escV(comQuem), 'Toque no botão e receba o seu código pelo WhatsApp.')}
       ${passo(2, 'Responda no seu tempo', 'No celular, uma pergunta de cada vez.' + (casal ? ' Em casal, cada um no seu.' : ''))}
-      ${passo(3, 'Receba o seu resultado', 'O seu mapa, o gráfico e o que ele revela sobre você.')}
+      ${comExtras ? passo(3, 'Entenda o seu resultado', 'Alguns testes mostram o resultado na hora; nos demais, a leitura é feita junto com ' + escV(comQuem) + '.') : passo(3, 'Receba o seu resultado', 'O seu mapa, o gráfico e o que ele revela sobre você.')}
       ${passo(4, 'Dê o próximo passo', 'Converse com ' + escV(comQuem) + ' a partir do resultado, com um caminho para você.')}
     </ol>
   </div></section>
