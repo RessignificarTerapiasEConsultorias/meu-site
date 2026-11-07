@@ -785,3 +785,42 @@ function dvCapaVendas(){
     alvos.forEach(a => io.observe(a));
   }
 }
+
+
+/* ============================================================================
+   PÁGINA SÓ COM O TESTE DE TRAÇOS DE CARÁTER (terapeuta que não comprou o Teste de Travas)
+   A capa fala só desse teste e a área da terapeuta já abre nele. O Teste de Travas só entra se ela comprar.
+   ============================================================================ */
+function dvSoTracos(){
+  const capa = document.getElementById('tela-capa'); if(!capa || capa.dataset.soTracos) return;
+  capa.dataset.soTracos = '1';
+  const quem = dvQuem(), lt = capa.querySelector('.lado-texto') || capa;
+  const selo = lt.querySelector('.selo'); if(selo) selo.textContent = 'Teste de Traços de Caráter';
+  const h1 = lt.querySelector('h1'); if(h1) h1.textContent = 'Como a sua história moldou o seu jeito de ser?';
+  const ps = lt.querySelectorAll('.texto-capa');
+  if(ps[0]) ps[0].innerHTML = 'Desde a gestação até os primeiros anos de vida, o corpo e a mente aprendem a se proteger. Esses jeitos de se proteger viram traços que aparecem até hoje na sua postura, nas suas relações e nas suas decisões.';
+  if(ps[1]) ps[1].innerHTML = 'Este teste identifica os 5 traços de caráter que se formaram na sua história e mostra, em porcentagem, quais predominam em você, junto com os talentos de cada um. Pode ser feito sozinho(a) ou em casal. Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d' + escV(quem) + '.';
+  const ul = lt.querySelector('.lista-leve');
+  if(ul) ul.innerHTML = '<li>40 afirmações, de 8 a 12 minutos</li><li>Sozinho(a) ou em casal: no casal, cada um recebe a sua devolutiva e vocês recebem a do casal</li>' +
+    '<li>O código que você recebeu já abre o teste</li><li>O resultado vai direto para ' + escV(quem) + ', para vocês conversarem a partir dele</li>';
+  document.title = 'Teste de Traços de Caráter' + (window.T_NOME ? ' · ' + T_NOME : '');
+  /* área da terapeuta: só o Teste de Traços de Caráter */
+  const alt = document.getElementById('alt-teste'); if(alt && alt.closest('.campo')) alt.closest('.campo').style.display = 'none';
+  const abrirTracos = () => { const b = document.querySelector('#alt-teste [data-v=tracos]'); if(b && !b.classList.contains('ativa')) b.click(); };
+  if(typeof window.entrarNoPainel === 'function'){
+    const entrar = window.entrarNoPainel;
+    window.entrarNoPainel = function(){ const r = entrar.apply(this, arguments); abrirTracos(); return r; };
+  }
+  const adm = document.getElementById('painel-admin');
+  if(adm && 'MutationObserver' in window) new MutationObserver(() => { if(adm.classList.contains('ver')) abrirTracos(); }).observe(adm, { attributes:true, attributeFilter:['class'] });
+}
+/* nenhum teste ativo (ex.: assinatura suspensa por falta de pagamento) */
+function dvSemTeste(){
+  const capa = document.getElementById('tela-capa'); if(!capa || capa.dataset.semTeste) return;
+  capa.dataset.semTeste = '1';
+  const quem = dvQuem(), lt = capa.querySelector('.lado-texto') || capa;
+  const h1 = lt.querySelector('h1'); if(h1) h1.textContent = 'Teste indisponível no momento';
+  lt.querySelectorAll('.texto-capa, .lista-leve, .cartao').forEach(x => x.remove());
+  const selo = lt.querySelector('.selo'); if(selo) selo.remove();
+  (h1 || lt).insertAdjacentHTML('afterend', '<p class="texto-capa">Este teste está temporariamente indisponível. Se você recebeu um código, fale com ' + escV(quem) + ' pelo WhatsApp.</p>');
+}

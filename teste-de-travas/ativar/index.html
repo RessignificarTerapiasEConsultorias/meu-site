@@ -204,6 +204,7 @@
       if (j.__status === 404 || !j.ok) { mostrar("eInvalido"); return; }
       pedido = j;
       if (j.status === "ativado" && j.pagina) { pronto(j.pagina, j.email, null, j.nome); return; }
+      if (j.produto_chave === "tracos") modoTracos();
       if (j.status === "pago" || j.status === "ativando") { abrirForm(j); return; }
       if (j.status === "cancelado") { mostrar("eInvalido"); return; }
       tentativas++;
@@ -227,6 +228,19 @@
   $("#btnDeNovo").addEventListener("click", function () { tentativas = veioDoPagamento ? 30 : 0; mostrar("eConferindo"); conferir(); });
   $("#novaCompra").addEventListener("click", function () { try { localStorage.removeItem("travas_pedido"); } catch (e) {} });
 
+  /* compra do Teste de Traços de Caráter sem ter página: os textos falam desse teste */
+  function modoTracos() {
+    if (document.body.dataset.tracos) return; document.body.dataset.tracos = "1";
+    document.title = "Montar a minha página · Teste de Traços de Caráter";
+    var sm = document.querySelector(".marca small"); if (sm) sm.textContent = "Teste de Traços de Caráter";
+    var h = document.querySelector("#eForm h2"); if (h) h.textContent = "Agora vamos montar a sua página";
+    var l = document.querySelector("#eForm .lead"); if (l) l.textContent = "Leva 2 minutos. É a página do seu Teste de Traços de Caráter, com o seu nome e a sua foto: tudo isso aparece para os seus clientes.";
+    $("#btnCriar").textContent = "Criar a minha página";
+    var hp = document.querySelector("#ePronto h2"); if (hp) hp.textContent = "Sua página está pronta!";
+    var lp = document.querySelector("#ePronto .lead"); if (lp) lp.textContent = "Este é o link da sua página do Teste de Traços de Caráter. É ele que você manda para os seus clientes.";
+    $("#btnAbrir").textContent = "Abrir a minha página";
+    document.querySelectorAll("[data-wa]").forEach(function (a) { a.setAttribute("data-wa", a.getAttribute("data-wa").replace(/Teste de Travas Mentais|Teste de Travas/g, "Teste de Traços de Caráter")); });
+  }
   function abrirForm(j) {
     $("#fNome").value = j.nome || ""; $("#fZap").value = zapFormatado(j.whatsapp);
     $("#emailLogin").textContent = j.email; $("#emailLogin2").textContent = j.email;
@@ -234,7 +248,7 @@
     atualizaInicial();
     sugerirLink();
     mostrar("eForm");
-    if (!sessionStorage.getItem("travas_compra_" + token)) {
+    if (j.produto_chave !== "tracos" && !sessionStorage.getItem("travas_compra_" + token)) {
       try { sessionStorage.setItem("travas_compra_" + token, "1"); } catch (e) {}
       window.dataLayer = window.dataLayer || []; window.dataLayer.push({ event: "compra_teste_travas", value: 147, currency: "BRL" });
       if (window.gtag) gtag("event", "purchase", { value: 147, currency: "BRL", items: [{ item_name: "Teste de Travas Mentais" }] });
@@ -321,15 +335,15 @@
       if (senha.length < 8) return erro("Crie uma senha com pelo menos 8 caracteres.", $("#fSenha"));
       if (senha !== $("#fSenha2").value) return erro("As duas senhas não são iguais.", $("#fSenha2"));
     }
-    var b = $("#btnCriar"); b.disabled = true; b.textContent = "Criando o seu teste…";
+    var b = $("#btnCriar"); b.disabled = true; b.textContent = document.body.dataset.tracos ? "Criando a sua página…" : "Criando o seu teste…";
     chamar({ acao: "ativar", token: token, nome: nome, genero: genero, titulo: $("#fTitulo").value, registro: $("#fRegistro").value,
              frase: $("#fFrase").value, whatsapp: zap, instagram: $("#fInsta").value, foto: fotoDados, paleta: paleta,
              senha: pedido.conta_existente ? "" : senha, link: link })
       .then(function (j) {
-        if (!j.ok) throw new Error(j.erro || "Não foi possível criar o teste.");
+        if (!j.ok) throw new Error(j.erro || "Não foi possível criar a página.");
         pronto(j.pagina, j.email, genero, nome);
       })
-      .catch(function (err) { b.disabled = false; b.textContent = "Criar o meu teste"; erro(err.message, /link/i.test(err.message) ? $("#fLink") : null); if (/link/i.test(err.message)) conferirLink(); });
+      .catch(function (err) { b.disabled = false; b.textContent = document.body.dataset.tracos ? "Criar a minha página" : "Criar o meu teste"; erro(err.message, /link/i.test(err.message) ? $("#fLink") : null); if (/link/i.test(err.message)) conferirLink(); });
   });
 
   $("#btnCopiar").addEventListener("click", function () {

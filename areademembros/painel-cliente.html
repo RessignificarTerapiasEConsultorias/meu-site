@@ -205,10 +205,15 @@
   try {
     const [rt, rpg] = await Promise.all([
       supa().from("travas_terapeutas").select("perfil_id").eq("perfil_id", eu.id).maybeSingle(),
-      supa().from("travas_paginas").select("slug").eq("terapeuta_id", eu.id).maybeSingle()
+      supa().from("travas_paginas").select("slug,dados").eq("terapeuta_id", eu.id).maybeSingle()
     ]);
-    temTravas = !!rt.data;
+    /* a página pode ter o Teste de Travas, o de Traços de Caráter ou os dois */
+    const testesPg = rpg.data && rpg.data.dados && Array.isArray(rpg.data.dados.testes) ? rpg.data.dados.testes : null;
+    const temTravasPg = !testesPg || testesPg.indexOf("travas") > -1, temTracosPg = !!testesPg && testesPg.indexOf("tracos") > -1;
+    temTravas = !!rt.data && temTravasPg;
     if (rpg.data && rpg.data.slug) {
+      const tituloT = document.querySelector("#cartaoTravas h2");
+      if (tituloT) tituloT.textContent = temTravasPg && temTracosPg ? "Seus testes: Travas Mentais e Traços de Caráter" : temTravasPg ? "Seu Teste de Travas Mentais" : "Seu Teste de Traços de Caráter";
       const linkTeste = "https://ressignificarterapiaseconsultorias.com/teste/?t=" + encodeURIComponent(rpg.data.slug);
       document.getElementById("travasLink").value = linkTeste;
       document.getElementById("travasVer").href = linkTeste;
@@ -231,8 +236,8 @@
     ]);
     const jaTem = new Set((rcp.data || []).map(function (x) { return x.produto_id; }));
     if ((rp.data || []).some(function (x) { return x.chave === "clinica" && jaTem.has(x.id); })) document.getElementById("cartaoClinicaOt").hidden = false;
-    /* não oferece o que a pessoa já comprou (nem o Teste de Travas para quem já tem o teste; o de Traços só para quem tem o de Travas) */
-    const prods = (rp.data || []).filter(function (x) { return !jaTem.has(x.id) && !(temTravas && x.chave === "travas") && !(!temTravas && x.chave === "tracos"); }), pedidos = new Set((ri.data || []).map(function (i) { return i.produto_id; }));
+    /* não oferece o que a pessoa já comprou (nem o Teste de Travas para quem já tem o teste) */
+    const prods = (rp.data || []).filter(function (x) { return !jaTem.has(x.id) && !(temTravas && x.chave === "travas"); }), pedidos = new Set((ri.data || []).map(function (i) { return i.produto_id; }));
     if (prods.length) {
       const nomes = document.getElementById("ofertasNomes"); nomes.innerHTML = "";
       prods.forEach(function (x) {

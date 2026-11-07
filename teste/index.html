@@ -527,7 +527,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611070156">
+<meta name="versao-site" content="v202611070322">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -3711,9 +3711,12 @@ async function tcDetalheCasal(codigo){
 /* página inicial fala dos dois testes (no domínio, só para quem tem o Traços de Caráter liberado);
    a versão de vendas (individual e casal) liga com dados.capa_vendas */
 (function(){
-  const d = window.__T && window.__T.dados, tracos = !d || (Array.isArray(d.testes) && d.testes.indexOf('tracos') > -1);
-  if(tracos) dvCapaDoisTestes();
-  if(tracos && (!d || d.capa_vendas)) dvCapaVendas();
+  const d = window.__T && window.__T.dados, lista = d && Array.isArray(d.testes) ? d.testes : null;
+  const tracos = !d || (lista && lista.indexOf('tracos') > -1), travas = !lista || lista.indexOf('travas') > -1;
+  if(tracos && travas) dvCapaDoisTestes();
+  if(tracos && !travas) dvSoTracos();                  // comprou só o Teste de Traços de Caráter
+  if(!tracos && !travas) dvSemTeste();                 // nenhum teste ativo (ex.: assinatura suspensa)
+  if(tracos && travas && (!d || d.capa_vendas)) dvCapaVendas();
 })();
 /* O Teste de Traços de Caráter só aparece na área de quem tem o teste liberado (travas_paginas.dados.testes) */
 (function(){ const d = window.__T && __T.dados, ok = !!(d && Array.isArray(d.testes) && d.testes.indexOf('tracos') > -1);

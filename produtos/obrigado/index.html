@@ -59,7 +59,7 @@
   var $ = function (s) { return document.getElementById(s); };
   var q = new URLSearchParams(location.search);
   var token = (q.get("p") || "").toLowerCase();
-  if (!token) { try { token = localStorage.getItem("loja_pedido_dre") || localStorage.getItem("loja_pedido_clinica") || ""; } catch (e) {} }
+  if (!token) { try { token = localStorage.getItem("loja_pedido_dre") || localStorage.getItem("loja_pedido_clinica") || localStorage.getItem("loja_pedido_tracos") || ""; } catch (e) {} }
   var retorno = { transaction_nsu: q.get("transaction_nsu") || "", slug: q.get("slug") || "" };
   var veioPago = !!retorno.transaction_nsu, tentativas = 0;
   document.addEventListener("click", function (ev) {
@@ -73,10 +73,14 @@
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (!j.ok) { mostrar("eErro"); return; }
+        if (j.montar) {   /* comprou o Teste de Traços de Caráter sem ter página de teste: vai montar a página (2 minutos) */
+          $("txtCarregando").textContent = "Pagamento confirmado! Abrindo a montagem da sua página…";
+          location.href = j.montar; return;
+        }
         if (j.status === "ativado" && j.destino) {
           try { localStorage.removeItem("loja_pedido_" + j.produto_chave); } catch (e) {}
           $("prontoTitulo").textContent = "Pronto" + (j.nome ? ", " + j.nome : "") + "!";
-          $("prontoTxt").textContent = (j.produto || "O seu produto") + (j.produto_chave === "tracos" ? " já está liberado na sua página de teste, ao lado do Teste de Travas." : " já está liberado na sua Área de Membros.");
+          $("prontoTxt").textContent = (j.produto || "O seu produto") + (j.produto_chave === "tracos" ? " já está liberado na sua página de teste." : " já está liberado na sua Área de Membros.");
           $("prontoBtn").href = j.destino;
           $("prontoBtn").textContent = j.produto_chave === "clinica" ? "Abrir a minha clínica" : j.produto_chave === "tracos" ? "Abrir a minha página de teste" : "Abrir a minha DRE";
           $("prontoDica").textContent = "Se pedir login, entre com " + j.email + " e a sua senha. Também mandamos um e-mail com o link.";
