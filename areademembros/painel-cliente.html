@@ -235,13 +235,17 @@
       supa().from("cliente_produtos").select("produto_id").eq("perfil_id", eu.id).eq("situacao", "adquirido")
     ]);
     const jaTem = new Set((rcp.data || []).map(function (x) { return x.produto_id; }));
+    /* condição especial desta pessoa (ex.: R$ 1 por ano): aparece no lugar do preço normal e vai junto no link */
+    const resp = await supa().from("cliente_produtos").select("produto_id,preco_centavos,oferta_token").eq("perfil_id", eu.id).not("preco_centavos", "is", null);
+    const esp = {}; (resp.data || []).forEach(function (x) { esp[x.produto_id] = x; });
     if ((rp.data || []).some(function (x) { return x.chave === "clinica" && jaTem.has(x.id); })) document.getElementById("cartaoClinicaOt").hidden = false;
     /* não oferece o que a pessoa já comprou (nem o Teste de Travas para quem já tem o teste) */
     const prods = (rp.data || []).filter(function (x) { return !jaTem.has(x.id) && !(temTravas && x.chave === "travas"); }), pedidos = new Set((ri.data || []).map(function (i) { return i.produto_id; }));
     if (prods.length) {
       const nomes = document.getElementById("ofertasNomes"); nomes.innerHTML = "";
       prods.forEach(function (x) {
-        const destino = x.pagina ? "../" + x.pagina.replace(/^\/+/, "") + "?de=painel" : x.link_pagamento;
+        const destino = x.pagina ? "../" + x.pagina.replace(/^\/+/, "") + "?de=painel" + (esp[x.id] ? "&oferta=" + esp[x.id].oferta_token : "") : x.link_pagamento;
+        if (esp[x.id]) x.preco_texto = brl(esp[x.id].preco_centavos / 100) + (/ano/i.test(x.preco_texto || "") ? " por ano" : /m[eê]s/i.test(x.preco_texto || "") ? " por mês" : "") + " para você";
         if (!destino) return;
         const t = document.createElement("a"); t.className = "oferta-teaser" + (x.destaque ? " destaque" : ""); t.href = destino;
         if (!x.pagina) { t.target = "_blank"; t.rel = "noopener noreferrer"; }

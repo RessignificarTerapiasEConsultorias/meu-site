@@ -22,7 +22,7 @@
     const [rp, rf, rv, ri] = await Promise.all([
       supa().from("catalogo_produtos").select("*").order("ordem").order("nome"),
       supa().from("perfis").select("id,nome,email,papel,telefone,ativo").order("nome"),
-      supa().from("cliente_produtos").select("perfil_id,produto_id,situacao,desde"),
+      supa().from("cliente_produtos").select("perfil_id,produto_id,situacao,desde,preco_centavos,oferta_token"),
       supa().from("interesses").select("id,perfil_id,produto_id,mensagem,status,criado_em").order("criado_em", { ascending: false })
     ]);
     produtos = rp.data || []; perfis = rf.data || []; vinculos = rv.data || []; interesses = ri.data || [];
@@ -87,6 +87,20 @@
       await carregar(); desenharTudo();
     });
   }
+  /* preço especial por cliente: cada um tem o seu link pessoal, que já abre a página com o valor dele */
+  function linkEspecial(p, v) { const base = linkVenda(p); return base + (base.indexOf("?") > -1 ? "&" : "?") + "oferta=" + v.oferta_token; }
+  function condicoesEspeciais(p) {
+    const lista = vinculos.filter(function (v) { return v.produto_id === p.id && v.preco_centavos && v.situacao !== "adquirido"; });
+    if (!lista.length || !linkVenda(p)) return "";
+    return '<div class="link-venda"><span class="rotulo">Condição especial · link pessoal</span>' + lista.map(function (v) {
+      const pe = pessoa(v.perfil_id), url = linkEspecial(p, v), prim = String(pe.nome || "").split(" ")[0];
+      const msg = "Olá, " + prim + "! Separei uma condição especial para você no " + p.nome + ": " + brl(v.preco_centavos / 100) + (/ano/i.test(p.preco_texto || "") ? " por ano" : /m[eê]s/i.test(p.preco_texto || "") ? " por mês" : "") + ".\n\nVeja como funciona e garanta o seu acesso por este link (é só seu):\n" + url + "\n\nMauricio Pinho · Ressignificar";
+      return '<p style="margin:10px 0 4px"><b>' + esc(pe.nome) + "</b>: " + brl(v.preco_centavos / 100) + "</p>" +
+        '<div class="link-teste"><input type="text" readonly value="' + esc(url) + '" aria-label="Link especial de ' + esc(pe.nome) + '"><button type="button" class="btn peq" data-copiar-url="' + esc(url) + '">Copiar</button></div>' +
+        '<div class="acoes" style="margin-top:6px"><a class="btn peq" style="background:#1FA855;color:#fff" target="_blank" rel="noopener" href="https://wa.me/' + esc(String(pe.telefone || "").replace(/\D/g, "")) + "?text=" + encodeURIComponent(msg) + '">Enviar no WhatsApp</a>' +
+        '<a class="btn peq contorno" href="' + esc(url) + '" target="_blank" rel="noopener">Ver como fica</a></div>';
+    }).join("") + "</div>";
+  }
   function cartaoProduto(p) {
     const tem = vinculos.filter(function (v) { return v.produto_id === p.id && v.situacao === "adquirido"; }).length;
     const of = vinculos.filter(function (v) { return v.produto_id === p.id && v.situacao === "oferecido"; }).length;
@@ -100,6 +114,7 @@
         '<div class="link-teste"><input type="text" readonly value="' + esc(linkVenda(p)) + '" aria-label="Link de vendas de ' + esc(p.nome) + '"><button type="button" class="btn peq" data-copiar="' + p.id + '">Copiar</button></div>' +
         '<div class="acoes" style="margin-top:8px"><button type="button" class="btn peq" style="background:#1FA855;color:#fff" data-enviar="' + p.id + '">Enviar no WhatsApp ou e-mail</button>' +
         (p.pagina ? '<a class="btn peq contorno" href="' + esc(linkVenda(p)) + '" target="_blank" rel="noopener">Ver a página de vendas</a>' : "") + "</div></div>" : "") +
+      condicoesEspeciais(p) +
       (master ? '<div class="acoes" style="margin-top:4px"><button class="btn peq contorno" type="button" data-ed="' + p.id + '">Editar</button><button class="btn peq perigo" type="button" data-del="' + p.id + '">Apagar</button></div>' : "") + "</div>";
   }
   function desenharCatalogo() {
@@ -107,6 +122,12 @@
   }
   document.getElementById("listaProd").addEventListener("click", async function (e) {
     const be = e.target.closest("[data-ed]"), bd = e.target.closest("[data-del]"), bc = e.target.closest("[data-copiar]"), bv = e.target.closest("[data-enviar]");
+    const bu = e.target.closest("[data-copiar-url]");
+    if (bu) {
+      const inp = bu.parentNode.querySelector("input");
+      try { await navigator.clipboard.writeText(bu.dataset.copiarUrl); } catch (err) { inp.select(); document.execCommand("copy"); }
+      bu.textContent = "Copiado ✓"; setTimeout(function () { bu.textContent = "Copiar"; }, 2000); return;
+    }
     if (bc) {
       const url = linkVenda(produto(bc.dataset.copiar)), inp = bc.parentNode.querySelector("input");
       try { await navigator.clipboard.writeText(url); } catch (err) { inp.select(); document.execCommand("copy"); }

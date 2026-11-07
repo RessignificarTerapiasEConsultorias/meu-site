@@ -7,7 +7,10 @@
   var ZAP = "5581992531561";
   var caixa = document.getElementById("comprar");
   var PRODUTO = caixa.getAttribute("data-produto"), NOME = caixa.getAttribute("data-nome"), PRECO = caixa.getAttribute("data-preco");
-  var SO_CLIENTE = caixa.getAttribute("data-so-cliente") === "1";   /* produto só para quem já tem conta (ex.: Traços de Caráter) */
+  var SO_CLIENTE = caixa.getAttribute("data-so-cliente") === "1";   /* produto só para quem já tem conta */
+  /* link pessoal de oferta (?oferta=...): mostra o preço especial da pessoa antes mesmo de ela entrar */
+  var OFERTA = (new URLSearchParams(location.search).get("oferta") || "").replace(/[^0-9a-f-]/gi, "").slice(0, 36);
+  try { if (OFERTA) sessionStorage.setItem("oferta_" + PRODUTO, OFERTA); else OFERTA = sessionStorage.getItem("oferta_" + PRODUTO) || ""; } catch (e) {}
   var $ = function (id) { return document.getElementById(id); };
   var modo = "nova", sessao = null, eu = null;
   var aviso = $("cAviso"), botao = $("cBotao");
@@ -24,7 +27,7 @@
   function mostrarAbas() { $("cAbas").hidden = SO_CLIENTE; }
   /* preço desta pessoa: se houver condição especial, mostra na caixa e no botão */
   function precoDaPessoa(token) {
-    chamar({ acao: "preco", produto: PRODUTO }, token).then(function (j) {
+    chamar({ acao: "preco", produto: PRODUTO, oferta: token ? "" : OFERTA }, token).then(function (j) {
       if (!j || !j.ok) return;
       if (j.precisa_travas) avisar("Esta conta ainda não tem o Teste de Travas. Entre com a conta do seu teste ou fale com o Mauricio pelo WhatsApp.");
       if (!j.especial) return;
@@ -32,6 +35,18 @@
       rotuloBotao = "Assinar agora · " + txt; if (!botao.disabled) botao.textContent = rotuloBotao;
       var r = document.querySelector("#comprar .resumo-compra span"); if (r) r.innerHTML = "<s>" + r.textContent + "</s> " + txt;
       var e = $("cEspecial"); if (e) { e.textContent = "Condição especial para você: " + txt + "."; e.hidden = false; }
+      /* troca o preço normal pelo especial nos outros lugares da página (topo, oferta e barra do celular) */
+      var normal = (PRECO.match(/R\$\s?([\d.]+)(,\d{2})?/) || [])[1], valor = txt.replace(/\/(ano|mês)$/, "");
+      if (normal) {
+        var re = new RegExp("R\\$\\s?" + normal.replace(".", "\\.") + "(,00)?(?!\\d)", "g");
+        document.querySelectorAll(".cta-linha small, #barra .btn, .preco-grande, .ancora .nossa").forEach(function (el) { el.innerHTML = el.innerHTML.replace(re, valor); });
+        var pd = document.querySelector(".por-dia"); if (pd) pd.textContent = "Condição especial para você";
+      }
+      /* veio pelo link pessoal e ainda não entrou: abre "Já sou cliente" com o e-mail dela */
+      if (!token && j.email && !sessao) {
+        trocarModo("cliente"); $("cEmailCli").value = j.email;
+        if (e) e.textContent = "Condição especial para você: " + txt + ". Entre com a sua senha para garantir.";
+      }
     }).catch(function () {});
   }
   function trocarModo(m) {
@@ -101,7 +116,7 @@
   supa().auth.getSession().then(function (r) {
     sessao = r && r.data && r.data.session;
     registrarVisita();
-    if (!sessao) return;
+    if (!sessao) { if (OFERTA) precoDaPessoa(null); return; }
     return supa().from("perfis").select("nome,email,ativo").eq("id", sessao.user.id).maybeSingle().then(function (rp) {
       eu = rp.data; if (!eu || !eu.ativo) { sessao = null; return; }
       $("cLogNome").textContent = eu.nome.split(" ")[0];
