@@ -185,8 +185,8 @@
     ]);
     const jaTem = new Set((rcp.data || []).map(function (x) { return x.produto_id; }));
     if ((rp.data || []).some(function (x) { return x.chave === "clinica" && jaTem.has(x.id); })) document.getElementById("cartaoClinicaOt").hidden = false;
-    /* não oferece o que a pessoa já comprou (nem o Teste de Travas para quem já tem o teste) */
-    const prods = (rp.data || []).filter(function (x) { return !jaTem.has(x.id) && !(temTravas && x.chave === "travas"); }), pedidos = new Set((ri.data || []).map(function (i) { return i.produto_id; }));
+    /* não oferece o que a pessoa já comprou (nem o Teste de Travas para quem já tem o teste; o de Traços só para quem tem o de Travas) */
+    const prods = (rp.data || []).filter(function (x) { return !jaTem.has(x.id) && !(temTravas && x.chave === "travas") && !(!temTravas && x.chave === "tracos"); }), pedidos = new Set((ri.data || []).map(function (i) { return i.produto_id; }));
     if (prods.length) {
       const nomes = document.getElementById("ofertasNomes"); nomes.innerHTML = "";
       prods.forEach(function (x) {

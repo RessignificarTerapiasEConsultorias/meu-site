@@ -7,6 +7,7 @@
   var ZAP = "5581992531561";
   var caixa = document.getElementById("comprar");
   var PRODUTO = caixa.getAttribute("data-produto"), NOME = caixa.getAttribute("data-nome"), PRECO = caixa.getAttribute("data-preco");
+  var SO_CLIENTE = caixa.getAttribute("data-so-cliente") === "1";   /* produto só para quem já tem conta (ex.: Traços de Caráter) */
   var $ = function (id) { return document.getElementById(id); };
   var modo = "nova", sessao = null, eu = null;
   var aviso = $("cAviso"), botao = $("cBotao");
@@ -20,6 +21,19 @@
   }
   function avisar(msg, ok) { aviso.textContent = msg || ""; aviso.classList.toggle("on", !!msg); aviso.classList.toggle("ok", !!ok); }
   function ocupado(sim, txt) { botao.disabled = sim; botao.textContent = sim ? (txt || "Aguarde…") : rotuloBotao; }
+  function mostrarAbas() { $("cAbas").hidden = SO_CLIENTE; }
+  /* preço desta pessoa: se houver condição especial, mostra na caixa e no botão */
+  function precoDaPessoa(token) {
+    chamar({ acao: "preco", produto: PRODUTO }, token).then(function (j) {
+      if (!j || !j.ok) return;
+      if (j.precisa_travas) avisar("Esta conta ainda não tem o Teste de Travas. Entre com a conta do seu teste ou fale com o Mauricio pelo WhatsApp.");
+      if (!j.especial) return;
+      var txt = (j.preco_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) + (j.anual ? "/ano" : "/mês");
+      rotuloBotao = "Assinar agora · " + txt; if (!botao.disabled) botao.textContent = rotuloBotao;
+      var r = document.querySelector("#comprar .resumo-compra span"); if (r) r.innerHTML = "<s>" + r.textContent + "</s> " + txt;
+      var e = $("cEspecial"); if (e) { e.textContent = "Condição especial para você: " + txt + "."; e.hidden = false; }
+    }).catch(function () {});
+  }
   function trocarModo(m) {
     modo = m;
     document.querySelectorAll("#cAbas button").forEach(function (b) { b.setAttribute("aria-selected", String(b.getAttribute("data-modo") === m)); });
@@ -85,11 +99,12 @@
       $("cLogIni").textContent = eu.nome.trim().charAt(0).toUpperCase();
       $("cLogada").hidden = false; $("cAbas").hidden = true; $("cJaCliente").classList.remove("on");
       document.querySelectorAll("[data-so]").forEach(function (el) { el.hidden = true; });
+      precoDaPessoa(sessao.access_token);
     });
   }).catch(function () {});
   $("cSair").addEventListener("click", function (ev) {
     ev.preventDefault();
-    supa().auth.signOut().then(function () { sessao = null; $("cLogada").hidden = true; $("cAbas").hidden = false; trocarModo("cliente"); });
+    supa().auth.signOut().then(function () { sessao = null; $("cLogada").hidden = true; mostrarAbas(); trocarModo("cliente"); });
   });
 
   $("cForm").addEventListener("submit", function (ev) {
@@ -97,7 +112,7 @@
     if (sessao) {
       ocupado(true, "Preparando o pagamento…");
       chamar({ acao: "iniciar", produto: PRODUTO, modo: "cliente", negocio: $("cNegocioCli") ? $("cNegocioCli").value : "" }, sessao.access_token)
-        .then(function (j) { if (j.relogar) { sessao = null; $("cLogada").hidden = true; $("cAbas").hidden = false; trocarModo("cliente"); ocupado(false); avisar(j.erro); return; } if (tratar(j)) irParaPagamento(j); })
+        .then(function (j) { if (j.relogar) { sessao = null; $("cLogada").hidden = true; mostrarAbas(); trocarModo("cliente"); ocupado(false); avisar(j.erro); return; } if (tratar(j)) irParaPagamento(j); })
         .catch(function () { ocupado(false); avisar("Sem conexão. Confira a internet e tente de novo."); });
       return;
     }
@@ -127,7 +142,8 @@
     }).catch(function () { ocupado(false); avisar("Sem conexão. Confira a internet e tente de novo."); });
   });
 
-  trocarModo(/[?&]cliente=1/.test(location.search) ? "cliente" : "nova");
+  trocarModo(SO_CLIENTE || /[?&]cliente=1/.test(location.search) ? "cliente" : "nova");
+  mostrarAbas();
   ocupado(false);
 
   /* barra fixa no celular: aparece depois do topo e some quando a caixa de compra está na tela */

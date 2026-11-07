@@ -76,9 +76,9 @@
         if (j.status === "ativado" && j.destino) {
           try { localStorage.removeItem("loja_pedido_" + j.produto_chave); } catch (e) {}
           $("prontoTitulo").textContent = "Pronto" + (j.nome ? ", " + j.nome : "") + "!";
-          $("prontoTxt").textContent = (j.produto || "O seu produto") + " já está liberado na sua Área de Membros.";
+          $("prontoTxt").textContent = (j.produto || "O seu produto") + (j.produto_chave === "tracos" ? " já está liberado na sua página de teste, ao lado do Teste de Travas." : " já está liberado na sua Área de Membros.");
           $("prontoBtn").href = j.destino;
-          $("prontoBtn").textContent = j.produto_chave === "clinica" ? "Abrir a minha clínica" : "Abrir a minha DRE";
+          $("prontoBtn").textContent = j.produto_chave === "clinica" ? "Abrir a minha clínica" : j.produto_chave === "tracos" ? "Abrir a minha página de teste" : "Abrir a minha DRE";
           $("prontoDica").textContent = "Se pedir login, entre com " + j.email + " e a sua senha. Também mandamos um e-mail com o link.";
           mostrar("ePronto");
           return;

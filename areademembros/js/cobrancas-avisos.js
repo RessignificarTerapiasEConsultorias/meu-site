@@ -2,7 +2,7 @@
    Mostra o que saiu para cada cobrança (enviado, entregue, aberto, clicou, erro), as respostas dos clientes
    e deixa corrigir e-mail, pausar, reenviar, mandar prévia e dar baixa. */
 (function () {
-  const TIPO = { lembrete: "Lembrete (5 dias)", vence_hoje: "Vence hoje", atraso: "Atraso", obrigado: "Obrigado", manual: "Prévia para você" };
+  const TIPO = { lembrete: "Lembrete (faltam até 5 dias)", vence_hoje: "Vence hoje", atraso: "Atraso", obrigado: "Obrigado", manual: "Prévia para você" };
   const RESP = { ja_paguei: "Disse que já pagou", nova_data: "Vai pagar em outra data", ajuda: "Pediu ajuda" };
   let dados = { cobs: [], perfis: {}, prefs: {}, envios: [], respostas: [] }, busca = "", carregando = false;
   const $ = function (s) { return document.getElementById(s); };
