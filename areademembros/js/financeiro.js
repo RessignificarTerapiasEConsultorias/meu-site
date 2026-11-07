@@ -42,13 +42,17 @@
 
   /* ---------- carregar ---------- */
   async function carregar() {
-    const [rp, rc, rcu, re, rpref] = await Promise.all([
+    const [rp, rc, rcu, re, rpref, rprod] = await Promise.all([
       supa().from("perfis").select("id,nome,email,papel,telefone,ativo").order("nome"),
-      supa().from("contratos").select("id,perfil_id,servico,produto,data_inicio,data_fim,valor_total,periodicidade,valor_recorrente,forma_pagamento,ativo,executor_perfil_id,recorrente_aberto,valor_inicial,observacao").order("criado_em"),
+      supa().from("contratos").select("id,perfil_id,servico,produto,produto_id,data_inicio,data_fim,valor_total,periodicidade,valor_recorrente,forma_pagamento,ativo,executor_perfil_id,recorrente_aberto,valor_inicial,observacao").order("criado_em"),
       supa().from("custos_cliente").select("id,perfil_id,data,valor,descricao").order("data", { ascending: false }),
       supa().from("empresas").select("id,nome,tipo,empresa_membros(perfil_id)").in("tipo", ["empresa","pessoal"]).order("nome"),
-      supa().from("preferencias").select("dados").eq("perfil_id", eu.id).maybeSingle()
+      supa().from("preferencias").select("dados").eq("perfil_id", eu.id).maybeSingle(),
+      supa().from("catalogo_produtos").select("id,nome,chave").in("chave", ["dre", "clinica", "tracos"]).order("ordem")
     ]);
+    /* produtos com acesso que podem ser ligados a um contrato (suspende se atrasar) */
+    const opcoesAcesso = '<option value="">Nenhum (serviço)</option>' + (rprod.data || []).map(function (p) { return '<option value="' + p.id + '">' + esc(p.nome) + "</option>"; }).join("");
+    ["ctAcesso", "ectAcesso"].forEach(function (id) { const s = document.getElementById(id); if (s) { const v = s.value; s.innerHTML = opcoesAcesso; s.value = v; } });
     perfis = rp.data || [];
     contratos = (rc.data || []).filter(function (c) { return c.ativo; });
     custos = rcu.data || [];
@@ -494,7 +498,7 @@
       if (!fim || fim < venc) { aviso("Escolha o término do contrato (depois do 1º vencimento).", true); return; }
       datas = gerarDatas(venc, per, dia1, dia2, fim); dataFim = fim;
     }
-    const reg = { perfil_id: cli, servico: $("ctServ").value, produto: produto, periodicidade: per, data_inicio: $("ctIni").value || hoje, data_fim: dataFim,
+    const reg = { perfil_id: cli, servico: $("ctServ").value, produto: produto, produto_id: $("ctAcesso").value || null, periodicidade: per, data_inicio: $("ctIni").value || hoje, data_fim: dataFim,
       forma_pagamento: $("ctForma").value.trim() || null, executor_perfil_id: executor, recorrente_aberto: semPrazo, ganho_extra: respGanho === "sim",
       dia_1: recorrente ? dia1 : null, dia_2: quinz ? dia2 : null, qtd_sessoes: fechado && +$("ctSessoes").value > 0 ? +$("ctSessoes").value : null,
       valor_total: fechado ? valor : (per === "sessao" ? 0 : Math.round(valor * (datas ? datas.length : 1) * 100) / 100), valor_recorrente: fechado ? null : valor };
@@ -665,6 +669,7 @@
     const semPrazo = k.recorrente_aberto && !k.data_fim;
     document.getElementById("ectInfo").textContent = pessoa(k.perfil_id).nome + " · valor inicial " + brl(k.valor_inicial || valorAtual) + " · atual " + brl(valorAtual);
     document.getElementById("ectDesc").value = k.produto; document.getElementById("ectForma").value = k.forma_pagamento || "";
+    document.getElementById("ectAcesso").value = k.produto_id || "";
     const equipe = perfis.filter(function (p) { return (p.papel === "suporte" || p.papel === "profissional") && p.ativo; });
     const sel = document.getElementById("ectExecutor");
     sel.innerHTML = '<option value="">Eu mesmo (Mauricio)</option>' + equipe.map(function (p) { return '<option value="' + p.id + '">' + esc(p.nome) + "</option>"; }).join("");
@@ -709,6 +714,12 @@
     if (encurtou && !confirm("O novo término é antes do atual. As cobranças ainda não pagas depois de " + dataBR(novoFim) + " serão apagadas. Continuar?")) return;
     const b = this; b.disabled = true;
     let ganho = 0;
+    const acessoNovo = document.getElementById("ectAcesso").value || null;
+    if (acessoNovo !== (k.produto_id || null)) {
+      const ra = await supa().from("contratos").update({ produto_id: acessoNovo }).eq("id", k.id);
+      if (ra.error) { b.disabled = false; aviso("Não foi possível ligar o produto: " + ra.error.message, true); return; }
+      k.produto_id = acessoNovo;
+    }
     try {
       if (mudouPer) {
         const pv = document.getElementById("ectPv").value, semP = document.getElementById("ectSemPrazoNovo").checked, fimN = document.getElementById("ectFimNovo").value || null;

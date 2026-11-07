@@ -10,8 +10,17 @@
   /* acesso: comprou a Clínica Otimizada (ou é o master) */
   let liberado = eu.papel === "master";
   if (!liberado) {
-    const r = await supa().from("cliente_produtos").select("situacao,catalogo_produtos!inner(chave)").eq("perfil_id", eu.id).eq("situacao", "adquirido").eq("catalogo_produtos.chave", "clinica");
-    liberado = !!(r.data && r.data.length);
+    const r = await supa().from("cliente_produtos").select("situacao,suspenso_em,suspenso_cobranca_id,catalogo_produtos!inner(chave)").eq("perfil_id", eu.id).eq("situacao", "adquirido").eq("catalogo_produtos.chave", "clinica");
+    const tem = (r.data || [])[0];
+    liberado = !!tem && !tem.suspenso_em;
+    if (tem && tem.suspenso_em) {   /* suspensa por falta de pagamento: volta sozinha quando pagar */
+      const rc = tem.suspenso_cobranca_id ? await supa().from("cobrancas").select("token,descricao,valor").eq("id", tem.suspenso_cobranca_id).maybeSingle() : { data: null };
+      const c = rc.data, box = $("semAcesso");
+      box.innerHTML = "<h2>A sua Clínica Otimizada está suspensa</h2>" +
+        '<p class="ajuda">O acesso foi suspenso por falta de pagamento' + (c ? " de " + esc(c.descricao) + " (" + brl(c.valor) + ")" : "") + ". Os seus clientes, sessões e anotações continuam guardados. <b>Assim que o pagamento for feito, a clínica volta na hora.</b></p>" +
+        (c && c.token ? '<div class="acoes"><a class="btn auto" href="../cobranca/?t=' + encodeURIComponent(c.token) + '&a=pagar">Pagar e liberar o acesso</a></div>' : '<div class="acoes"><a class="btn auto" href="painel-cliente.html">Ver os meus pagamentos</a></div>');
+      box.hidden = false; return;
+    }
   }
   if (!liberado) { $("semAcesso").hidden = false; return; }
   $("area").hidden = false;

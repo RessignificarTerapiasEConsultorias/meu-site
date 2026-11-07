@@ -67,7 +67,7 @@
           <span class="rotulo" id="rotOp">O que aconteceu?</span>
           <div class="opcoes" role="radiogroup" aria-labelledby="rotOp">
             <label class="opcao"><input type="radio" name="op" value="ja_paguei"><span><b>Já paguei</b><small>Aviso o Mauricio para conferir.</small></span></label>
-            <label class="opcao"><input type="radio" name="op" value="nova_data"><span><b>Vou pagar em outra data</b><small>Você escolhe o dia; os lembretes param até lá.</small></span></label>
+            <label class="opcao"><input type="radio" name="op" value="nova_data"><span><b>Vou pagar em outra data</b><small>Você escolhe o dia e ele fica garantido. Nos 5 dias antes, você recebe um lembrete por dia. Se passar da data sem pagamento, o acesso ao produto é suspenso até o pagamento.</small></span></label>
             <label class="opcao"><input type="radio" name="op" value="ajuda"><span><b>Preciso de ajuda</b><small>Alguma dificuldade? Conte para o Mauricio.</small></span></label>
           </div>
 
@@ -172,7 +172,7 @@
       if (!j.ok) throw new Error(j.erro || "Não foi possível enviar.");
       $("#blocoAberto").hidden = true; $("#eFeito").hidden = false;
       $("#feitoTxt").textContent = op === "ja_paguei" ? "Obrigado! O Mauricio foi avisado e vai conferir o pagamento." :
-        op === "nova_data" ? "Combinado! Você vai pagar em " + dataBR(corpo.nova_data) + ". Os lembretes param até lá." : "Recebido! O Mauricio vai falar com você.";
+        op === "nova_data" ? "Combinado! A data " + dataBR(corpo.nova_data) + " está garantida. Nos 5 dias antes você recebe um lembrete por dia. Lembre: se passar dessa data sem pagamento, o acesso ao produto é suspenso até o pagamento." : "Recebido! O Mauricio vai falar com você.";
       window.scrollTo(0, 0);
     }).catch(function (err) { b.disabled = false; b.textContent = rot; aviso.textContent = err.message; aviso.classList.add("on"); });
   });

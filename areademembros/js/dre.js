@@ -13,6 +13,10 @@
   }
   const eid = new URLSearchParams(location.search).get("e");
   if (!eid) return falha("Nenhuma empresa foi escolhida. Volte ao painel e clique em \"Abrir DRE\".");
+  if (!gestor) {   /* DRE comprada pela loja e suspensa por falta de pagamento: volta sozinha quando pagar */
+    const rsus = await supa().from("cliente_produtos").select("suspenso_em,catalogo_produtos!inner(chave)").eq("perfil_id", eu.id).eq("catalogo_produtos.chave", "dre").not("suspenso_em", "is", null);
+    if (rsus.data && rsus.data.length) return falha("O seu acesso à DRE Financeira está suspenso por falta de pagamento. Os seus lançamentos continuam guardados e o acesso volta na hora em que o pagamento for feito. Veja o pagamento em aberto no seu painel.");
+  }
   const re = await supa().from("empresas").select("id,nome,segmento,tipo").eq("id", eid).maybeSingle();
   if (!re.data) return falha("Esta empresa não existe ou você não tem acesso a ela.");
   const emp = re.data;

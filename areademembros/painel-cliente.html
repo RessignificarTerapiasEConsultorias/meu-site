@@ -24,6 +24,11 @@
     <h1 id="ola">Sua área</h1>
     <p class="sub">Aqui você acompanha o seu processo e mantém os seus números em dia.</p>
     <div class="alertas-topo" id="alertasTopo" hidden></div>
+    <div class="cartao" id="cartaoSuspenso" hidden style="border:2px solid #C0392B">
+      <h2>Acesso suspenso</h2>
+      <div id="listaSuspensos"></div>
+    </div>
+    <div id="cartoesParceiro"></div>
     <div class="cartao">
       <h2>Seus serviços</h2>
       <div id="meusServicos"><p class="vazio">Carregando...</p></div>
@@ -153,6 +158,47 @@
     d.appendChild(t); d.appendChild(bt);
     if (chave === "pagamentos") faixa.insertBefore(d, faixa.firstChild); else faixa.appendChild(d);   // o financeiro aparece primeiro
   }
+
+  /* ---------- acesso suspenso por falta de pagamento (volta sozinho quando pagar) ---------- */
+  try {
+    const rs = await supa().from("cliente_produtos").select("suspenso_em,suspenso_cobranca_id,catalogo_produtos(nome)").eq("perfil_id", eu.id).not("suspenso_em", "is", null);
+    if (rs.data && rs.data.length) {
+      const ids = rs.data.map(function (x) { return x.suspenso_cobranca_id; }).filter(Boolean);
+      const rcs = ids.length ? await supa().from("cobrancas").select("id,token,descricao,valor").in("id", ids) : { data: [] };
+      document.getElementById("listaSuspensos").innerHTML = rs.data.map(function (x) {
+        const c = (rcs.data || []).find(function (y) { return y.id === x.suspenso_cobranca_id; }), nome = (x.catalogo_produtos || {}).nome || "Produto";
+        return '<p style="margin:0 0 10px"><b>' + esc(nome) + "</b> está suspenso desde " + dataBR(String(x.suspenso_em).slice(0, 10)) + " por falta de pagamento" + (c ? " de " + esc(c.descricao) + " (" + brl(c.valor) + ")" : "") + ". Os seus dados continuam guardados. <b>Assim que o pagamento for feito, o acesso volta na hora.</b></p>" +
+          (c && c.token ? '<div class="acoes" style="margin-bottom:12px"><a class="btn auto" href="../cobranca/?t=' + encodeURIComponent(c.token) + '&a=pagar">Pagar e liberar ' + esc(nome) + "</a></div>" : "");
+      }).join("");
+      document.getElementById("cartaoSuspenso").hidden = false;
+      alertar("suspenso", "Acesso suspenso", rs.data.length === 1 ? "um produto seu está suspenso por falta de pagamento." : rs.data.length + " produtos seus estão suspensos por falta de pagamento.", "Ver e pagar", "cartaoSuspenso");
+    }
+  } catch (e) { /* sem suspensão, sem problema */ }
+
+  /* ---------- dona de um produto (ex.: Tatiana no Teste de Traços de Caráter): link de vendas e painel ---------- */
+  try {
+    const rpp = await supa().from("produto_parceiros").select("percentual,catalogo_produtos(nome,chave,pagina)").eq("perfil_id", eu.id);
+    const origem = String(eu.nome || "").split(" ")[0].normalize("NFD").replace(/[^A-Za-z]/g, "").toLowerCase() || "parceira";
+    (rpp.data || []).forEach(function (pp) {
+      const pr = pp.catalogo_produtos; if (!pr || !pr.pagina) return;
+      const link = "https://ressignificarterapiaseconsultorias.com" + pr.pagina + "?de=" + origem;
+      const msg = "Oi! Você já conhece o " + pr.nome + "? Ele mostra como a história de cada pessoa moldou o jeito de ser dela, sozinha ou em casal, com uma devolutiva completa pronta para a sua sessão. Você pode ter ele na sua página de teste: " + link;
+      const pct = String(pp.percentual).replace(/\.0+$/, "").replace(".", ",") + "%";
+      const div = document.createElement("div"); div.className = "cartao"; div.id = "cartaoParceiro-" + pr.chave;
+      div.innerHTML = "<h2>Seu produto: " + esc(pr.nome) + "</h2>" +
+        '<p class="ajuda">Você é a dona deste produto e recebe <b>' + pct + "</b> de cada venda, de forma automática, em 1 a 5 dias úteis. Envie o link da página de vendas para terapeutas e acompanhe tudo no painel: quem visitou, quem tentou comprar, quem comprou e os seus repasses.</p>" +
+        '<div class="link-teste"><input type="text" readonly aria-label="Link da página de vendas" value="' + esc(link) + '"><button type="button" class="btn peq" data-copiar="' + esc(link) + '">Copiar</button></div>' +
+        '<div class="acoes"><a class="btn auto" href="produto-parceiro.html?p=' + encodeURIComponent(pr.chave) + '">Abrir o painel do produto</a>' +
+        '<a class="btn auto contorno" href="https://wa.me/?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener">Enviar no WhatsApp</a>' +
+        '<a class="btn auto contorno" href="' + esc(link) + '" target="_blank" rel="noopener">Ver a página de vendas</a></div>';
+      document.getElementById("cartoesParceiro").appendChild(div);
+      div.querySelector("[data-copiar]").addEventListener("click", function () {
+        const b = this, i = div.querySelector("input");
+        (navigator.clipboard ? navigator.clipboard.writeText(b.dataset.copiar) : Promise.reject()).catch(function () { i.select(); document.execCommand("copy"); })
+          .then(function () { b.textContent = "Copiado ✓"; setTimeout(function () { b.textContent = "Copiar"; }, 2000); });
+      });
+    });
+  } catch (e) { /* sem produto próprio, sem problema */ }
 
   /* ---------- Teste de Travas Mentais (comprado pela loja do site) ---------- */
   let temTravas = false;

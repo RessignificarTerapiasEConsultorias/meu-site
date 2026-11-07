@@ -88,9 +88,19 @@
   document.querySelectorAll("#cAbas button").forEach(function (b) { b.addEventListener("click", function () { trocarModo(b.getAttribute("data-modo")); }); });
   $("cEsqueci").href = "https://wa.me/" + ZAP + "?text=" + encodeURIComponent("Olá, Mauricio! Esqueci a senha da Área de Membros e quero assinar " + NOME + ".");
 
+  /* visita da página (conta uma vez por dia por aparelho; com a conta, identifica quem entrou) */
+  function registrarVisita() {
+    try {
+      var v = localStorage.getItem("rs_visitante");
+      if (!v) { v = "v" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); localStorage.setItem("rs_visitante", v); }
+      var origem = (new URLSearchParams(location.search).get("de") || "").slice(0, 40);
+      supa().rpc("produto_visita", { p_chave: PRODUTO, p_visitante: v, p_origem: origem || null }).then(function () {}, function () {});
+    } catch (e) {}
+  }
   /* já logada nesta aba? */
   supa().auth.getSession().then(function (r) {
     sessao = r && r.data && r.data.session;
+    registrarVisita();
     if (!sessao) return;
     return supa().from("perfis").select("nome,email,ativo").eq("id", sessao.user.id).maybeSingle().then(function (rp) {
       eu = rp.data; if (!eu || !eu.ativo) { sessao = null; return; }
@@ -123,7 +133,7 @@
       ocupado(true, "Entrando…");
       supa().auth.signInWithPassword({ email: email, password: senha }).then(function (r) {
         if (r.error || !r.data || !r.data.session) { ocupado(false); avisar(/Invalid login/i.test((r.error || {}).message || "") ? "E-mail ou senha incorretos." : "Não foi possível entrar agora. Tente de novo."); return; }
-        sessao = r.data.session; ocupado(true, "Preparando o pagamento…");
+        sessao = r.data.session; registrarVisita(); ocupado(true, "Preparando o pagamento…");
         return chamar({ acao: "iniciar", produto: PRODUTO, modo: "cliente", negocio: $("cNegocioCli") ? $("cNegocioCli").value : "" }, sessao.access_token).then(function (j) { if (tratar(j)) irParaPagamento(j); });
       }).catch(function () { ocupado(false); avisar("Sem conexão. Confira a internet e tente de novo."); });
       return;

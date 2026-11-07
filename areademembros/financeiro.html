@@ -78,6 +78,7 @@
             <div><label for="ctServ">Serviço</label><select id="ctServ"><option value="terapia">Terapia</option><option value="mentoria">Mentoria</option><option value="consultoria_empresarial">Consultoria empresarial</option></select></div>
             <div><label for="ctExecutor">Quem executa</label><select id="ctExecutor"><option value="">Eu mesmo (Mauricio)</option></select></div>
             <div><label for="ctProd">Descrição</label><input id="ctProd" maxlength="100" placeholder="Ex.: Acompanhamento 3 meses" required></div>
+            <div><label for="ctAcesso">Produto com acesso</label><select id="ctAcesso"><option value="">Nenhum (serviço)</option></select><small class="ajuda" style="display:block;margin-top:4px">Se atrasar 5 dias (ou passar da data combinada), o acesso é suspenso até o pagamento.</small></div>
             <div><label for="ctPer">Como cobra</label><select id="ctPer">
               <option value="parcelado">Valor fechado (à vista ou parcelado)</option>
               <option value="mensal">Mensal</option><option value="quinzenal">Quinzenal (2 datas por mês)</option><option value="trimestral">Trimestral</option>
@@ -247,6 +248,7 @@
   <p class="ajuda" id="ectInfo"></p>
   <div class="f">
     <div><label for="ectDesc">Descrição</label><input id="ectDesc" maxlength="100"></div>
+    <div style="margin-top:12px"><label for="ectAcesso">Produto com acesso</label><select id="ectAcesso"><option value="">Nenhum (serviço)</option></select><small class="ajuda" style="display:block;margin-top:4px">Se atrasar 5 dias (ou passar da data combinada), o acesso a este produto é suspenso até o pagamento. Ao pagar, volta sozinho.</small></div>
     <div class="grade g2" style="margin-top:12px">
       <div><label for="ectForma">Forma de pagamento</label><input id="ectForma" maxlength="60"></div>
       <div><label for="ectExecutor">Quem executa</label><select id="ectExecutor"></select></div>

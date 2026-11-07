@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Painel do produto | Ressignificar</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilo.css">
+<style>
+  .pp-link{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 0}
+  .pp-link input{flex:1 1 260px;min-width:0}
+  .pp-origens{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0}
+  .pp-sit{white-space:nowrap}
+  .pp-vazio{padding:10px 0}
+  .pp-secao{margin-top:26px}
+  .pp-repasse-pago{color:#15502E;font-weight:700}
+  .pp-repasse-aberto{color:#8A6A22;font-weight:700}
+</style>
+</head>
+<body>
+<div class="carregando" id="carregando">Carregando...</div>
+<div id="painel" hidden>
+  <header class="topo-painel">
+    <div class="marca" style="display:flex;align-items:center;gap:14px"><a class="voltar" id="voltar" href="painel-cliente.html" style="margin:0">← Voltar</a></div>
+    <div class="usuario">
+      <span data-nome-usuario></span>
+      <button class="sair" data-sair>Sair</button>
+    </div>
+  </header>
+  <main class="conteudo-painel largo">
+    <div id="semAcesso" class="cartao" hidden><h2>Painel indisponível</h2><p class="ajuda">Este painel é só para a dona do produto. Se você acha que deveria ter acesso, fale com o Mauricio.</p></div>
+    <div id="area" hidden>
+      <h1 id="titulo">Painel do produto</h1>
+      <p class="sub" id="sub"></p>
+
+      <div class="cartao">
+        <h2>Link da página de vendas</h2>
+        <p class="ajuda">Envie para terapeutas. Quem já tem o Teste de Travas entra com a conta e assina na hora; o teste aparece sozinho na página dela.</p>
+        <div class="pp-link"><input type="text" id="link" readonly aria-label="Link da página de vendas"><button type="button" class="btn peq" id="copiar">Copiar</button>
+          <a class="btn peq contorno" id="zap" href="#" target="_blank" rel="noopener">Enviar no WhatsApp</a><a class="btn peq contorno" id="ver" href="#" target="_blank" rel="noopener">Ver a página</a></div>
+      </div>
+
+      <div class="kpis kpis-carrinho" id="kpis"></div>
+      <div class="pp-origens" id="origens"></div>
+
+      <section class="pp-secao">
+        <h2>Repasses</h2>
+        <p class="ajuda" id="repAjuda"></p>
+        <div class="tabela-wrap"><table class="t"><thead><tr><th>Venda</th><th>Quem comprou</th><th class="n">Valor da venda</th><th class="n">Repasse</th><th>Situação</th></tr></thead><tbody id="repasses"></tbody></table></div>
+      </section>
+
+      <section class="pp-secao">
+        <h2>Quem entrou na página com a conta</h2>
+        <p class="ajuda">Terapeutas que abriram a página de vendas já logadas (ou entraram na caixa de compra).</p>
+        <div class="tabela-wrap"><table class="t"><thead><tr><th>Nome</th><th>Contato</th><th>Visitas</th><th>Última visita</th><th>Situação</th></tr></thead><tbody id="entraram"></tbody></table></div>
+      </section>
+
+      <section class="pp-secao">
+        <h2>Compras e tentativas</h2>
+        <p class="ajuda">Todo mundo que começou a compra: quem desistiu no pagamento, quem está pagando e quem comprou.</p>
+        <div id="lista" class="lista-carrinhos"><p class="vazio">Carregando...</p></div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+<script src="js/produto-parceiro.js"></script>
+</body>
+</html>
