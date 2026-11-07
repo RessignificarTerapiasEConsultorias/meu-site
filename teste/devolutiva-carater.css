@@ -186,6 +186,14 @@ body.cv-on{overflow-x:clip}
 .cv-meta{font-weight:700;color:var(--tinta-suave);font-size:15px;margin-top:auto!important;padding-top:6px}
 .cv-link{display:inline-block;margin-top:6px;font-weight:800;color:var(--ardosia);text-decoration:none;border-bottom:2px solid var(--salvia);align-self:flex-start;padding:6px 0}
 .cv-sigilo{text-align:center;color:var(--tinta-suave);margin:0}
+.cv-sub{color:var(--tinta-suave);max-width:640px;margin:-8px auto 18px}
+.cv-itens{display:grid;gap:10px;margin:8px 0 18px}
+@media(min-width:640px){.cv-itens{grid-template-columns:1fr 1fr}}
+@media(min-width:960px){.cv-itens{grid-template-columns:repeat(3,1fr)}}
+.cv-item{position:relative;background:var(--papel);border:1.4px solid var(--borda);border-radius:16px;padding:14px 16px 14px 58px;box-shadow:var(--sombra-leve)}
+.cv-item-n{position:absolute;left:14px;top:14px;width:32px;height:32px;border-radius:50%;background:var(--argila-clara);color:var(--ardosia);font:800 15px/32px 'Karla',sans-serif;text-align:center}
+.cv-item b{display:block;font-size:17px;color:var(--ardosia);margin-bottom:2px}
+.cv-item small{display:block;font-size:14.5px;line-height:1.45;color:var(--tinta-suave)}
 .cv-casal-grade,.cv-recebe-grade{display:grid;gap:28px;align-items:center}
 @media(min-width:860px){.cv-casal-grade{grid-template-columns:1.25fr .75fr}.cv-recebe-grade{grid-template-columns:.75fr 1.25fr}}
 .cv-escura p{color:rgba(255,255,255,.9)}

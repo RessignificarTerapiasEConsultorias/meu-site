@@ -624,34 +624,53 @@ function dvAbrirAssinatura(nome, aoConfirmar){
 
 
 /* ============================================================================
-   PÁGINA INICIAL DE VENDAS: os dois testes (Travas + Traços de Caráter), individual e em casal.
-   No domínio, liga com travas_paginas.dados.capa_vendas = true. No site da Tatiana, sempre.
+   PÁGINA INICIAL DE VENDAS, conforme os testes da terapeuta:
+   'ambos' (Travas + Traços de Caráter, individual e casal) · 'travas' (só o Teste de Travas) · 'tracos' (só o de Traços)
+   Ligada para todas as páginas (desliga com travas_paginas.dados.capa_vendas = false). No site da Tatiana, sempre.
    O campo do código continua no topo: quem já recebeu o código entra direto.
    ============================================================================ */
 const CV_IMG = 'https://ressignificarterapiaseconsultorias.com/teste/img/';
 const CV_ZAP_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.2.1-1.9-.1a17 17 0 0 1-1.8-.7c-3.1-1.3-5.1-4.5-5.3-4.7-.2-.2-1.3-1.7-1.3-3.2 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .7.5l1 2.3c.1.2.1.4 0 .6l-.4.6-.5.5c-.2.2-.3.3-.1.6.2.3.8 1.4 1.8 2.2 1.2 1.1 2.3 1.4 2.6 1.6.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l2.2 1c.3.2.5.2.6.4.1.1.1.7-.1 1.3z"/></svg>';
-function dvCapaVendas(){
+function dvCapaVendas(modo){
+  modo = modo === 'travas' || modo === 'tracos' ? modo : 'ambos';
+  const ambos = modo === 'ambos', soTravas = modo === 'travas', soTracos = modo === 'tracos', casal = !soTravas;
   const capa = document.getElementById('tela-capa'); if(!capa || capa.classList.contains('capa-vendas')) return;
   const lt = capa.querySelector('.lado-texto'), cartao = lt && lt.querySelector('.cartao'), rodape = capa.querySelector('.rodape');
   if(!lt || !cartao || !rodape) return;
-  dvCapaDoisTestes();
+  if(ambos) dvCapaDoisTestes();
   capa.classList.add('capa-vendas'); document.body.classList.add('cv-on');
-  const quem = dvQuem(), apelido = String(dvTerapeuta() || '').split(' ')[0] || PRIM_TER, comQuem = (/^o /i.test(quem) ? 'o ' : 'a ') + apelido;
+  const dd = dvCad(), prim = s => String(s || '').trim().split(' ')[0];
+  const quem = dvQuem();
+  const apelido = (dd && dd.nome_curto) ? prim(dd.nome_curto) : (typeof T_PRIM !== 'undefined' && T_PRIM) || (dd && (dd.primeiro || prim(dd.nome))) || prim(dvTerapeuta()) || PRIM_TER;
+  const comQuem = (/^o /i.test(quem) ? 'o ' : 'a ') + apelido;
   const foto = (capa.querySelector('.moldura img') || {}).src || '';
   const num = typeof CONFIG !== 'undefined' ? (CONFIG.whatsappNumero || '') : '';
-  const zap = msg => 'https://wa.me/' + num + '?text=' + encodeURIComponent('Olá, ' + apelido + '! Vi a página dos testes e ' + msg);
-  const Z = { ind:zap('quero fazer o meu teste. Como recebo o meu código?'), casal:zap('quero fazer o teste em casal. Como funciona para nós dois?'),
+  const zap = msg => 'https://wa.me/' + num + '?text=' + encodeURIComponent('Olá, ' + apelido + '! Vi a página do teste e ' + msg);
+  const nomeTeste = soTravas ? 'o Teste de Travas Mentais' : soTracos ? 'o Teste de Traços de Caráter' : 'o meu teste';
+  const Z = { ind:zap('quero fazer ' + nomeTeste + '. Como recebo o meu código?'), casal:zap('quero fazer o teste em casal. Como funciona para nós dois?'),
+    duvida:zap('tenho uma dúvida sobre o teste.'),
     travas:zap('quero fazer o Teste de Travas Mentais. Como recebo o meu código?'), tracos:zap('quero fazer o Teste de Traços de Caráter. Como recebo o meu código?') };
   const ext = 'target="_blank" rel="noopener"';
   const bt = (cls, href, tit, sub, icone) => `<a class="btn ${cls} cv-btn" href="${href}" ${ext}>${icone ? CV_ZAP_SVG : ''}<span class="duas">${tit}<small>${sub}</small></span></a>`;
-  const ctas = id => `<div class="cv-ctas" id="${id}">${bt('btn-primario', Z.ind, 'Quero fazer o meu teste', 'fale com ' + escV(comQuem) + ' e receba o seu código', true)}${bt('btn-contorno', Z.casal, 'Quero fazer em casal', 'cada um no seu tempo, com o mesmo código')}</div>`;
+  const ctas = id => `<div class="cv-ctas" id="${id}">${bt('btn-primario', Z.ind, 'Quero fazer o meu teste', 'fale com ' + escV(comQuem) + ' e receba o seu código', true)}` +
+    (casal ? bt('btn-contorno', Z.casal, 'Quero fazer em casal', 'cada um no seu tempo, com o mesmo código') : bt('btn-contorno', Z.duvida, 'Tirar uma dúvida', 'pelo WhatsApp, sem compromisso')) + '</div>';
 
-  /* topo: promessa curta, provas rápidas e as duas chamadas; o código fica logo abaixo */
-  const h1 = lt.querySelector('h1'); if(h1) h1.innerHTML = 'Você sabe o que quer mudar. <em>Então por que algo sempre puxa você de volta?</em>';
+  /* topo: promessa curta, provas rápidas e as chamadas; o código fica logo abaixo */
+  const h1 = lt.querySelector('h1');
+  if(h1) h1.innerHTML = soTracos ? 'Você repete os mesmos padrões? <em>Descubra como a sua história moldou o seu jeito de ser.</em>'
+                                 : 'Você sabe o que quer mudar. <em>Então por que algo sempre puxa você de volta?</em>';
+  const selo = lt.querySelector('.selo');
+  if(selo) selo.textContent = ambos ? 'Teste de Travas Mentais · Teste de Traços de Caráter' : soTravas ? 'Teste de Travas Mentais' : 'Teste de Traços de Caráter';
   lt.querySelectorAll('.texto-capa, .lista-leve').forEach(x => x.remove());
+  const lead = soTravas
+    ? 'Quase sempre é uma trava mental: um padrão antigo que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. Em poucos minutos, você descobre <b>quais travas estão mais ativas em você hoje</b>, em números.'
+    : soTracos
+    ? 'Desde a infância, o corpo e a mente aprendem a se proteger, e esses jeitos de se proteger viram traços que aparecem até hoje nas suas relações e decisões. Em poucos minutos, você descobre <b>como a sua história moldou o seu jeito de ser</b>. Sozinho(a) ou em casal.'
+    : 'Quase sempre é um padrão antigo, que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. Em poucos minutos, você descobre <b>o que trava você hoje</b> e <b>como a sua história moldou o seu jeito de ser</b>. Sozinho(a) ou em casal.';
+  const chips = [soTravas ? 'No celular, de 10 a 15 minutos' : soTracos ? 'No celular, de 8 a 12 minutos' : 'No celular, de 8 a 15 minutos',
+    'Só ' + escV(quem) + ' vê as suas respostas', soTravas ? 'Resultado em números' : 'Individual ou em casal'];
   const ass = lt.querySelector('.assinatura');
-  (ass || h1).insertAdjacentHTML('afterend', `<p class="cv-lead">Quase sempre é um padrão antigo, que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. Em poucos minutos, você descobre <b>o que trava você hoje</b> e <b>como a sua história moldou o seu jeito de ser</b>. Sozinho(a) ou em casal.</p>
-    <ul class="cv-chips"><li>No celular, de 8 a 15 minutos</li><li>Só ${escV(quem)} vê as suas respostas</li><li>Individual ou em casal</li></ul>`);
+  (ass || h1).insertAdjacentHTML('afterend', `<p class="cv-lead">${lead}</p><ul class="cv-chips">${chips.map(c => '<li>' + c + '</li>').join('')}</ul>`);
   cartao.insertAdjacentHTML('beforebegin', '<p class="cv-ja" id="cv-ja">Já recebeu o seu código? É só digitar aqui:</p>');
   const temCodigo = /[?&](c|codigo|code)=/.test(location.search) || !!(document.getElementById('campo-codigo') || {}).value;
   if(temCodigo) cartao.insertAdjacentHTML('afterend', ctas('cv-ctas-topo'));
@@ -659,20 +678,12 @@ function dvCapaVendas(){
 
   const passo = (n, t, d) => `<li><span class="cv-n">${n}</span><b>${t}</b><small>${d}</small></li>`;
   const pq = (q, a) => `<details><summary>${q}</summary><p>${a}</p></details>`;
-  rodape.insertAdjacentHTML('beforebegin', `<div class="cv">
-  <section class="cv-faixa cv-areia"><div class="cv-in cv-estreito">
-    <span class="cv-olho">Talvez você se reconheça</span>
-    <h2>Você começa com vontade e, lá pelo meio do caminho, alguma coisa puxa você de volta</h2>
-    <ul class="cv-dores">
-      <li>Promete que desta vez vai ser diferente e se pega repetindo o mesmo padrão.</li>
-      <li>Sabe exatamente o que precisa fazer, mas trava na hora de agir.</li>
-      <li>No relacionamento, as mesmas discussões voltam, só com outras palavras.</li>
-      <li>Carrega um peso que nem sabe direito de onde vem.</li>
-    </ul>
-    <p class="cv-virada">Não é falta de força de vontade. É um padrão antigo agindo sem pedir licença. <b>E o que a gente enxerga, a gente consegue mudar.</b></p>
-  </div></section>
+  const primFrase = t => { const m = String(t || '').match(/^.*?[.!?](\s|$)/); return (m ? m[0] : String(t || '')).trim(); };
 
-  <section class="cv-faixa"><div class="cv-in">
+  /* o que o teste mapeia */
+  let meio = '';
+  if(ambos){
+    meio = `<section class="cv-faixa"><div class="cv-in">
     <div class="cv-centro"><span class="cv-olho">Aqui você encontra dois testes</span>
     <h2>Duas perguntas que mudam o jeito como você se enxerga</h2></div>
     <div class="cv-testes">
@@ -694,9 +705,28 @@ function dvCapaVendas(){
       </article>
     </div>
     <p class="cv-sigilo">Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d${escV(quem)}.</p>
-  </div></section>
+  </div></section>`;
+  } else if(soTravas){
+    const lista = (typeof TRAVAS !== 'undefined' && Array.isArray(TRAVAS)) ? TRAVAS : [];
+    meio = `<section class="cv-faixa"><div class="cv-in">
+    <div class="cv-centro"><span class="cv-olho">O que o teste mapeia</span>
+    <h2>10 travas mentais. Quais estão mais ativas em você?</h2>
+    <p class="cv-sub">O resultado mostra cada uma em números, de 1 a 10, com as mais ativas em destaque.</p></div>
+    <div class="cv-itens">${lista.map((t, i) => `<div class="cv-item"><span class="cv-item-n">${i + 1}</span><b>${escV(t.nome)}</b><small>${escV(primFrase(t.contexto))}</small></div>`).join('')}</div>
+    <p class="cv-sigilo">Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d${escV(quem)}.</p>
+  </div></section>`;
+  } else {
+    const lista = (typeof TC_TRACOS !== 'undefined' && Array.isArray(TC_TRACOS)) ? TC_TRACOS : [];
+    meio = `<section class="cv-faixa"><div class="cv-in">
+    <div class="cv-centro"><span class="cv-olho">O que o teste mapeia</span>
+    <h2>5 traços de caráter. Qual deles comanda o seu jeito de ser?</h2>
+    <p class="cv-sub">Os nomes vêm da psicanálise e descrevem estilos de funcionamento, não doenças. Cada traço traz talentos próprios.</p></div>
+    <div class="cv-itens">${lista.map((t, i) => `<div class="cv-item"><span class="cv-item-n">${i + 1}</span><b>${escV(t.nome)}</b><small>${escV(t.recurso || '')}</small></div>`).join('')}</div>
+    <p class="cv-sigilo">Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d${escV(quem)}.</p>
+  </div></section>`;
+  }
 
-  <section class="cv-faixa cv-escura"><div class="cv-in">
+  const secCasal = !casal ? '' : `<section class="cv-faixa cv-escura"><div class="cv-in">
     <div class="cv-casal-grade">
       <div>
         <span class="cv-olho">Tem um parceiro ou uma parceira?</span>
@@ -716,22 +746,60 @@ function dvCapaVendas(){
       <p><b>Como funciona:</b> cada um responde no próprio celular, quando puder, com o mesmo código (ou juntos, no mesmo aparelho). <b>Cada um recebe a sua devolutiva individual, e vocês recebem a devolutiva do casal</b>, com um acordo para os dois assinarem.</p>
       ${bt('btn-argila', Z.casal, 'Quero fazer em casal', 'fale com ' + escV(comQuem) + ' pelo WhatsApp', true)}
     </div>
+  </div></section>`;
+
+  const checks = soTravas
+    ? ['O seu mapa das 10 travas, de 1 a 10, com as mais ativas em destaque', 'Um gráfico para ver o seu perfil num relance', 'O que cada trava significa e como ela aparece no seu dia a dia', 'Por onde começar: a trava que mais pesa em você hoje', 'Uma conversa com ' + escV(comQuem) + ' a partir do resultado']
+    : soTracos
+    ? ['Os seus 5 traços em porcentagem, com os dois mais fortes em destaque', 'Um gráfico de teia para ver o seu perfil num relance', 'O que cada traço significa e os talentos escondidos nele', 'Ações práticas para começar a mudar a partir de hoje', 'Em casal: a devolutiva de cada um e a dos dois juntos']
+    : ['O seu mapa em números, com o que está mais ativo em destaque', 'Um gráfico de teia para ver o seu perfil num relance', 'O que cada resultado significa e os talentos escondidos nele', 'Ações práticas para começar a mudar a partir de hoje', 'Em casal: a devolutiva de cada um e a dos dois juntos'];
+  const imgRecebe = soTravas ? `<img src="${CV_IMG}vendas-travas.jpg" alt="Resultado do Teste de Travas com as 10 travas em números" loading="lazy" width="600" height="1200">`
+                             : `<img src="${CV_IMG}vendas-individual.jpg" alt="Devolutiva com os traços em porcentagem e o gráfico de teia" loading="lazy" width="600" height="1200">`;
+  const faq = soTravas ? [
+      pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre o teste.'),
+      pq('O que é uma trava mental?', 'É um padrão de pensamento e de comportamento que se repete e segura você, mesmo quando você sabe o que precisa fazer. O teste mostra quais estão mais ativas hoje.'),
+      pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. O resultado serve para a conversa de vocês, com cuidado e sigilo.'),
+      pq('O resultado é um diagnóstico?', 'Não. É uma ferramenta de autoconhecimento que mostra por onde começar. Ela não substitui um acompanhamento profissional.'),
+      pq('Quanto tempo leva?', 'De 10 a 15 minutos, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
+    ] : soTracos ? [
+      pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre o teste.'),
+      pq('Como funciona em casal? Precisamos estar juntos?', 'Não precisam. Cada um responde no próprio celular, quando puder, com o mesmo código. Se preferirem, dá para responder juntos, no mesmo aparelho, um de cada vez. Cada um recebe a sua devolutiva individual, e vocês recebem a do casal.'),
+      pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. No casal, cada um responde sozinho(a), sem ver as respostas do outro.'),
+      pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.'),
+      pq('Quanto tempo leva?', 'De 8 a 12 minutos, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
+    ] : [
+      pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre o teste certo.'),
+      pq('Preciso fazer os dois testes?', 'Não. Você pode fazer um deles ou os dois. Eles se completam: as travas mostram o que pesa em você hoje, e os traços mostram de onde isso vem.'),
+      pq('Como funciona em casal? Precisamos estar juntos?', 'Não precisam. Cada um responde no próprio celular, quando puder, com o mesmo código. Se preferirem, dá para responder juntos, no mesmo aparelho, um de cada vez. Cada um recebe a sua devolutiva individual, e vocês recebem a do casal.'),
+      pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. No casal, cada um responde sozinho(a), sem ver as respostas do outro.'),
+      pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.'),
+      pq('Quanto tempo leva?', 'De 8 a 15 minutos por teste, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
+    ];
+
+  rodape.insertAdjacentHTML('beforebegin', `<div class="cv">
+  <section class="cv-faixa cv-areia"><div class="cv-in cv-estreito">
+    <span class="cv-olho">Talvez você se reconheça</span>
+    <h2>Você começa com vontade e, lá pelo meio do caminho, alguma coisa puxa você de volta</h2>
+    <ul class="cv-dores">
+      <li>Promete que desta vez vai ser diferente e se pega repetindo o mesmo padrão.</li>
+      <li>Sabe exatamente o que precisa fazer, mas trava na hora de agir.</li>
+      <li>No relacionamento, as mesmas discussões voltam, só com outras palavras.</li>
+      <li>Carrega um peso que nem sabe direito de onde vem.</li>
+    </ul>
+    <p class="cv-virada">Não é falta de força de vontade. É um padrão antigo agindo sem pedir licença. <b>E o que a gente enxerga, a gente consegue mudar.</b></p>
   </div></section>
+
+  ${meio}
+  ${secCasal}
 
   <section class="cv-faixa cv-areia"><div class="cv-in">
     <div class="cv-recebe-grade">
-      <figure class="cv-cel"><img src="${CV_IMG}vendas-individual.jpg" alt="Devolutiva individual com os traços em porcentagem e o gráfico de teia" loading="lazy" width="600" height="1200"></figure>
+      <figure class="cv-cel">${imgRecebe}</figure>
       <div>
         <span class="cv-olho">O que você recebe</span>
-        <h2>Uma devolutiva clara, para você se enxergar por inteiro</h2>
-        <ul class="cv-checks">
-          <li>O seu mapa em números, com o que está mais ativo em destaque</li>
-          <li>Um gráfico de teia para ver o seu perfil num relance</li>
-          <li>O que cada resultado significa e os talentos escondidos nele</li>
-          <li>Ações práticas para começar a mudar a partir de hoje</li>
-          <li>Em casal: a devolutiva de cada um e a dos dois juntos</li>
-        </ul>
-        <p class="cv-nota">Telas reais da devolutiva, com nomes fictícios.</p>
+        <h2>Um resultado claro, para você se enxergar por inteiro</h2>
+        <ul class="cv-checks">${checks.map(c => '<li>' + c + '</li>').join('')}</ul>
+        <p class="cv-nota">Telas reais do resultado, com nomes fictícios.</p>
       </div>
     </div>
   </div></section>
@@ -740,8 +808,8 @@ function dvCapaVendas(){
     <div class="cv-centro"><span class="cv-olho">Como funciona</span><h2>Do primeiro toque ao seu próximo passo</h2></div>
     <ol class="cv-passos">
       ${passo(1, 'Fale com ' + escV(comQuem), 'Toque no botão e receba o seu código pelo WhatsApp.')}
-      ${passo(2, 'Responda no seu tempo', 'No celular, uma afirmação de cada vez. Em casal, cada um no seu.')}
-      ${passo(3, 'Receba a sua devolutiva', 'O seu mapa, o gráfico e o que ele revela sobre você.')}
+      ${passo(2, 'Responda no seu tempo', 'No celular, uma pergunta de cada vez.' + (casal ? ' Em casal, cada um no seu.' : ''))}
+      ${passo(3, 'Receba o seu resultado', 'O seu mapa, o gráfico e o que ele revela sobre você.')}
       ${passo(4, 'Dê o próximo passo', 'Converse com ' + escV(comQuem) + ' a partir do resultado, com um caminho para você.')}
     </ol>
   </div></section>
@@ -765,12 +833,7 @@ function dvCapaVendas(){
 
   <section class="cv-faixa"><div class="cv-in cv-estreito cv-faq">
     <h2 class="cv-centro">Perguntas frequentes</h2>
-    ${pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre o teste certo.')}
-    ${pq('Preciso fazer os dois testes?', 'Não. Você pode fazer um deles ou os dois. Eles se completam: as travas mostram o que pesa em você hoje, e os traços mostram de onde isso vem.')}
-    ${pq('Como funciona em casal? Precisamos estar juntos?', 'Não precisam. Cada um responde no próprio celular, quando puder, com o mesmo código. Se preferirem, dá para responder juntos, no mesmo aparelho, um de cada vez. Cada um recebe a sua devolutiva individual, e vocês recebem a do casal.')}
-    ${pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. No casal, cada um responde sozinho(a), sem ver as respostas do outro.')}
-    ${pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.')}
-    ${pq('Quanto tempo leva?', 'De 8 a 15 minutos por teste, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')}
+    ${faq.join('')}
   </div></section>
   </div>
   <div class="cv-barra" id="cv-barra">${bt('btn-primario', Z.ind, 'Quero fazer o meu teste', 'receba o seu código pelo WhatsApp', true)}</div>`);
@@ -785,7 +848,6 @@ function dvCapaVendas(){
     alvos.forEach(a => io.observe(a));
   }
 }
-
 
 /* ============================================================================
    PÁGINA SÓ COM O TESTE DE TRAÇOS DE CARÁTER (terapeuta que não comprou o Teste de Travas)
