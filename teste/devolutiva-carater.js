@@ -630,7 +630,16 @@ function dvAbrirAssinatura(nome, aoConfirmar){
    O campo do código continua no topo: quem já recebeu o código entra direto.
    ============================================================================ */
 const CV_IMG = 'https://ressignificarterapiaseconsultorias.com/teste/img/';
-const CV_ZAP_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.2.1-1.9-.1a17 17 0 0 1-1.8-.7c-3.1-1.3-5.1-4.5-5.3-4.7-.2-.2-1.3-1.7-1.3-3.2 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .7.5l1 2.3c.1.2.1.4 0 .6l-.4.6-.5.5c-.2.2-.3.3-.1.6.2.3.8 1.4 1.8 2.2 1.2 1.1 2.3 1.4 2.6 1.6.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l2.2 1c.3.2.5.2.6.4.1.1.1.7-.1 1.3z"/></svg>';
+/* acesso da terapeuta no topo da página: abre a mesma área do link do rodapé (entrar com a senha) */
+const CV_CADEADO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zm2 0V8a4 4 0 0 1 8 0v3"/></svg>';
+function dvBotaoArea(capa){
+  const la = document.getElementById('link-admin');
+  if(!capa || !la || document.getElementById('cv-area')) return;
+  const rot = la.textContent.trim() || 'Área da terapeuta';
+  capa.insertAdjacentHTML('afterbegin', `<div class="cv-topo"><a href="#" class="cv-area" id="cv-area" aria-label="${escV(rot)}: entrar com a senha">${CV_CADEADO}<span>${escV(rot)}</span><small>Entrar</small></a></div>`);
+  document.getElementById('cv-area').addEventListener('click', e => { e.preventDefault(); la.click(); });
+}
+const CV_ZAP_SVG ='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.2.1-1.9-.1a17 17 0 0 1-1.8-.7c-3.1-1.3-5.1-4.5-5.3-4.7-.2-.2-1.3-1.7-1.3-3.2 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .7.5l1 2.3c.1.2.1.4 0 .6l-.4.6-.5.5c-.2.2-.3.3-.1.6.2.3.8 1.4 1.8 2.2 1.2 1.1 2.3 1.4 2.6 1.6.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l2.2 1c.3.2.5.2.6.4.1.1.1.7-.1 1.3z"/></svg>';
 function dvCapaVendas(modo){
   modo = modo === 'travas' || modo === 'tracos' ? modo : 'ambos';
   const ambos = modo === 'ambos', soTravas = modo === 'travas', soTracos = modo === 'tracos', casal = !soTravas;
@@ -639,6 +648,7 @@ function dvCapaVendas(modo){
   if(!lt || !cartao || !rodape) return;
   if(ambos) dvCapaDoisTestes();
   capa.classList.add('capa-vendas'); document.body.classList.add('cv-on');
+  dvBotaoArea(capa);
   const dd = dvCad(), prim = s => String(s || '').trim().split(' ')[0];
   const quem = dvQuem();
   const apelido = (dd && dd.nome_curto) ? prim(dd.nome_curto) : (typeof T_PRIM !== 'undefined' && T_PRIM) || (dd && (dd.primeiro || prim(dd.nome))) || prim(dvTerapeuta()) || PRIM_TER;
@@ -840,13 +850,16 @@ function dvCapaVendas(modo){
 
   /* barra fixa no celular: aparece depois do topo e some quando há outra chamada na tela */
   const barra = document.getElementById('cv-barra');
+  document.body.appendChild(barra);   // fora da capa: a capa tem animação (transform) que prendia a barra no fim da página, em cima do rodapé
   if('IntersectionObserver' in window){
-    const vis = new Map(); const alvos = [document.getElementById('cv-ctas-topo'), cartao, document.getElementById('cv-ctas-fim')].filter(Boolean);
-    const io = new IntersectionObserver(es => { es.forEach(e => vis.set(e.target, e.isIntersecting));
-      const topoVisto = vis.get(alvos[0]) === false && vis.get(cartao) === false;
-      barra.classList.toggle('on', topoVisto && ![...vis.values()].some(Boolean)); });
+    const vis = new Map(); const alvos = [document.getElementById('cv-ctas-topo'), cartao, document.getElementById('cv-ctas-fim'), rodape].filter(Boolean);
+    let passou = false;   // a pessoa já rolou para além das chamadas do topo
+    const io = new IntersectionObserver(es => { es.forEach(e => { vis.set(e.target, e.isIntersecting);
+        if(e.target === alvos[0]) passou = !e.isIntersecting && e.boundingClientRect.top < 0; });
+      barra.classList.toggle('on', capa.classList.contains('ativa') && passou && ![...vis.values()].some(Boolean)); });
     alvos.forEach(a => io.observe(a));
   }
+  new MutationObserver(() => { if(!capa.classList.contains('ativa')) barra.classList.remove('on'); }).observe(capa, { attributes:true, attributeFilter:['class'] });
 }
 
 /* ============================================================================
