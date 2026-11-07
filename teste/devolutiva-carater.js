@@ -1,5 +1,5 @@
 /* ============================================================================
-   DEVOLUTIVA DO TESTE DE CARÁTER COMPORTAMENTAL (individual e casal)
+   DEVOLUTIVA DO TESTE DE TRAÇOS DE CARÁTER (individual e casal)
    No mesmo formato dos relatórios da Tatiana:
    - Individual: alinhamento, distribuição, picos, complementares, síntese,
      plano de ação (7 áreas), perguntas poderosas e considerações finais.
@@ -446,11 +446,11 @@ function dvLigar(raiz, aoTrocarGenero){
 }
 
 /* ============================================================================
-   AÇÕES DA TERAPEUTA no resultado do Caráter Comportamental (iguais às do Teste de Travas):
+   AÇÕES DA TERAPEUTA no resultado do Traços de Caráter (iguais às do Teste de Travas):
    WhatsApp, e-mail (para ela e para o cliente), apresentação, copiar a ficha e PDF.
    ============================================================================ */
-/* textos da "Gerar apresentação" quando ela vem do Caráter Comportamental */
-const DV_VOC = { pct:true, teste:'Teste de Caráter Comportamental', item:'traço', itens:'traços',
+/* textos da "Gerar apresentação" quando ela vem do Traços de Caráter */
+const DV_VOC = { pct:true, teste:'Teste de Traços de Caráter', item:'traço', itens:'traços',
   capaTit:'o seu mapa de caráter e o caminho para o equilíbrio.', capaSub:'Plano para trabalhar os traços que mais pesam em você hoje.',
   mapaTit:'Os seus 5 traços de caráter', caminhoTit:'Como vamos trabalhar os seus traços',
   fase1:'Começamos pelo seu pico primário. Como trabalhamos: ', fase2:'Seguimos para o pico secundário, integrando os dois. Como trabalhamos: ',
@@ -534,20 +534,20 @@ function dvAcoes(el, o){
 }
 
 /* ============================================================================
-   PÁGINA INICIAL com os dois testes (Travas + Caráter Comportamental)
+   PÁGINA INICIAL com os dois testes (Travas + Traços de Caráter)
    ============================================================================ */
 function dvCapaDoisTestes(){
   const capa = document.getElementById('tela-capa'); if(!capa || capa.dataset.doisTestes) return;
   capa.dataset.doisTestes = '1';
   const quem = dvQuem(), lt = capa.querySelector('.lado-texto') || capa;
-  const selo = lt.querySelector('.selo'); if(selo) selo.textContent = 'Teste de Travas Mentais · Teste de Caráter Comportamental';
+  const selo = lt.querySelector('.selo'); if(selo) selo.textContent = 'Teste de Travas Mentais · Teste de Traços de Caráter';
   const h1 = lt.querySelector('h1'); if(h1) h1.textContent = 'O que te trava hoje, e como a sua história moldou o seu jeito de ser?';
   const ps = lt.querySelectorAll('.texto-capa');
-  if(ps[1]) ps[1].innerHTML = 'Aqui você encontra dois testes. O <b>Teste de Travas Mentais</b> mapeia 10 travas e mostra, em números, quais estão mais ativas em você hoje. O <b>Teste de Caráter Comportamental</b> identifica os 5 traços de caráter que se formaram na sua história e como eles aparecem no seu dia a dia. Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d' + escV(quem) + '.';
+  if(ps[1]) ps[1].innerHTML = 'Aqui você encontra dois testes. O <b>Teste de Travas Mentais</b> mapeia 10 travas e mostra, em números, quais estão mais ativas em você hoje. O <b>Teste de Traços de Caráter</b> identifica os 5 traços de caráter que se formaram na sua história e como eles aparecem no seu dia a dia. Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d' + escV(quem) + '.';
   const ul = lt.querySelector('.lista-leve');
-  if(ul) ul.innerHTML = '<li>Teste de Travas Mentais: 50 perguntas, de 10 a 15 minutos</li><li>Teste de Caráter Comportamental: 40 afirmações, de 8 a 12 minutos, individual ou casal</li>' +
+  if(ul) ul.innerHTML = '<li>Teste de Travas Mentais: 50 perguntas, de 10 a 15 minutos</li><li>Teste de Traços de Caráter: 40 afirmações, de 8 a 12 minutos, individual ou casal</li>' +
     '<li>O código que você recebeu já abre o teste certo</li><li>O resultado vai direto para ' + escV(quem) + ', para vocês conversarem a partir dele</li>';
-  document.title = 'Teste de Travas Mentais e Teste de Caráter Comportamental' + (window.T_NOME ? ' · ' + T_NOME : '');
+  document.title = 'Teste de Travas Mentais e Teste de Traços de Caráter' + (window.T_NOME ? ' · ' + T_NOME : '');
 }
 
 
@@ -620,4 +620,168 @@ function dvAbrirAssinatura(nome, aoConfirmar){
     try{ await aoConfirmar(png); fechar(); }
     catch(err){ b.disabled = false; b.textContent = 'Confirmar assinatura'; aviso.textContent = (err && err.message) || 'Não consegui salvar agora. Tente de novo.'; }
   });
+}
+
+
+/* ============================================================================
+   PÁGINA INICIAL DE VENDAS: os dois testes (Travas + Traços de Caráter), individual e em casal.
+   No domínio, liga com travas_paginas.dados.capa_vendas = true. No site da Tatiana, sempre.
+   O campo do código continua no topo: quem já recebeu o código entra direto.
+   ============================================================================ */
+const CV_IMG = 'https://ressignificarterapiaseconsultorias.com/teste/img/';
+const CV_ZAP_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.2.1-1.9-.1a17 17 0 0 1-1.8-.7c-3.1-1.3-5.1-4.5-5.3-4.7-.2-.2-1.3-1.7-1.3-3.2 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .7.5l1 2.3c.1.2.1.4 0 .6l-.4.6-.5.5c-.2.2-.3.3-.1.6.2.3.8 1.4 1.8 2.2 1.2 1.1 2.3 1.4 2.6 1.6.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l2.2 1c.3.2.5.2.6.4.1.1.1.7-.1 1.3z"/></svg>';
+function dvCapaVendas(){
+  const capa = document.getElementById('tela-capa'); if(!capa || capa.classList.contains('capa-vendas')) return;
+  const lt = capa.querySelector('.lado-texto'), cartao = lt && lt.querySelector('.cartao'), rodape = capa.querySelector('.rodape');
+  if(!lt || !cartao || !rodape) return;
+  dvCapaDoisTestes();
+  capa.classList.add('capa-vendas'); document.body.classList.add('cv-on');
+  const quem = dvQuem(), apelido = String(dvTerapeuta() || '').split(' ')[0] || PRIM_TER, comQuem = (/^o /i.test(quem) ? 'o ' : 'a ') + apelido;
+  const foto = (capa.querySelector('.moldura img') || {}).src || '';
+  const num = typeof CONFIG !== 'undefined' ? (CONFIG.whatsappNumero || '') : '';
+  const zap = msg => 'https://wa.me/' + num + '?text=' + encodeURIComponent('Olá, ' + apelido + '! Vi a página dos testes e ' + msg);
+  const Z = { ind:zap('quero fazer o meu teste. Como recebo o meu código?'), casal:zap('quero fazer o teste em casal. Como funciona para nós dois?'),
+    travas:zap('quero fazer o Teste de Travas Mentais. Como recebo o meu código?'), tracos:zap('quero fazer o Teste de Traços de Caráter. Como recebo o meu código?') };
+  const ext = 'target="_blank" rel="noopener"';
+  const bt = (cls, href, tit, sub, icone) => `<a class="btn ${cls} cv-btn" href="${href}" ${ext}>${icone ? CV_ZAP_SVG : ''}<span class="duas">${tit}<small>${sub}</small></span></a>`;
+  const ctas = id => `<div class="cv-ctas" id="${id}">${bt('btn-primario', Z.ind, 'Quero fazer o meu teste', 'fale com ' + escV(comQuem) + ' e receba o seu código', true)}${bt('btn-contorno', Z.casal, 'Quero fazer em casal', 'cada um no seu tempo, com o mesmo código')}</div>`;
+
+  /* topo: promessa curta, provas rápidas e as duas chamadas; o código fica logo abaixo */
+  const h1 = lt.querySelector('h1'); if(h1) h1.innerHTML = 'Você sabe o que quer mudar. <em>Então por que algo sempre puxa você de volta?</em>';
+  lt.querySelectorAll('.texto-capa, .lista-leve').forEach(x => x.remove());
+  const ass = lt.querySelector('.assinatura');
+  (ass || h1).insertAdjacentHTML('afterend', `<p class="cv-lead">Quase sempre é um padrão antigo, que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. Em poucos minutos, você descobre <b>o que trava você hoje</b> e <b>como a sua história moldou o seu jeito de ser</b>. Sozinho(a) ou em casal.</p>
+    <ul class="cv-chips"><li>No celular, de 8 a 15 minutos</li><li>Só ${escV(quem)} vê as suas respostas</li><li>Individual ou em casal</li></ul>`);
+  cartao.insertAdjacentHTML('beforebegin', '<p class="cv-ja" id="cv-ja">Já recebeu o seu código? É só digitar aqui:</p>');
+  const temCodigo = /[?&](c|codigo|code)=/.test(location.search) || !!(document.getElementById('campo-codigo') || {}).value;
+  if(temCodigo) cartao.insertAdjacentHTML('afterend', ctas('cv-ctas-topo'));
+  else document.getElementById('cv-ja').insertAdjacentHTML('beforebegin', ctas('cv-ctas-topo'));
+
+  const passo = (n, t, d) => `<li><span class="cv-n">${n}</span><b>${t}</b><small>${d}</small></li>`;
+  const pq = (q, a) => `<details><summary>${q}</summary><p>${a}</p></details>`;
+  rodape.insertAdjacentHTML('beforebegin', `<div class="cv">
+  <section class="cv-faixa cv-areia"><div class="cv-in cv-estreito">
+    <span class="cv-olho">Talvez você se reconheça</span>
+    <h2>Você começa com vontade e, lá pelo meio do caminho, alguma coisa puxa você de volta</h2>
+    <ul class="cv-dores">
+      <li>Promete que desta vez vai ser diferente e se pega repetindo o mesmo padrão.</li>
+      <li>Sabe exatamente o que precisa fazer, mas trava na hora de agir.</li>
+      <li>No relacionamento, as mesmas discussões voltam, só com outras palavras.</li>
+      <li>Carrega um peso que nem sabe direito de onde vem.</li>
+    </ul>
+    <p class="cv-virada">Não é falta de força de vontade. É um padrão antigo agindo sem pedir licença. <b>E o que a gente enxerga, a gente consegue mudar.</b></p>
+  </div></section>
+
+  <section class="cv-faixa"><div class="cv-in">
+    <div class="cv-centro"><span class="cv-olho">Aqui você encontra dois testes</span>
+    <h2>Duas perguntas que mudam o jeito como você se enxerga</h2></div>
+    <div class="cv-testes">
+      <article class="cv-teste">
+        <span class="cv-tag">Individual</span>
+        <h3>Teste de Travas Mentais</h3>
+        <p class="cv-pergunta">O que está travando você hoje?</p>
+        <p>Mapeia 10 travas mentais e mostra, em números, quais estão mais ativas em você agora: as que pesam no trabalho, nas relações e nas decisões.</p>
+        <p class="cv-meta">50 perguntas · 10 a 15 minutos</p>
+        <a class="cv-link" href="${Z.travas}" ${ext}>Quero fazer este teste →</a>
+      </article>
+      <article class="cv-teste cv-teste-destaque">
+        <span class="cv-tag">Individual ou em casal</span>
+        <h3>Teste de Traços de Caráter</h3>
+        <p class="cv-pergunta">Como a sua história moldou o seu jeito de ser?</p>
+        <p>Identifica os 5 traços de caráter que se formaram na sua história e mostra, em porcentagem, como eles aparecem no seu dia a dia, junto com os talentos que cada um traz.</p>
+        <p class="cv-meta">40 afirmações · 8 a 12 minutos</p>
+        <a class="cv-link" href="${Z.tracos}" ${ext}>Quero fazer este teste →</a>
+      </article>
+    </div>
+    <p class="cv-sigilo">Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d${escV(quem)}.</p>
+  </div></section>
+
+  <section class="cv-faixa cv-escura"><div class="cv-in">
+    <div class="cv-casal-grade">
+      <div>
+        <span class="cv-olho">Tem um parceiro ou uma parceira?</span>
+        <h2>Em casal, isso fica ainda mais interessante</h2>
+        <p>O que muita gente não sabe: o teste não serve só para você se conhecer sozinho(a). Ele também pode ser feito em casal. Quando as duas pessoas respondem, dá para cruzar as informações e descobrir:</p>
+        <ol class="cv-cruza">
+          <li><b>Como cada um funciona</b><span>o que protege, o que trava e o que move cada um de vocês</span></li>
+          <li><b>Onde os traços de vocês se encontram</b><span>e onde eles entram em atrito</span></li>
+          <li><b>Por que certas discussões se repetem</b><span>quase sempre é o encontro de duas dores antigas, e não uma questão de quem está certo</span></li>
+          <li><b>Como cada um reage ao estresse e ao conflito</b><span>e como apoiar um ao outro nesses momentos</span></li>
+        </ol>
+      </div>
+      <figure class="cv-cel cv-cel-casal"><img src="${CV_IMG}vendas-casal.jpg" alt="Devolutiva do casal com o gráfico de teia dos dois" loading="lazy" width="600" height="1200"></figure>
+    </div>
+    <blockquote class="cv-citacao">“No fundo, um relacionamento é o encontro de duas histórias, e de duas armaduras. Quando você entende a sua e a do outro, para de lutar contra a pessoa e começa a entender o padrão que está ali. É aí que a mudança se torna possível.”</blockquote>
+    <div class="cv-como-casal">
+      <p><b>Como funciona:</b> cada um responde no próprio celular, quando puder, com o mesmo código (ou juntos, no mesmo aparelho). <b>Cada um recebe a sua devolutiva individual, e vocês recebem a devolutiva do casal</b>, com um acordo para os dois assinarem.</p>
+      ${bt('btn-argila', Z.casal, 'Quero fazer em casal', 'fale com ' + escV(comQuem) + ' pelo WhatsApp', true)}
+    </div>
+  </div></section>
+
+  <section class="cv-faixa cv-areia"><div class="cv-in">
+    <div class="cv-recebe-grade">
+      <figure class="cv-cel"><img src="${CV_IMG}vendas-individual.jpg" alt="Devolutiva individual com os traços em porcentagem e o gráfico de teia" loading="lazy" width="600" height="1200"></figure>
+      <div>
+        <span class="cv-olho">O que você recebe</span>
+        <h2>Uma devolutiva clara, para você se enxergar por inteiro</h2>
+        <ul class="cv-checks">
+          <li>O seu mapa em números, com o que está mais ativo em destaque</li>
+          <li>Um gráfico de teia para ver o seu perfil num relance</li>
+          <li>O que cada resultado significa e os talentos escondidos nele</li>
+          <li>Ações práticas para começar a mudar a partir de hoje</li>
+          <li>Em casal: a devolutiva de cada um e a dos dois juntos</li>
+        </ul>
+        <p class="cv-nota">Telas reais da devolutiva, com nomes fictícios.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="cv-faixa"><div class="cv-in">
+    <div class="cv-centro"><span class="cv-olho">Como funciona</span><h2>Do primeiro toque ao seu próximo passo</h2></div>
+    <ol class="cv-passos">
+      ${passo(1, 'Fale com ' + escV(comQuem), 'Toque no botão e receba o seu código pelo WhatsApp.')}
+      ${passo(2, 'Responda no seu tempo', 'No celular, uma afirmação de cada vez. Em casal, cada um no seu.')}
+      ${passo(3, 'Receba a sua devolutiva', 'O seu mapa, o gráfico e o que ele revela sobre você.')}
+      ${passo(4, 'Dê o próximo passo', 'Converse com ' + escV(comQuem) + ' a partir do resultado, com um caminho para você.')}
+    </ol>
+  </div></section>
+
+  <section class="cv-faixa cv-areia"><div class="cv-in cv-estreito">
+    <div class="cv-quem">
+      ${foto ? `<img src="${escV(foto)}" alt="" width="120" height="120">` : ''}
+      <div><span class="cv-olho">Quem vai ler o seu resultado</span>
+        <h2>${escV(dvTerapeuta())}</h2>
+        <p class="cv-quem-tit">${escV(String(dvAssinatura()).split('—').slice(1).join('—').trim() || 'Terapeuta')}</p>
+        <p>Ninguém vê as suas respostas além d${escV(quem)}. O resultado serve para a conversa de vocês, com todo o cuidado e sigilo, sem julgamento e no seu ritmo.</p></div>
+    </div>
+  </div></section>
+
+  <section class="cv-faixa cv-escura cv-final"><div class="cv-in cv-estreito cv-centro">
+    <h2>Que tal descobrir hoje o que está por trás dos seus padrões?</h2>
+    <p>Leva poucos minutos. O que você vai enxergar pode mudar o jeito como você vive as suas escolhas e as suas relações.</p>
+    ${ctas('cv-ctas-fim')}
+    <a class="cv-ir-codigo" href="#cv-ja">Já tenho o meu código ↑</a>
+  </div></section>
+
+  <section class="cv-faixa"><div class="cv-in cv-estreito cv-faq">
+    <h2 class="cv-centro">Perguntas frequentes</h2>
+    ${pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre o teste certo.')}
+    ${pq('Preciso fazer os dois testes?', 'Não. Você pode fazer um deles ou os dois. Eles se completam: as travas mostram o que pesa em você hoje, e os traços mostram de onde isso vem.')}
+    ${pq('Como funciona em casal? Precisamos estar juntos?', 'Não precisam. Cada um responde no próprio celular, quando puder, com o mesmo código. Se preferirem, dá para responder juntos, no mesmo aparelho, um de cada vez. Cada um recebe a sua devolutiva individual, e vocês recebem a do casal.')}
+    ${pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. No casal, cada um responde sozinho(a), sem ver as respostas do outro.')}
+    ${pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.')}
+    ${pq('Quanto tempo leva?', 'De 8 a 15 minutos por teste, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')}
+  </div></section>
+  </div>
+  <div class="cv-barra" id="cv-barra">${bt('btn-primario', Z.ind, 'Quero fazer o meu teste', 'receba o seu código pelo WhatsApp', true)}</div>`);
+
+  /* barra fixa no celular: aparece depois do topo e some quando há outra chamada na tela */
+  const barra = document.getElementById('cv-barra');
+  if('IntersectionObserver' in window){
+    const vis = new Map(); const alvos = [document.getElementById('cv-ctas-topo'), cartao, document.getElementById('cv-ctas-fim')].filter(Boolean);
+    const io = new IntersectionObserver(es => { es.forEach(e => vis.set(e.target, e.isIntersecting));
+      const topoVisto = vis.get(alvos[0]) === false && vis.get(cartao) === false;
+      barra.classList.toggle('on', topoVisto && ![...vis.values()].some(Boolean)); });
+    alvos.forEach(a => io.observe(a));
+  }
 }

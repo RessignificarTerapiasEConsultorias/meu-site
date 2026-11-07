@@ -527,7 +527,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611062215">
+<meta name="versao-site" content="v202611070156">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -842,7 +842,7 @@ html.t-erro .t-girar{display:none}
   <div class="capa">
     <div class="moldura"><img id="tc-foto" alt=""></div>
     <div class="lado-texto">
-      <span class="selo">Teste de Caráter Comportamental</span>
+      <span class="selo">Teste de Traços de Caráter</span>
       <h1>Como a sua história moldou o seu jeito de ser?</h1>
       <p class="assinatura" id="tc-assinatura"></p>
       <p class="texto-capa">Desde a gestação até os primeiros anos de vida, o corpo e a mente aprendem a se proteger. Esses jeitos de se proteger viram traços que aparecem até hoje na sua postura, nas suas relações e nas suas decisões.</p>
@@ -851,6 +851,7 @@ html.t-erro .t-girar{display:none}
         <li>40 afirmações, de 8 a 12 minutos</li>
         <li>Você responde de “Nunca” a “Sempre”, no seu tempo</li>
         <li>O resultado vira a sua devolutiva com {{A}}</li>
+        <li>Sozinho(a) ou em casal: no casal, cada um recebe a sua devolutiva e vocês recebem a do casal</li>
       </ul>
       <div class="cartao">
         <div class="campo" style="margin-bottom:10px">
@@ -910,7 +911,7 @@ html.t-erro .t-girar{display:none}
       <label id="rot-alt-teste">Qual teste?</label>
       <div class="alternar" id="alt-teste" role="radiogroup" aria-labelledby="rot-alt-teste">
         <button type="button" class="ativa" data-v="travas" role="radio" aria-checked="true">Teste de Travas Mentais<small>50 perguntas · 10 travas</small></button>
-        <button type="button" data-v="tracos" role="radio" aria-checked="false">Caráter Comportamental<small>40 afirmações · individual ou casal</small></button>
+        <button type="button" data-v="tracos" role="radio" aria-checked="false">Traços de Caráter<small>40 afirmações · individual ou casal</small></button>
       </div>
     </div>
     <div id="painel-tc">
@@ -2705,7 +2706,7 @@ async function apresAbrir(lead, extra){
     terap: { nome: CONFIG.terapeuta, zap: CONFIG.whatsappNumero, insta, papel, foto },
     tec: Object.fromEntries(TRAVAS.map(t => [t.id, t.tecnica]))
   };
-  if(extra) Object.assign(cfg, extra);   // Caráter Comportamental: textos e biblioteca dos traços
+  if(extra) Object.assign(cfg, extra);   // Traços de Caráter: textos e biblioteca dos traços
   const html = document.getElementById('ap-src').textContent.split('<\\/script>').join('<' + '/script>');
   const url = URL.createObjectURL(new Blob([html], { type:'text/html' }));
   const o = document.getElementById('ap-overlay'); o.innerHTML = '';
@@ -2884,14 +2885,14 @@ window.addEventListener('resize', ()=>{
   if($('#tela-resultado').classList.contains('ativa') && estado.resultado) desenharTeia($('#teia'), estado.resultado.linhas);
 });
 /* ============================================================================
-   TESTE DE CARÁTER COMPORTAMENTAL (os 5 traços de caráter; separado do Teste de Travas)
+   TESTE DE TRAÇOS DE CARÁTER (os 5 traços de caráter; separado do Teste de Travas)
    40 afirmações, escala de 1 (Nunca) a 5 (Sempre), 5 traços. Individual ou casal.
    Cálculo igual ao da planilha original:
      - afirmações 31 a 35 são invertidas (1↔5, 2↔4);
      - soma por traço ÷ pontuação máxima do traço × 100  (Esquizoide 40, Oral 45, Psicopata 35, Masoquista 40, Rígido 40);
      - cada índice ÷ soma dos 5 índices × 100 = a porcentagem; a ordem dá o 1º (primário) e o 2º (secundário).
    ============================================================================ */
-const TC_NOME = 'Teste de Caráter Comportamental';
+const TC_NOME = 'Teste de Traços de Caráter';
 const TC_ESCALA = ['Nunca', 'Raramente', 'Às vezes', 'Frequentemente', 'Sempre'];
 /* Textos de cada traço (dá para ajustar aqui). */
 const TC_TRACOS = [
@@ -3390,14 +3391,17 @@ function tcTelaEnviar(meu, statusOutro){
   tcMostrar(`<span class="selo">Parte concluída ✔</span><h1 class="tc-h1">Suas respostas foram salvas!</h1>
     <p>${texto} O código é o mesmo: <b>${escV(tc.codigo)}</b>.</p>
     ${juntos ? agora + enviar : enviar + agora}
-    ${tc.mostrar ? `<button class="btn btn-contorno" id="te-ver">${escV(nmO)} já terminou? Ver o resultado</button>` : ''}
-    <p class="nota-rodape">O resultado só aparece quando os dois terminarem.</p>`);
+    ${tc.mostrar ? `<div class="tc-minha"><b>A sua devolutiva individual já está pronta.</b><span>Veja agora a leitura dos seus traços. A do casal aparece quando ${escV(nmO)} terminar.</span>
+      <button class="btn btn-argila" id="te-minha"><span class="duas">Ver a minha devolutiva individual<small>${escV(tc.nomes[meu])}</small></span></button></div>
+    <button class="btn btn-contorno" id="te-ver">${escV(nmO)} já terminou? Ver o resultado do casal</button>` : ''}
+    <p class="nota-rodape">A devolutiva do casal só aparece quando os dois terminarem.</p>`);
   tcZapSvg($('#te-zap'));
   const num = $('#tp-zap-num'); mascaraTelefone(num);
   const atualizarZap = () => { let d = tcDig(num.value); if(d.length === 10 || d.length === 11) d = '55' + d; $('#te-zap').href = 'https://wa.me/' + (d.length >= 12 ? d : '') + '?text=' + encodeURIComponent(msg); };
   num.addEventListener('input', atualizarZap); num.addEventListener('change', atualizarZap);
   $('#te-copiar').addEventListener('click', async e => { try{ await navigator.clipboard.writeText(tcLink(tc.codigo)); e.target.textContent = 'Link copiado!'; }catch(err){ e.target.textContent = 'Não consegui copiar'; } setTimeout(() => { e.target.textContent = 'Copiar o link'; }, 2000); });
   const ag = $('#tp-agora'); if(ag) ag.addEventListener('click', () => tcTelaDados(o, nmO));
+  const minha = $('#te-minha'); if(minha) minha.addEventListener('click', () => tcMinhaDevolutiva(meu, () => tcTelaEnviar(meu, statusOutro)));
   const ver = $('#te-ver');
   if(ver) ver.addEventListener('click', async () => {
     ver.disabled = true; ver.textContent = 'Verificando...';
@@ -3405,6 +3409,34 @@ function tcTelaEnviar(meu, statusOutro){
     if(st && st.ok === true && st.concluido){ tc.estado = st; return tcCasalResultado(); }
     ver.disabled = false; ver.textContent = nmO + ' ainda não terminou. Verificar de novo';
   });
+}
+/* casal: a devolutiva individual de quem já terminou a própria parte (só no aparelho de quem respondeu) */
+async function tcMinhaDevolutiva(slot, voltar){
+  tcMostrar('<div class="carregando">Abrindo a sua devolutiva...</div>');
+  const r = await compRpc('travas_casal_minha_parte', { p_codigo:tc.codigo, p_token:tcLocal(tc.codigo).tokens[slot] || null });
+  if(!r || r.ok !== true || r.oculto){
+    tcMostrar(`<h1 class="tc-h1">Não deu para abrir agora</h1>${tcErro((r && r.msg) || 'Não consegui abrir a sua devolutiva agora. Confira a sua internet e tente de novo.')}<button class="btn btn-primario" id="tm-voltar">Voltar</button>`);
+    $('#tm-voltar').addEventListener('click', voltar); return;
+  }
+  const calc = tcDeNotas(r.notas), outro = tc.nomes[3 - slot] || 'a outra pessoa';
+  $('#tc-resultado').innerHTML = `<button class="voltar" id="tm-voltar">← Voltar</button><span class="selo">${escV(TC_NOME)} · Individual</span>
+    <h1 class="tc-h1">${escV(tcPrim(r.nome))}, esta é a sua devolutiva individual</h1>
+    <p style="color:var(--tinta-suave)">É a leitura só dos seus traços. Quando ${escV(outro)} terminar, a devolutiva do casal aparece neste mesmo link, junto com a individual de cada um.</p>
+    ${dvBarra(false)}${dvIndividual({ nome:r.nome, genero:r.genero, data:String(r.concluido_em || hoje()).slice(0, 10), calc })}
+    <button class="btn btn-contorno" id="tm-voltar2">Voltar</button>`;
+  mostrarTela('#tela-tc-resultado'); window.scrollTo({ top:0, behavior:'auto' });
+  tcLigarTeia($('#tc-resultado'), tcSeries1(calc)); dvLigar($('#tc-resultado'));
+  $('#tm-voltar').addEventListener('click', voltar); $('#tm-voltar2').addEventListener('click', voltar);
+}
+/* abas da devolutiva do casal: a do casal e a individual de cada um */
+function tcAbasDv(n1, n2){
+  return `<div class="tc-dv-abas dv-sem-print" role="tablist" aria-label="Escolha a devolutiva">
+    <button type="button" role="tab" data-tc-aba="casal">Do casal<small>os dois juntos</small></button>
+    <button type="button" role="tab" data-tc-aba="1" aria-label="Devolutiva individual de ${escV(n1)}">${escV(n1)}<small>individual</small></button>
+    <button type="button" role="tab" data-tc-aba="2" aria-label="Devolutiva individual de ${escV(n2)}">${escV(n2)}<small>individual</small></button></div>`;
+}
+function tcMarcarAba(raiz, aba){
+  raiz.querySelectorAll('[data-tc-aba]').forEach(b => { const on = b.dataset.tcAba === String(aba); b.classList.toggle('ativa', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
 }
 async function tcCasalResultado(digitado){
   if(!tc.mostrar){
@@ -3427,13 +3459,22 @@ async function tcCasalResultado(digitado){
       n1 + ': ' + k.p1.ordem.map(x => x.nome + ' ' + tcPct(x.pct)).join(', '), n2 + ': ' + k.p2.ordem.map(x => x.nome + ' ' + tcPct(x.pct)).join(', '), '', 'Queremos conversar sobre o nosso resultado.'].join('\n');
     $('#tc-resultado').innerHTML = `<span class="selo">${escV(TC_NOME)} · Casal</span>
       <h1 class="tc-h1">${escV(n1)} e ${escV(n2)}, esta é a devolutiva de vocês</h1>
-      <p style="color:var(--tinta-suave)">As duas partes estão concluídas e bloqueadas. Guardem este link: ele abre esta devolutiva sempre que vocês quiserem.${!assin[1].em || !assin[2].em ? ' No final, cada um assina o acordo de vocês. Quem não assinar agora pode assinar depois, por este mesmo link.' : ''}</p>
-      ${dvBarra(false)}${dvc}
+      <p style="color:var(--tinta-suave)">As duas partes estão concluídas e bloqueadas. Aqui estão a devolutiva do casal e a individual de cada um. Guardem este link: ele abre as devolutivas sempre que vocês quiserem.${!assin[1].em || !assin[2].em ? ' No final da devolutiva do casal, cada um assina o acordo de vocês. Quem não assinar agora pode assinar depois, por este mesmo link.' : ''}</p>
+      ${tcAbasDv(n1, n2)}<div id="tc-dv-corpo"></div>
       <a class="btn btn-zap" id="tcr-zap" href="${tcZapTer(msg)}" target="_blank" rel="noopener"><span class="duas">Enviar o nosso resultado para ${escV(T_A)}<small>abre a conversa com ${escV(CONFIG.whatsappVisivel)}</small></span></a>`;
     tcZapSvg($('#tcr-zap'));
     mostrarTela('#tela-tc-resultado'); window.scrollTo({ top:0, behavior:'auto' });
-    tcLigarTeia($('#tc-resultado'), tcSeries2(k)); dvLigar($('#tc-resultado'));
-    document.querySelectorAll('#tc-resultado [data-dv-assinar]').forEach(b => b.addEventListener('click', () => {
+    const corpo = $('#tc-dv-corpo'), raiz = $('#tc-resultado'), dataC = String(r.concluido_em || hoje()).slice(0, 10);
+    const desenhar = aba => {
+      tcMarcarAba(raiz, aba);
+      if(aba !== 'casal'){
+        const p = aba === 1 ? r.p1 : r.p2, calc = aba === 1 ? k.p1 : k.p2;
+        corpo.innerHTML = dvBarra(false) + dvIndividual({ nome:p.nome, genero:p.genero, data:dataC, calc });
+        tcLigarTeia(corpo, tcSeries1(calc)); dvLigar(corpo); return;
+      }
+      corpo.innerHTML = dvBarra(false) + dvc;
+      tcLigarTeia(corpo, tcSeries2(k)); dvLigar(corpo);
+    corpo.querySelectorAll('[data-dv-assinar]').forEach(b => b.addEventListener('click', () => {
       const s = +b.dataset.dvAssinar, nome = s === 1 ? r.p1.nome : r.p2.nome;
       dvAbrirAssinatura(nome, async png => {
         const res = await compRpc('travas_casal_assinar', { p_codigo:tc.codigo, p_slot:s, p_token:(loc.tokens || {})[s] || null, p_contato:(r.slot_contato === s ? contato : null), p_assinatura:png });
@@ -3442,6 +3483,12 @@ async function tcCasalResultado(digitado){
         const ac = document.querySelector('#tc-resultado .dv-acordo'); if(ac) ac.scrollIntoView({ block:'center' });
       });
     }));
+    };
+    raiz.querySelectorAll('[data-tc-aba]').forEach(b => b.addEventListener('click', () => {
+      desenhar(b.dataset.tcAba === 'casal' ? 'casal' : +b.dataset.tcAba);
+      const ab = raiz.querySelector('.tc-dv-abas'); if(ab) ab.scrollIntoView({ block:'start', behavior:'smooth' });
+    }));
+    desenhar('casal');
     return;
   }
   if(r && r.erro === 'incompleto') return tcCasalEntrar();
@@ -3621,9 +3668,18 @@ async function tcDetalheCasal(codigo){
   $('#tc-detalhe-conteudo').innerHTML = `<h2 style="font-size:24px;margin:6px 0 4px">${escV(n1)} e ${escV(n2)}</h2>
     <p class="secao-sub">Casal · ${codigo} · ${data.modo === 'juntos' ? 'responderam juntos, no mesmo aparelho' : 'cada um no seu aparelho'} · concluído em ${tcQuando(data.concluido_em)}</p>
     <button type="button" class="mini-btn" id="tc-copiar-resumo-c" style="margin-bottom:14px">Copiar o resumo do casal</button>
-    <div id="dv-area"></div><div id="dv-acoes"></div><h2 class="secao-titulo">Contatos e respostas de cada um</h2>${ficha(p1, 1, k.p1)}${ficha(p2, 2, k.p2)}`;
-  const g1 = (p1.dados && p1.dados.genero) || '', g2 = (p2.dados && p2.dados.genero) || '';
+    ${tcAbasDv(n1, n2)}<div id="dv-area"></div><div id="dv-acoes"></div><h2 class="secao-titulo">Contatos e respostas de cada um</h2>${ficha(p1, 1, k.p1)}${ficha(p2, 2, k.p2)}`;
+  let g1 = (p1.dados && p1.dados.genero) || '', g2 = (p2.dados && p2.dados.genero) || '', abaAt = 'casal';
+  const dataC = String(data.concluido_em || '').slice(0, 10), raizD = $('#tc-detalhe-conteudo');
+  const pessoaD = (p, g, calc) => ({ nome:p.nome, whatsapp:p.telefone, email:p.email, genero:g, calc });
+  const desenharInd = s => {
+    const p = s === 1 ? p1 : p2, calc = s === 1 ? k.p1 : k.p2, g = s === 1 ? g1 : g2, area = $('#dv-area');
+    area.innerHTML = dvBarra(true, g) + dvIndividual({ nome:p.nome, genero:g, data:dataC, calc, respostas:p.dados && p.dados.respostas, terapeuta:true });
+    tcLigarTeia(area, tcSeries1(calc)); dvLigar(area, gn => { if(s === 1) g1 = gn; else g2 = gn; desenharInd(s); });
+    dvAcoes($('#dv-acoes'), { pessoas:[pessoaD(p, g, calc)], codigo, data:dataC, area });
+  };
   const desenharDvC = (ga, gb) => {
+    g1 = ga; g2 = gb;
     const area = $('#dv-area');
     area.innerHTML = `<div class="dv-barra dv-sem-print"><button type="button" class="mini-btn" data-dv-pdf>Baixar em PDF</button><button type="button" class="mini-btn" data-dv-editar>Editar o texto</button>
       <label class="dv-trat">${escV(n1)} <select data-dv-ga><option value="">neutro</option><option value="f"${ga === 'f' ? ' selected' : ''}>feminino</option><option value="m"${ga === 'm' ? ' selected' : ''}>masculino</option></select></label>
@@ -3634,22 +3690,32 @@ async function tcDetalheCasal(codigo){
     area.querySelector('[data-dv-ga]').addEventListener('change', e => desenharDvC(e.target.value, gb));
     area.querySelector('[data-dv-gb]').addEventListener('change', e => desenharDvC(ga, e.target.value));
   };
-  desenharDvC(g1, g2);
-  dvAcoes($('#dv-acoes'), { casal:true, codigo, data:String(data.concluido_em || '').slice(0, 10), area:$('#dv-area'),
-    pessoas:[{ nome:p1.nome, whatsapp:p1.telefone, email:p1.email, genero:g1, calc:k.p1 }, { nome:p2.nome, whatsapp:p2.telefone, email:p2.email, genero:g2, calc:k.p2 }] });
+  const abrirAba = aba => {
+    abaAt = aba; tcMarcarAba(raizD, aba);
+    if(aba !== 'casal') return desenharInd(aba);
+    desenharDvC(g1, g2);
+    dvAcoes($('#dv-acoes'), { casal:true, codigo, data:dataC, area:$('#dv-area'), pessoas:[pessoaD(p1, g1, k.p1), pessoaD(p2, g2, k.p2)] });
+  };
+  raizD.querySelectorAll('[data-tc-aba]').forEach(b => b.addEventListener('click', () => abrirAba(b.dataset.tcAba === 'casal' ? 'casal' : +b.dataset.tcAba)));
+  abrirAba('casal');
   $('#tc-copiar-resumo-c').addEventListener('click', async e => { try{ await navigator.clipboard.writeText(tcResumoTexto(p1.nome, k.p1) + '\n\n' + tcResumoTexto(p2.nome, k.p2)); e.target.textContent = 'Copiado!'; }catch(err){ e.target.textContent = 'Não consegui'; } setTimeout(() => { e.target.textContent = 'Copiar o resumo do casal'; }, 1800); });
 }
 
-/* ---- 9. LINK DO CLIENTE: ?t=terapeuta&ct=CÓDIGO abre a capa do Teste de Caráter Comportamental ---- */
+/* ---- 9. LINK DO CLIENTE: ?t=terapeuta&ct=CÓDIGO abre a capa do Teste de Traços de Caráter ---- */
 (function(){
   try{
     const t = (new URLSearchParams(location.search).get('ct') || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 9);
     if(t) tcAbrirCapa(t);
   }catch(e){}
 })();
-/* página inicial fala dos dois testes (no domínio, só para quem tem o Caráter Comportamental liberado) */
-(function(){ const d = window.__T && window.__T.dados; if(!d || (Array.isArray(d.testes) && d.testes.indexOf('tracos') > -1)) dvCapaDoisTestes(); })();
-/* O Teste de Caráter Comportamental só aparece na área de quem tem o teste liberado (travas_paginas.dados.testes) */
+/* página inicial fala dos dois testes (no domínio, só para quem tem o Traços de Caráter liberado);
+   a versão de vendas (individual e casal) liga com dados.capa_vendas */
+(function(){
+  const d = window.__T && window.__T.dados, tracos = !d || (Array.isArray(d.testes) && d.testes.indexOf('tracos') > -1);
+  if(tracos) dvCapaDoisTestes();
+  if(tracos && (!d || d.capa_vendas)) dvCapaVendas();
+})();
+/* O Teste de Traços de Caráter só aparece na área de quem tem o teste liberado (travas_paginas.dados.testes) */
 (function(){ const d = window.__T && __T.dados, ok = !!(d && Array.isArray(d.testes) && d.testes.indexOf('tracos') > -1);
   if(!ok){ const c = $('#alt-teste'); if(c && c.closest('.campo')) c.closest('.campo').style.display = 'none'; } })();
 
@@ -4010,7 +4076,7 @@ const OBJECOES = {
 };
 
 let LEAD = null;
-/* vocabulário da apresentação: Teste de Travas (padrão) ou Teste de Caráter Comportamental (vem do site) */
+/* vocabulário da apresentação: Teste de Travas (padrão) ou Teste de Traços de Caráter (vem do site) */
 const VOC_PADRAO = { pct:false, teste:'Teste de Travas Mentais', item:'trava', itens:'travas',
   capaTit:'o seu mapa e o caminho para destravar.', capaSub:'Plano para trabalhar as travas que mais pesam em você hoje.',
   mapaTit:'As suas 10 travas', caminhoTit:'Como vamos trabalhar as suas travas',
