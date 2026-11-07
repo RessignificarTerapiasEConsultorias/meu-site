@@ -204,7 +204,7 @@
       if (j.__status === 404 || !j.ok) { mostrar("eInvalido"); return; }
       pedido = j;
       if (j.status === "ativado" && j.pagina) { pronto(j.pagina, j.email, null, j.nome); return; }
-      if (j.produto_chave === "tracos") modoTracos();
+      if (j.produto_chave === "tracos" || j.produto_chave === "mpcc") modoTracos(j.produto_chave);
       if (j.status === "pago" || j.status === "ativando") { abrirForm(j); return; }
       if (j.status === "cancelado") { mostrar("eInvalido"); return; }
       tentativas++;
@@ -229,17 +229,18 @@
   $("#novaCompra").addEventListener("click", function () { try { localStorage.removeItem("travas_pedido"); } catch (e) {} });
 
   /* compra do Teste de Traços de Caráter sem ter página: os textos falam desse teste */
-  function modoTracos() {
+  function modoTracos(chave) {
     if (document.body.dataset.tracos) return; document.body.dataset.tracos = "1";
-    document.title = "Montar a minha página · Teste de Traços de Caráter";
-    var sm = document.querySelector(".marca small"); if (sm) sm.textContent = "Teste de Traços de Caráter";
+    var NOME = chave === "mpcc" ? "MPCC (Mapa de Perfil Comportamental e Competências)" : "Teste de Traços de Caráter";
+    document.title = "Montar a minha página · " + NOME;
+    var sm = document.querySelector(".marca small"); if (sm) sm.textContent = chave === "mpcc" ? "MPCC" : NOME;
     var h = document.querySelector("#eForm h2"); if (h) h.textContent = "Agora vamos montar a sua página";
-    var l = document.querySelector("#eForm .lead"); if (l) l.textContent = "Leva 2 minutos. É a página do seu Teste de Traços de Caráter, com o seu nome e a sua foto: tudo isso aparece para os seus clientes.";
+    var l = document.querySelector("#eForm .lead"); if (l) l.textContent = "Leva 2 minutos. É a página do seu " + NOME + ", com o seu nome e a sua foto: tudo isso aparece para os seus clientes.";
     $("#btnCriar").textContent = "Criar a minha página";
     var hp = document.querySelector("#ePronto h2"); if (hp) hp.textContent = "Sua página está pronta!";
-    var lp = document.querySelector("#ePronto .lead"); if (lp) lp.textContent = "Este é o link da sua página do Teste de Traços de Caráter. É ele que você manda para os seus clientes.";
+    var lp = document.querySelector("#ePronto .lead"); if (lp) lp.textContent = "Este é o link da sua página do " + NOME + ". É ele que você manda para os seus clientes.";
     $("#btnAbrir").textContent = "Abrir a minha página";
-    document.querySelectorAll("[data-wa]").forEach(function (a) { a.setAttribute("data-wa", a.getAttribute("data-wa").replace(/Teste de Travas Mentais|Teste de Travas/g, "Teste de Traços de Caráter")); });
+    document.querySelectorAll("[data-wa]").forEach(function (a) { a.setAttribute("data-wa", a.getAttribute("data-wa").replace(/Teste de Travas Mentais|Teste de Travas/g, NOME)); });
   }
   function abrirForm(j) {
     $("#fNome").value = j.nome || ""; $("#fZap").value = zapFormatado(j.whatsapp);
@@ -248,7 +249,7 @@
     atualizaInicial();
     sugerirLink();
     mostrar("eForm");
-    if (j.produto_chave !== "tracos" && !sessionStorage.getItem("travas_compra_" + token)) {
+    if (j.produto_chave !== "tracos" && j.produto_chave !== "mpcc" && !sessionStorage.getItem("travas_compra_" + token)) {
       try { sessionStorage.setItem("travas_compra_" + token, "1"); } catch (e) {}
       window.dataLayer = window.dataLayer || []; window.dataLayer.push({ event: "compra_teste_travas", value: 147, currency: "BRL" });
       if (window.gtag) gtag("event", "purchase", { value: 147, currency: "BRL", items: [{ item_name: "Teste de Travas Mentais" }] });

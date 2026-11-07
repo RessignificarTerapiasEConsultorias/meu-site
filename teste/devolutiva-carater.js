@@ -640,13 +640,18 @@ function dvBotaoArea(capa){
   document.getElementById('cv-area').addEventListener('click', e => { e.preventDefault(); la.click(); });
 }
 const CV_ZAP_SVG ='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.2.1-1.9-.1a17 17 0 0 1-1.8-.7c-3.1-1.3-5.1-4.5-5.3-4.7-.2-.2-1.3-1.7-1.3-3.2 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .7.5l1 2.3c.1.2.1.4 0 .6l-.4.6-.5.5c-.2.2-.3.3-.1.6.2.3.8 1.4 1.8 2.2 1.2 1.1 2.3 1.4 2.6 1.6.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l2.2 1c.3.2.5.2.6.4.1.1.1.7-.1 1.3z"/></svg>';
+const mpJuntar = itens => { itens = itens.filter(Boolean); return itens.length > 1 ? itens.slice(0, -1).join(', ') + ' e ' + itens[itens.length - 1] : (itens[0] || ''); };
 function dvCapaVendas(modo){
-  modo = modo === 'travas' || modo === 'tracos' ? modo : 'ambos';
-  const ambos = modo === 'ambos', soTravas = modo === 'travas', soTracos = modo === 'tracos', casal = !soTravas;
+  /* modo: 'travas', 'tracos', 'mpcc', 'ambos' (travas + traços) ou uma lista com os testes da terapeuta */
+  const lista = Array.isArray(modo) ? modo.filter(k => k === 'travas' || k === 'tracos' || k === 'mpcc')
+    : (modo === 'travas' || modo === 'tracos' || modo === 'mpcc') ? [modo] : ['travas', 'tracos'];
+  if(!lista.length) return;
+  const tem = k => lista.indexOf(k) > -1;
+  const ambos = lista.length > 1, soTravas = lista.length === 1 && tem('travas'), soTracos = lista.length === 1 && tem('tracos'), soMpcc = lista.length === 1 && tem('mpcc'), casal = tem('tracos');
   const capa = document.getElementById('tela-capa'); if(!capa || capa.classList.contains('capa-vendas')) return;
   const lt = capa.querySelector('.lado-texto'), cartao = lt && lt.querySelector('.cartao'), rodape = capa.querySelector('.rodape');
   if(!lt || !cartao || !rodape) return;
-  if(ambos) dvCapaDoisTestes();
+  if(ambos && tem('travas') && tem('tracos') && !tem('mpcc')) dvCapaDoisTestes();
   capa.classList.add('capa-vendas'); document.body.classList.add('cv-on');
   dvBotaoArea(capa);
   const dd = dvCad(), prim = s => String(s || '').trim().split(' ')[0];
@@ -656,10 +661,11 @@ function dvCapaVendas(modo){
   const foto = (capa.querySelector('.moldura img') || {}).src || '';
   const num = typeof CONFIG !== 'undefined' ? (CONFIG.whatsappNumero || '') : '';
   const zap = msg => 'https://wa.me/' + num + '?text=' + encodeURIComponent('Olá, ' + apelido + '! Vi a página do teste e ' + msg);
-  const nomeTeste = soTravas ? 'o Teste de Travas Mentais' : soTracos ? 'o Teste de Traços de Caráter' : 'o meu teste';
+  const nomeTeste = soTravas ? 'o Teste de Travas Mentais' : soTracos ? 'o Teste de Traços de Caráter' : soMpcc ? 'o MPCC (Mapa de Perfil Comportamental e Competências)' : 'o meu teste';
   const Z = { ind:zap('quero fazer ' + nomeTeste + '. Como recebo o meu código?'), casal:zap('quero fazer o teste em casal. Como funciona para nós dois?'),
     duvida:zap('tenho uma dúvida sobre o teste.'),
-    travas:zap('quero fazer o Teste de Travas Mentais. Como recebo o meu código?'), tracos:zap('quero fazer o Teste de Traços de Caráter. Como recebo o meu código?') };
+    travas:zap('quero fazer o Teste de Travas Mentais. Como recebo o meu código?'), tracos:zap('quero fazer o Teste de Traços de Caráter. Como recebo o meu código?'),
+    mpcc:zap('quero fazer o MPCC, o Mapa de Perfil Comportamental e Competências. Como recebo o meu código?') };
   const ext = 'target="_blank" rel="noopener"';
   const bt = (cls, href, tit, sub, icone) => `<a class="btn ${cls} cv-btn" href="${href}" ${ext}>${icone ? CV_ZAP_SVG : ''}<span class="duas">${tit}<small>${sub}</small></span></a>`;
   const ctas = id => `<div class="cv-ctas" id="${id}">${bt('btn-primario', Z.ind, 'Quero fazer o meu teste', 'fale com ' + escV(comQuem) + ' e receba o seu código', true)}` +
@@ -668,17 +674,22 @@ function dvCapaVendas(modo){
   /* topo: promessa curta, provas rápidas e as chamadas; o código fica logo abaixo */
   const h1 = lt.querySelector('h1');
   if(h1) h1.innerHTML = soTracos ? 'Você repete os mesmos padrões? <em>Descubra como a sua história moldou o seu jeito de ser.</em>'
+                                 : soMpcc ? 'Você sabe do que é capaz? <em>Descubra onde já é forte e onde pode crescer.</em>'
                                  : 'Você sabe o que quer mudar. <em>Então por que algo sempre puxa você de volta?</em>';
   const selo = lt.querySelector('.selo');
-  if(selo) selo.textContent = ambos ? 'Teste de Travas Mentais · Teste de Traços de Caráter' : soTravas ? 'Teste de Travas Mentais' : 'Teste de Traços de Caráter';
+  const ROT = { travas:'Teste de Travas Mentais', tracos:'Teste de Traços de Caráter', mpcc:'MPCC' };
+  if(selo) selo.textContent = soMpcc ? 'MPCC · Mapa de Perfil Comportamental e Competências' : lista.map(k => ROT[k]).join(' · ');
   lt.querySelectorAll('.texto-capa, .lista-leve').forEach(x => x.remove());
   const lead = soTravas
     ? 'Quase sempre é uma trava mental: um padrão antigo que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. Em poucos minutos, você descobre <b>quais travas estão mais ativas em você hoje</b>, em números.'
     : soTracos
     ? 'Desde a infância, o corpo e a mente aprendem a se proteger, e esses jeitos de se proteger viram traços que aparecem até hoje nas suas relações e decisões. Em poucos minutos, você descobre <b>como a sua história moldou o seu jeito de ser</b>. Sozinho(a) ou em casal.'
-    : 'Quase sempre é um padrão antigo, que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. Em poucos minutos, você descobre <b>o que trava você hoje</b> e <b>como a sua história moldou o seu jeito de ser</b>. Sozinho(a) ou em casal.';
-  const chips = [soTravas ? 'No celular, de 10 a 15 minutos' : soTracos ? 'No celular, de 8 a 12 minutos' : 'No celular, de 8 a 15 minutos',
-    'Só ' + escV(quem) + ' vê as suas respostas', soTravas ? 'Resultado em números' : 'Individual ou em casal'];
+    : soMpcc
+    ? 'Iniciativa, comunicação, decisão, adaptação, organização, autoconfiança: cada um de nós é mais forte em algumas áreas e mais travado em outras, quase sempre sem perceber. Em poucos minutos, você descobre <b>onde já é forte</b> e <b>onde pode crescer</b>, em um mapa de 8 dimensões.'
+    : 'Quase sempre é um padrão antigo, que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. Em poucos minutos, você descobre ' +
+      mpJuntar([tem('travas') ? '<b>o que trava você hoje</b>' : '', tem('tracos') ? '<b>como a sua história moldou o seu jeito de ser</b>' : '', tem('mpcc') ? '<b>onde você já é forte e onde pode crescer</b>' : '']) + '.' + (casal ? ' Sozinho(a) ou em casal.' : '');
+  const chips = [soTravas || soMpcc ? 'No celular, de 10 a 15 minutos' : soTracos ? 'No celular, de 8 a 12 minutos' : 'No celular, de 8 a 15 minutos',
+    'Só ' + escV(quem) + ' vê as suas respostas', soTravas ? 'Resultado em números' : soMpcc ? 'Mapa em gráfico radar' : casal ? 'Individual ou em casal' : 'Resultado em números e gráfico'];
   const ass = lt.querySelector('.assinatura');
   (ass || h1).insertAdjacentHTML('afterend', `<p class="cv-lead">${lead}</p><ul class="cv-chips">${chips.map(c => '<li>' + c + '</li>').join('')}</ul>`);
   cartao.insertAdjacentHTML('beforebegin', '<p class="cv-ja" id="cv-ja">Já recebeu o seu código? É só digitar aqui:</p>');
@@ -692,27 +703,38 @@ function dvCapaVendas(modo){
 
   /* o que o teste mapeia */
   let meio = '';
-  if(ambos){
-    meio = `<section class="cv-faixa"><div class="cv-in">
-    <div class="cv-centro"><span class="cv-olho">Aqui você encontra dois testes</span>
-    <h2>Duas perguntas que mudam o jeito como você se enxerga</h2></div>
-    <div class="cv-testes">
-      <article class="cv-teste">
+  const CARTOES = {
+    travas:`<article class="cv-teste">
         <span class="cv-tag">Individual</span>
         <h3>Teste de Travas Mentais</h3>
         <p class="cv-pergunta">O que está travando você hoje?</p>
         <p>Mapeia 10 travas mentais e mostra, em números, quais estão mais ativas em você agora: as que pesam no trabalho, nas relações e nas decisões.</p>
         <p class="cv-meta">50 perguntas · 10 a 15 minutos</p>
         <a class="cv-link" href="${Z.travas}" ${ext}>Quero fazer este teste →</a>
-      </article>
-      <article class="cv-teste cv-teste-destaque">
+      </article>`,
+    tracos:`<article class="cv-teste cv-teste-destaque">
         <span class="cv-tag">Individual ou em casal</span>
         <h3>Teste de Traços de Caráter</h3>
         <p class="cv-pergunta">Como a sua história moldou o seu jeito de ser?</p>
         <p>Identifica os 5 traços de caráter que se formaram na sua história e mostra, em porcentagem, como eles aparecem no seu dia a dia, junto com os talentos que cada um traz.</p>
         <p class="cv-meta">40 afirmações · 8 a 12 minutos</p>
         <a class="cv-link" href="${Z.tracos}" ${ext}>Quero fazer este teste →</a>
-      </article>
+      </article>`,
+    mpcc:`<article class="cv-teste cv-teste-destaque">
+        <span class="cv-tag">Individual · Mapa em 8 dimensões</span>
+        <h3>MPCC · Mapa de Perfil Comportamental e Competências</h3>
+        <p class="cv-pergunta">Onde você já é forte e onde pode crescer?</p>
+        <p>Mostra, em um gráfico radar, 8 dimensões do seu comportamento: iniciativa, comunicação, relacionamento, decisão, adaptação, organização, autoconfiança e equilíbrio emocional.</p>
+        <p class="cv-meta">40 afirmações · 10 a 15 minutos</p>
+        <a class="cv-link" href="${Z.mpcc}" ${ext}>Quero fazer este teste →</a>
+      </article>`
+  };
+  if(ambos){
+    meio = `<section class="cv-faixa"><div class="cv-in">
+    <div class="cv-centro"><span class="cv-olho">Aqui você encontra ${lista.length > 2 ? 'três testes' : 'dois testes'}</span>
+    <h2>${lista.length > 2 ? 'Três olhares que mudam o jeito como você se enxerga' : 'Duas perguntas que mudam o jeito como você se enxerga'}</h2></div>
+    <div class="cv-testes${lista.length > 2 ? ' cv-testes-3' : ''}">
+      ${lista.map(k => CARTOES[k]).join('\n      ')}
     </div>
     <p class="cv-sigilo">Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d${escV(quem)}.</p>
   </div></section>`;
@@ -723,6 +745,15 @@ function dvCapaVendas(modo){
     <h2>10 travas mentais. Quais estão mais ativas em você?</h2>
     <p class="cv-sub">O resultado mostra cada uma em números, de 1 a 10, com as mais ativas em destaque.</p></div>
     <div class="cv-itens">${lista.map((t, i) => `<div class="cv-item"><span class="cv-item-n">${i + 1}</span><b>${escV(t.nome)}</b><small>${escV(primFrase(t.contexto))}</small></div>`).join('')}</div>
+    <p class="cv-sigilo">Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d${escV(quem)}.</p>
+  </div></section>`;
+  } else if(soMpcc){
+    const dims = (typeof MP_DIM !== 'undefined' && Array.isArray(MP_DIM)) ? MP_DIM : [];
+    meio = `<section class="cv-faixa"><div class="cv-in">
+    <div class="cv-centro"><span class="cv-olho">O que o mapa mostra</span>
+    <h2>8 dimensões do seu comportamento. Em quais você já é forte?</h2>
+    <p class="cv-sub">O resultado mostra cada uma em uma escala de 1 a 5, em um gráfico radar, com os seus maiores recursos e as áreas em desenvolvimento.</p></div>
+    <div class="cv-itens">${dims.map((t, i) => `<div class="cv-item"><span class="cv-item-n">${i + 1}</span><b>${escV(t.nome)}</b><small>${escV(t.avalia.slice(0, 3).join(', '))}</small></div>`).join('')}</div>
     <p class="cv-sigilo">Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d${escV(quem)}.</p>
   </div></section>`;
   } else {
@@ -762,8 +793,11 @@ function dvCapaVendas(modo){
     ? ['O seu mapa das 10 travas, de 1 a 10, com as mais ativas em destaque', 'Um gráfico para ver o seu perfil num relance', 'O que cada trava significa e como ela aparece no seu dia a dia', 'Por onde começar: a trava que mais pesa em você hoje', 'Uma conversa com ' + escV(comQuem) + ' a partir do resultado']
     : soTracos
     ? ['Os seus 5 traços em porcentagem, com os dois mais fortes em destaque', 'Um gráfico de teia para ver o seu perfil num relance', 'O que cada traço significa e os talentos escondidos nele', 'Ações práticas para começar a mudar a partir de hoje', 'Em casal: a devolutiva de cada um e a dos dois juntos']
+    : soMpcc
+    ? ['O seu mapa em 8 dimensões, de 1 a 5, com o perfil geral', 'Um gráfico radar para ver os seus recursos num relance', 'Os seus 3 maiores recursos e as 3 áreas com mais espaço para crescer', 'Recomendações práticas de desenvolvimento pessoal e profissional', 'Relatório de 6 páginas em PDF e a devolutiva individual com ' + escV(comQuem)]
     : ['O seu mapa em números, com o que está mais ativo em destaque', 'Um gráfico de teia para ver o seu perfil num relance', 'O que cada resultado significa e os talentos escondidos nele', 'Ações práticas para começar a mudar a partir de hoje', 'Em casal: a devolutiva de cada um e a dos dois juntos'];
   const imgRecebe = soTravas ? `<img src="${CV_IMG}vendas-travas.jpg" alt="Resultado do Teste de Travas com as 10 travas em números" loading="lazy" width="600" height="1200">`
+                             : soMpcc ? `<img src="${CV_IMG}vendas-mpcc.jpg" alt="Mapa de perfil do MPCC com o gráfico radar das 8 dimensões" loading="lazy" width="600" height="1200">`
                              : `<img src="${CV_IMG}vendas-individual.jpg" alt="Devolutiva com os traços em porcentagem e o gráfico de teia" loading="lazy" width="600" height="1200">`;
   const faq = soTravas ? [
       pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre o teste.'),
@@ -777,26 +811,38 @@ function dvCapaVendas(modo){
       pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. No casal, cada um responde sozinho(a), sem ver as respostas do outro.'),
       pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.'),
       pq('Quanto tempo leva?', 'De 8 a 12 minutos, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
+    ] : soMpcc ? [
+      pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre a avaliação.'),
+      pq('O MPCC é um teste psicológico?', 'Não. É uma ferramenta de autoconhecimento e desenvolvimento pessoal. Ele mostra tendências de comportamento neste momento e não é diagnóstico nem avaliação clínica.'),
+      pq('Existe resposta certa ou errada?', 'Não. Responda pensando em como você normalmente age no seu dia a dia, e não em como gostaria de agir.'),
+      pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. Você aceita os termos de privacidade antes de começar, e os seus dados são usados para gerar o seu resultado e para a sua devolutiva.'),
+      pq('Eu recebo o resultado?', 'Sim, se ' + escV(comQuem) + ' deixar liberado, você vê o mapa na hora e baixa o relatório em PDF. Depois, é possível agendar a devolutiva individual.'),
+      pq('Quanto tempo leva?', 'De 10 a 15 minutos, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
     ] : [
       pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre o teste certo.'),
-      pq('Preciso fazer os dois testes?', 'Não. Você pode fazer um deles ou os dois. Eles se completam: as travas mostram o que pesa em você hoje, e os traços mostram de onde isso vem.'),
-      pq('Como funciona em casal? Precisamos estar juntos?', 'Não precisam. Cada um responde no próprio celular, quando puder, com o mesmo código. Se preferirem, dá para responder juntos, no mesmo aparelho, um de cada vez. Cada um recebe a sua devolutiva individual, e vocês recebem a do casal.'),
-      pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. No casal, cada um responde sozinho(a), sem ver as respostas do outro.'),
-      pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.'),
+      pq('Preciso fazer ' + (lista.length > 2 ? 'todos os testes' : 'os dois testes') + '?', 'Não. Você pode fazer ' + (lista.length > 2 ? 'só um deles, ou todos' : 'um deles ou os dois') + '. ' + (tem('travas') && tem('tracos') ? 'Eles se completam: as travas mostram o que pesa em você hoje, e os traços mostram de onde isso vem.' : 'Eles se completam: cada um olha para o seu jeito de funcionar por um ângulo diferente.')),
+      casal ? pq('Como funciona em casal? Precisamos estar juntos?', 'Não precisam. Cada um responde no próprio celular, quando puder, com o mesmo código. Se preferirem, dá para responder juntos, no mesmo aparelho, um de cada vez. Cada um recebe a sua devolutiva individual, e vocês recebem a do casal.') : '',
+      pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '.' + (casal ? ' No casal, cada um responde sozinho(a), sem ver as respostas do outro.' : '')),
+      casal ? pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.') : '',
+      tem('mpcc') ? pq('O MPCC é um teste psicológico?', 'Não. É uma ferramenta de autoconhecimento e desenvolvimento pessoal, que mostra tendências de comportamento neste momento. Não é diagnóstico.') : '',
       pq('Quanto tempo leva?', 'De 8 a 15 minutos por teste, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
-    ];
+    ].filter(Boolean);
 
   rodape.insertAdjacentHTML('beforebegin', `<div class="cv">
   <section class="cv-faixa cv-areia"><div class="cv-in cv-estreito">
     <span class="cv-olho">Talvez você se reconheça</span>
-    <h2>Você começa com vontade e, lá pelo meio do caminho, alguma coisa puxa você de volta</h2>
-    <ul class="cv-dores">
+    <h2>${soMpcc ? 'Você sente que poderia render mais, mas não sabe por onde começar' : 'Você começa com vontade e, lá pelo meio do caminho, alguma coisa puxa você de volta'}</h2>
+    <ul class="cv-dores">${soMpcc ? `
+      <li>Tem facilidade em algumas áreas e trava em outras, sem entender o porquê.</li>
+      <li>Decide, se comunica ou se organiza de um jeito que nem sempre combina com o que você quer.</li>
+      <li>Quer crescer na vida pessoal ou profissional, mas falta um mapa claro do ponto de partida.</li>
+      <li>Reconhece as suas falhas com facilidade, e as suas qualidades com dificuldade.</li>` : `
       <li>Promete que desta vez vai ser diferente e se pega repetindo o mesmo padrão.</li>
       <li>Sabe exatamente o que precisa fazer, mas trava na hora de agir.</li>
       <li>No relacionamento, as mesmas discussões voltam, só com outras palavras.</li>
-      <li>Carrega um peso que nem sabe direito de onde vem.</li>
+      <li>Carrega um peso que nem sabe direito de onde vem.</li>`}
     </ul>
-    <p class="cv-virada">Não é falta de força de vontade. É um padrão antigo agindo sem pedir licença. <b>E o que a gente enxerga, a gente consegue mudar.</b></p>
+    <p class="cv-virada">${soMpcc ? 'Não é falta de capacidade. É falta de um mapa. <b>E o que a gente enxerga, a gente consegue desenvolver.</b>' : 'Não é falta de força de vontade. É um padrão antigo agindo sem pedir licença. <b>E o que a gente enxerga, a gente consegue mudar.</b>'}</p>
   </div></section>
 
   ${meio}
@@ -835,8 +881,8 @@ function dvCapaVendas(modo){
   </div></section>
 
   <section class="cv-faixa cv-escura cv-final"><div class="cv-in cv-estreito cv-centro">
-    <h2>Que tal descobrir hoje o que está por trás dos seus padrões?</h2>
-    <p>Leva poucos minutos. O que você vai enxergar pode mudar o jeito como você vive as suas escolhas e as suas relações.</p>
+    <h2>${soMpcc ? 'Que tal descobrir hoje onde você já é forte e onde pode crescer?' : 'Que tal descobrir hoje o que está por trás dos seus padrões?'}</h2>
+    <p>${soMpcc ? 'Leva poucos minutos. O mapa que você vai receber pode ser o ponto de partida para decidir o seu próximo passo.' : 'Leva poucos minutos. O que você vai enxergar pode mudar o jeito como você vive as suas escolhas e as suas relações.'}</p>
     ${ctas('cv-ctas-fim')}
     <a class="cv-ir-codigo" href="#cv-ja">Já tenho o meu código ↑</a>
   </div></section>

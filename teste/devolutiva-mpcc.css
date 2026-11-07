@@ -1,0 +1,109 @@
+/* MPCC · Mapa de Perfil Comportamental e Competências: telas do cliente, área da terapeuta e relatório em PDF.
+   Usa as cores da terapeuta (azul claro e celeste) e o dourado só em detalhes. */
+:root{--dourado:#B8913F;--dourado-claro:#F3E9CF}
+#painel-mp{display:none}
+#painel-admin.modo-mp #painel-mp{display:block}
+#painel-admin.modo-mp .abas,#painel-admin.modo-mp .aba-conteudo,#painel-admin.modo-mp #detalhe-resposta,#painel-admin.modo-mp #aviso-modo-local,#painel-admin.modo-mp #painel-tc{display:none!important}
+#mp-abas{display:flex;gap:8px;margin:0 0 16px}
+#mp-abas button{flex:1;border:1.4px solid var(--borda);background:var(--papel);color:var(--ardosia);border-radius:12px;padding:11px 8px;font:inherit;font-weight:700;cursor:pointer}
+#mp-abas button.ativa{background:var(--ardosia);color:#fff;border-color:var(--ardosia)}
+.mp-selo{background:var(--dourado-claro)!important;color:#6B4E12!important;border:1px solid #E5D3A3}
+#tela-mp-capa h1 em{display:block;font-style:normal;font-size:.55em;letter-spacing:.14em;color:var(--dourado);margin-top:6px}
+.mp-escala{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:15px}
+.mp-escala td{padding:7px 10px;border-bottom:1px solid var(--borda)}
+.mp-escala td:first-child{width:42px;text-align:center;color:var(--ardosia)}
+.mp-nota-peq{font-size:13.5px;color:var(--tinta-suave);line-height:1.45;margin:10px 0}
+.mp-intro{font-size:17px;line-height:1.5;color:var(--tinta)}
+.mp-secao{background:var(--papel);border:1.4px solid var(--borda);border-radius:18px;padding:20px 18px;margin:0 0 16px;box-shadow:var(--sombra-leve)}
+.mp-secao h2{font-size:23px;margin:0 0 10px;color:var(--ardosia);padding-bottom:8px;border-bottom:2px solid var(--dourado-claro)}
+.mp-secao h3,.mp-card h3{font-size:18px;margin:0;color:var(--ardosia)}
+.mp-secao p{line-height:1.55;margin:8px 0}
+.mp-geral{display:flex;gap:16px;align-items:center;margin:6px 0 10px}
+@media(max-width:560px){.mp-geral{flex-direction:column;align-items:stretch;text-align:center}.mp-geral-nota{width:100%!important;box-sizing:border-box}}
+.mp-geral-nota{flex:none;width:128px;text-align:center;border:2px solid var(--c,#4F86A8);border-radius:18px;padding:12px 6px;background:#fff}
+.mp-geral-nota span{display:block;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tinta-suave)}
+.mp-geral-nota b{display:block;font-family:'Fraunces',serif;font-size:38px;line-height:1.1;color:var(--c,#4F86A8)}
+.mp-geral-nota small{font-size:12px;color:var(--tinta-suave)}
+.mp-faixa{display:inline-block;font-size:13px;font-weight:700;padding:4px 11px;border-radius:999px;border:1.4px solid var(--c,#4F86A8);color:var(--c,#4F86A8);background:#fff;margin:2px 0}
+.mp-grafico{display:flex;justify-content:center;margin:6px 0}
+.mp-grafico canvas{max-width:100%}
+.mp-radar-img{width:100%;max-width:560px;height:auto}
+.mp-legenda{list-style:none;margin:10px 0;padding:0;display:grid;gap:8px}
+.mp-legenda li{display:grid;grid-template-columns:26px 1fr 40px;grid-template-areas:"n t v" "b b b";gap:2px 8px;align-items:center}
+.mp-leg-n{grid-area:n;width:24px;height:24px;border-radius:50%;background:var(--ardosia);color:#fff;font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.mp-leg-t{grid-area:t;font-weight:600}
+.mp-legenda b{grid-area:v;text-align:right}
+.mp-barra{grid-area:b;display:block;height:7px;border-radius:6px;background:var(--borda);overflow:hidden}
+.mp-barra i{display:block;height:100%;border-radius:6px}
+.mp-card{border:1.4px solid var(--borda);border-left:5px solid var(--dourado);border-radius:14px;padding:14px;margin:12px 0;background:#fff}
+.mp-card-topo{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.mp-nota{font-size:14px;color:var(--c);white-space:nowrap}
+.mp-nota b{font-family:'Fraunces',serif;font-size:24px}
+.mp-avalia{font-size:13.5px;color:var(--tinta-suave)}
+.mp-aviso{background:var(--dourado-claro);border-radius:12px;padding:12px 14px;color:#5C430F;font-weight:600}
+.mp-sub{margin:18px 0 6px!important;font-size:18px}
+.mp-meio{list-style:none;padding:0;margin:8px 0;display:grid;gap:8px}
+.mp-meio li{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;border:1.4px solid var(--borda);border-radius:12px;padding:10px 12px}
+.mp-reco{border:1.4px solid var(--borda);border-radius:14px;padding:12px 14px;margin:10px 0}
+.mp-reco-forte{border-color:var(--dourado);background:#FFFCF4}
+.mp-reco h3{font-size:17px}
+.mp-reco ul{margin:6px 0 0;padding-left:20px}
+.mp-reco li{margin:6px 0;line-height:1.5}
+.mp-final{background:linear-gradient(180deg,#fff,#FFFCF4);border-color:#E5D3A3}
+.mp-devolutiva{background:var(--ardosia);color:#fff;border-radius:20px;padding:22px 18px;margin:0 0 16px;text-align:center}
+.mp-devolutiva h2,.mp-pag .mp-devolutiva h2{color:#fff;font-size:24px;margin:0 0 10px;border:0;padding:0}
+.mp-devolutiva p{color:#E8F1F6;line-height:1.55}
+.mp-devolutiva .btn{margin-top:10px}
+.mp-acoes{display:grid;gap:10px;margin:14px 0}
+.mp-barra-acoes{display:flex;justify-content:flex-end;margin:0 0 12px}
+.mp-resp{margin:6px 0;line-height:1.5}
+.mp-hist{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.mp-hist-i{border:1.4px solid var(--borda);border-radius:12px;padding:8px 12px;display:grid;font-size:13.5px}
+.mp-hist-i.atual{border-color:var(--dourado);background:#FFFCF4}
+.mp-comp{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+.mp-comp th,.mp-comp td{border-bottom:1px solid var(--borda);padding:7px 6px;text-align:left}
+.mp-comp .sobe{color:#1F6E54;font-weight:700}.mp-comp .desce{color:#A8542B;font-weight:700}
+@media(min-width:900px){.mp-acoes{grid-template-columns:1fr 1fr}}
+/* relatório (6 páginas): na tela da terapeuta e no PDF */
+.mp-rel{max-width:820px;margin:0 auto}
+.mp-pag{background:#fff;padding:26px 22px;margin:0 0 14px;border:1.4px solid var(--borda);border-radius:14px}
+.mp-capa{min-height:440px;display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(160deg,#fff,#EAF4FA 60%,#F3E9CF);border-color:#E5D3A3}
+.mp-capa-in{max-width:520px}
+.mp-capa-sigla{display:inline-block;font-family:'Fraunces',serif;font-size:54px;letter-spacing:.14em;color:var(--dourado);margin-bottom:6px}
+.mp-capa h1{font-size:28px;color:var(--ardosia);margin:0 0 14px}
+.mp-capa-linha{width:90px;height:3px;background:var(--dourado);margin:14px auto;border-radius:3px}
+.mp-capa-nome{font-family:'Fraunces',serif;font-size:26px;margin:14px 0 4px;color:var(--tinta)}
+.mp-capa-data,.mp-capa-marca{color:var(--tinta-suave);margin:4px 0}
+.mp-capa-marca{margin-top:26px;font-weight:700;letter-spacing:.06em;color:var(--ardosia)}
+.mp-pag h2{font-size:24px;color:var(--ardosia);border-bottom:2px solid var(--dourado-claro);padding-bottom:8px;margin:0 0 12px}
+#mp-impressao{display:none}
+@media print{
+  body.mp-imprimindo > *:not(#mp-impressao){display:none!important}
+  body.mp-imprimindo #mp-impressao{display:block!important}
+  body.mp-imprimindo{background:#fff!important;padding:0!important}
+  body.mp-imprimindo .mp-rel{max-width:none}
+  body.mp-imprimindo .mp-pag{break-after:page;border:0;border-radius:0;margin:0;padding:6mm 2mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.mp-imprimindo .mp-pag:last-child{break-after:auto}
+  body.mp-imprimindo .mp-capa{min-height:230mm}
+  body.mp-imprimindo .mp-card,body.mp-imprimindo .mp-reco{break-inside:avoid}
+  body.mp-imprimindo .mp-rel{font-size:12.5px;line-height:1.4}
+  body.mp-imprimindo .mp-rel p{margin:5px 0;line-height:1.42}
+  body.mp-imprimindo .mp-pag h2{font-size:20px;margin:0 0 8px;padding-bottom:6px}
+  body.mp-imprimindo .mp-radar-img{max-width:330px}
+  body.mp-imprimindo .mp-grafico{margin:0}
+  body.mp-imprimindo .mp-legenda{gap:5px;margin:6px 0}
+  body.mp-imprimindo .mp-card{padding:9px 12px;margin:8px 0}
+  body.mp-imprimindo .mp-card h3,body.mp-imprimindo .mp-reco h3{font-size:15px}
+  body.mp-imprimindo .mp-nota b{font-size:20px}
+  body.mp-imprimindo .mp-avalia{font-size:11px}
+  body.mp-imprimindo .mp-reco{padding:8px 12px;margin:7px 0}
+  body.mp-imprimindo .mp-reco li{margin:3px 0;line-height:1.4}
+  body.mp-imprimindo .mp-final{padding:10px 12px;margin:8px 0;border:1px solid #E5D3A3;border-radius:10px}
+  body.mp-imprimindo .mp-final h3{font-size:15px;margin:0 0 4px}
+  body.mp-imprimindo .mp-devolutiva{padding:12px 14px;margin:8px 0;border-radius:12px}
+  body.mp-imprimindo .mp-devolutiva h2{font-size:17px!important;margin:0 0 6px;padding:0}
+  body.mp-imprimindo .mp-geral-nota b{font-size:30px}
+  body.mp-imprimindo .mp-devolutiva{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.mp-imprimindo .mp-zap{border:1.4px solid #fff}
+  .mp-sem-print{display:none!important}
+}

@@ -59,9 +59,10 @@
   var $ = function (s) { return document.getElementById(s); };
   var q = new URLSearchParams(location.search);
   var token = (q.get("p") || "").toLowerCase();
-  if (!token) { try { token = localStorage.getItem("loja_pedido_dre") || localStorage.getItem("loja_pedido_clinica") || localStorage.getItem("loja_pedido_tracos") || ""; } catch (e) {} }
+  if (!token) { try { token = localStorage.getItem("loja_pedido_dre") || localStorage.getItem("loja_pedido_clinica") || localStorage.getItem("loja_pedido_tracos") || localStorage.getItem("loja_pedido_mpcc") || ""; } catch (e) {} }
   var retorno = { transaction_nsu: q.get("transaction_nsu") || "", slug: q.get("slug") || "" };
   var veioPago = !!retorno.transaction_nsu, tentativas = 0;
+  var TESTE_NA_PAGINA = ["tracos", "mpcc"];   /* produtos que são um teste na página da terapeuta */
   document.addEventListener("click", function (ev) {
     var w = ev.target.closest && ev.target.closest("[data-wa]"); if (!w) return;
     ev.preventDefault(); window.open("https://wa.me/" + ZAP + "?text=" + encodeURIComponent(w.getAttribute("data-wa")), "_blank", "noopener");
@@ -80,9 +81,9 @@
         if (j.status === "ativado" && j.destino) {
           try { localStorage.removeItem("loja_pedido_" + j.produto_chave); } catch (e) {}
           $("prontoTitulo").textContent = "Pronto" + (j.nome ? ", " + j.nome : "") + "!";
-          $("prontoTxt").textContent = (j.produto || "O seu produto") + (j.produto_chave === "tracos" ? " já está liberado na sua página de teste." : " já está liberado na sua Área de Membros.");
+          $("prontoTxt").textContent = (j.produto || "O seu produto") + (TESTE_NA_PAGINA.indexOf(j.produto_chave) > -1 ? " já está liberado na sua página de teste." : " já está liberado na sua Área de Membros.");
           $("prontoBtn").href = j.destino;
-          $("prontoBtn").textContent = j.produto_chave === "clinica" ? "Abrir a minha clínica" : j.produto_chave === "tracos" ? "Abrir a minha página de teste" : "Abrir a minha DRE";
+          $("prontoBtn").textContent = j.produto_chave === "clinica" ? "Abrir a minha clínica" : TESTE_NA_PAGINA.indexOf(j.produto_chave) > -1 ? "Abrir a minha página de teste" : "Abrir a minha DRE";
           $("prontoDica").textContent = "Se pedir login, entre com " + j.email + " e a sua senha. Também mandamos um e-mail com o link.";
           mostrar("ePronto");
           return;

@@ -177,6 +177,7 @@ body.cv-on{overflow-x:clip}
 .cv-virada b{color:var(--ardosia)}
 .cv-testes{display:grid;gap:16px;margin:8px 0 18px}
 @media(min-width:760px){.cv-testes{grid-template-columns:1fr 1fr}}
+@media(min-width:1000px){.cv-testes-3{grid-template-columns:repeat(3,1fr)}}
 .cv-teste{background:var(--papel);border:1.4px solid var(--borda);border-radius:20px;padding:24px 22px;box-shadow:var(--sombra-leve);display:flex;flex-direction:column}
 .cv-teste p{margin:0 0 10px}
 .cv-teste-destaque{border:2px solid var(--argila);box-shadow:var(--sombra)}

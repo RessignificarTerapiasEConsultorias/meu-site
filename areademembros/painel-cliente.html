@@ -182,7 +182,9 @@
     (rpp.data || []).forEach(function (pp) {
       const pr = pp.catalogo_produtos; if (!pr || !pr.pagina) return;
       const link = "https://ressignificarterapiaseconsultorias.com" + pr.pagina + "?de=" + origem;
-      const msg = "Oi! Você já conhece o " + pr.nome + "? Ele mostra como a história de cada pessoa moldou o jeito de ser dela, sozinha ou em casal, com uma devolutiva completa pronta para a sua sessão. Você pode ter ele na sua página de teste: " + link;
+      const msg = pr.chave === "mpcc"
+        ? "Oi! Você já conhece o " + pr.nome + "? Ele mostra, em um gráfico de 8 dimensões, onde o seu cliente já é forte e onde pode crescer, com relatório em PDF pronto para a sua devolutiva. Você pode ter ele na sua página de teste: " + link
+        : "Oi! Você já conhece o " + pr.nome + "? Ele mostra como a história de cada pessoa moldou o jeito de ser dela, sozinha ou em casal, com uma devolutiva completa pronta para a sua sessão. Você pode ter ele na sua página de teste: " + link;
       const pct = String(pp.percentual).replace(/\.0+$/, "").replace(".", ",") + "%";
       const div = document.createElement("div"); div.className = "cartao"; div.id = "cartaoParceiro-" + pr.chave;
       div.innerHTML = "<h2>Seu produto: " + esc(pr.nome) + "</h2>" +
@@ -209,11 +211,15 @@
     ]);
     /* a página pode ter o Teste de Travas, o de Traços de Caráter ou os dois */
     const testesPg = rpg.data && rpg.data.dados && Array.isArray(rpg.data.dados.testes) ? rpg.data.dados.testes : null;
-    const temTravasPg = !testesPg || testesPg.indexOf("travas") > -1, temTracosPg = !!testesPg && testesPg.indexOf("tracos") > -1;
+    const temTravasPg = !testesPg || testesPg.indexOf("travas") > -1, temTracosPg = !!testesPg && testesPg.indexOf("tracos") > -1, temMpccPg = !!testesPg && testesPg.indexOf("mpcc") > -1;
     temTravas = !!rt.data && temTravasPg;
     if (rpg.data && rpg.data.slug) {
       const tituloT = document.querySelector("#cartaoTravas h2");
-      if (tituloT) tituloT.textContent = temTravasPg && temTracosPg ? "Seus testes: Travas Mentais e Traços de Caráter" : temTravasPg ? "Seu Teste de Travas Mentais" : "Seu Teste de Traços de Caráter";
+      if (tituloT) {
+        const nomesT = [temTravasPg ? "Travas Mentais" : "", temTracosPg ? "Traços de Caráter" : "", temMpccPg ? "MPCC" : ""].filter(Boolean);
+        tituloT.textContent = nomesT.length > 1 ? "Seus testes: " + nomesT.slice(0, -1).join(", ") + " e " + nomesT[nomesT.length - 1]
+          : temTravasPg ? "Seu Teste de Travas Mentais" : temMpccPg ? "Seu MPCC · Mapa de Perfil Comportamental e Competências" : "Seu Teste de Traços de Caráter";
+      }
       const linkTeste = "https://ressignificarterapiaseconsultorias.com/teste/?t=" + encodeURIComponent(rpg.data.slug);
       document.getElementById("travasLink").value = linkTeste;
       document.getElementById("travasVer").href = linkTeste;
