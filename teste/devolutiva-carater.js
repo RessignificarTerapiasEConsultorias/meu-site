@@ -698,6 +698,16 @@ function dvCapaVendas(modo){
     'Só ' + escV(quem) + ' vê as suas respostas', soTravas ? 'Resultado em números' : soMpcc ? 'Mapa em gráfico radar' : casal ? 'Individual ou em casal' : 'Resultado em números e gráfico'];
   const ass = lt.querySelector('.assinatura');
   (ass || h1).insertAdjacentHTML('afterend', `<p class="cv-lead">${lead}</p><ul class="cv-chips">${chips.map(c => '<li>' + c + '</li>').join('')}</ul>`);
+  /* páginas com testes extras (ex.: Miralene): logo no topo, um menu com todos os testes, cada um levando ao seu detalhe */
+  const CV_NOME_CURTO = k => k === 'travas' ? 'Travas Mentais' : k === 'tracos' ? 'Traços de Caráter' : k === 'mpcc' ? 'MPCC' : (EX[k].curto || EX[k].rot);
+  const CV_PERGUNTA = k => k === 'travas' ? 'O que está travando você hoje?' : k === 'tracos' ? 'Como a sua história moldou o seu jeito de ser?' : k === 'mpcc' ? 'Onde você já é forte e onde pode crescer?' : EX[k].pergunta;
+  if(comExtras){
+    const chipsEl = lt.querySelector('.cv-chips');
+    if(chipsEl) chipsEl.insertAdjacentHTML('afterend', `<nav class="cv-menu" aria-label="Os testes desta página"><p class="cv-menu-tit">Escolha o seu teste e veja os detalhes:</p>
+      ${lista.map((k, i) => `<a class="cv-menu-i" href="#cv-t-${k}"><span class="cv-det-n">${i + 1}</span><span class="cv-menu-tx"><b>${escV(CV_NOME_CURTO(k))}</b><small>${escV(CV_PERGUNTA(k))}</small></span><span class="cv-menu-seta" aria-hidden="true">↓</span></a>`).join('')}</nav>`);
+  }
+  /* introdução desligada pela terapeuta (travas_paginas.dados.capa_intro = false): some o título, o convite e o texto de abertura */
+  if(dd && dd.capa_intro === false) [h1, ass, lt.querySelector('.cv-lead')].forEach(x => { if(x) x.style.display = 'none'; });
   cartao.insertAdjacentHTML('beforebegin', '<p class="cv-ja" id="cv-ja">Já recebeu o seu código? É só digitar aqui:</p>');
   const temCodigo = /[?&](c|codigo|code)=/.test(location.search) || !!(document.getElementById('campo-codigo') || {}).value;
   if(temCodigo) cartao.insertAdjacentHTML('afterend', ctas('cv-ctas-topo'));
@@ -743,7 +753,31 @@ function dvCapaVendas(modo){
         <p class="cv-meta">${escV(e.meta)}</p>
         <a class="cv-link" href="${Z[k]}" ${ext}>Quero fazer este teste →</a>
       </article>`; });
-  if(ambos){
+  if(comExtras){
+    const listaTravas = (typeof TRAVAS !== 'undefined' && Array.isArray(TRAVAS)) ? TRAVAS : [];
+    const DET = Object.assign({ travas:{ tag:'Individual · Resultado em números', titulo:'Teste de Identificação de Travas Mentais', pergunta:'O que está travando você hoje?',
+      objetivo:'Identificar os padrões de pensamento e de comportamento que estão segurando você hoje, no trabalho, nas relações e nas decisões, para o acompanhamento começar pelo lugar certo.',
+      como:['50 perguntas, de 10 a 15 minutos', 'No celular, uma pergunta de cada vez', 'Você marca o quanto cada frase combina com você hoje'],
+      resultado:q => 'O mapa das 10 travas, em números, com as mais ativas em destaque, para você conversar com ' + q + ' a partir dele.',
+      mapaTitulo:'As 10 travas que o teste mapeia', itens:listaTravas.map(t => ({ nome:t.nome, desc:primFrase(t.contexto) })) } }, EX);
+    const detalhe = (k, i) => { const e = DET[k];
+      return `<section class="cv-faixa${i % 2 ? '' : ' cv-areia'} cv-det" id="cv-t-${k}"><div class="cv-in">
+      <div class="cv-det-topo"><span class="cv-det-n">${i + 1}</span><div><span class="cv-tag">${escV(e.tag)}</span><h2>${e.tituloHtml || escV(e.titulo)}</h2><p class="cv-pergunta">${escV(e.pergunta)}</p></div></div>
+      <div class="cv-det-grade">
+        <div class="cv-det-bloco"><h3>Para que serve</h3><p>${escV(e.objetivo || e.texto)}</p></div>
+        <div class="cv-det-bloco"><h3>Como funciona</h3><ul>${(e.como || [e.meta]).map(c => '<li>' + escV(c) + '</li>').join('')}</ul></div>
+        <div class="cv-det-bloco"><h3>O que você recebe</h3><p>${escV(e.resultado ? e.resultado(comQuem) : e.recebe(comQuem))}</p></div>
+      </div>
+      ${e.itens && e.itens.length ? `<h3 class="cv-det-mapa">${escV(e.mapaTitulo || 'O que o teste mapeia')}</h3>
+      <div class="cv-itens">${e.itens.map((t, j) => `<div class="cv-item"><span class="cv-item-n">${j + 1}</span><b>${escV(t.nome)}</b>${t.desc ? '<small>' + escV(t.desc) + '</small>' : ''}</div>`).join('')}</div>` : ''}
+      <div class="cv-det-cta">${bt('btn-primario', Z[k], 'Quero fazer este teste', 'fale com ' + escV(comQuem) + ' e receba o seu código', true)}</div>
+    </div></section>`; };
+    meio = `<section class="cv-faixa"><div class="cv-in cv-centro"><span class="cv-olho">Aqui você encontra ${NUM[lista.length] || lista.length} testes</span>
+      <h2>${maius(NUM[lista.length] || String(lista.length))} olhares que mudam o jeito como você se enxerga</h2>
+      <p class="cv-sub">Cada teste responde a uma pergunta diferente. Veja abaixo para que serve cada um, como funciona e o que você recebe. Se tiver dúvida sobre qual fazer primeiro, fale com ${escV(comQuem)}.</p>
+      <p class="cv-sigilo">Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d${escV(quem)}.</p></div></section>
+    ${lista.map((k, i) => detalhe(k, i)).join('')}`;
+  } else if(ambos){
     meio = `<section class="cv-faixa"><div class="cv-in">
     <div class="cv-centro"><span class="cv-olho">Aqui você encontra ${lista.length > 3 ? (NUM[lista.length] || lista.length) + ' testes' : lista.length > 2 ? 'três testes' : 'dois testes'}</span>
     <h2>${lista.length > 3 ? maius(NUM[lista.length] || String(lista.length)) + ' olhares que mudam o jeito como você se enxerga' : lista.length > 2 ? 'Três olhares que mudam o jeito como você se enxerga' : 'Duas perguntas que mudam o jeito como você se enxerga'}</h2></div>

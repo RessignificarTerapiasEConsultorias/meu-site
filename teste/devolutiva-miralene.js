@@ -1371,7 +1371,12 @@ function miAjustarTestes(lista, ativos){
 /* textos dos três testes na capa de vendas (devolutiva-carater.js: dvCapaVendas lê window.CV_EXTRA) */
 const CV_EXTRA = {
   serena:{
-    rot:'Diagnóstico Mente Serena', tag:'Individual · Mapa em teia', titulo:'Diagnóstico Mente Serena',
+    rot:'Diagnóstico Mente Serena', curto:'Mente Serena', tag:'Individual · Mapa em teia', titulo:'Diagnóstico Mente Serena',
+    objetivo:'Mostrar como estão os 7 pilares da mulher serena: onde você já tem força e o que pede cuidado agora, para saber por onde começar a cuidar de si com mais calma, segurança e equilíbrio.',
+    como:['49 afirmações e um termômetro inicial, de 10 a 15 minutos', 'Feito para mulheres que querem mais calma, segurança e equilíbrio', 'Se precisar parar, o progresso fica salvo no aparelho'],
+    resultado:q => 'O seu Termômetro Mente Serena, logo ao terminar: uma nota de 1 a 10 para cada pilar, em um gráfico de teia. Depois, a leitura aprofundada com ' + q + '.',
+    mapaTitulo:'Os 7 pilares que o diagnóstico mapeia',
+    itens:Object.keys(EXPLICA_PILARES).map(n => ({ nome:n, desc:EXPLICA_PILARES[n] })),
     pergunta:'Onde estão as suas forças e o que pede cuidado?',
     texto:'Mapeia os 7 pilares da mulher serena (essência, segurança, amor-próprio, organização da mente, espiritualidade, regulação emocional e posicionamento) e mostra, em um gráfico de teia, onde estão as suas forças e o que precisa de cuidado.',
     meta:'49 afirmações · 10 a 15 minutos',
@@ -1382,7 +1387,20 @@ const CV_EXTRA = {
     faq:q => ['O que é o Termômetro Mente Serena?', 'É o resultado do diagnóstico: uma nota de 1 a 10 para cada um dos 7 pilares, em um gráfico de teia. Perto de 10, o pilar está fortalecido; perto de 1, é um sinal de alerta. É um primeiro retrato, que você aprofunda com ' + q + ' na devolutiva.']
   },
   esquemas:{
-    rot:'Esquemas e Necessidades Emocionais', tag:'Individual · Mais profundo', titulo:'Questionário de Esquemas e Necessidades Emocionais',
+    rot:'Esquemas e Necessidades Emocionais', curto:'Esquemas e Necessidades Emocionais', tag:'Individual · Mais profundo', titulo:'Questionário de Esquemas e Necessidades Emocionais',
+    objetivo:'Entender de onde vêm os padrões que se repetem na sua vida: quais esquemas emocionais se formaram na sua história, como você aprendeu a lidar com eles e quais necessidades emocionais ficaram sem resposta na infância.',
+    como:['5 partes, cerca de 1 hora', 'Dá para parar e continuar depois: o progresso fica salvo no aparelho', 'Algumas frases falam da infância e da relação com a mãe e o pai: vá no seu ritmo'],
+    resultado:q => 'O mapa dos seus esquemas, das suas formas de enfrentamento e dos estilos parentais que você percebeu, com a leitura feita junto com ' + q + ' na devolutiva.',
+    mapaTitulo:'O que o questionário mapeia: 18 esquemas em 5 domínios, e mais',
+    itens:[
+      { nome:'Desconexão e rejeição', desc:'Privação emocional, abandono, desconfiança e abuso, isolamento social, defectividade e vergonha.' },
+      { nome:'Autonomia e desempenho prejudicados', desc:'Fracasso, dependência e incompetência, vulnerabilidade e emaranhamento.' },
+      { nome:'Limites prejudicados', desc:'Arrogo e grandiosidade, autocontrole e autodisciplina insuficientes.' },
+      { nome:'Orientação para o outro', desc:'Subjugação, autossacrifício e busca de aprovação.' },
+      { nome:'Supervigilância e inibição', desc:'Inibição emocional, padrões inflexíveis, negativismo e postura punitiva.' },
+      { nome:'Estilos parentais', desc:'Como você percebe a forma como foi cuidado(a) pela mãe e pelo pai.' },
+      { nome:'Formas de enfrentamento', desc:'Como você costuma reagir aos esquemas: compensando ou evitando.' }
+    ],
     pergunta:'De onde vêm os padrões que se repetem na sua vida?',
     texto:'Um mapa mais profundo da sua história, baseado no modelo de esquemas de Young: ajuda a entender de onde vêm alguns padrões que se repetem na sua vida e quais necessidades emocionais ficaram sem resposta na infância.',
     meta:'5 partes · cerca de 1 hora, com o progresso salvo',
@@ -1393,7 +1411,18 @@ const CV_EXTRA = {
     faq:q => ['Posso parar no meio do Questionário de Esquemas?', 'Pode. O seu progresso fica salvo no aparelho: ao abrir o link de novo, você continua de onde parou. Algumas frases falam de lembranças e de relações difíceis; vá no seu ritmo e, se algo mexer muito com você, fale com ' + q + '.']
   },
   tdah:{
-    rot:'Escala de TDAH em adultos (ETDAH-AD)', tag:'Individual · Triagem', titulo:'Escala de TDAH em adultos (ETDAH-AD)',
+    rot:'Escala de TDAH em adultos (ETDAH-AD)', curto:'TDAH em adultos (ETDAH-AD)', tag:'Individual · Triagem', titulo:'Escala de TDAH em adultos (ETDAH-AD)',
+    objetivo:'Uma triagem que ajuda a entender como funcionam a sua atenção, a sua impulsividade, as suas emoções e a sua energia no dia a dia. Ela apoia a avaliação, mas não é um diagnóstico.',
+    como:['69 frases, de 15 a 20 minutos', 'Você marca com que frequência cada frase descreve você', 'O resultado leva em conta a sua escolaridade, como na escala original'],
+    resultado:q => 'A pontuação em cada um dos 5 fatores, comparada com a de adultos da mesma escolaridade, com a leitura feita junto com ' + q + ' na devolutiva.',
+    mapaTitulo:'Os 5 fatores da escala',
+    itens:[
+      { nome:'Desatenção', desc:'Foco, esquecimentos e distrações no dia a dia (23 frases).' },
+      { nome:'Impulsividade', desc:'Agir ou falar antes de pensar, impaciência e dificuldade de esperar (23 frases).' },
+      { nome:'Aspectos emocionais', desc:'Como as emoções e o humor afetam o dia a dia (4 frases).' },
+      { nome:'Autorregulação da atenção, da motivação e da ação', desc:'Organizar-se, manter a motivação e levar as tarefas até o fim (12 frases).' },
+      { nome:'Hiperatividade', desc:'Inquietação e excesso de energia no corpo e na mente (7 frases).' }
+    ],
     tituloHtml:'Escala de TDAH em adultos <span style="white-space:nowrap">(ETDAH-AD)</span>',
     pergunta:'Como funcionam a sua atenção, a sua impulsividade e a sua energia?',
     texto:'Uma triagem que ajuda a entender como funcionam a sua atenção, a sua impulsividade e a sua energia no dia a dia. Apoia a avaliação, mas não é um diagnóstico: a leitura do resultado é feita junto com você.',
