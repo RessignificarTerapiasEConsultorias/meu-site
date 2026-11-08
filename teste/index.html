@@ -527,7 +527,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611072315">
+<meta name="versao-site" content="v202611081721">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -1670,7 +1670,7 @@ async function compIniciar(codigo){
   }else{
     const lista = ler(CHAVE_CODIGOS, []), c = lista.find(x => x.codigo === codigo);
     if(!c || !c.compartilhado) return { ok:false, msg:'Esse código não está valendo.' };
-    if((c.usos || 0) >= c.usosMax) return { ok:false, msg:'Este link atingiu o limite de acessos. Fale com a ' + PRIM_TER + ' para receber um novo.' };
+    if((c.usos || 0) >= c.usosMax) return { ok:false, msg:'Este link atingiu o limite de acessos. Fale com ' + (typeof T_A !== 'undefined' ? T_A : 'a ' + PRIM_TER) + ' para receber um novo.' };
     c.usos = (c.usos || 0) + 1; c.acessos = c.acessos || [];
     const agora = Date.now(), dur = (c.duracaoMin || 30) * 60000, token = 'l' + Math.random().toString(36).slice(2) + agora.toString(36);
     c.acessos.push({ numero:c.usos, token, iniciadoEm:agora, expiraEm:agora + dur, concluidoEm:null });
@@ -1687,7 +1687,7 @@ function compLocalConcluir(){
   if(a){ a.concluidoEm = Date.now(); guardar(CHAVE_CODIGOS, lista); }
 }
 function compLocalValido(c){
-  if(c.usado || (c.usos || 0) >= c.usosMax) return { ok:false, msg:'Este link atingiu o limite de acessos. Fale com a ' + PRIM_TER + ' para receber um novo.' };
+  if(c.usado || (c.usos || 0) >= c.usosMax) return { ok:false, msg:'Este link atingiu o limite de acessos. Fale com ' + (typeof T_A !== 'undefined' ? T_A : 'a ' + PRIM_TER) + ' para receber um novo.' };
   return { ok:true, mostrar:(c.mostrarResultado !== false), urgencia:(c.urgencia !== false), cliente:'', compartilhado:true, duracao:c.duracaoMin || 30 };
 }
 /* ao abrir o link: avisa já na capa que existe cronômetro (ou que o link acabou), sem gastar vaga */
@@ -1796,14 +1796,16 @@ $$('#alt-urgencia button').forEach(b => b.addEventListener('click', () => {
 
 const URG_SEGUNDOS = 60, URG_ADIAR_MAX = 600;
 const URG_PRIM = (CONFIG.terapeuta || '').split(' ')[0];
+const URG_ELE = typeof T_ELA !== 'undefined' && T_ELA === 'Ele', URG_DELA = URG_ELE ? 'dele' : 'dela', URG_ELA = URG_ELE ? 'ele' : 'ela';
+const URG_A = typeof T_A !== 'undefined' ? T_A : 'a ' + URG_PRIM, URG_DA = typeof T_DA !== 'undefined' ? T_DA : 'da ' + URG_PRIM, URG_A_MAI = URG_A.charAt(0).toUpperCase() + URG_A.slice(1);
 let urgTimer = null;
 const urgFmt = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
 const URG_SINO = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 22a2.4 2.4 0 0 0 2.4-2.4H9.6A2.4 2.4 0 0 0 12 22Zm7-6.2V11a7 7 0 0 0-5.2-6.8V3.5a1.8 1.8 0 0 0-3.6 0v.7A7 7 0 0 0 5 11v4.8l-1.8 1.8v1h17.6v-1L19 15.8Z"/></svg>';
 const URG_TEXTOS = {
-  janela:     () => '<b>Este é o momento de falar com a ' + URG_PRIM + '.</b> O que você sentiu ao responder está vivo agora. Toque no botão verde e fale com ela pelo WhatsApp <b>nos próximos 60 segundos</b>. Passado esse tempo, o atalho direto se fecha e você precisará aguardar o retorno dela.',
-  encerrada:  () => '<b>O atalho direto para o WhatsApp da ' + URG_PRIM + ' foi encerrado.</b> Você ainda pode avisá-la de que quer conversar: ao enviar uma notificação, ela vê o seu interesse no sistema dela. <b>Atenção: uma notificação não é uma conversa no WhatsApp.</b> A ' + URG_PRIM + ' responderá assim que puder, e isso pode levar mais tempo.',
-  zap:        () => '<b>Ótimo, você agiu a tempo.</b> A conversa com a ' + URG_PRIM + ' está aberta no WhatsApp: é só enviar a mensagem que já está pronta.',
-  notificada: () => '<b>Pronto, a ' + URG_PRIM + ' foi avisada do seu interesse.</b> Lembre-se: uma notificação não abre uma conversa no WhatsApp. Ela retornará assim que puder.'
+  janela:     () => '<b>Este é o momento de falar com ' + URG_A + '.</b> O que você sentiu ao responder está vivo agora. Toque no botão verde e fale com ' + URG_ELA + ' pelo WhatsApp <b>nos próximos 60 segundos</b>. Passado esse tempo, o atalho direto se fecha e você precisará aguardar o retorno ' + URG_DELA + '.',
+  encerrada:  () => '<b>O atalho direto para o WhatsApp ' + URG_DA + ' foi encerrado.</b> Você ainda pode avisá-' + (URG_ELE ? 'lo' : 'la') + ' de que quer conversar: ao enviar uma notificação, ' + URG_ELA + ' vê o seu interesse no sistema ' + URG_DELA + '. <b>Atenção: uma notificação não é uma conversa no WhatsApp.</b> ' + URG_A_MAI + ' responderá assim que puder, e isso pode levar mais tempo.',
+  zap:        () => '<b>Ótimo, você agiu a tempo.</b> A conversa com ' + URG_A + ' está aberta no WhatsApp: é só enviar a mensagem que já está pronta.',
+  notificada: () => '<b>Pronto, ' + URG_A + ' foi ' + (URG_ELE ? 'avisado' : 'avisada') + ' do seu interesse.</b> Lembre-se: uma notificação não abre uma conversa no WhatsApp. ' + (URG_ELE ? 'Ele' : 'Ela') + ' retornará assim que puder.'
 };
 const urgDecorrido = () => (estado.urg && estado.urg.inicio) ? (Date.now() - estado.urg.inicio) / 1000 : 0;
 const urgAdiou = () => (estado.urg && estado.urg.fim) ? Math.max(0, Math.floor((Date.now() - estado.urg.fim) / 1000)) : 0;
@@ -1833,11 +1835,11 @@ function urgMontar(btn){
   card.innerHTML = '<div class="urg-topo"><span class="urg-rot" id="urg-rot"></span><span><b class="urg-num" id="urg-num">01:00</b><small class="urg-legenda" id="urg-legenda"></small></span></div>'
     + '<div class="urg-barra" aria-hidden="true"><i id="urg-barra"></i></div><p class="urg-msg" id="urg-msg" aria-live="polite"></p>';
   const notif = document.createElement('div'); notif.id = 'urg-notif'; notif.className = 'notif-bloco'; notif.hidden = true;
-  notif.innerHTML = '<button type="button" id="btn-notif">' + URG_SINO + '<span class="duas">Enviar notificação para a ' + P + '<small>avisa que você quer conversar · não abre o WhatsApp</small></span>'
+  notif.innerHTML = '<button type="button" id="btn-notif">' + URG_SINO + '<span class="duas">Enviar notificação para ' + URG_A + '<small>avisa que você quer conversar · não abre o WhatsApp</small></span>'
     + '<span class="notif-linha" aria-hidden="true"><i id="notif-linha"></i></span></button>'
-    + '<div class="notif-caixa" id="notif-caixa" hidden><label for="notif-texto">Quer deixar um recado para a ' + P + '? <span>(opcional)</span></label>'
+    + '<div class="notif-caixa" id="notif-caixa" hidden><label for="notif-texto">Quer deixar um recado para ' + URG_A + '? <span>(opcional)</span></label>'
     + '<textarea id="notif-texto" maxlength="500" rows="3" placeholder="Ex.: Quero entender melhor o meu resultado."></textarea>'
-    + '<p class="notif-aviso">Ao enviar, a ' + P + ' recebe a sua notificação e o seu recado no sistema dela. <b>Isto não abre uma conversa no WhatsApp.</b></p>'
+    + '<p class="notif-aviso">Ao enviar, ' + URG_A + ' recebe a sua notificação e o seu recado no sistema ' + URG_DELA + '. <b>Isto não abre uma conversa no WhatsApp.</b></p>'
     + '<p class="notif-erro" id="notif-erro" role="alert"></p>'
     + '<div class="notif-acoes"><button type="button" class="btn btn-primario" id="notif-enviar">Enviar notificação</button><button type="button" class="btn btn-contorno" id="notif-voltar">Voltar</button></div></div>';
   btn.insertAdjacentElement('beforebegin', card); card.insertAdjacentElement('afterend', notif);
@@ -1864,7 +1866,7 @@ function urgRender(){
   card.className = 'urg' + (u.fase === 'encerrada' ? ' encerrada' : u.fase === 'zap' ? ' zap' : u.fase === 'notificada' ? ' notificada' : '');
   $('#urg-notif').hidden = u.fase !== 'encerrada';
   const msg = $('#urg-msg'), rot = $('#urg-rot'), chave = (u.fase === 'espera' || u.fase === 'janela' || u.fase === 'verificando') ? 'janela' : u.fase;
-  rot.textContent = { janela: 'Fale com a ' + URG_PRIM + ' agora', encerrada: 'Seu tempo acabou', zap: 'Conversa aberta', notificada: 'Notificação enviada' }[chave] || '';
+  rot.textContent = { janela: 'Fale com ' + URG_A + ' agora', encerrada: 'Seu tempo acabou', zap: 'Conversa aberta', notificada: 'Notificação enviada' }[chave] || '';
   msg.innerHTML = (URG_TEXTOS[chave] || URG_TEXTOS.janela)();
   urgAtualizar();
 }
