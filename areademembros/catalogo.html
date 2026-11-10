@@ -82,6 +82,24 @@
         <div class="f" style="max-width:420px;margin-bottom:14px"><label for="selCli">Cliente</label><select id="selCli"></select></div>
         <div class="tabela-wrap"><table class="t"><thead><tr><th>Produto</th><th>Quem vê</th><th>Situação para este cliente</th></tr></thead><tbody id="listaCliProd"></tbody></table></div>
       </div>
+      <div class="cartao so-master" id="cartaoLiberar">
+        <h2>Liberar um teste manualmente</h2>
+        <p class="ajuda">Para quem pagou por fora (Pix, dinheiro, cartão na maquininha), vai pagar numa data combinada ou vai ganhar de cortesia. Escolha o cliente acima. Se a pessoa já tem página de teste, o teste entra nela na hora. Se ainda não tem, aparece o link para ela montar a página.</p>
+        <form id="formLib" class="f" novalidate>
+          <div class="grade g3">
+            <div><label for="libTeste">Teste</label><select id="libTeste"><option value="travas">Teste de Travas Mentais</option><option value="tracos">Teste de Traços de Caráter</option><option value="mpcc">MPCC</option></select></div>
+            <div><label for="libModo">Pagamento</label><select id="libModo"><option value="pago">Já pagou (pagamento manual)</option><option value="a_pagar">Vai pagar na data que eu definir</option><option value="cortesia">Cortesia (sem cobrança)</option></select></div>
+            <div><label for="libPer">Cobrança</label><select id="libPer"><option value="unico">Pagamento único</option><option value="anual">Anual (renova todo ano)</option><option value="mensal">Mensal</option></select></div>
+          </div>
+          <div class="grade g3" id="libPagamento" style="margin-top:12px">
+            <div><label for="libValor">Valor (R$)</label><input id="libValor" inputmode="decimal" placeholder="Ex.: 147"></div>
+            <div><label for="libData" id="libDataRot">Data do pagamento</label><input id="libData" type="date"></div>
+            <div><label for="libForma">Forma</label><select id="libForma"><option>Pix</option><option>Cartão</option><option>Dinheiro</option><option>Transferência</option><option>Boleto</option></select></div>
+          </div>
+          <div class="acoes"><button class="btn auto" type="submit" id="libBtn">Liberar teste</button></div>
+        </form>
+        <div id="libResultado" hidden style="margin-top:14px"></div>
+      </div>
     </section>
   </main>
 </div>

@@ -235,6 +235,53 @@
     await carregar(); desenharTudo();
   });
 
+  /* ================= LIBERAR TESTE MANUALMENTE ================= */
+  const fLib = document.getElementById("formLib");
+  if (fLib) {
+    const PRECO = { travas: { v: "147", per: "unico" }, tracos: { v: "97", per: "anual" }, mpcc: { v: "97", per: "anual" } };
+    const libModo = document.getElementById("libModo"), libTeste = document.getElementById("libTeste");
+    function ajustarLib() {
+      const m = libModo.value;
+      document.getElementById("libPagamento").hidden = m === "cortesia";
+      document.getElementById("libPer").disabled = m === "cortesia";
+      document.getElementById("libDataRot").textContent = m === "a_pagar" ? "Data do pagamento (vencimento)" : "Data em que pagou";
+      if (!document.getElementById("libData").value) document.getElementById("libData").value = hojeISO();
+    }
+    libTeste.addEventListener("change", function () { const p = PRECO[libTeste.value]; document.getElementById("libValor").value = p.v; document.getElementById("libPer").value = p.per; });
+    libModo.addEventListener("change", ajustarLib);
+    document.getElementById("libValor").value = PRECO.travas.v; ajustarLib();
+    fLib.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const pid = selCli.value, modo = libModo.value;
+      if (!pid) { aviso("Escolha o cliente lá em cima.", true); selCli.focus(); return; }
+      const valor = modo === "cortesia" ? 0 : lerValor(document.getElementById("libValor").value);
+      const data = document.getElementById("libData").value;
+      if (modo !== "cortesia" && (!(valor > 0) || !data)) { aviso("Informe o valor e a data.", true); return; }
+      const p = pessoa(pid), nomeTeste = libTeste.options[libTeste.selectedIndex].text;
+      if (!confirm("Liberar " + nomeTeste + " para " + p.nome + "?")) return;
+      const b = document.getElementById("libBtn"); b.disabled = true; b.textContent = "Liberando...";
+      const r = await supa().rpc("master_liberar_teste", { p_perfil: pid, p_chave: libTeste.value, p_modo: modo, p_valor: valor, p_data: modo === "cortesia" ? null : data,
+        p_forma: modo === "cortesia" ? null : document.getElementById("libForma").value, p_periodicidade: modo === "cortesia" ? "unico" : document.getElementById("libPer").value });
+      b.disabled = false; b.textContent = "Liberar teste";
+      if (r.error || !r.data || !r.data.ok) { aviso((r.data && r.data.erro) || "Não foi possível liberar.", true); return; }
+      const d = r.data, prim = (p.nome || "").split(" ")[0];
+      const msg = d.montar
+        ? "Olá, " + prim + "! Liberei o seu " + nomeTeste + ". Agora é só montar a sua página (leva 2 minutos): " + d.montar + "\n\nE entre no grupo de terapeutas no WhatsApp: " + d.grupo
+        : "Olá, " + prim + "! Liberei o " + nomeTeste + " na sua página: " + SITE + "/teste/?t=" + d.slug + " . Entre na Área do terapeuta com o seu e-mail e senha.\n\nE entre no grupo de terapeutas no WhatsApp: " + d.grupo;
+      const box = document.getElementById("libResultado");
+      box.hidden = false;
+      box.innerHTML = '<div class="aviso-sigilo" style="display:block">✅ <b>' + esc(nomeTeste) + "</b> liberado para <b>" + esc(p.nome) + "</b>. " +
+        (modo === "pago" ? "O pagamento entrou como pago no Financeiro dela e na sua DRE." : modo === "a_pagar" ? "A cobrança ficou no Financeiro dela com vencimento em " + dataBR(data) + ", com os avisos por e-mail." : "Cortesia: sem cobrança.") +
+        (d.montar ? "<br>Ela ainda não tem página de teste: mande o link para ela montar." : "<br>O teste já está na página dela.") + "</div>" +
+        '<label for="libMsg" style="margin-top:10px">Mensagem para enviar</label><textarea id="libMsg" rows="5">' + esc(msg) + "</textarea>" +
+        '<div class="acoes">' + (p.telefone ? '<a class="btn auto" style="background:#1FA855;color:#fff" target="_blank" rel="noopener" href="https://wa.me/' + soDig(p.telefone) + "?text=" + encodeURIComponent(msg) + '">Enviar no WhatsApp</a>' : "") +
+        '<button class="btn auto contorno" type="button" id="libCopiar">Copiar mensagem</button></div>';
+      document.getElementById("libCopiar").addEventListener("click", function () { navigator.clipboard.writeText(document.getElementById("libMsg").value).then(function () { aviso("Mensagem copiada."); }); });
+      aviso("Teste liberado.");
+      await carregar(); desenharTudo();
+    });
+  }
+
   function desenharTudo() { desenharInteresses(); desenharCatalogo(); preencherClientes(); desenharPorCliente(); }
   ligarAbas(document.getElementById("abas"));
   await carregar();
