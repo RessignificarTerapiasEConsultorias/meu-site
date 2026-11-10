@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grupo de terapeutas · Ressignificar</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0B1F3A">
+<link rel="icon" href="../img/favicon.png">
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F4EFE5;font-family:Figtree,Arial,Helvetica,sans-serif;color:#16203A;text-align:center;padding:24px;box-sizing:border-box}
+  .c{max-width:420px}
+  img{width:64px;height:64px;border-radius:50%}
+  h1{font-size:22px;margin:14px 0 8px}
+  p{color:#4C5670;line-height:1.5}
+  a.b{display:inline-block;margin-top:10px;background:#25D366;color:#fff;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:12px}
+</style>
+</head>
+<body>
+<div class="c">
+  <img src="../img/logo.png" alt="Ressignificar">
+  <h1>Abrindo o grupo de terapeutas no WhatsApp…</h1>
+  <p>Se o WhatsApp não abrir sozinho, toque no botão abaixo.</p>
+  <a class="b" id="btn" href="https://chat.whatsapp.com/GDS2pUKSChz7ZBbIjRHbmm">Entrar no grupo</a>
+</div>
+<script>
+(function () {
+  var SB = "https://gobjhepmnijoceirwgow.supabase.co";
+  var ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmpoZXBtbmlqb2NlaXJ3Z293Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyODgyMDQsImV4cCI6MjEwNzg2NDIwNH0.XPGLdSyG9rwg4VD0hlVAFFWdNeiJom86CSsqnMtMgx4";
+  var btn = document.getElementById("btn"), link = btn.href, foi = false;
+  var token = (new URLSearchParams(location.search).get("p") || "").toLowerCase();
+  function ir() { if (foi) return; foi = true; btn.href = link; location.replace(link); }
+  if (!/^[0-9a-f-]{36}$/.test(token)) token = null;
+  fetch(SB + "/rest/v1/rpc/grupo_entrar", { method: "POST", headers: { apikey: ANON, Authorization: "Bearer " + ANON, "Content-Type": "application/json" }, body: JSON.stringify({ p_token: token }) })
+    .then(function (r) { return r.json(); })
+    .then(function (j) { if (typeof j === "string" && /^https:\/\/chat\.whatsapp\.com\//.test(j)) link = j; ir(); })
+    .catch(ir);
+  setTimeout(ir, 4000);
+})();
+</script>
+</body>
+</html>

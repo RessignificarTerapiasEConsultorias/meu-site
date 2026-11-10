@@ -28,6 +28,11 @@
       <div id="eCarregando" class="passo-estado" role="status"><div class="girar" aria-hidden="true"></div><p id="txtCarregando">Confirmando o seu pagamento…</p></div>
 
       <div id="ePronto" class="pronto" hidden>
+        <div class="grupo-aviso" id="grupoAviso">
+          <b class="t">Último passo: entre no grupo de terapeutas</b>
+          <p>É por lá que passo as novidades, as atualizações dos testes e o suporte. Toque no botão para entrar no grupo do WhatsApp.</p>
+          <a class="btn wa" id="grupoBtn" href="../../grupo/">Entrar no grupo do WhatsApp</a>
+        </div>
         <div class="icone">✓</div>
         <h2 id="prontoTitulo" style="font-size:28px">Pronto!</h2>
         <p class="lead" id="prontoTxt" style="margin:10px auto 18px"></p>
@@ -85,6 +90,8 @@
           $("prontoBtn").href = j.destino;
           $("prontoBtn").textContent = j.produto_chave === "clinica" ? "Abrir a minha clínica" : TESTE_NA_PAGINA.indexOf(j.produto_chave) > -1 ? "Abrir a minha página de teste" : "Abrir a minha DRE";
           $("prontoDica").textContent = "Se pedir login, entre com " + j.email + " e a sua senha. Também mandamos um e-mail com o link.";
+          $("grupoBtn").href = "../../grupo/?p=" + token;
+          $("grupoAviso").hidden = TESTE_NA_PAGINA.indexOf(j.produto_chave) === -1;   /* o grupo é de quem comprou um teste */
           mostrar("ePronto");
           return;
         }

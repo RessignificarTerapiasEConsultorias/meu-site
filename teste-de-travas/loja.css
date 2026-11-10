@@ -140,3 +140,8 @@ footer a{color:#DCE3F1}
 .ja-cliente{display:none;margin:0 0 14px;padding:14px;border-radius:12px;background:#FFF6DD;border:1px solid #EAD9A5;color:#5C4500;font-size:15.5px}
 .ja-cliente.on{display:block}
 .ja-cliente b{display:block;font-size:16.5px;margin-bottom:4px}
+/* aviso do grupo de terapeutas no WhatsApp (fim da compra e página montada) */
+.grupo-aviso{margin:0 0 22px;padding:18px 16px;border-radius:14px;background:#E9F8EF;border:2px solid #25D366;text-align:center}
+.grupo-aviso b.t{display:block;font-size:19px;color:#14532D;margin-bottom:6px}
+.grupo-aviso p{margin:0 0 12px;color:#1F3B2A;font-size:15px;line-height:1.5}
+.grupo-aviso .btn{width:100%}

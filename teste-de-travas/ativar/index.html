@@ -129,6 +129,11 @@
 
       <!-- 3. pronto -->
       <div id="ePronto" class="pronto" hidden>
+        <div class="grupo-aviso" id="grupoAviso">
+          <b class="t">Último passo: entre no grupo de terapeutas</b>
+          <p>É por lá que passo as novidades, as atualizações dos testes e o suporte. Toque no botão para entrar no grupo do WhatsApp.</p>
+          <a class="btn wa" id="grupoBtn" href="../../grupo/">Entrar no grupo do WhatsApp</a>
+        </div>
         <div class="icone" aria-hidden="true">✓</div>
         <h2>Seu teste está pronto!</h2>
         <p class="lead" style="margin:0 auto">Este é o link do seu teste. É ele que você manda para os seus clientes.</p>
@@ -196,6 +201,7 @@
     $("#senhaAntiga").hidden = !(pedido && pedido.conta_existente);
     var prim = (nome || "").split(" ")[0];
     $("#daPrim").textContent = prim ? (genero === "m" ? "do " : "da ") + prim : "da terapeuta";
+    if (token) $("#grupoBtn").href = "../../grupo/?p=" + token;
     mostrar("ePronto");
   }
 

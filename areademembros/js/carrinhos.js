@@ -63,7 +63,7 @@
 
   async function carregar() {
     const [rp, re] = await Promise.all([
-      supa().from("travas_pedidos").select("id,token,produto,nome,email,whatsapp,valor_centavos,valor_pago_centavos,status,checkout_url,capture_method,criado_em,pago_em,ativado_em,contato_status,anotacao,contatado_em").order("criado_em", { ascending: false }).limit(1000),
+      supa().from("travas_pedidos").select("id,token,produto,nome,email,whatsapp,valor_centavos,valor_pago_centavos,status,checkout_url,capture_method,criado_em,pago_em,ativado_em,contato_status,anotacao,contatado_em,grupo_entrou_em,produto_chave").order("criado_em", { ascending: false }).limit(1000),
       supa().from("travas_pedidos_eventos").select("pedido_id,tipo,detalhe,criado_em").order("criado_em").limit(5000)
     ]);
     if (rp.error) { document.getElementById("lista").innerHTML = '<p class="aviso erro">Não foi possível carregar: ' + esc(rp.error.message) + "</p>"; return; }
@@ -124,6 +124,11 @@
         else t += tem("abriu_formulario") ? " Chegou a abrir o formulário." : " Não chegou a abrir o formulário.";
         break;
       case "venda": t = "Comprou em " + dataHora(p.pago_em || p.criado_em) + (forma(p, evs) ? " (" + forma(p, evs) + ")" : "") + (/travas/i.test(p.produto || "") ? " e ativou o teste em " : " e o acesso foi liberado em ") + dataHora(p.ativado_em) + "."; break;
+    }
+    if ((p._sit === "venda" || p._sit === "sem_ativar") && ["travas", "tracos", "mpcc"].indexOf(p.produto_chave || "travas") > -1) {
+      const lemb = evs.filter(function (e) { return e.tipo === "lembrete_grupo"; }).length;
+      t += p.grupo_entrou_em ? " ✅ Entrou no grupo do WhatsApp em " + dataHora(p.grupo_entrou_em) + "." :
+        " ⚠️ Ainda não entrou no grupo do WhatsApp" + (lemb ? " (" + lemb + (lemb === 1 ? " lembrete enviado)." : " lembretes enviados).") : "; recebe um lembrete por e-mail todo dia.");
     }
     if (p._comprouDepois) t += " Comprou depois, em outro pedido.";
     if (p._teste) t += " (Pedido do modo teste de R$ 1.)";
