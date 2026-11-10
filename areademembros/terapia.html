@@ -93,6 +93,23 @@
       <!-- ===== TESTES ===== -->
       <section data-painel="testes" hidden>
         <div class="cartao so-master">
+          <h2>Agendar teste para este cliente</h2>
+          <p class="ajuda">O código é gerado na hora, só para este cliente. Na data escolhida aparece para ele o botão "Fazer o teste agora". Quando ele terminar, o resultado entra sozinho aqui embaixo. Pode agendar quantos quiser (ex.: um agora e outro daqui a 1 mês).</p>
+          <form id="formAgendar" class="f" novalidate>
+            <div class="grade g3">
+              <div><label for="agTeste">Teste</label><select id="agTeste"><option value="travas">Teste de Travas Mentais</option><option value="tracos">Teste de Traços de Caráter</option><option value="mpcc">MPCC · Perfil Comportamental</option></select></div>
+              <div><label for="agQuando">Quando</label><select id="agQuando"><option value="0">Agora</option><option value="7">Daqui a 1 semana</option><option value="15">Daqui a 15 dias</option><option value="30">Daqui a 1 mês</option><option value="data">Escolher a data</option></select></div>
+              <div id="agDataBox" hidden><label for="agData">Data</label><input id="agData" type="date"></div>
+            </div>
+            <div class="checks" style="margin-top:12px"><label><input type="checkbox" id="agMostrar"> O cliente vê o resultado assim que terminar (sem marcar, só vê quando você liberar)</label></div>
+            <div class="acoes"><button class="btn auto" type="submit" id="agBtn">Agendar teste</button></div>
+          </form>
+        </div>
+        <div class="cartao" id="cartaoAgendados" hidden>
+          <h2 id="tituloAgendados">Testes agendados</h2>
+          <ul class="acoes-lista" id="listaAgendados"></ul>
+        </div>
+        <div class="cartao so-master">
           <h2>Registrar resultado de teste</h2>
           <p class="ajuda">Ex.: Teste de Travas Mentais. Escreva cada trava (ou dimensão) com a sua nota. Ao repetir o mesmo teste, os nomes das dimensões já vêm preenchidos.</p>
           <form id="formTeste" class="f" novalidate>

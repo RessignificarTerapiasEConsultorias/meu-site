@@ -21,7 +21,7 @@
   if (master) {
     const pid = new URLSearchParams(location.search).get("p");
     if (!pid) return falha("Escolha a pessoa no painel, na lista de pessoas, botão \"Terapia\".");
-    const r = await supa().from("perfis").select("id,nome,email,papel").eq("id", pid).maybeSingle();
+    const r = await supa().from("perfis").select("id,nome,email,papel,telefone").eq("id", pid).maybeSingle();
     if (!r.data) return falha("Pessoa não encontrada.");
     pessoa = r.data;
   }
@@ -64,18 +64,20 @@
     ["tentativas", "O que você já tentou antes para resolver?"],
     ["observacoes", "Algo mais que você queira contar"]
   ];
-  let areas = [], avaliacoes = [], acoes = [], sessoes = [], notas = {}, testes = [], graficos = {}, abaAtual = "geral";
+  let areas = [], avaliacoes = [], acoes = [], sessoes = [], notas = {}, testes = [], agendados = [], graficos = {}, abaAtual = "geral";
   const hoje = hojeISO();
 
   /* ---------- carregar ---------- */
   async function carregar() {
-    const [ra, rv, rc, rs, rt] = await Promise.all([
+    const [ra, rv, rc, rs, rt, rg] = await Promise.all([
       supa().from("areas_vida").select("id,nome,meta,ordem,ativo").eq("perfil_id", pid).order("ordem").order("criado_em"),
       supa().from("areas_avaliacoes").select("id,area_id,data,nota,comentario").eq("perfil_id", pid).order("data"),
       supa().from("acoes").select("id,area_id,titulo,plano,responsavel,prazo,status,comentario_cliente,concluida_em").eq("perfil_id", pid).eq("contexto", "terapia").order("prazo", { ascending: true, nullsFirst: false }),
       supa().from("terapia_sessoes").select("id,data,duracao_min,tema,resumo_cliente,tarefa,humor_antes,humor_depois").eq("perfil_id", pid).order("data", { ascending: false }),
-      supa().from("testes_resultados").select("id,teste,data,pontuacao,menor_melhor,dimensoes,observacao").eq("perfil_id", pid).order("data")
+      supa().from("testes_resultados").select("id,teste,data,pontuacao,menor_melhor,dimensoes,observacao").eq("perfil_id", pid).order("data"),
+      supa().from("terapia_testes").select("id,teste,disponivel_em,mostrar_resultado,codigo,status,feito_em,resultado_id").eq("perfil_id", pid).neq("status", "cancelado").order("disponivel_em")
     ]);
+    agendados = rg.data || [];
     areas = (ra.data || []).filter(function (a) { return a.ativo; });
     avaliacoes = rv.data || []; acoes = rc.data || []; sessoes = rs.data || []; testes = rt.data || [];
     notas = {};
@@ -596,7 +598,73 @@
       document.querySelectorAll("[data-status]").forEach(function (x) { x.disabled = true; });
     }
   }
-  function desenharTudo() { desenharGeral(); desenharAreas(); desenharSessoes(); desenharTestes(); aplicarPermissoes(); }
+  /* ================= TESTES AGENDADOS ================= */
+  const SLUG_TESTE = "mauricio";
+  const NOME_T = { travas: "Teste de Travas Mentais", tracos: "Teste de Traços de Caráter", mpcc: "MPCC · Perfil Comportamental" };
+  const linkTeste = function (c) { return "https://ressignificarterapiaseconsultorias.com/teste/?t=" + SLUG_TESTE + "&c=" + encodeURIComponent(c); };
+  const somarDias = function (iso, n) { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const fAg = document.getElementById("formAgendar");
+  if (fAg) {
+    const q = document.getElementById("agQuando");
+    q.addEventListener("change", function () { document.getElementById("agDataBox").hidden = q.value !== "data"; if (q.value === "data" && !document.getElementById("agData").value) document.getElementById("agData").value = hoje; });
+    fAg.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const data = q.value === "data" ? document.getElementById("agData").value : somarDias(hoje, +q.value);
+      if (!data) { aviso("Escolha a data.", true); return; }
+      const b = document.getElementById("agBtn"); b.disabled = true; b.textContent = "Agendando...";
+      const r = await supa().rpc("terapia_agendar_teste", { p_perfil: pid, p_teste: document.getElementById("agTeste").value, p_data: data, p_mostrar: document.getElementById("agMostrar").checked });
+      b.disabled = false; b.textContent = "Agendar teste";
+      if (r.error || !r.data || !r.data.ok) { aviso((r.data && r.data.erro) || "Não foi possível agendar.", true); return; }
+      aviso("Teste agendado para " + dataBR(data) + ". Código " + r.data.codigo + ".");
+      await carregar(); desenharTudo();
+    });
+  }
+  function desenharAgendados() {
+    const box = document.getElementById("cartaoAgendados"), ul = document.getElementById("listaAgendados");
+    box.hidden = !agendados.length && !master;
+    if (!agendados.length) { ul.innerHTML = '<li class="vazio">Nenhum teste agendado ainda.</li>'; return; }
+    document.getElementById("tituloAgendados").textContent = master ? "Testes agendados" : "Seus testes";
+    ul.innerHTML = agendados.slice().sort(function (a, b) { return (a.status === "feito") - (b.status === "feito") || (a.disponivel_em < b.disponivel_em ? -1 : 1); }).map(function (t) {
+      const nome = NOME_T[t.teste] || t.teste, libera = t.disponivel_em <= hoje, feito = t.status === "feito";
+      let info, acoesHtml = "";
+      if (feito) info = "Feito em " + dataBR(t.feito_em) + ". " + (t.mostrar_resultado ? (master ? "O cliente vê o resultado." : "O resultado está logo abaixo.") : (master ? "O cliente ainda não vê o resultado." : "O Mauricio vai liberar o resultado para você."));
+      else info = libera ? (master ? "Disponível para o cliente desde " + dataBR(t.disponivel_em) + "." : "Já pode fazer. Separe uns minutos com calma.") : "Disponível a partir de " + dataBR(t.disponivel_em) + ".";
+      if (master) {
+        info += " Código <b>" + esc(t.codigo) + "</b>.";
+        const msg = "Olá, " + primeiroNome + "! Deixei um teste para você: " + nome + ". " + (libera ? "Já pode fazer pelo link: " : "Ele fica disponível em " + dataBR(t.disponivel_em) + ", pelo link: ") + linkTeste(t.codigo);
+        acoesHtml = '<div class="acoes" style="margin-top:6px">' +
+          '<label style="display:flex;gap:6px;align-items:center;font-weight:500"><input type="checkbox" data-ver-res="' + t.id + '"' + (t.mostrar_resultado ? " checked" : "") + "> Cliente vê o resultado</label>" +
+          (feito ? "" : '<button class="btn peq contorno" type="button" data-copiar="' + esc(linkTeste(t.codigo)) + '">Copiar link</button>' +
+            '<a class="btn peq" style="background:#1FA855;color:#fff" target="_blank" rel="noopener" href="https://wa.me/' + String(pessoa.telefone || "").replace(/\D/g, "") + "?text=" + encodeURIComponent(msg) + '">Mandar no WhatsApp</a>' +
+            '<button class="btn peq perigo" type="button" data-cancelar="' + t.id + '">Cancelar</button>') + "</div>";
+      } else if (!feito && libera) {
+        acoesHtml = '<div style="margin-top:8px"><a class="btn auto" href="' + linkTeste(t.codigo) + '" target="_blank" rel="noopener">Fazer o teste agora</a></div>';
+      }
+      return '<li class="acao' + (!feito && libera && !master ? " atrasada" : "") + '"><div class="acao-linha"><b>' + esc(nome) + "</b>" +
+        '<span class="selo' + (feito ? " ok" : "") + '">' + (feito ? "Feito" : (libera ? "Disponível" : "Agendado")) + "</span></div>" +
+        '<div class="acao-info">' + info + "</div>" + acoesHtml + "</li>";
+    }).join("");
+  }
+  document.getElementById("listaAgendados").addEventListener("click", async function (e) {
+    const c = e.target.closest("[data-copiar]");
+    if (c) { navigator.clipboard.writeText(c.dataset.copiar).then(function () { aviso("Link copiado."); }); return; }
+    const x = e.target.closest("[data-cancelar]");
+    if (x && confirm("Cancelar este teste agendado? O código deixa de valer.")) {
+      const t = agendados.find(function (a) { return a.id === x.dataset.cancelar; });
+      await supa().from("terapia_testes").update({ status: "cancelado" }).eq("id", t.id);
+      await supa().from("travas_codigos").delete().eq("codigo", t.codigo).eq("usado", false);
+      aviso("Teste cancelado."); await carregar(); desenharTudo();
+    }
+  });
+  document.getElementById("listaAgendados").addEventListener("change", async function (e) {
+    const v = e.target.closest("[data-ver-res]"); if (!v) return;
+    const r = await supa().rpc("terapia_liberar_resultado", { p_id: v.dataset.verRes, p_ver: v.checked });
+    if (r.error || !r.data || !r.data.ok) { aviso("Não foi possível salvar.", true); v.checked = !v.checked; return; }
+    aviso(v.checked ? "Resultado liberado para o cliente." : "Resultado escondido do cliente.");
+    await carregar(); desenharTudo();
+  });
+
+  function desenharTudo() { desenharGeral(); desenharAreas(); desenharSessoes(); desenharAgendados(); desenharTestes(); aplicarPermissoes(); }
   const abrirAba = ligarAbas(document.getElementById("abas"), function (nome) {
     abaAtual = nome;
     if (nome === "cadastro") carregarCadastro();
