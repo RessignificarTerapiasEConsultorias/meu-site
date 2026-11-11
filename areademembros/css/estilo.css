@@ -522,3 +522,17 @@ tr.sub>td{background:#FBF7EE;padding:10px 14px}
 .recolhe-resumo{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px}
 .btn-alerta.aberto,.btn-alerta.calmo{animation:none}
 .btn-alerta.aberto .ponto-pisca,.btn-alerta.calmo .ponto-pisca{animation:none;opacity:.5}
+/* cartões de Pagamentos e Ofertas: mesmo visual das ofertas (azul profundo, dourado e botão vermelho) */
+.cartao.cartao-escuro{position:relative;overflow:hidden;background:radial-gradient(120% 120% at 100% 0%,#1B3766 0%,var(--navy) 60%,var(--deep) 100%);color:#fff;border:0;box-shadow:0 14px 32px rgba(6,20,42,.2)}
+.cartao.cartao-escuro::after{content:"";position:absolute;right:-36px;top:-36px;width:130px;height:130px;border-radius:50%;border:1px solid rgba(227,196,119,.25);pointer-events:none}
+.cartao-escuro .ce-olho{margin:0 0 6px;font:700 12.5px var(--sans,inherit);letter-spacing:.07em;text-transform:uppercase;color:var(--gold2)}
+.cartao-escuro .ce-titulo{margin:0 0 10px;font:600 clamp(21px,2.6vw,25px)/1.25 var(--serif);color:#fff;text-wrap:balance}
+.cartao-escuro .ce-rodape{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 16px}
+.cartao-escuro .ce-info{font-size:14.5px;color:#C9D2E4;line-height:1.5;flex:1 1 200px}
+.cartao-escuro .ce-valor{color:var(--gold2);font-size:16px}
+.cartao-escuro .ce-valor.ce-ruim{color:#FF9C8F}
+.cartao-escuro .ce-corpo{margin-top:16px;background:#FFFDF8;color:var(--ink,#16203A);border-radius:14px;padding:14px;position:relative;z-index:1}
+.cartao-escuro .ce-corpo.ce-corpo-escuro{background:transparent;padding:0}
+.cartao-escuro .ce-corpo-escuro .btn.contorno{background:transparent;border-color:rgba(255,255,255,.55);color:#fff}
+.cartao-escuro .btn-alerta{position:relative;z-index:1}
+.cartao-escuro .btn-alerta.aberto,.cartao-escuro .btn-alerta.calmo{background:rgba(255,255,255,.14);color:#fff}

@@ -39,22 +39,23 @@
       <div class="link-teste"><input type="text" id="travasLink" readonly aria-label="Link do seu teste"><button type="button" class="btn peq" id="travasCopiar">Copiar</button></div>
       <div class="acoes"><a class="btn auto" id="travasArea" href="#">Abrir minha área do teste</a><a class="btn auto contorno" id="travasVer" href="#" target="_blank" rel="noopener">Ver como o cliente vê</a></div>
     </div>
-    <div class="cartao" id="cartaoPag" hidden>
-      <h2>Seus pagamentos</h2>
-      <div class="recolhe-resumo"><span class="ajuda" id="pagResumo" style="margin:0"></span>
+    <div class="cartao cartao-escuro" id="cartaoPag" hidden>
+      <h2 class="ce-olho">Seus pagamentos</h2>
+      <p class="ce-titulo" id="pagResumo"></p>
+      <div class="ce-rodape"><span class="ce-info" id="pagInfo"></span>
         <button type="button" class="btn-alerta" data-recolhe="pagCorpo" data-txt="Ver os pagamentos" aria-expanded="false" aria-controls="pagCorpo"><span class="ponto-pisca" aria-hidden="true"></span><span class="rec-txt">Ver os pagamentos</span></button></div>
-      <div id="pagCorpo" hidden>
+      <div id="pagCorpo" class="ce-corpo" hidden>
         <div id="avisoPag"></div>
         <div class="tabela-wrap" style="margin-top:12px"><table class="t"><thead><tr><th>Serviço</th><th>Vencimento</th><th class="n">Valor</th></tr></thead><tbody id="listaPag"></tbody></table></div>
         <div class="acoes"><button class="btn peq contorno" type="button" id="verTodosPag" hidden>Ver histórico completo</button><button type="button" class="btn peq contorno" data-recolhe-fechar="pagCorpo">Recolher os pagamentos ↑</button></div>
       </div>
     </div>
-    <div class="cartao" id="cartaoOfertas" hidden>
-      <h2>Ofertas para você</h2>
-      <div class="recolhe-resumo"><span class="ajuda" id="ofertasResumo" style="margin:0"></span>
+    <div class="cartao cartao-escuro" id="cartaoOfertas" hidden>
+      <h2 class="ce-olho">Ofertas para você</h2>
+      <p class="ce-titulo" id="ofertasResumo"></p>
+      <div class="ce-rodape"><span class="ce-info">Ferramentas que o Mauricio usa com os clientes dele, prontas para você.</span>
         <button type="button" class="btn-alerta" data-recolhe="ofertasCorpo" data-txt="Ver as ofertas" aria-expanded="false" aria-controls="ofertasCorpo"><span class="ponto-pisca" aria-hidden="true"></span><span class="rec-txt">Ver as ofertas</span></button></div>
-      <div id="ofertasCorpo" hidden>
-        <p class="ajuda">Ferramentas que o Mauricio usa com os clientes dele, agora prontas para você.</p>
+      <div id="ofertasCorpo" class="ce-corpo ce-corpo-escuro" hidden>
         <div class="ofertas-nomes" id="ofertasNomes"></div>
         <button type="button" class="btn peq contorno" data-recolhe-fechar="ofertasCorpo" style="margin-top:12px">Recolher as ofertas ↑</button>
       </div>
@@ -288,9 +289,9 @@
         nomes.appendChild(t);
       });
       document.getElementById("cartaoOfertas").hidden = false;
-      document.getElementById("ofertasResumo").textContent = nomes.children.length + (nomes.children.length === 1 ? " oferta" : " ofertas") + " do Mauricio para você.";
+      document.getElementById("ofertasResumo").textContent = nomes.children.length + (nomes.children.length === 1 ? " oferta nova" : " ofertas novas") + " para o seu momento";
       const novas = prods.filter(function (x) { return !pedidos.has(x.id); });
-      if (novas.length) alertar("ofertas", "Novidade para você", novas.length + (novas.length === 1 ? " ferramenta nova" : " ferramentas novas") + " do Mauricio para conhecer.", "Ver agora", "cartaoOfertas");
+      if (false && novas.length) alertar("ofertas", "Novidade para você", novas.length + (novas.length === 1 ? " ferramenta nova" : " ferramentas novas") + " do Mauricio para conhecer.", "Ver agora", "cartaoOfertas");
     }
   } catch (e) { /* sem ofertas, sem problema */ }
 
@@ -329,15 +330,18 @@
       if (!historicoAberto) document.getElementById("cartaoPag").scrollIntoView({ behavior: "smooth", block: "start" });
     });
     document.getElementById("cartaoPag").hidden = false;
-    document.getElementById("pagResumo").textContent = atras.length ? atras.length + (atras.length === 1 ? " pagamento atrasado" : " pagamentos atrasados") + " · " + brl(totAtras) + (prox.length ? " · " + prox.length + " a vencer este mês" : "")
-      : prox.length ? prox.length + (prox.length === 1 ? " pagamento a vencer este mês · " : " pagamentos a vencer este mês · ") + brl(prox.reduce(function (t, c) { return t + +c.valor; }, 0))
-      : "Tudo em dia." + (futuras.length ? " Próxima cobrança em " + dataBR(futuras[0].vencimento) + "." : "");
+    const totProx = prox.reduce(function (t, c) { return t + +c.valor; }, 0);
+    document.getElementById("pagResumo").textContent = atras.length ? (atras.length === 1 ? "1 pagamento atrasado" : atras.length + " pagamentos atrasados")
+      : prox.length ? (prox.length === 1 ? "1 pagamento a vencer este mês" : prox.length + " pagamentos a vencer este mês") : "Tudo em dia. Obrigado!";
+    document.getElementById("pagInfo").innerHTML = atras.length ? '<b class="ce-valor ce-ruim">' + brl(totAtras) + "</b> em atraso desde " + dataBR(atras[0].vencimento) + (prox.length ? " · mais " + brl(totProx) + " a vencer" : "")
+      : prox.length ? '<b class="ce-valor">' + brl(totProx) + "</b> · próximo vencimento em " + dataBR(prox[0].vencimento)
+      : (futuras.length ? "Próxima cobrança em " + dataBR(futuras[0].vencimento) + "." : "Nenhuma cobrança em aberto.");
     if (!atras.length && !prox.length) { const rb = document.querySelector('[data-recolhe="pagCorpo"]'); if (rb) rb.classList.add("calmo"); }
     if (atras.length || prox.length) {
       const partes = [];
       if (atras.length) partes.push(atras.length + (atras.length === 1 ? " pagamento atrasado" : " pagamentos atrasados") + " (" + brl(totAtras) + ")");
       if (prox.length) partes.push(prox.length + (prox.length === 1 ? " vencimento próximo" : " vencimentos próximos"));
-      alertar("pagamentos", "Importante: seus pagamentos", partes.join(" e ") + ". Confira valores e datas.", "Ver pagamentos", "cartaoPag");
+      if (false) alertar("pagamentos", "Importante: seus pagamentos", partes.join(" e ") + ". Confira valores e datas.", "Ver pagamentos", "cartaoPag");
     }
   }
 
