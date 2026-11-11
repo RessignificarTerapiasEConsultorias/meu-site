@@ -290,3 +290,17 @@ body.cv-on{overflow-x:clip}
 .linha-item[data-dv-del]{flex-wrap:wrap}
 .dv-exc-resp{display:inline-flex;align-items:center;margin-top:8px;padding:6px 12px;border-radius:999px;border:1.5px solid #EFC2BB;color:#A3271B;font-size:13px;font-weight:700;background:#fff;cursor:pointer}
 .dv-exc-resp:hover{background:#FBEAE7}
+
+/* área da terapeuta: quem chamou no WhatsApp */
+.dv-cliques{position:relative;overflow:hidden;margin:16px 0;padding:18px 18px 16px;border-radius:16px;background:radial-gradient(120% 120% at 100% 0%,#1B3766 0%,#0B1F3A 60%,#06142A 100%);color:#fff;box-shadow:0 12px 28px rgba(6,20,42,.18)}
+.dv-cliques::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;border:1px solid rgba(227,196,119,.25);pointer-events:none}
+.dv-cl-olho{display:block;font-size:12.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#E3C477}
+.dv-cl-tit{margin:6px 0 8px;font-family:'Fraunces',Georgia,serif;font-size:clamp(19px,2.4vw,22px);line-height:1.3;font-weight:600;color:#fff}
+.dv-cl-rodape{position:relative;z-index:1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px;font-size:14px;color:#C9D2E4}
+.dv-cl-corpo{position:relative;z-index:1;margin-top:14px;background:#FFFDF8;color:#16203A;border-radius:14px;padding:14px}
+.dv-cl-corpo h4{margin:4px 0 8px;font-size:15px}
+.dv-cl-corpo ul{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
+.dv-cl-corpo li{border:1px solid #E3DCCD;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.dv-cl-corpo li span{font-size:13px;color:#4C5670}
+.dv-cl-orig{font-size:13.5px;color:#4C5670;margin:0 0 10px}
+.dv-cl-nota{font-size:12.5px;color:#4C5670;margin:4px 0 10px}

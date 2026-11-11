@@ -670,7 +670,7 @@ function dvCapaVendas(modo){
   const comQuem = (/^o /i.test(quem) ? 'o ' : 'a ') + apelido;
   const foto = (capa.querySelector('.moldura img') || {}).src || '';
   const num = typeof CONFIG !== 'undefined' ? (CONFIG.whatsappNumero || '') : '';
-  const zap = msg => 'https://wa.me/' + num + '?text=' + encodeURIComponent('Olá, ' + apelido + '! Vi a página do teste e ' + msg);
+  const zap = msg => 'https://wa.me/' + num + '?text=' + encodeURIComponent('Olá, ' + apelido + '! Vim pelo seu site de testes e ' + msg);
   const nomeTeste = soTravas ? 'o Teste de Travas Mentais' : soTracos ? 'o Teste de Traços de Caráter' : soMpcc ? 'o MPCC (Mapa de Perfil Comportamental e Competências)' : 'o meu teste';
   const Z = { ind:zap('quero fazer ' + nomeTeste + '. Como recebo o meu código?'), casal:zap('quero fazer o teste em casal. Como funciona para nós dois?'),
     duvida:zap('tenho uma dúvida sobre o teste.'),
@@ -1119,3 +1119,116 @@ async function dvExcluirResposta(linha, botao){
   }catch(e){ botao.textContent = 'Excluir'; alert('Não consegui excluir agora. Tente de novo em instantes.'); }
 }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dvExcluirRespostas); else dvExcluirRespostas();
+
+/* ============================================================================
+   WHATSAPP DAS PÁGINAS DE TESTE (todas as terapeutas, todos os testes)
+   1) toda mensagem que sai da página diz que a pessoa veio do site de testes;
+   2) cada clique fica registrado (botão, de onde a pessoa veio, teste e código, se já tinha);
+   3) na área da terapeuta, o quadro "Quem chamou você no WhatsApp" mostra os cliques.
+   ============================================================================ */
+const DV_SITE_TXT = 'Vim pelo seu site de testes.';
+function dvOrigemVisita(){
+  try{
+    const salva = sessionStorage.getItem('dv_origem'); if(salva) return JSON.parse(salva);
+    const q = new URLSearchParams(location.search), utm = (q.get('utm_source') || q.get('origem') || q.get('de') || '').toLowerCase();
+    let host = ''; try{ host = document.referrer ? new URL(document.referrer).hostname.replace(/^www\./, '') : ''; }catch(e){}
+    const base = utm || host;
+    const nome = /insta/.test(base) ? 'Instagram' : /facebook|fb\.|^fb$/.test(base) ? 'Facebook' : /whats|wa\.me/.test(base) ? 'WhatsApp' : /google/.test(base) ? 'Google'
+      : /tiktok/.test(base) ? 'TikTok' : /youtube|youtu\.be/.test(base) ? 'YouTube' : /ressignificar/.test(base) ? 'Site da Ressignificar' : base ? base : 'Link direto';
+    const o = { origem: nome, referencia: (host ? host : '') + (utm ? (host ? ' · ' : '') + 'utm=' + utm : '') };
+    sessionStorage.setItem('dv_origem', JSON.stringify(o)); return o;
+  }catch(e){ return { origem:'Link direto', referencia:'' }; }
+}
+function dvCodigoAtual(){
+  try{
+    if(typeof estado !== 'undefined' && estado && estado.codigo) return estado.codigo;
+    if(typeof tc !== 'undefined' && tc && tc.codigo) return tc.codigo;
+    const q = new URLSearchParams(location.search), c = q.get('c') || q.get('codigo') || q.get('code') || q.get('mp') || q.get('ct');
+    return c || sessionStorage.getItem('dv_ultimo_codigo') || '';
+  }catch(e){ return ''; }
+}
+function dvTesteAtual(tela){
+  const id = tela ? tela.id : '';
+  if(/^tela-tc/.test(id)) return 'tracos';
+  if(/^tela-mp/.test(id)) return 'mpcc';
+  if(/^tela-(orientacao|dados|teste|resultado|obrigada|expirou)/.test(id)) return 'travas';
+  return '';
+}
+function dvWhatsSite(){
+  if(window.__dvWhats) return; window.__dvWhats = true;
+  dvOrigemVisita();
+  document.addEventListener('input', e => { if(e.target && e.target.id === 'campo-codigo'){ try{ sessionStorage.setItem('dv_ultimo_codigo', e.target.value.trim().toUpperCase()); }catch(err){} } });
+  document.addEventListener('click', e => {
+    const a = e.target.closest && e.target.closest('a[href*="wa.me/"]'); if(!a) return;
+    if(a.closest('#tela-admin')) return;                       // botões da área da terapeuta (falar com o cliente) não entram
+    const tela = a.closest('.tela'), id = tela ? tela.id : '';
+    const momento = /resultado|obrigada/.test(id) || /^(tf|tr|to)-zap$/.test(a.id) || /resultado/i.test(a.id) ? 'resultado'
+      : (!tela || id === 'tela-capa' || id === 'tela-tc-capa' || id === 'tela-mp-capa' || a.closest('.cv-barra, footer, .rodape')) ? 'pagina' : 'durante';
+    /* mensagem: sempre dizendo que veio do site de testes */
+    try{
+      const u = new URL(a.href, location.href); let t = u.searchParams.get('text') || '';
+      if(!/site de testes/i.test(t)){
+        const prim = (typeof PRIM_TER !== 'undefined' && PRIM_TER) ? PRIM_TER : '';
+        t = !t ? 'Olá' + (prim ? ', ' + prim : '') + '! ' + DV_SITE_TXT + ' Queria saber mais.'
+          : momento === 'pagina' ? t.replace(/^((?:Olá|Oi)[^!]*!)\s*/i, '$1 ' + DV_SITE_TXT + ' ').replace(/^(?!(?:Olá|Oi))/i, DV_SITE_TXT + ' ') : t;
+        u.searchParams.set('text', t); a.href = u.toString();
+      }
+    }catch(err){}
+    /* registro do clique */
+    try{
+      if(typeof T_SLUG === 'undefined' || !T_SLUG || typeof MEMBROS_URL === 'undefined') return;
+      const o = dvOrigemVisita(), cl = a.cloneNode(true); cl.querySelectorAll('small,svg').forEach(x => x.remove()); const botao = (cl.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+      fetch(MEMBROS_URL + '/rest/v1/rpc/teste_registrar_clique', { method:'POST', keepalive:true,
+        headers:{ 'Content-Type':'application/json', apikey:MEMBROS_KEY, Authorization:'Bearer ' + MEMBROS_KEY },
+        body: JSON.stringify({ p_slug: T_SLUG, p_dados: { teste: dvTesteAtual(tela), momento, botao, codigo: momento === 'pagina' ? '' : dvCodigoAtual(), origem: o.origem, referencia: o.referencia } }) }).catch(() => {});
+    }catch(err){}
+  }, true);
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dvWhatsSite); else dvWhatsSite();
+
+/* área da terapeuta: "Quem chamou você no WhatsApp" (últimos 60 dias) */
+async function dvQuadroCliques(){
+  const adm = document.getElementById('painel-admin'); if(!adm || typeof clienteMembros !== 'function') return;
+  let box = document.getElementById('dv-cliques');
+  try{
+    const c = clienteMembros(), { data:sess } = await c.auth.getSession(); if(!sess || !sess.session) return;
+    const uid = sess.session.user.id, desde = new Date(Date.now() - 60 * 86400000).toISOString();
+    const { data, error } = await c.from('teste_cliques').select('teste,momento,botao,codigo,origem,criado_em').eq('terapeuta_id', uid).gte('criado_em', desde).order('criado_em', { ascending:false }).limit(300);
+    if(error || !data || !data.length){ if(box) box.remove(); return; }
+    /* quem é cada código (das respostas dos três testes) */
+    const cods = Array.from(new Set(data.filter(x => x.codigo).map(x => x.codigo)));
+    const nomes = {};
+    if(cods.length){
+      const rs = await Promise.all(['travas_respostas', 'tracos_respostas', 'mpcc_respostas'].map(t => c.from(t).select('codigo,nome').eq('terapeuta_id', uid).in('codigo', cods)));
+      rs.forEach(r => (r.data || []).forEach(x => { if(x.nome) nomes[x.codigo] = x.nome; }));
+    }
+    const ROT = { travas:'Travas', tracos:'Traços', mpcc:'MPCC' }, MOM = { pagina:'pela página, sem teste', durante:'durante o teste', resultado:'depois do resultado' };
+    const quando = iso => new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+    const pag = data.filter(x => x.momento === 'pagina'), teste = data.filter(x => x.momento !== 'pagina');
+    const porOrigem = {}; pag.forEach(x => { porOrigem[x.origem || 'Link direto'] = (porOrigem[x.origem || 'Link direto'] || 0) + 1; });
+    const linha = x => '<li><b>' + escV(x.codigo ? (nomes[x.codigo] || 'Código ' + x.codigo) : (x.origem || 'Link direto')) + '</b><span>' + quando(x.criado_em) + ' · ' + MOM[x.momento] + (x.teste ? ' · ' + ROT[x.teste] : '') + (x.botao ? ' · botão “' + escV(x.botao.slice(0, 40)) + '”' : '') + (x.codigo && x.origem ? ' · veio de ' + escV(x.origem) : '') + '</span></li>';
+    const html = '<span class="dv-cl-olho">Quem chamou você no WhatsApp</span><p class="dv-cl-tit">' + data.length + (data.length === 1 ? ' clique' : ' cliques') + ' nos últimos 60 dias</p>' +
+      '<div class="dv-cl-rodape"><span>' + pag.length + ' pela página, sem teste · ' + teste.length + ' de quem estava no teste</span>' +
+      '<button type="button" class="vit-alerta" data-vit-abrir="dvClCorpo" data-txt="Ver quem chamou" aria-expanded="false" aria-controls="dvClCorpo"><span class="vit-ponto" aria-hidden="true"></span><span class="vit-alerta-txt">Ver quem chamou</span></button></div>' +
+      '<div class="dv-cl-corpo" id="dvClCorpo" hidden>' +
+        (teste.length ? '<h4>De quem estava fazendo o teste</h4><ul>' + teste.map(linha).join('') + '</ul>' : '') +
+        (pag.length ? '<h4>Pela página, sem fazer teste</h4><p class="dv-cl-orig">De onde vieram: ' + Object.keys(porOrigem).sort((a, b) => porOrigem[b] - porOrigem[a]).map(k => escV(k) + ' (' + porOrigem[k] + ')').join(' · ') + '</p><ul>' + pag.slice(0, 60).map(linha).join('') + '</ul>' : '') +
+        '<p class="dv-cl-nota">Só você vê isto. Quem clicou pela página ainda não fez o teste: a pessoa abre o WhatsApp com a mensagem pronta e você recebe a conversa.</p>' +
+        '<button type="button" class="vit-fechar" data-vit-fechar="dvClCorpo">Recolher ↑</button></div>';
+    if(!box){
+      box = document.createElement('div'); box.id = 'dv-cliques'; box.className = 'dv-cliques nao-imprimir';
+      const ref = document.getElementById('financeiroRessignificar') || document.getElementById('vitrineRessignificar') || adm.querySelector('.cabecalho-admin');
+      if(ref) ref.insertAdjacentElement('afterend', box); else adm.prepend(box);
+    }
+    box.innerHTML = html;
+  }catch(e){ if(box) box.remove(); }
+}
+(function(){
+  const ligar = () => {
+    const adm = document.getElementById('painel-admin'); if(!adm || !('MutationObserver' in window)) return;
+    let ultima = 0;
+    const ver = () => { if(adm.classList.contains('ver') && Date.now() - ultima > 20000){ ultima = Date.now(); setTimeout(dvQuadroCliques, 900); } };
+    new MutationObserver(ver).observe(adm, { attributes:true, attributeFilter:['class'] }); ver();
+  };
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligar); else ligar();
+})();

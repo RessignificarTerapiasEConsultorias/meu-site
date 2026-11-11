@@ -527,7 +527,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611110705">
+<meta name="versao-site" content="v202611110715">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -587,6 +587,11 @@ html.t-erro .t-girar{display:none}
 #financeiroRessignificar .vit-resumo{position:relative;z-index:1}
 #financeiroRessignificar .vit-detalhe{position:relative;z-index:1;margin-top:14px;background:#FFFDF8;color:#16203A;border-radius:14px;padding:12px}
 #financeiroRessignificar .vit-fechar{background:#fff}
+
+/* resumo de interesse: nomes de quem clicou */
+.ri-nomes{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ri-nome{border:1px solid #D9C27A;background:#FFF9E3;color:#5C4500;border-radius:999px;padding:4px 10px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;text-align:left}
+.ri-nome:hover{background:#F6E7B0}
 
 </style>
 <link rel="stylesheet" href="devolutiva-carater.css">
@@ -1977,12 +1982,16 @@ function urgResumo(lista){
   const z = base.filter(r => r.interesse && r.interesse.whatsapp), n = base.filter(r => r.interesse && r.interesse.notificacao);
   const sem = base.filter(r => !(r.interesse && (r.interesse.whatsapp || r.interesse.notificacao))).length;
   const mz = urgMedia(z.map(r => r.interesse.whatsapp.segundos)), mn = urgMedia(n.map(r => r.interesse.notificacao.adiou_segundos));
+  const semL = base.filter(r => !(r.interesse && (r.interesse.whatsapp || r.interesse.notificacao)));
+  const quem = (l, f) => l.length ? '<span class="ri-nomes">' + l.map(r => '<button type="button" class="ri-nome" data-ri-i="' + (lista || []).indexOf(r) + '">' + escH(String(r.nome || 'Sem nome').split(' ').slice(0, 2).join(' ')) + (f ? ' · ' + f(r) : '') + '</button>').join('') + '</span>' : '';
+  window.__riLista = lista || [];
   caixa.innerHTML = '<div class="resumo-interesse"><div class="ri-titulo">Interesse depois do resultado</div><div class="ri-grade">'
-    + '<div><b>' + z.length + '</b>clicaram no WhatsApp<small>' + (mz === null ? 'sem média' : 'em média ' + urgDur(mz) + ' depois do resultado') + '</small></div>'
-    + '<div><b>' + n.length + '</b>enviaram notificação<small>' + (mn === null ? 'sem média' : 'em média ' + urgDur(mn) + ' depois do tempo acabar') + '</small></div>'
-    + '<div><b>' + sem + '</b>sem ação<small>não clicaram nem notificaram</small></div></div>'
+    + '<div><b>' + z.length + '</b>clicaram no WhatsApp<small>' + (mz === null ? 'sem média' : 'em média ' + urgDur(mz) + ' depois do resultado') + '</small>' + quem(z, r => urgDur(r.interesse.whatsapp.segundos)) + '</div>'
+    + '<div><b>' + n.length + '</b>enviaram notificação<small>' + (mn === null ? 'sem média' : 'em média ' + urgDur(mn) + ' depois do tempo acabar') + '</small>' + quem(n) + '</div>'
+    + '<div><b>' + sem + '</b>sem ação<small>não clicaram nem notificaram</small>' + quem(semL) + '</div></div>'
     + '<p class="ri-base">Em ' + base.length + (base.length === 1 ? ' resposta' : ' respostas') + ' com o cronômetro de 60 s. Só você vê isto; não vai no PDF.</p></div>';
 }
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-ri-i]'); if(!b) return; const r = (window.__riLista || [])[+b.dataset.riI]; if(r && typeof abrirDetalhe === 'function') abrirDetalhe(r); });
 function urgBloco(r){
   const i = r.interesse || {}, w = i.whatsapp, n = i.notificacao;
   if(r.urgencia === undefined && !w && !n) return '';                              // resposta de antes deste recurso
