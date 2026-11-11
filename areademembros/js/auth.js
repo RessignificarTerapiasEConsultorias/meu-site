@@ -22,6 +22,22 @@ const PAINEL_DO_PAPEL = {
   } catch (e) {}
 })();
 
+/* versão nova publicada? O celular às vezes guarda a página antiga por alguns minutos.
+   Compara a cópia guardada com a do site e, se mudou, atualiza a página uma vez (sem perder o login). */
+(async function atualizarSeVelha() {
+  try {
+    const chave = "atu_" + location.pathname;
+    if (sessionStorage.getItem(chave)) return;
+    const [guardada, nova] = await Promise.all([fetch(location.pathname, { cache: "force-cache" }), fetch(location.pathname, { cache: "no-store" })]);
+    const a = guardada.headers.get("etag") || guardada.headers.get("last-modified"), b = nova.headers.get("etag") || nova.headers.get("last-modified");
+    sessionStorage.setItem(chave, "1");
+    if (!a || !b || a === b) return;
+    const arquivos = [location.pathname].concat([].slice.call(document.querySelectorAll('link[rel="stylesheet"][href^="css/"], script[src^="js/"]')).map(function (el) { return el.getAttribute("href") || el.getAttribute("src"); }));
+    await Promise.all(arquivos.map(function (u) { return fetch(u, { cache: "reload" }).catch(function () {}); }));
+    location.reload();
+  } catch (e) {}
+})();
+
 let _cliente = null;
 function supa() {
   if (!_cliente) {
