@@ -2,7 +2,7 @@
 (async function () {
   const eu = await protegerPagina("profissional");
   if (!eu) return;
-  document.getElementById("ola").textContent = "Olá, " + eu.nome.split(" ")[0] + "!";
+  document.getElementById("ola").textContent = "Olá, " + (eu.nome_exibicao || eu.nome).split(" ")[0] + "!";
 
   function esc(s) { return String(s || "").replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
 

@@ -98,7 +98,7 @@ async function protegerPagina(papelEsperado) {
   document.querySelectorAll("[data-sair]").forEach(el => el.addEventListener("click", sair));
   document.getElementById("carregando")?.setAttribute("hidden", "");
   document.getElementById("painel")?.removeAttribute("hidden");
-  botaoMeusTestes(perfil);
+  await botaoMeusTestes(perfil);
   return perfil;
 }
 
@@ -106,9 +106,16 @@ async function protegerPagina(papelEsperado) {
 async function botaoMeusTestes(perfil) {
   try {
     const caixa = document.querySelector(".topo-painel .usuario");
-    if (!caixa || document.getElementById("btnMeusTestes")) return;
-    const { data } = await supa().from("travas_paginas").select("slug").eq("terapeuta_id", perfil.id).maybeSingle();
-    if (!data || !data.slug || document.getElementById("btnMeusTestes")) return;
+    const { data } = await supa().from("travas_paginas").select("slug,dados").eq("terapeuta_id", perfil.id).maybeSingle();
+    // nome de exibição: o cadastro guarda o nome completo; no topo e no "Olá" vale o nome que a terapeuta usa na página do teste
+    const nomePagina = data && data.dados && String(data.dados.nome || "").trim();
+    if (nomePagina && nomePagina !== perfil.nome) {
+      perfil.nome_exibicao = nomePagina;
+      document.querySelectorAll("[data-nome-usuario]").forEach(el => el.textContent = nomePagina);
+      const ola = document.getElementById("ola");
+      if (ola && /^Olá, /.test(ola.textContent)) ola.textContent = "Olá, " + nomePagina.split(" ")[0] + "!";
+    }
+    if (!caixa || !data || !data.slug || document.getElementById("btnMeusTestes")) return;
     const a = document.createElement("a");
     a.id = "btnMeusTestes"; a.className = "btn peq"; a.href = "/teste/?t=" + encodeURIComponent(data.slug) + "#admin";
     a.textContent = "Meus testes"; a.title = "Voltar para a área dos seus testes";

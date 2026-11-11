@@ -238,7 +238,7 @@
   /* ================= LIBERAR TESTE MANUALMENTE ================= */
   const fLib = document.getElementById("formLib");
   if (fLib) {
-    const PRECO = { travas: { v: "147", per: "unico" }, tracos: { v: "97", per: "anual" }, mpcc: { v: "97", per: "anual" } };
+    const PRECO = { travas: { v: "147", per: "anual" }, tracos: { v: "97", per: "anual" }, mpcc: { v: "97", per: "anual" } };
     const libModo = document.getElementById("libModo"), libTeste = document.getElementById("libTeste");
     function ajustarLib() {
       const m = libModo.value;
@@ -249,7 +249,7 @@
     }
     libTeste.addEventListener("change", function () { const p = PRECO[libTeste.value]; document.getElementById("libValor").value = p.v; document.getElementById("libPer").value = p.per; });
     libModo.addEventListener("change", ajustarLib);
-    document.getElementById("libValor").value = PRECO.travas.v; ajustarLib();
+    document.getElementById("libValor").value = PRECO.travas.v; document.getElementById("libPer").value = PRECO.travas.per; ajustarLib();
     fLib.addEventListener("submit", async function (e) {
       e.preventDefault();
       const pid = selCli.value, modo = libModo.value;
