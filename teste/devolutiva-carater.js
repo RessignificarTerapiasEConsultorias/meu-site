@@ -1070,3 +1070,52 @@ function dvEsqueciSenha(){
   });
 }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dvEsqueciSenha); else dvEsqueciSenha();
+
+/* ============================================================================
+   EXCLUIR RESPOSTAS (Travas, Traços individual e MPCC): "Excluir" em cada linha da lista de respostas.
+   As linhas vêm marcadas com data-dv-del (tipo do teste) e o id (ou, no Travas, código + nome + data).
+   ============================================================================ */
+const DV_TAB_RESP = { travas:'travas_respostas', tracos:'tracos_respostas', mpcc:'mpcc_respostas' };
+function dvExcluirRespostas(){
+  if(window.__dvExcR) return; window.__dvExcR = true;
+  function marcar(){
+    document.querySelectorAll('.linha-item[data-dv-del]:not([data-dv-del-ok])').forEach(l => {
+      l.setAttribute('data-dv-del-ok', '1');
+      const x = document.createElement('span');
+      x.className = 'dv-exc-resp'; x.setAttribute('role', 'button'); x.setAttribute('tabindex', '0');
+      x.setAttribute('aria-label', 'Excluir esta resposta'); x.textContent = 'Excluir';
+      const ir = ev => { ev.preventDefault(); ev.stopPropagation(); dvExcluirResposta(l, x); };
+      x.addEventListener('click', ir);
+      x.addEventListener('keydown', ev => { if(ev.key === 'Enter' || ev.key === ' ') ir(ev); });
+      l.appendChild(x);
+    });
+  }
+  marcar();
+  if('MutationObserver' in window) new MutationObserver(() => { clearTimeout(window.__dvExcRT); window.__dvExcRT = setTimeout(marcar, 60); }).observe(document.body, { childList:true, subtree:true });
+}
+async function dvExcluirResposta(linha, botao){
+  const tipo = linha.dataset.dvDel, tab = DV_TAB_RESP[tipo]; if(!tab) return;
+  const nome = (linha.querySelector('.nome') || {}).textContent || 'esta pessoa';
+  if(!confirm('Excluir a resposta de ' + nome.trim() + '?\n\nO resultado some da sua lista e não dá para recuperar depois.')) return;
+  if(typeof clienteMembros !== 'function'){ alert('Entre de novo na sua área para excluir.'); return; }
+  botao.textContent = 'Excluindo...';
+  try{
+    const c = clienteMembros(), { data:sess } = await c.auth.getSession();
+    if(!sess || !sess.session) throw new Error('sessão');
+    let q = c.from(tab).delete().eq('terapeuta_id', sess.session.user.id);
+    if(linha.dataset.id) q = q.eq('id', linha.dataset.id);
+    else if(tipo === 'travas' && linha.dataset.cod) q = q.eq('codigo', linha.dataset.cod).eq('dados->>nome', linha.dataset.nome || '').eq('dados->>data', linha.dataset.dt || '');
+    else throw new Error('sem identificação');
+    const { data, error } = await q.select('id');
+    if(error || !data || !data.length) throw new Error(error ? error.message : 'nada');
+    /* tira também da memória da lista, para não voltar ao filtrar */
+    try{
+      if(tipo === 'travas' && typeof respostasCache !== 'undefined') respostasCache = respostasCache.filter(r => !(r.codigo === linha.dataset.cod && (r.nome || '') === (linha.dataset.nome || '') && (r.data || '') === (linha.dataset.dt || '')));
+      if(tipo === 'tracos' && typeof tcRespCache !== 'undefined') tcRespCache = tcRespCache.filter(r => r.id !== linha.dataset.id);
+      if(tipo === 'mpcc' && typeof mpCache !== 'undefined') mpCache = mpCache.filter(r => r.id !== linha.dataset.id);
+    }catch(e){}
+    linha.style.transition = 'opacity .25s'; linha.style.opacity = '0';
+    setTimeout(() => { const box = linha.parentNode; linha.remove(); if(box && !box.querySelector('.linha-item')) box.innerHTML = '<div class="vazio">Nenhuma resposta por enquanto.</div>'; }, 260);
+  }catch(e){ botao.textContent = 'Excluir'; alert('Não consegui excluir agora. Tente de novo em instantes.'); }
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dvExcluirRespostas); else dvExcluirRespostas();

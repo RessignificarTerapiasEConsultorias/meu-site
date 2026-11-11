@@ -578,7 +578,7 @@ function mpDesenharLista(){
   const lista = mpCache.filter(x => !termo || (x.nome || '').toLowerCase().includes(termo));
   if(!lista.length){ caixa.innerHTML = '<div class="vazio">Nenhuma avaliação por enquanto.</div>'; return; }
   caixa.innerHTML = lista.map(x => { const calc = mpDeRegistro(x.dados || {});
-    return `<button type="button" class="linha-item" data-mp-i="${mpCache.indexOf(x)}"><span class="esq"><span class="nome">${escV(x.nome)}</span><span class="sub">Perfil geral ${mpNum(calc.geral.media, 2)} · ${escV(calc.geral.faixa.nome)} · ${mpQuando(x.criado_em)}</span></span><span class="etiqueta livre">${mpNum(calc.geral.media, 1)}</span></button>`; }).join('');
+    return `<button type="button" class="linha-item" data-mp-i="${mpCache.indexOf(x)}" data-dv-del="mpcc" data-id="${x.id}"><span class="esq"><span class="nome">${escV(x.nome)}</span><span class="sub">Perfil geral ${mpNum(calc.geral.media, 2)} · ${escV(calc.geral.faixa.nome)} · ${mpQuando(x.criado_em)}</span></span><span class="etiqueta livre">${mpNum(calc.geral.media, 1)}</span></button>`; }).join('');
   caixa.querySelectorAll('[data-mp-i]').forEach(b => b.addEventListener('click', () => mpAbrirDetalhe(mpCache[+b.dataset.mpI])));
 }
 function mpExportar(){

@@ -287,3 +287,6 @@ body.cv-on{overflow-x:clip}
 .mini-btn.dv-exc:disabled{opacity:.45;cursor:not-allowed}
 .dv-esqueci{text-align:center;margin:14px 0 0;font-size:15px}
 .dv-esqueci a{color:var(--ardosia,#0B1F3A);font-weight:700}
+.linha-item[data-dv-del]{flex-wrap:wrap}
+.dv-exc-resp{display:inline-flex;align-items:center;margin-top:8px;padding:6px 12px;border-radius:999px;border:1.5px solid #EFC2BB;color:#A3271B;font-size:13px;font-weight:700;background:#fff;cursor:pointer}
+.dv-exc-resp:hover{background:#FBEAE7}
