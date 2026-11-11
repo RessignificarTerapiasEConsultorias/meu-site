@@ -82,7 +82,23 @@ async function protegerPagina(papelEsperado) {
   document.querySelectorAll("[data-sair]").forEach(el => el.addEventListener("click", sair));
   document.getElementById("carregando")?.setAttribute("hidden", "");
   document.getElementById("painel")?.removeAttribute("hidden");
+  botaoMeusTestes(perfil);
   return perfil;
+}
+
+/* terapeuta com página de teste: botão "Meus testes" no topo de todas as páginas, para voltar à área do teste */
+async function botaoMeusTestes(perfil) {
+  try {
+    const caixa = document.querySelector(".topo-painel .usuario");
+    if (!caixa || document.getElementById("btnMeusTestes")) return;
+    const { data } = await supa().from("travas_paginas").select("slug").eq("terapeuta_id", perfil.id).maybeSingle();
+    if (!data || !data.slug || document.getElementById("btnMeusTestes")) return;
+    const a = document.createElement("a");
+    a.id = "btnMeusTestes"; a.className = "btn peq"; a.href = "/teste/?t=" + encodeURIComponent(data.slug) + "#admin";
+    a.textContent = "Meus testes"; a.title = "Voltar para a área dos seus testes";
+    a.style.cssText = "background:#C9A24A;color:#06142A;white-space:nowrap";
+    caixa.insertBefore(a, caixa.firstChild);
+  } catch (e) {}
 }
 
 function rotuloPapel(papel) {

@@ -40,7 +40,7 @@ a{color:var(--navy)}
 .topo-painel .marca{display:flex;align-items:center;gap:10px}
 .topo-painel .marca img{width:34px;height:34px;border-radius:50%}
 .topo-painel .marca b{font:600 17px var(--serif)}
-.topo-painel .usuario{display:flex;align-items:center;gap:12px;font-size:14px;color:#D5DCEA}
+.topo-painel .usuario{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;justify-content:flex-end;min-width:0;max-width:100%;font-size:14px;color:#D5DCEA}
 .selo-papel{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--gold);color:var(--deep)}
 .sair{background:none;border:1px solid rgba(255,255,255,.35);color:#fff;padding:8px 14px;border-radius:9px;cursor:pointer;font-weight:600;font-size:13.5px}
 .sair:hover{border-color:#fff}
