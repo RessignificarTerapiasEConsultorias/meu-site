@@ -57,10 +57,10 @@
         <div id="blocoAberto">
           <a class="btn" id="btnPagar" href="#" target="_blank" rel="noopener" style="width:100%;margin-bottom:8px" hidden>Pagar agora</a>
           <div id="blocoPix" hidden style="margin-bottom:8px">
-            <label for="pixCodigo" style="display:block;font-weight:700;margin-bottom:6px">Pix copia e cola</label>
+            <label for="pixCodigo" id="pixRotulo" style="display:block;font-weight:700;margin-bottom:6px">Pix copia e cola</label>
             <textarea id="pixCodigo" readonly rows="3" style="width:100%;font:13px/1.4 monospace;padding:10px;border-radius:10px;border:1px solid #D9D2C3;background:#fff;resize:none;word-break:break-all"></textarea>
             <button type="button" class="btn" id="btnPix" style="width:100%;margin-top:8px">Copiar o código Pix</button>
-            <p class="dica" style="text-align:center;margin:6px 0 0">No app do seu banco, escolha Pix › Pix copia e cola e cole o código.</p>
+            <p class="dica" id="pixDica" style="text-align:center;margin:6px 0 0">No app do seu banco, escolha Pix › Pix copia e cola e cole o código.</p>
           </div>
           <p class="dica" id="dicaPagar" hidden style="text-align:center;margin-bottom:16px">Depois de pagar, volte aqui e toque em “Já paguei”.</p>
 
@@ -136,14 +136,26 @@
     $("#resumo").innerHTML = "<b>" + esc(j.descricao) + "</b>" + (j.servico ? " · " + esc(j.servico) : "") + '<div class="valor">' + brl(j.valor) + "</div>" + sit;
     if (j.paga) { $("#blocoPaga").hidden = false; $("#blocoAberto").hidden = true; }
     else {
-      if (j.link_pagamento && /^https:\/\//.test(j.link_pagamento)) { $("#btnPagar").href = j.link_pagamento; $("#btnPagar").hidden = false; $("#dicaPagar").hidden = false; }
-      else if (j.link_pagamento && /^000201/.test(j.link_pagamento)) {        /* Pix copia e cola */
-        $("#pixCodigo").value = j.link_pagamento; $("#blocoPix").hidden = false; $("#dicaPagar").hidden = false;
+      /* forma de pagar: link do cartão (https://...), Pix copia e cola (000201...) e/ou chave Pix ("pix:chave");
+         pode ter mais de uma, separadas por linha ou espaço, e a pessoa escolhe */
+      var formas = String(j.link_pagamento || "").split(/\s+/).filter(Boolean);
+      var lnk = formas.filter(function (x) { return /^https:\/\//.test(x); })[0];
+      var pix = formas.filter(function (x) { return /^000201/.test(x); })[0];
+      var chave = formas.filter(function (x) { return /^pix:/i.test(x); })[0];
+      if (lnk) { $("#btnPagar").href = lnk; $("#btnPagar").hidden = false; $("#dicaPagar").hidden = false; if (pix || chave) $("#btnPagar").textContent = "Pagar no cartão de crédito"; }
+      if (pix || chave) {
+        $("#pixCodigo").value = pix || chave.slice(4); $("#blocoPix").hidden = false; $("#dicaPagar").hidden = false;
+        if (!pix) {
+          $("#pixRotulo").textContent = "Chave Pix (CNPJ)"; $("#pixCodigo").rows = 1; $("#btnPix").textContent = "Copiar a chave Pix";
+          $("#pixDica").textContent = "No app do seu banco, escolha Pix › Pagar com chave, cole a chave e digite o valor de " + brl(j.valor) + ".";
+        }
+        var txtPix = $("#btnPix").textContent;
         $("#btnPix").addEventListener("click", function () {
           var b = this, c = $("#pixCodigo");
           (navigator.clipboard ? navigator.clipboard.writeText(c.value) : Promise.reject()).catch(function () { c.select(); document.execCommand("copy"); })
-            .then(function () { b.textContent = "Código copiado ✓"; setTimeout(function () { b.textContent = "Copiar o código Pix"; }, 2500); });
+            .then(function () { b.textContent = "Copiado ✓"; setTimeout(function () { b.textContent = txtPix; }, 2500); });
         });
+        if (lnk) $("#blocoPix").insertAdjacentHTML("afterbegin", '<p class="dica" style="text-align:center;margin:4px 0 10px">ou pague no Pix:</p>');
       }
       var d = $("#fData"); d.min = j.hoje; var m = new Date(j.hoje + "T12:00:00"); m.setDate(m.getDate() + 60); d.max = m.toISOString().slice(0, 10);
       if (j.ultima_resposta) {

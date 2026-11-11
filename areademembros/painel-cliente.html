@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="img/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/estilo.css?v=202611111625">
+<link rel="stylesheet" href="css/estilo.css?v=202611111803">
 </head>
 <body>
 <div class="carregando" id="carregando">Carregando...</div>
@@ -68,6 +68,11 @@
       <p class="ce-titulo">Seu processo terapêutico</p>
       <div class="ce-rodape"><span class="ce-info">Suas áreas de trabalho, ações combinadas, sessões e testes. Tudo sigiloso.</span><a class="ce-btn" href="terapia.html">Abrir meu processo →</a></div>
     </div>
+    <div class="cartao cartao-escuro" id="cartaoRaiox" hidden>
+      <h2 class="ce-olho">Consultoria</h2>
+      <p class="ce-titulo">Raio-X da gestão</p>
+      <div class="ce-rodape"><span class="ce-info" id="raioxInfo">O diagnóstico da sua empresa, uma pergunta de cada vez.</span><a class="ce-btn" id="raioxBtn" href="raio-x.html">Abrir o Raio-X →</a></div>
+    </div>
     <div class="cartao cartao-escuro" id="cartaoAcompanha" hidden>
       <h2 class="ce-olho">Quem você acompanha</h2>
       <p class="ce-titulo">Pessoas que você acompanha</p>
@@ -124,13 +129,13 @@
   </main>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=202611111625"></script>
-<script src="js/auth.js?v=202611111625"></script>
-<script src="js/app.js?v=202611111625"></script>
+<script src="js/config.js?v=202611111803"></script>
+<script src="js/auth.js?v=202611111803"></script>
+<script src="js/app.js?v=202611111803"></script>
 <script src="js/i18n.js?v=202611110736"></script>
-<script src="js/chat-badge.js?v=202611111625"></script>
-<script src="js/aulas-card.js?v=202611111625"></script>
-<script src="js/terapia-card.js?v=202611111625"></script>
+<script src="js/chat-badge.js?v=202611111803"></script>
+<script src="js/aulas-card.js?v=202611111803"></script>
+<script src="js/terapia-card.js?v=202611111803"></script>
 <script>
 (async function () {
   const eu = await protegerPagina("cliente");
@@ -145,6 +150,20 @@
   if ((s.data || []).some(function (x) { return x.tipo === "terapia"; })) document.getElementById("cartaoTerapia").hidden = false;
   if ((s.data || []).some(function (x) { return x.tipo === "mentoria"; })) document.getElementById("cartaoMentoria").hidden = false;
   if ((s.data || []).some(function (x) { return x.tipo === "consultoria_empresarial" || x.tipo === "mentoria"; })) document.getElementById("cartaoProjetos").hidden = false;
+  // Raio-X da gestão (clientes de consultoria): aparece quando o Mauricio cria o Raio-X ou há consultoria ativa
+  try {
+    const rx = await supa().from("raiox_rodadas").select("id,status,raiox_liberacoes(pode_responder,pode_ver_resultado)").eq("perfil_id", eu.id).order("numero", { ascending: false }).limit(1);
+    const r0 = rx.data && rx.data[0], consultoria = (s.data || []).some(function (x) { return x.tipo === "consultoria_empresarial"; });
+    if (r0 || consultoria) {
+      const lb = r0 ? ((Array.isArray(r0.raiox_liberacoes) ? r0.raiox_liberacoes[0] : r0.raiox_liberacoes) || {}) : {};
+      const info = document.getElementById("raioxInfo"), btn = document.getElementById("raioxBtn");
+      if (!r0) { info.textContent = "O Mauricio vai liberar o seu Raio-X em breve."; btn.textContent = "Ver o Raio-X →"; }
+      else if (r0.status === "concluida") { info.textContent = lb.pode_ver_resultado ? "Seu resultado está liberado." : "Enviado. O Mauricio está lendo e vai liberar o seu resultado."; btn.textContent = lb.pode_ver_resultado ? "Ver meu resultado →" : "Ver o Raio-X →"; }
+      else if (lb.pode_responder) { info.textContent = "Liberado para você responder. Leva uns 15 minutos e salva sozinho a cada resposta."; btn.textContent = "Responder o Raio-X →"; }
+      else { info.textContent = "O Mauricio vai liberar o seu Raio-X em breve."; btn.textContent = "Ver o Raio-X →"; }
+      document.getElementById("cartaoRaiox").hidden = false;
+    }
+  } catch (e) {}
 
   const rv = await supa().from("clinica_pacientes").select("id,profissional_perfil_id").eq("perfil_id", eu.id).eq("ativo", true);
   if (rv.data && rv.data.length) {

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Raio-X da gestão | Ressignificar</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilo.css?v=202611111803">
+<style>
+.rx-lista{display:grid;gap:12px}
+.rx-card{background:#fff;border:1px solid #E3DCCD;border-radius:14px;padding:16px 18px}
+.rx-topo{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.rx-topo b{font-size:17px}
+.rx-chaves{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+.rx-chave{display:flex;align-items:center;gap:8px;border:1px solid #D9D2C3;border-radius:999px;padding:7px 12px;font-size:14px;cursor:pointer;background:#FBF8F1;min-width:0}
+.rx-chave input{width:18px;height:18px;margin:0;flex:none}
+.rx-chave.on{background:#E3F6E9;border-color:#9FD4B0}
+.rx-acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.rx-acoes .btn{width:auto}
+.rx-perm{width:100%;border-collapse:collapse;font-size:14px}
+.rx-perm th,.rx-perm td{padding:8px;border-bottom:1px solid #EEE7D8;text-align:center}
+.rx-perm th:first-child,.rx-perm td:first-child{text-align:left}
+.rx-scroll{overflow-x:auto}
+.rx-add{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 18px}
+.rx-add select{flex:1;min-width:200px;padding:10px;border-radius:10px;border:1px solid #D9D2C3;font:inherit}
+.rx-sub{color:#4C5670;font-size:14px;margin:4px 0 0}
+</style>
+</head>
+<body>
+<div class="carregando" id="carregando">Carregando...</div>
+<div id="painel" hidden>
+  <header class="topo-painel">
+    <div class="marca" style="display:flex;align-items:center;gap:14px"><a class="voltar" href="painel-master.html" style="margin:0">← Painel</a></div>
+    <div class="usuario">
+      <span data-nome-usuario></span>
+      <button class="sair" data-sair>Sair</button>
+    </div>
+  </header>
+  <main class="conteudo-painel largo">
+    <h1>Raio-X da gestão</h1>
+    <p class="sub">Diagnóstico dos clientes de consultoria. Você cria o Raio-X, libera para o cliente responder e decide quando ele vê o resultado e baixa o PDF. Ao abrir um Raio-X você vê o direcionamento confidencial (só você vê) e, se houver sócio na mesma empresa, a comparação entre os dois.</p>
+    <div id="aviso" class="aviso" hidden></div>
+
+    <h2 style="margin-top:22px">Clientes</h2>
+    <div class="rx-add" id="caixaNovo" hidden>
+      <select id="selCli" aria-label="Escolha o cliente"><option value="">Criar Raio-X para outro cliente...</option></select>
+      <button class="btn auto" type="button" id="btnNovo">Criar Raio-X</button>
+    </div>
+    <div id="lista" class="rx-lista"><p class="vazio">Carregando...</p></div>
+
+    <section id="secPerm" hidden style="margin-top:30px">
+      <h2>O que o suporte pode fazer</h2>
+      <p class="sub">Tudo começa desligado. Marque só o que cada pessoa do suporte pode fazer no Raio-X.</p>
+      <div class="rx-scroll"><table class="rx-perm" id="tabPerm"></table></div>
+    </section>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js?v=202611111803"></script>
+<script src="js/auth.js?v=202611111803"></script>
+<script src="js/app.js?v=202611111803"></script>
+<script>
+(async function () {
+  const eu = await protegerPagina(["master", "suporte"]);
+  if (!eu) return;
+  const master = eu.papel === "master";
+  const $ = function (id) { return document.getElementById(id); };
+  function aviso(t, erro) { const a = $("aviso"); a.textContent = t; a.hidden = false; a.className = "aviso" + (erro ? " erro" : " ok"); clearTimeout(aviso._t); aviso._t = setTimeout(function () { a.hidden = true; }, 4000); }
+  const dt = function (s) { return s ? new Date(s).toLocaleDateString("pt-BR") : ""; };
+
+  let perm = { pode_criar_rodada: master, pode_liberar_responder: master, pode_liberar_resultado: master, pode_liberar_pdf: master };
+  if (!master) { const rp = await supa().from("raiox_permissoes_suporte").select("*").eq("perfil_id", eu.id).maybeSingle(); if (rp.data) perm = rp.data; }
+  const PODE = { responder: perm.pode_liberar_responder, resultado: perm.pode_liberar_resultado, pdf: perm.pode_liberar_pdf };
+
+  async function carregar() {
+    const [rc, rk, rr] = await Promise.all([
+      supa().from("perfis").select("id,nome,email,papel,ativo").eq("papel", "cliente").order("nome"),
+      supa().from("contratos").select("perfil_id,servico,ativo,suspenso_em").eq("ativo", true).in("servico", ["consultoria_empresarial", "mentoria"]),
+      supa().from("raiox_rodadas").select("id,perfil_id,numero,status,criado_em,concluido_em,raiox_liberacoes(pode_responder,pode_ver_resultado,pode_baixar_pdf)").order("numero", { ascending: false })
+    ]);
+    const clientes = (rc.data || []).filter(function (p) { return p.ativo !== false; });
+    const consult = new Set((rk.data || []).map(function (k) { return k.perfil_id; }));
+    const susp = new Set((rk.data || []).filter(function (k) { return k.suspenso_em; }).map(function (k) { return k.perfil_id; }));
+    const rodadas = rr.data || [];
+    const ultima = {};
+    rodadas.forEach(function (r) { if (!ultima[r.perfil_id]) ultima[r.perfil_id] = r; });
+    const mostrar = clientes.filter(function (c) { return ultima[c.id] || consult.has(c.id); });
+    mostrar.sort(function (a, b) { return (ultima[b.id] ? 1 : 0) - (ultima[a.id] ? 1 : 0) || a.nome.localeCompare(b.nome); });
+
+    const L = $("lista"); L.innerHTML = "";
+    if (!mostrar.length) L.innerHTML = '<p class="vazio">Nenhum cliente de consultoria ainda. Use “Criar Raio-X” acima.</p>';
+    mostrar.forEach(function (c) {
+      const r = ultima[c.id], lib = r ? (Array.isArray(r.raiox_liberacoes) ? r.raiox_liberacoes[0] : r.raiox_liberacoes) || {} : {};
+      const card = document.createElement("div"); card.className = "rx-card";
+      let st = !r ? '<span class="selo">Sem Raio-X</span>'
+        : r.status === "concluida" ? '<span class="selo ok">Respondido em ' + dt(r.concluido_em) + "</span>"
+        : lib.pode_responder ? '<span class="selo pendente">Liberado para responder</span>' : '<span class="selo">Criado, ainda não liberado</span>';
+      card.innerHTML = '<div class="rx-topo"><div><b>' + esc(c.nome) + "</b>" + (consult.has(c.id) ? ' <span class="selo ouro">Consultoria</span>' : "") + (susp.has(c.id) ? ' <span class="selo off">Suspenso por atraso</span>' : "") +
+        '<p class="rx-sub">' + esc(c.email || "") + (r ? " · Raio-X " + r.numero + " criado em " + dt(r.criado_em) : "") + "</p></div><div>" + st + "</div></div>";
+      if (r) {
+        const ch = document.createElement("div"); ch.className = "rx-chaves";
+        [["responder", "pode_responder", "Pode responder"], ["resultado", "pode_ver_resultado", "Vê o resultado"], ["pdf", "pode_baixar_pdf", "Baixa o PDF"]].forEach(function (k) {
+          const lb = document.createElement("label"); lb.className = "rx-chave" + (lib[k[1]] ? " on" : "");
+          const i = document.createElement("input"); i.type = "checkbox"; i.checked = !!lib[k[1]]; i.disabled = !PODE[k[0]] || (k[0] === "responder" && r.status === "concluida");
+          i.addEventListener("change", async function () {
+            i.disabled = true;
+            const { error } = await supa().rpc("raiox_definir_chave", { p_rodada: r.id, p_chave: k[0], p_valor: i.checked });
+            i.disabled = false;
+            if (error) { i.checked = !i.checked; aviso(error.message || "Não foi possível alterar.", true); return; }
+            lb.classList.toggle("on", i.checked); aviso("Salvo: " + k[2].toLowerCase() + (i.checked ? " ligado." : " desligado."));
+          });
+          lb.appendChild(i); lb.appendChild(document.createTextNode(k[2])); ch.appendChild(lb);
+        });
+        card.appendChild(ch);
+      }
+      const ac = document.createElement("div"); ac.className = "rx-acoes";
+      if (r) { const a = document.createElement("a"); a.className = "btn auto"; a.href = "raio-x.html?r=" + encodeURIComponent(r.id); a.textContent = r.status === "concluida" ? "Abrir resultado e direcionamento" : "Ver o que já respondeu"; ac.appendChild(a); }
+      if (perm.pode_criar_rodada && (!r || r.status === "concluida")) {
+        const b = document.createElement("button"); b.type = "button"; b.className = "btn auto contorno"; b.textContent = r ? "Novo Raio-X (refazer)" : "Criar Raio-X";
+        b.addEventListener("click", function () { criar(c.id, b); }); ac.appendChild(b);
+      }
+      card.appendChild(ac); L.appendChild(card);
+    });
+
+    if (perm.pode_criar_rodada) {
+      $("caixaNovo").hidden = false;
+      const sel = $("selCli"); sel.length = 1;
+      clientes.filter(function (c) { return !ultima[c.id] && !consult.has(c.id); }).forEach(function (c) { const o = document.createElement("option"); o.value = c.id; o.textContent = c.nome + (c.email ? " · " + c.email : ""); sel.appendChild(o); });
+    }
+  }
+
+  async function criar(pid, b) {
+    if (b) b.disabled = true;
+    const { data, error } = await supa().rpc("raiox_criar_rodada", { p_perfil: pid });
+    if (error) { if (b) b.disabled = false; aviso(error.message || "Não foi possível criar.", true); return; }
+    if (PODE.responder) await supa().rpc("raiox_definir_chave", { p_rodada: data, p_chave: "responder", p_valor: true });
+    aviso(PODE.responder ? "Raio-X criado e liberado para o cliente responder." : "Raio-X criado. Falta liberar para responder.");
+    await carregar();
+  }
+  $("btnNovo").addEventListener("click", function () { const v = $("selCli").value; if (!v) { aviso("Escolha o cliente.", true); return; } criar(v, this); });
+
+  async function permissoes() {
+    if (!master) return;
+    const [rs, rp] = await Promise.all([supa().from("perfis").select("id,nome,ativo").eq("papel", "suporte").order("nome"), supa().from("raiox_permissoes_suporte").select("*")]);
+    const sup = (rs.data || []).filter(function (p) { return p.ativo !== false; });
+    if (!sup.length) return;
+    $("secPerm").hidden = false;
+    const P = {}; (rp.data || []).forEach(function (x) { P[x.perfil_id] = x; });
+    const COL = [["pode_criar_rodada", "Criar"], ["pode_liberar_responder", "Liberar responder"], ["pode_liberar_resultado", "Liberar resultado"], ["pode_liberar_pdf", "Liberar PDF"], ["pode_ver_respostas", "Ver respostas"], ["pode_ver_resultados", "Ver resultados"]];
+    const t = $("tabPerm"); t.innerHTML = "<tr><th>Suporte</th>" + COL.map(function (c) { return "<th>" + c[1] + "</th>"; }).join("") + "</tr>";
+    sup.forEach(function (s) {
+      const tr = document.createElement("tr"); tr.innerHTML = "<td>" + esc(s.nome) + "</td>";
+      COL.forEach(function (c) {
+        const td = document.createElement("td"); const i = document.createElement("input"); i.type = "checkbox"; i.style.cssText = "width:18px;height:18px";
+        i.checked = !!(P[s.id] && P[s.id][c[0]]); i.setAttribute("aria-label", c[1] + " · " + s.nome);
+        i.addEventListener("change", async function () {
+          const reg = Object.assign({ perfil_id: s.id }, P[s.id] || {}); reg[c[0]] = i.checked; reg.atualizado_em = new Date().toISOString();
+          const { error } = await supa().from("raiox_permissoes_suporte").upsert(reg, { onConflict: "perfil_id" });
+          if (error) { i.checked = !i.checked; aviso("Não foi possível salvar.", true); return; }
+          P[s.id] = reg; aviso("Permissão salva.");
+        });
+        td.appendChild(i); tr.appendChild(td);
+      });
+      t.appendChild(tr);
+    });
+  }
+
+  await carregar();
+  await permissoes();
+})();
+</script>
+</body>
+</html>
