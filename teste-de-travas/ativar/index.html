@@ -217,7 +217,7 @@
       if (j.__status === 404 || !j.ok) { mostrar("eInvalido"); return; }
       pedido = j;
       if (j.status === "ativado" && j.pagina) { pronto(j.pagina, j.email, null, j.nome); return; }
-      if (j.produto_chave === "tracos" || j.produto_chave === "mpcc") modoTracos(j.produto_chave);
+      if (j.produto_chave === "tracos" || j.produto_chave === "mpcc" || j.produto_chave === "disc") modoTracos(j.produto_chave);
       if (j.status === "pago" || j.status === "ativando") { abrirForm(j); return; }
       if (j.status === "cancelado") { mostrar("eInvalido"); return; }
       tentativas++;
@@ -244,9 +244,9 @@
   /* compra do Teste de Traços de Caráter sem ter página: os textos falam desse teste */
   function modoTracos(chave) {
     if (document.body.dataset.tracos) return; document.body.dataset.tracos = "1";
-    var NOME = chave === "mpcc" ? "MPCC (Mapa de Perfil Comportamental e Competências)" : "Teste de Traços de Caráter";
+    var NOME = chave === "mpcc" ? "MPCC (Mapa de Perfil Comportamental e Competências)" : chave === "disc" ? "DISC (Análise Comportamental)" : "Teste de Traços de Caráter";
     document.title = "Montar a minha página · " + NOME;
-    var sm = document.querySelector(".marca small"); if (sm) sm.textContent = chave === "mpcc" ? "MPCC" : NOME;
+    var sm = document.querySelector(".marca small"); if (sm) sm.textContent = chave === "mpcc" ? "MPCC" : chave === "disc" ? "DISC" : NOME;
     var h = document.querySelector("#eForm h2"); if (h) h.textContent = "Agora vamos montar a sua página";
     var l = document.querySelector("#eForm .lead"); if (l) l.textContent = "Leva 2 minutos. É a página do seu " + NOME + ", com o seu nome e a sua foto: tudo isso aparece para os seus clientes.";
     $("#btnCriar").textContent = "Criar a minha página";
@@ -263,7 +263,7 @@
     atualizaInicial();
     sugerirLink();
     mostrar("eForm");
-    if (j.produto_chave !== "tracos" && j.produto_chave !== "mpcc" && !sessionStorage.getItem("travas_compra_" + token)) {
+    if (j.produto_chave !== "tracos" && j.produto_chave !== "mpcc" && j.produto_chave !== "disc" && !sessionStorage.getItem("travas_compra_" + token)) {
       try { sessionStorage.setItem("travas_compra_" + token, "1"); } catch (e) {}
       window.dataLayer = window.dataLayer || []; window.dataLayer.push({ event: "compra_teste_travas", value: 147, currency: "BRL" });
       if (window.gtag) gtag("event", "purchase", { value: 147, currency: "BRL", items: [{ item_name: "Teste de Travas Mentais" }] });

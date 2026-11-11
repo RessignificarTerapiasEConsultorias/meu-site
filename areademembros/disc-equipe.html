@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DISC da equipe | Ressignificar</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilo.css?v=202611112142">
+<link rel="stylesheet" href="/teste/devolutiva-disc.css">
+<style>
+.dq-lista{display:grid;gap:12px}
+.dq-p{background:#fff;border:1px solid #E3DCCD;border-radius:14px;padding:14px 16px}
+.dq-topo{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.dq-topo b{font-size:17px}
+.dq-acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.dq-acoes .btn{width:auto}
+.dq-letra{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;color:#fff;font:700 18px/1 Georgia,serif;margin-right:8px;vertical-align:middle}
+.dq-res{margin-top:12px}
+.dq-sel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 16px}
+.dq-sel select{flex:1;min-width:220px;padding:10px;border-radius:10px;border:1px solid #D9D2C3;font:inherit}
+.dq-link{display:flex;gap:8px;margin-top:8px}.dq-link input{flex:1;min-width:0;padding:9px;border-radius:9px;border:1px solid #D9D2C3;font:13px monospace}
+</style>
+</head>
+<body>
+<div class="carregando" id="carregando">Carregando...</div>
+<div id="painel" hidden>
+  <header class="topo-painel">
+    <div class="marca" style="display:flex;align-items:center;gap:14px"><a class="voltar" id="voltar" href="painel-cliente.html" style="margin:0">← Painel</a></div>
+    <div class="usuario"><span data-nome-usuario></span><button class="sair" data-sair>Sair</button></div>
+  </header>
+  <main class="conteudo-painel largo">
+    <h1>DISC da equipe</h1>
+    <p class="sub">Análise comportamental de cada pessoa da empresa: como decide, se comunica, lida com ritmo e com regras no trabalho. Não é avaliação psicológica nem terapia, e não deve ser o único critério de uma decisão.</p>
+    <div id="aviso" class="aviso" hidden></div>
+    <div class="dq-sel" id="caixaEmp" hidden><select id="selEmp" aria-label="Empresa"></select></div>
+    <div id="lista" class="dq-lista"><p class="vazio">Carregando...</p></div>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js?v=202611112142"></script>
+<script src="js/auth.js?v=202611112142"></script>
+<script src="js/app.js?v=202611112142"></script>
+<script src="/teste/disc-nucleo.js"></script>
+<script>
+(async function () {
+  const eu = await protegerPagina(["master", "suporte", "cliente", "vendedor", "profissional"]);
+  if (!eu) return;
+  const master = eu.papel === "master", $ = id => document.getElementById(id);
+  $("voltar").href = PAINEL_DO_PAPEL[eu.papel] || "painel-cliente.html";
+  function aviso(t, erro) { const a = $("aviso"); a.textContent = t; a.hidden = false; a.className = "aviso" + (erro ? " erro" : " ok"); clearTimeout(aviso._t); aviso._t = setTimeout(() => { a.hidden = true; }, 5000); }
+  const dataBR = iso => iso ? new Date(iso).toLocaleDateString("pt-BR") : "";
+  const SITE = "https://ressignificarterapiaseconsultorias.com";
+
+  /* empresas: o master vê todas; a dona vê as dela */
+  let empresas = [];
+  if (master) { const r = await supa().from("empresas").select("id,nome,tipo").eq("tipo", "empresa").order("nome"); empresas = r.data || []; }
+  else { const r = await supa().from("empresa_membros").select("empresa_id,empresas(id,nome,tipo)").eq("perfil_id", eu.id).eq("funcao", "dono"); empresas = (r.data || []).map(m => m.empresas).filter(e => e && e.tipo === "empresa"); }
+  if (!empresas.length) { $("lista").innerHTML = '<p class="vazio">Nenhuma empresa para mostrar.</p>'; return; }
+  const sel = $("selEmp"); empresas.forEach(e => { const o = document.createElement("option"); o.value = e.id; o.textContent = e.nome; sel.appendChild(o); });
+  const pedida = new URLSearchParams(location.search).get("e"); if (pedida && empresas.some(e => e.id === pedida)) sel.value = pedida;
+  $("caixaEmp").hidden = empresas.length < 2 && !master;
+  sel.addEventListener("change", carregar);
+
+  function convite(nome, link) {
+    return ["Olá, " + String(nome || "").split(" ")[0] + "! Aqui é o Mauricio, da Ressignificar.", "",
+      "Liberei para você a Análise Comportamental DISC. Ela mostra como você age no trabalho: como decide, se comunica, lida com ritmo e com regras.", "",
+      "São 24 blocos com 4 palavras, de 8 a 12 minutos. É só abrir o link (o código já vai preenchido):", link, "",
+      "Você também encontra o botão “Fazer o meu DISC” na sua Área de Membros."].join("\n");
+  }
+  async function carregar() {
+    const L = $("lista"); L.innerHTML = '<p class="vazio">Carregando...</p>';
+    const { data, error } = await supa().rpc("disc_equipe", { p_empresa: sel.value });
+    if (error) { L.innerHTML = '<p class="vazio">Não consegui carregar a equipe.</p>'; return; }
+    const pessoas = (data && data.pessoas) || [];
+    if (!pessoas.length) { L.innerHTML = '<p class="vazio">Nenhuma pessoa ligada a esta empresa ainda.</p>'; return; }
+    L.innerHTML = "";
+    pessoas.forEach(p => {
+      const card = document.createElement("div"); card.className = "dq-p";
+      const r = p.resultado, c = p.codigo, calc = r ? DISC.deRegistro(r.dados || {}) : null;
+      const st = calc ? `<span><span class="dq-letra" style="background:${DISC.FATORES[calc.pico].cor}">${calc.pico}</span><b style="font-size:14px">${esc(DISC.FATORES[calc.pico].nome)} · estilo ${esc(calc.estilo)}</b></span>`
+        : c ? (c.usado ? '<span class="selo ok">Respondido</span>' : '<span class="selo pendente">Liberado · aguardando</span>') : '<span class="selo">Sem DISC</span>';
+      card.innerHTML = `<div class="dq-topo"><div><b>${esc(p.nome)}</b> <span class="selo">${esc(p.funcao || "")}</span><p class="rx-sub" style="margin:4px 0 0;color:#4C5670;font-size:14px">${esc(p.email || "")}${r ? " · respondeu em " + dataBR(r.criado_em) : c ? " · liberado em " + dataBR(c.criado_em) : ""}</p></div><div>${st}</div></div><div class="dq-acoes"></div><div class="dq-res" hidden></div>`;
+      const ac = card.querySelector(".dq-acoes");
+      if (calc) {
+        const b = document.createElement("button"); b.type = "button"; b.className = "btn auto"; b.textContent = "Ver gráficos e laudo";
+        b.addEventListener("click", () => abrir(card, calc, b)); ac.appendChild(b);
+      }
+      if (master && (!c || c.usado)) {
+        const b = document.createElement("button"); b.type = "button"; b.className = "btn auto contorno"; b.textContent = c ? "Liberar um novo DISC" : "Liberar o DISC";
+        b.addEventListener("click", () => liberar(p, card, b)); ac.appendChild(b);
+      }
+      if (master && c && !c.usado) mostrarLink(card, p, c.codigo, null);
+      L.appendChild(card);
+    });
+  }
+  async function mostrarLink(card, p, codigo, slug) {
+    if (!slug) { const r = await supa().from("travas_paginas").select("slug").eq("terapeuta_id", eu.id).maybeSingle(); slug = r.data && r.data.slug; }
+    const link = SITE + "/teste/?t=" + encodeURIComponent(slug || "") + "&dc=" + encodeURIComponent(codigo);
+    const box = document.createElement("div");
+    box.innerHTML = `<div class="dq-link"><input readonly aria-label="Link do DISC" value="${esc(link)}"><button type="button" class="btn peq">Copiar</button></div>
+      <div class="dq-acoes"><a class="btn auto" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(convite(p.nome, link))}">Enviar o link pelo WhatsApp</a></div>
+      <p style="font-size:13px;color:#4C5670;margin:6px 0 0">Código ${esc(codigo)}. A pessoa também vê o botão “Fazer o meu DISC” na Área de Membros dela.</p>`;
+    box.querySelector("button").addEventListener("click", async e => { try { await navigator.clipboard.writeText(link); e.target.textContent = "Copiado!"; } catch (er) { box.querySelector("input").select(); } setTimeout(() => { e.target.textContent = "Copiar"; }, 1800); });
+    card.querySelector(".dq-acoes").after(box);
+  }
+  async function liberar(p, card, b) {
+    b.disabled = true;
+    const { data, error } = await supa().rpc("disc_liberar", { p_perfil: p.perfil_id, p_empresa: sel.value, p_mostrar: true });
+    if (error || !data || !data.ok) { b.disabled = false; aviso((error && error.message) || "Não consegui liberar agora.", true); return; }
+    aviso("DISC liberado para " + p.nome + ". Envie o link ou avise que o botão está na Área de Membros.");
+    await carregar();
+  }
+  async function abrir(card, calc, b) {
+    const res = card.querySelector(".dq-res");
+    if (!res.hidden) { res.hidden = true; b.textContent = "Ver gráficos e laudo"; return; }
+    const L = DISC.laudoCompleto(calc);
+    res.innerHTML = `<div class="dc-secao"><p><b>${esc(L.titulo)}</b>. ${esc(L["Resumo do Perfil"])}</p><p>${esc(L.combinacao)}</p><div class="dq-graf"></div>
+      <div class="dc-duas" style="margin-top:12px">
+        <div class="dc-caixa"><h3>Áreas recomendadas</h3><ul class="dc-lista">${L["Áreas Recomendadas"].map(a => "<li>" + esc(a) + "</li>").join("")}</ul></div>
+        <div class="dc-caixa"><h3>Estilo de liderança</h3><p style="margin:0">${esc(L["Estilo de Liderança"])}</p></div>
+        <div class="dc-caixa"><h3>Como se comunicar</h3><p style="margin:0">${esc(L.detalhe.comunicar)}</p></div>
+        <div class="dc-caixa"><h3>O que motiva</h3><p style="margin:0">${esc(L.detalhe.motiva)}</p></div>
+      </div><p class="dc-nota-peq">${esc(L.adaptacao)}</p></div>`;
+    res.hidden = false; b.textContent = "Fechar";
+    DISC.graficos(res.querySelector(".dq-graf"), calc).catch(() => {});
+  }
+  await carregar();
+})();
+</script>
+</body>
+</html>

@@ -64,10 +64,10 @@
   var $ = function (s) { return document.getElementById(s); };
   var q = new URLSearchParams(location.search);
   var token = (q.get("p") || "").toLowerCase();
-  if (!token) { try { token = localStorage.getItem("loja_pedido_dre") || localStorage.getItem("loja_pedido_clinica") || localStorage.getItem("loja_pedido_tracos") || localStorage.getItem("loja_pedido_mpcc") || ""; } catch (e) {} }
+  if (!token) { try { token = localStorage.getItem("loja_pedido_dre") || localStorage.getItem("loja_pedido_clinica") || localStorage.getItem("loja_pedido_tracos") || localStorage.getItem("loja_pedido_mpcc") || localStorage.getItem("loja_pedido_disc") || ""; } catch (e) {} }
   var retorno = { transaction_nsu: q.get("transaction_nsu") || "", slug: q.get("slug") || "" };
   var veioPago = !!retorno.transaction_nsu, tentativas = 0;
-  var TESTE_NA_PAGINA = ["tracos", "mpcc"];   /* produtos que são um teste na página da terapeuta */
+  var TESTE_NA_PAGINA = ["tracos", "mpcc", "disc"];   /* produtos que são um teste na página da terapeuta */
   document.addEventListener("click", function (ev) {
     var w = ev.target.closest && ev.target.closest("[data-wa]"); if (!w) return;
     ev.preventDefault(); window.open("https://wa.me/" + ZAP + "?text=" + encodeURIComponent(w.getAttribute("data-wa")), "_blank", "noopener");

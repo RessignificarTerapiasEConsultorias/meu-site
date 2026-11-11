@@ -769,7 +769,15 @@ function dvCapaVendas(modo){
       objetivo:'Identificar os padrões de pensamento e de comportamento que estão segurando você hoje, no trabalho, nas relações e nas decisões, para o acompanhamento começar pelo lugar certo.',
       como:['50 perguntas, de 10 a 15 minutos', 'No celular, uma pergunta de cada vez', 'Você marca o quanto cada frase combina com você hoje'],
       resultado:q => 'O mapa das 10 travas, em números, com as mais ativas em destaque, para você conversar com ' + q + ' a partir dele.',
-      mapaTitulo:'As 10 travas que o teste mapeia', itens:listaTravas.map(t => ({ nome:t.nome, desc:primFrase(t.contexto) })) } }, EX);
+      mapaTitulo:'As 10 travas que o teste mapeia', itens:listaTravas.map(t => ({ nome:t.nome, desc:primFrase(t.contexto) })) },
+      tracos:{ tag:'Individual ou em casal', titulo:'Teste de Traços de Caráter', pergunta:'Como a sua história moldou o seu jeito de ser?',
+        objetivo:'Identificar os 5 traços de caráter que se formaram na sua história e mostrar, em porcentagem, como eles aparecem no seu dia a dia, junto com os talentos que cada um traz.',
+        como:['40 afirmações, de 8 a 12 minutos', 'Pode ser feito sozinho(a) ou em casal', 'No celular, uma afirmação de cada vez'],
+        resultado:q => 'Os seus 5 traços em porcentagem, com o pico primário e o secundário, para você conversar com ' + q + ' a partir deles.' },
+      mpcc:{ tag:'Individual · Mapa em 8 dimensões', titulo:'MPCC · Mapa de Perfil Comportamental e Competências', pergunta:'Onde você já é forte e onde pode crescer?',
+        objetivo:'Mostrar, em um gráfico radar, 8 dimensões do seu comportamento: iniciativa, comunicação, relacionamento, decisão, adaptação, organização, autoconfiança e equilíbrio emocional.',
+        como:['40 afirmações, de 10 a 15 minutos', 'Você responde de 1 a 5', 'No final, gráfico radar e relatório em PDF'],
+        resultado:q => 'O seu mapa em 8 dimensões, com pontos fortes e oportunidades de desenvolvimento, para conversar com ' + q + '.' } }, EX);
     const detalhe = (k, i) => { const e = DET[k];
       return `<section class="cv-faixa${i % 2 ? '' : ' cv-areia'} cv-det" id="cv-t-${k}"><div class="cv-in">
       <div class="cv-det-topo"><span class="cv-det-n">${i + 1}</span><div><span class="cv-tag">${escV(e.tag)}</span><h2>${e.tituloHtml || escV(e.titulo)}</h2><p class="cv-pergunta">${escV(e.pergunta)}</p></div></div>
@@ -1075,7 +1083,7 @@ if(document.readyState === 'loading') document.addEventListener('DOMContentLoade
    EXCLUIR RESPOSTAS (Travas, Traços individual e MPCC): "Excluir" em cada linha da lista de respostas.
    As linhas vêm marcadas com data-dv-del (tipo do teste) e o id (ou, no Travas, código + nome + data).
    ============================================================================ */
-const DV_TAB_RESP = { travas:'travas_respostas', tracos:'tracos_respostas', mpcc:'mpcc_respostas' };
+const DV_TAB_RESP = { travas:'travas_respostas', tracos:'tracos_respostas', mpcc:'mpcc_respostas', disc:'disc_respostas' };
 function dvExcluirRespostas(){
   if(window.__dvExcR) return; window.__dvExcR = true;
   function marcar(){
@@ -1113,6 +1121,7 @@ async function dvExcluirResposta(linha, botao){
       if(tipo === 'travas' && typeof respostasCache !== 'undefined') respostasCache = respostasCache.filter(r => !(r.codigo === linha.dataset.cod && (r.nome || '') === (linha.dataset.nome || '') && (r.data || '') === (linha.dataset.dt || '')));
       if(tipo === 'tracos' && typeof tcRespCache !== 'undefined') tcRespCache = tcRespCache.filter(r => r.id !== linha.dataset.id);
       if(tipo === 'mpcc' && typeof mpCache !== 'undefined') mpCache = mpCache.filter(r => r.id !== linha.dataset.id);
+      if(tipo === 'disc' && typeof dcCache !== 'undefined') dcCache = dcCache.filter(r => r.id !== linha.dataset.id);
     }catch(e){}
     linha.style.transition = 'opacity .25s'; linha.style.opacity = '0';
     setTimeout(() => { const box = linha.parentNode; linha.remove(); if(box && !box.querySelector('.linha-item')) box.innerHTML = '<div class="vazio">Nenhuma resposta por enquanto.</div>'; }, 260);
@@ -1151,6 +1160,7 @@ function dvTesteAtual(tela){
   const id = tela ? tela.id : '';
   if(/^tela-tc/.test(id)) return 'tracos';
   if(/^tela-mp/.test(id)) return 'mpcc';
+  if(/^tela-dc/.test(id)) return 'disc';
   if(/^tela-(orientacao|dados|teste|resultado|obrigada|expirou)/.test(id)) return 'travas';
   return '';
 }
@@ -1199,10 +1209,10 @@ async function dvQuadroCliques(){
     const cods = Array.from(new Set(data.filter(x => x.codigo).map(x => x.codigo)));
     const nomes = {};
     if(cods.length){
-      const rs = await Promise.all(['travas_respostas', 'tracos_respostas', 'mpcc_respostas'].map(t => c.from(t).select('codigo,nome').eq('terapeuta_id', uid).in('codigo', cods)));
+      const rs = await Promise.all(['travas_respostas', 'tracos_respostas', 'mpcc_respostas', 'disc_respostas'].map(t => c.from(t).select('codigo,nome').eq('terapeuta_id', uid).in('codigo', cods)));
       rs.forEach(r => (r.data || []).forEach(x => { if(x.nome) nomes[x.codigo] = x.nome; }));
     }
-    const ROT = { travas:'Travas', tracos:'Traços', mpcc:'MPCC' }, MOM = { pagina:'pela página, sem teste', durante:'durante o teste', resultado:'depois do resultado' };
+    const ROT = { travas:'Travas', tracos:'Traços', mpcc:'MPCC', disc:'DISC' }, MOM = { pagina:'pela página, sem teste', durante:'durante o teste', resultado:'depois do resultado' };
     const quando = iso => new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
     const pag = data.filter(x => x.momento === 'pagina'), teste = data.filter(x => x.momento !== 'pagina');
     const porOrigem = {}; pag.forEach(x => { porOrigem[x.origem || 'Link direto'] = (porOrigem[x.origem || 'Link direto'] || 0) + 1; });
@@ -1271,8 +1281,8 @@ function dvUrgEmbrulhar(){
   {
     const rpc0 = window.compRpc;
     window.compRpc = async function(nome, args){ const r = await rpc0.apply(this, arguments);
-      try{ if((nome === 'tracos_salvar_resposta' || nome === 'mpcc_salvar_resposta') && r && r.ok === true){
-        DV_URG.tok = r.acao_token || null; DV_URG.teste = nome.indexOf('tracos') === 0 ? 'tracos' : 'mpcc';
+      try{ if((nome === 'tracos_salvar_resposta' || nome === 'mpcc_salvar_resposta' || nome === 'disc_salvar_resposta') && r && r.ok === true){
+        DV_URG.tok = r.acao_token || null; DV_URG.teste = nome.indexOf('tracos') === 0 ? 'tracos' : nome.indexOf('disc') === 0 ? 'disc' : 'mpcc';
         if(r.urgencia === false && DV_URG.cod) DV_URG.cod.urgencia = false;
         DV_URG.u = null; clearInterval(DV_URG.timer); DV_URG.montado = false;
       } }catch(e){}
@@ -1282,7 +1292,7 @@ function dvUrgEmbrulhar(){
 }
 function dvUrgProcurar(){
   if(!DV_URG.tok || DV_URG.montado) return;
-  const btn = DV_URG.teste === 'tracos' ? document.querySelector('#tr-zap, #tf-zap') : document.querySelector('#tela-mp-resultado .mp-devolutiva .mp-zap, #tela-mp .mp-zap');
+  const btn = DV_URG.teste === 'tracos' ? document.querySelector('#tr-zap, #tf-zap') : DV_URG.teste === 'disc' ? document.querySelector('#tela-dc-resultado .dc-zap, #tela-dc .dc-zap') : document.querySelector('#tela-mp-resultado .mp-devolutiva .mp-zap, #tela-mp .mp-zap');
   if(!btn || btn.closest('#tela-admin')) return;
   DV_URG.montado = true; dvUrgIniciarEm(btn);
 }
@@ -1380,12 +1390,12 @@ if(document.readyState === 'loading') document.addEventListener('DOMContentLoade
 async function dvUrgTagsLista(){
   try{
     if(typeof clienteMembros !== 'function') return;
-    const linhas = Array.from(document.querySelectorAll('.linha-item[data-dv-del="tracos"]:not([data-urg-ok]), .linha-item[data-dv-del="mpcc"]:not([data-urg-ok])'));
+    const linhas = Array.from(document.querySelectorAll('.linha-item[data-dv-del="tracos"]:not([data-urg-ok]), .linha-item[data-dv-del="mpcc"]:not([data-urg-ok]), .linha-item[data-dv-del="disc"]:not([data-urg-ok])'));
     if(!linhas.length) return;
     linhas.forEach(l => l.setAttribute('data-urg-ok', '1'));
-    const porTab = { tracos:[], mpcc:[] }; linhas.forEach(l => porTab[l.dataset.dvDel].push(l.dataset.id));
+    const porTab = { tracos:[], mpcc:[], disc:[] }; linhas.forEach(l => porTab[l.dataset.dvDel].push(l.dataset.id));
     const c = clienteMembros(), mapa = {};
-    for(const t of ['tracos', 'mpcc']){ if(!porTab[t].length) continue;
+    for(const t of ['tracos', 'mpcc', 'disc']){ if(!porTab[t].length) continue;
       const { data } = await c.from(t + '_respostas').select('id,interesse,urgencia').in('id', porTab[t]); (data || []).forEach(x => { mapa[x.id] = x; }); }
     const dur = s => s == null ? '' : s < 60 ? Math.round(s) + ' s' : Math.floor(s / 60) + ' min';
     linhas.forEach(l => { const x = mapa[l.dataset.id]; if(!x) return; const i = x.interesse || {}, t = [];

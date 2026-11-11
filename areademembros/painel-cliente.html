@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="img/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/estilo.css?v=202611111803">
+<link rel="stylesheet" href="css/estilo.css?v=202611112142">
 </head>
 <body>
 <div class="carregando" id="carregando">Carregando...</div>
@@ -129,13 +129,14 @@
   </main>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=202611111803"></script>
-<script src="js/auth.js?v=202611111803"></script>
-<script src="js/app.js?v=202611111803"></script>
+<script src="js/config.js?v=202611112142"></script>
+<script src="js/auth.js?v=202611112142"></script>
+<script src="js/app.js?v=202611112142"></script>
 <script src="js/i18n.js?v=202611110736"></script>
-<script src="js/chat-badge.js?v=202611111803"></script>
-<script src="js/aulas-card.js?v=202611111803"></script>
-<script src="js/terapia-card.js?v=202611111803"></script>
+<script src="js/chat-badge.js?v=202611112142"></script>
+<script src="js/aulas-card.js?v=202611112142"></script>
+<script src="js/terapia-card.js?v=202611112142"></script>
+<script src="js/disc-card.js?v=202611112142"></script>
 <script>
 (async function () {
   const eu = await protegerPagina("cliente");
@@ -256,12 +257,12 @@
     ]);
     /* a página pode ter o Teste de Travas, o de Traços de Caráter ou os dois */
     const testesPg = rpg.data && rpg.data.dados && Array.isArray(rpg.data.dados.testes) ? rpg.data.dados.testes : null;
-    const temTravasPg = !testesPg || testesPg.indexOf("travas") > -1, temTracosPg = !!testesPg && testesPg.indexOf("tracos") > -1, temMpccPg = !!testesPg && testesPg.indexOf("mpcc") > -1;
+    const temTravasPg = !testesPg || testesPg.indexOf("travas") > -1, temTracosPg = !!testesPg && testesPg.indexOf("tracos") > -1, temMpccPg = !!testesPg && testesPg.indexOf("mpcc") > -1, temDiscPg = !!testesPg && testesPg.indexOf("disc") > -1;
     temTravas = !!rt.data && temTravasPg;
     if (rpg.data && rpg.data.slug) {
       const tituloT = document.querySelector("#cartaoTravas .ce-titulo");
       if (tituloT) {
-        const nomesT = [temTravasPg ? "Travas Mentais" : "", temTracosPg ? "Traços de Caráter" : "", temMpccPg ? "MPCC" : ""].filter(Boolean);
+        const nomesT = [temTravasPg ? "Travas Mentais" : "", temTracosPg ? "Traços de Caráter" : "", temMpccPg ? "MPCC" : "", temDiscPg ? "DISC" : ""].filter(Boolean);
         tituloT.textContent = nomesT.length > 1 ? "Seus testes: " + nomesT.slice(0, -1).join(", ") + " e " + nomesT[nomesT.length - 1]
           : temTravasPg ? "Seu Teste de Travas Mentais" : temMpccPg ? "Seu MPCC · Mapa de Perfil Comportamental e Competências" : "Seu Teste de Traços de Caráter";
       }

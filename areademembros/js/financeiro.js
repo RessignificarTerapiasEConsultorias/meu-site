@@ -48,7 +48,7 @@
       supa().from("custos_cliente").select("id,perfil_id,data,valor,descricao").order("data", { ascending: false }),
       supa().from("empresas").select("id,nome,tipo,empresa_membros(perfil_id)").in("tipo", ["empresa","pessoal"]).order("nome"),
       supa().from("preferencias").select("dados").eq("perfil_id", eu.id).maybeSingle(),
-      supa().from("catalogo_produtos").select("id,nome,chave").in("chave", ["dre", "clinica", "tracos", "mpcc"]).order("ordem")
+      supa().from("catalogo_produtos").select("id,nome,chave").in("chave", ["dre", "clinica", "tracos", "mpcc", "disc"]).order("ordem")
     ]);
     /* produtos com acesso que podem ser ligados a um contrato (suspende se atrasar) */
     const opcoesAcesso = '<option value="">Nenhum (serviço)</option>' + (rprod.data || []).map(function (p) { return '<option value="' + p.id + '">' + esc(p.nome) + "</option>"; }).join("");
