@@ -1007,3 +1007,48 @@ function dvSemTeste(){
   const selo = lt.querySelector('.selo'); if(selo) selo.remove();
   (h1 || lt).insertAdjacentHTML('afterend', '<p class="texto-capa">Este teste está temporariamente indisponível. Se você recebeu um código, fale com ' + escV(quem) + ' pelo WhatsApp.</p>');
 }
+
+/* ============================================================================
+   EXCLUIR CÓDIGOS (Travas, Traços e MPCC): botão "Excluir" em cada código da área da terapeuta.
+   O resultado de quem já respondeu continua salvo. Código de casal já começado não pode ser excluído
+   (apagaria a devolutiva do casal).
+   ============================================================================ */
+function dvExcluirCodigos(){
+  if(window.__dvExc) return; window.__dvExc = true;
+  const LISTAS = ['lista-codigos', 'tc-lista-codigos', 'mp-lista-codigos'];
+  const RE = /\b([A-Z0-9]{2}|[A-Z0-9]{4})-[A-Z0-9]{4}\b/;
+  function marcar(){
+    LISTAS.forEach(id => {
+      const box = document.getElementById(id); if(!box) return;
+      box.querySelectorAll('.linha-item:not([data-dv-exc])').forEach(l => {
+        l.setAttribute('data-dv-exc', '1');
+        const nome = l.querySelector('.nome'), m = nome && nome.textContent.match(RE); if(!m) return;
+        const etq = (l.querySelector('.etiqueta') || {}).textContent || '';
+        const casalComecado = /em andamento|concluído/i.test(etq);
+        let barra = Array.from(l.children).find(x => x.tagName === 'SPAN' && /width:\s*100%/.test(x.getAttribute('style') || ''));
+        if(!barra){ barra = document.createElement('span'); barra.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;width:100%;margin-top:8px'; l.style.flexWrap = 'wrap'; l.appendChild(barra); }
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'mini-btn dv-exc'; b.textContent = 'Excluir';
+        if(casalComecado){ b.disabled = true; b.title = 'O casal já começou: excluir apagaria a devolutiva do casal.'; }
+        b.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); dvExcluirCodigo(m[0], l, b, id); });
+        barra.appendChild(b);
+      });
+    });
+  }
+  marcar();
+  if('MutationObserver' in window) new MutationObserver(() => { clearTimeout(window.__dvExcT); window.__dvExcT = setTimeout(marcar, 60); }).observe(document.body, { childList:true, subtree:true });
+}
+async function dvExcluirCodigo(codigo, linha, botao, lista){
+  const usado = /usado|concluído/i.test(((linha.querySelector('.etiqueta') || {}).textContent || ''));
+  if(!confirm('Excluir o código ' + codigo + '?\n\n' + (usado ? 'O resultado de quem já respondeu continua salvo na sua lista de respostas.' : 'O link deste código deixa de funcionar.'))) return;
+  if(typeof clienteMembros !== 'function'){ alert('Entre de novo na sua área para excluir.'); return; }
+  botao.disabled = true; botao.textContent = 'Excluindo...';
+  try{
+    const c = clienteMembros(), { data:sess } = await c.auth.getSession();
+    if(!sess || !sess.session) throw new Error('sessão');
+    const { data, error } = await c.from('travas_codigos').delete().eq('codigo', codigo).eq('terapeuta_id', sess.session.user.id).select('id');
+    if(error || !data || !data.length) throw new Error(error ? error.message : 'nada');
+    linha.style.transition = 'opacity .25s'; linha.style.opacity = '0';
+    setTimeout(() => { const box = document.getElementById(lista); linha.remove(); if(box && !box.querySelector('.linha-item')) box.innerHTML = '<div class="vazio">Nenhum código ainda. Gere o primeiro acima.</div>'; }, 260);
+  }catch(e){ botao.disabled = false; botao.textContent = 'Excluir'; alert('Não consegui excluir agora. Tente de novo em instantes.'); }
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dvExcluirCodigos); else dvExcluirCodigos();

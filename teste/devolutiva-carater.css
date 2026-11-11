@@ -283,3 +283,5 @@ body.cv-on{overflow-x:clip}
 .dv-editar-linha{margin:-4px 0 16px}
 .dv-editar{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1.5px solid var(--borda,#E3DCCD);background:var(--papel,#fff);color:var(--ardosia,#0B1F3A);font-weight:700;text-decoration:none;font-size:15px}
 .dv-editar small{font-weight:500;color:var(--tinta-suave,#4C5670);font-size:13px}
+.mini-btn.dv-exc{color:#A3271B;border-color:#EFC2BB}
+.mini-btn.dv-exc:disabled{opacity:.45;cursor:not-allowed}
