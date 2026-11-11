@@ -592,6 +592,57 @@ function mpExportar(){
   const url = URL.createObjectURL(new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8' }));
   const a = document.createElement('a'); a.href = url; a.download = 'mpcc-resultados-' + (window.T_SLUG || 'terapeuta') + '.csv'; a.click(); URL.revokeObjectURL(url);
 }
+/* ---- 6b. "GERAR APRESENTAÇÃO" A PARTIR DO MPCC (mesmo gerador do Teste de Travas) ----
+   Cada dimensão entra com o "espaço para crescer": quanto falta para 5 (100% = tudo a desenvolver, 0% = já no máximo). */
+const MP_APRES_VOC = { pct:true, teste:'MPCC', item:'dimensão', itens:'dimensões',
+  capaTit:'o seu mapa de competências e o caminho para crescer.', capaSub:'Plano para desenvolver as dimensões com mais espaço para crescer.',
+  mapaTit:'Espaço para crescer em cada dimensão', caminhoTit:'Como vamos desenvolver as suas competências',
+  fase1:'Começamos pela dimensão com mais espaço para crescer. Como trabalhamos: ', fase2:'Seguimos para as próximas dimensões em foco, apoiados nos seus recursos. Como trabalhamos: ',
+  evol:'Cada nova aplicação do MPCC mostra, em números, o quanto você cresceu.',
+  altoTxt:'com mais espaço para crescer: o foco do nosso trabalho.', baixoTxt:'dimensões que já são recursos em você.',
+  destaque:'É a dimensão com mais espaço para crescer, a primeira a ser trabalhada.',
+  dica:'Tudo o que aparece na apresentação (as dimensões e o espaço para crescer em cada uma) vem do MPCC desta pessoa.',
+  objDinheiro:'O que se perde por não desenvolver uma competência costuma custar mais, todos os dias.',
+  objTentei:'Trabalhamos as dimensões com mais espaço para crescer, uma de cada vez.',
+  picoRot:'em foco', suporteRot:'recursos', legPico:'Em foco: as 3 com mais espaço para crescer', legSuporte:'Recursos: as demais' };
+const MP_APRES_LIB = {
+  autonomia:{ x:'segurança para começar', y:'capacidade', resumo:'Você tem ideias e competência, mas costuma esperar orientação ou o momento ideal antes de dar o primeiro passo.', custo:'Projetos adiados, oportunidades que passam e a sensação de depender dos outros para agir.', imagine:['Você começa sem esperar as condições perfeitas.', 'As suas ideias saem do papel com mais frequência.'] },
+  comunicacao:{ x:'expressão', y:'conteúdo', resumo:'Você sabe o que pensa e sente, mas muitas vezes guarda para si por receio de desagradar ou de ser julgado(a).', custo:'Mal-entendidos, incômodos acumulados e a sensação de não ser ouvido(a).', imagine:['Você diz o que precisa com clareza e tranquilidade.', 'As conversas difíceis deixam de ser evitadas.'] },
+  relacionamento:{ x:'troca', y:'boa vontade', resumo:'Você se importa com as pessoas, mas cooperar e confiar no grupo nem sempre acontece com leveza.', custo:'Sobrecarga por fazer tudo sozinho(a) e vínculos mais frágeis do que você gostaria.', imagine:['Você divide tarefas e confia no outro.', 'As relações passam a somar, e não a cansar.'] },
+  decisao:{ x:'confiança no próprio critério', y:'inteligência', resumo:'Você analisa bem as situações, mas decidir costuma vir com dúvida, adiamento ou necessidade de aprovação.', custo:'Decisões que demoram, energia gasta em ruminação e oportunidades perdidas.', imagine:['Você decide com mais clareza e menos culpa.', 'Errar vira aprendizado, não ameaça.'] },
+  flexibilidade:{ x:'adaptação', y:'firmeza', resumo:'Você gosta do que é previsível; quando o plano muda, a tensão e a resistência aparecem.', custo:'Estresse diante de mudanças e dificuldade de aproveitar o novo.', imagine:['Você ajusta a rota sem perder o rumo.', 'O imprevisto deixa de tirar o seu chão.'] },
+  organizacao:{ x:'método', y:'vontade', resumo:'Você quer dar conta de tudo, mas falta um jeito simples de organizar prioridades, prazos e compromissos.', custo:'Correria, tarefas esquecidas e a sensação de estar sempre atrasado(a).', imagine:['A sua rotina passa a ter começo, meio e fim.', 'Você cumpre o que promete sem se esgotar.'] },
+  autoconfianca:{ x:'reconhecimento do próprio valor', y:'competência', resumo:'Você tem mais recursos do que acredita, mas a autocrítica e a comparação diminuem o que você já construiu.', custo:'Oportunidades recusadas, insegurança para se posicionar e cansaço de se provar.', imagine:['Você reconhece o seu valor sem precisar de aprovação.', 'Você se posiciona com mais firmeza.'] },
+  regulacao:{ x:'equilíbrio emocional', y:'força', resumo:'Você sente muito e com intensidade; sob pressão, as emoções tomam a frente e fica difícil voltar ao centro.', custo:'Reações das quais se arrepende, desgaste nas relações e cansaço emocional.', imagine:['Você percebe a emoção antes que ela te leve.', 'Voltar à calma fica mais rápido e mais leve.'] }
+};
+const MP_APRES_TEC = {
+  autonomia:'metas pequenas e semanais, o primeiro passo sempre definido e revisão do que travou a iniciativa.',
+  comunicacao:'treino de conversas reais, escuta ativa e frases para dizer o que você pensa e precisa.',
+  relacionamento:'mapa das suas relações, combinados claros e prática de pedir e oferecer ajuda.',
+  decisao:'critérios simples para decidir, prazos para as escolhas e o trabalho com o medo de errar.',
+  flexibilidade:'exposição gradual a mudanças, planos com alternativas e o cuidado com a tensão que elas trazem.',
+  organizacao:'rotina semanal enxuta, prioridades do dia e acompanhamento dos compromissos.',
+  autoconfianca:'registro das suas conquistas, trabalho com a autocrítica e situações reais para se posicionar.',
+  regulacao:'reconhecer os sinais do corpo, técnicas para voltar à calma e o trabalho com o que dispara as emoções.'
+};
+function mpApresentar(x){
+  if(typeof apresAbrir !== 'function') return alert('A apresentação não está disponível nesta página.');
+  const d = x.dados || {}, calc = mpDeRegistro(d), foco = calc.baixo.map(z => z.id);
+  const lista = calc.dims.map(z => ({ id:z.id, nome:z.nome, nota:Math.round(Math.max(0, Math.min(4, 5 - z.media)) / 4 * 100), nivel:foco.indexOf(z.id) > -1 ? 'alta' : 'baixa' }))
+    .sort((a, b) => b.nota - a.nota);
+  apresAbrir({ nome:x.nome || '', prim:mpPrim(x.nome), genero:'', idade:d.idade || '', motivo:d.objetivo || '', dor:d.expectativa || '', olhar:'', atencao:0, travas:lista },
+    { voc:MP_APRES_VOC, lib:MP_APRES_LIB, tec:MP_APRES_TEC });
+}
+async function mpEnviarEmail(destino, assunto, corpo, codigo, b){
+  const rotulo = b.innerHTML; b.disabled = true; b.textContent = 'Enviando...';
+  let ok = false;
+  try{ if(typeof modoLocal !== 'function' || !modoLocal()){ const r = await api(ACOES.enviarEmail, { destino, assunto, corpo, codigo }); ok = !!(r && r.ok !== false); } }catch(e){ ok = false; }
+  b.disabled = false;
+  if(ok){ b.textContent = 'E-mail enviado para ' + destino; setTimeout(() => { b.innerHTML = rotulo; }, 3000); return; }
+  b.innerHTML = rotulo;
+  location.href = 'mailto:' + encodeURIComponent(destino) + '?subject=' + encodeURIComponent(assunto) + '&body=' + encodeURIComponent(corpo.slice(0, 1800));
+}
+
 function mpAbrirDetalhe(x){
   const d = x.dados || {}, calc = mpDeRegistro(d), zap = zapNumero(d.whatsapp), prim = mpPrim(x.nome);
   const r = { nome:x.nome, calc, dataTxt:mpDataCurta(x.criado_em), codigo:x.codigo }, resumo = mpResumoTexto(x.nome, calc);
@@ -609,9 +660,11 @@ function mpAbrirDetalhe(x){
     <p class="secao-sub">${d.consentimento_contato ? 'Autorizou o contato profissional.' : 'Não marcou a autorização de contato profissional.'}</p>
     <div class="mp-acoes mp-sem-print">
       ${zap ? `<a class="btn btn-zap mp-zap" href="https://wa.me/${zap}?text=${encodeURIComponent(msgZap)}" target="_blank" rel="noopener"><span class="duas">Falar com ${escV(prim)} no WhatsApp<small>mensagem já escrita com o resultado</small></span></a>` : ''}
-      ${d.email ? `<a class="btn btn-contorno" href="mailto:${escV(d.email)}?subject=${encodeURIComponent(MP.SIGLA + ' · ' + x.nome)}&body=${encodeURIComponent(resumo)}"><span class="duas">Enviar para ${escV(prim)} por e-mail<small>${escV(d.email)}</small></span></a>` : ''}
-      <button type="button" class="btn btn-argila" data-mp-pdf><span class="duas">Baixar o relatório em PDF<small>capa + 5 páginas</small></span></button>
-      <button type="button" class="btn btn-contorno" data-mp-copiar>Copiar o resumo</button>
+      <button type="button" class="btn btn-argila" data-mp-email="eu"><span class="duas">Enviar para o meu e-mail<small>${escV(CONFIG.emailTerapeuta || '')}</small></span></button>
+      ${d.email ? `<button type="button" class="btn btn-contorno" data-mp-email="cliente"><span class="duas">Enviar para ${escV(prim)}<small>${escV(d.email)}</small></span></button>` : ''}
+      <button type="button" class="btn btn-argila" data-mp-apres><span class="duas">Gerar apresentação<small>plano de acompanhamento para ${escV(prim)}</small></span></button>
+      <button type="button" class="btn btn-contorno" data-mp-copiar>Copiar a ficha completa</button>
+      <button type="button" class="btn btn-contorno" data-mp-pdf><span class="duas">Salvar em PDF ou imprimir<small>relatório com capa + 5 páginas</small></span></button>
     </div>
     <div class="mp-rel-tela">${(() => { const s = mpSecoes(calc); return `<div class="mp-secao">${s.visao}</div><div class="mp-secao">${s.grafico}</div><div class="mp-secao">${s.destaques}</div><div class="mp-secao">${s.desen}</div><div class="mp-secao">${s.reco}</div>`; })()}</div>
     ${hist}
@@ -620,7 +673,12 @@ function mpAbrirDetalhe(x){
     </tbody></table></details>`;
   const raiz = document.getElementById('mp-detalhe-conteudo'); mpLigarRadar(raiz, calc.dims); window.scrollTo({ top:0, behavior:'auto' });
   raiz.querySelector('[data-mp-pdf]').addEventListener('click', () => mpImprimir(r, zap ? 'https://wa.me/' + (CONFIG.whatsappNumero || '') + '?text=' + encodeURIComponent('Oi, ' + T_PRIM + '! Quero agendar a minha devolutiva do ' + MP.SIGLA + '.') : mpZapTer('Quero agendar a minha devolutiva do ' + MP.SIGLA + '.')));
-  raiz.querySelector('[data-mp-copiar]').addEventListener('click', async e => { try{ await navigator.clipboard.writeText(resumo); e.target.textContent = 'Copiado!'; }catch(err){ e.target.textContent = 'Não consegui'; } setTimeout(() => { e.target.textContent = 'Copiar o resumo'; }, 1800); });
+  raiz.querySelector('[data-mp-copiar]').addEventListener('click', async e => { const b = e.currentTarget; try{ await navigator.clipboard.writeText(resumo); b.textContent = 'Ficha copiada!'; }catch(err){ b.textContent = 'Não consegui copiar'; } setTimeout(() => { b.textContent = 'Copiar a ficha completa'; }, 2200); });
+  raiz.querySelector('[data-mp-apres]').addEventListener('click', () => mpApresentar(x));
+  raiz.querySelectorAll('[data-mp-email]').forEach(b => b.addEventListener('click', () => {
+    const eu = b.dataset.mpEmail === 'eu';
+    mpEnviarEmail(eu ? CONFIG.emailTerapeuta : d.email, MP.SIGLA + ' — ' + x.nome + ' (' + mpDataCurta(x.criado_em) + ')', resumo, x.codigo, b);
+  }));
 }
 
 /* ---- 7. SELETOR DE TESTES DA ÁREA E LIGAÇÃO COM O MODELO ---- */

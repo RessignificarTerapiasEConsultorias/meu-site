@@ -527,7 +527,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611081721">
+<meta name="versao-site" content="v202611110603">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -4460,8 +4460,8 @@ function montarSlides(d){
   /* 6 · mapa em números (gráfico de barras) */
   slide('', `${ey('O seu mapa em números')}<h2>${esc(VOC.mapaTit)}</h2>
     <div class="barras-box"><div class="barras">${tr.map(t=>`<div class="barra-linha"><span class="bn">${esc(t.nome)}</span><div class="bt"><i style="width:${VOC.pct ? Math.round(t.nota / tr[0].nota * 100) : t.nota*10}%;background:${COR_NIVEL[t.nivel]}"></i></div><span class="bv" style="color:${COR_NIVEL[t.nivel]}">${NT(t)}</span></div>`).join('')}</div>
-      <div>${VOC.pct ? `<div style="display:flex;gap:22px;margin-bottom:12px"><div><div class="grande" style="color:${COR_NIVEL.alta}">${altas.length}</div><span>em pico</span></div><div><div class="grande" style="color:${COR_NIVEL.baixa}">${bai.length}</div><span>de suporte</span></div></div>
-      <div class="leg"><span><i style="background:${COR_NIVEL.alta}"></i>Pico: os 2 traços mais fortes</span><span><i style="background:${COR_NIVEL.baixa}"></i>Suporte: os demais</span></div>` : `<div style="display:flex;gap:22px;margin-bottom:12px"><div><div class="grande" style="color:${COR_NIVEL.alta}">${altas.length}</div><span>altas</span></div><div><div class="grande" style="color:${COR_NIVEL.media}">${med.length}</div><span>médias</span></div><div><div class="grande" style="color:${COR_NIVEL.baixa}">${bai.length}</div><span>baixas</span></div></div>
+      <div>${VOC.pct ? `<div style="display:flex;gap:22px;margin-bottom:12px"><div><div class="grande" style="color:${COR_NIVEL.alta}">${altas.length}</div><span>${esc(VOC.picoRot||"em pico")}</span></div><div><div class="grande" style="color:${COR_NIVEL.baixa}">${bai.length}</div><span>${esc(VOC.suporteRot||"de suporte")}</span></div></div>
+      <div class="leg"><span><i style="background:${COR_NIVEL.alta}"></i>${esc(VOC.legPico||"Pico: os 2 traços mais fortes")}</span><span><i style="background:${COR_NIVEL.baixa}"></i>${esc(VOC.legSuporte||"Suporte: os demais")}</span></div>` : `<div style="display:flex;gap:22px;margin-bottom:12px"><div><div class="grande" style="color:${COR_NIVEL.alta}">${altas.length}</div><span>altas</span></div><div><div class="grande" style="color:${COR_NIVEL.media}">${med.length}</div><span>médias</span></div><div><div class="grande" style="color:${COR_NIVEL.baixa}">${bai.length}</div><span>baixas</span></div></div>
       <div class="leg"><span><i style="background:${COR_NIVEL.alta}"></i>Alta: 6 ou mais</span><span><i style="background:${COR_NIVEL.media}"></i>Média: 5 a 5,9</span><span><i style="background:${COR_NIVEL.baixa}"></i>Baixa: menos de 5</span></div>`}
       ${L.atencao ? `<div style="margin-top:20px"><span class="tag-at">${L.atencao} ${L.atencao===1?'ponto':'pontos'} de atenção · vamos olhar juntos</span></div>` : ''}</div></div>`);
 
