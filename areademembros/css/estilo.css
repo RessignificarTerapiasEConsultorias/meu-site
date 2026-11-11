@@ -536,3 +536,22 @@ tr.sub>td{background:#FBF7EE;padding:10px 14px}
 .cartao-escuro .ce-corpo-escuro .btn.contorno{background:transparent;border-color:rgba(255,255,255,.55);color:#fff}
 .cartao-escuro .btn-alerta{position:relative;z-index:1}
 .cartao-escuro .btn-alerta.aberto,.cartao-escuro .btn-alerta.calmo{background:rgba(255,255,255,.14);color:#fff}
+/* painel do cliente: todos os cartões no visual azul profundo, com botão dourado */
+.cartao-escuro .ce-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:999px;background:var(--gold);color:var(--deep);font-weight:700;font-size:15px;text-decoration:none;white-space:nowrap;position:relative;z-index:1;transition:transform .15s,background .15s}
+.cartao-escuro .ce-btn:hover{background:var(--gold2);transform:translateY(-1px)}
+.cartao-escuro .ce-btn.ce-btn-sec{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.45)}
+.cartao-escuro .ce-btn.ce-btn-sec:hover{background:rgba(255,255,255,.1)}
+.cartao-escuro > .ce-info{display:block;margin:0 0 10px}
+.cartao-escuro .ce-olho .selo{vertical-align:middle;margin-left:6px}
+.cartao-escuro .ce-empresas{display:grid;gap:10px;margin-top:12px;position:relative;z-index:1}
+.cartao-escuro .ce-empresas .cartao-empresa{background:rgba(255,255,255,.07);border:1px solid rgba(227,196,119,.28);border-radius:14px;color:#fff;padding:14px}
+.cartao-escuro .ce-empresas .cartao-empresa b{color:#fff;font:600 19px var(--serif)}
+.cartao-escuro .ce-empresas .selo{background:rgba(227,196,119,.18);color:var(--gold2)}
+.cartao-escuro .ce-empresas .btn{background:var(--gold);color:var(--deep);border-radius:999px}
+.cartao-escuro .ce-empresas .btn.contorno{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.45)}
+.cartao-escuro .ce-corpo .acoes-lista .btn{border-radius:999px}
+.servicos-linha{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 16px}
+.servicos-rot{font-size:12.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--goldtxt)}
+.servicos-linha #meusServicos{display:flex;flex-wrap:wrap;gap:6px}
+.servicos-linha #meusServicos p{margin:0}
+.cartao-escuro .ce-link{position:relative;z-index:1;margin:0 0 12px}.cartao-escuro .ce-link input{background:#fff}

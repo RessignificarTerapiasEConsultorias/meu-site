@@ -29,16 +29,7 @@
       <div id="listaSuspensos"></div>
     </div>
     <div id="cartoesParceiro"></div>
-    <div class="cartao">
-      <h2>Seus serviços</h2>
-      <div id="meusServicos"><p class="vazio">Carregando...</p></div>
-    </div>
-    <div class="cartao" id="cartaoTravas" hidden>
-      <h2>Seu Teste de Travas Mentais</h2>
-      <p class="ajuda">Este é o link que você envia para os seus clientes. Na sua área do teste você gera os códigos e vê as respostas.</p>
-      <div class="link-teste"><input type="text" id="travasLink" readonly aria-label="Link do seu teste"><button type="button" class="btn peq" id="travasCopiar">Copiar</button></div>
-      <div class="acoes"><a class="btn auto" id="travasArea" href="#">Abrir minha área do teste</a><a class="btn auto contorno" id="travasVer" href="#" target="_blank" rel="noopener">Ver como o cliente vê</a></div>
-    </div>
+    <div class="servicos-linha"><span class="servicos-rot">Seus serviços</span><div id="meusServicos"><p class="vazio">Carregando...</p></div></div>
     <div class="cartao cartao-escuro" id="cartaoPag" hidden>
       <h2 class="ce-olho">Seus pagamentos</h2>
       <p class="ce-titulo" id="pagResumo"></p>
@@ -60,62 +51,75 @@
         <button type="button" class="btn peq contorno" data-recolhe-fechar="ofertasCorpo" style="margin-top:12px">Recolher as ofertas ↑</button>
       </div>
     </div>
-    <div class="cartao" id="cartaoClinicaOt" hidden>
-      <h2>Sua Clínica Otimizada</h2>
-      <p class="ajuda">Seus clientes, sessões, pagamentos e anotações em um só lugar. Só você vê.</p>
-      <div class="acoes"><a class="btn auto" href="minha-clinica.html">Abrir minha clínica</a><a class="btn auto contorno" href="minha-clinica.html#testes">Trazer quem fez o teste</a></div>
+    <div class="cartao cartao-escuro" id="cartaoTravas" hidden>
+      <h2 class="ce-olho">Seus testes</h2>
+      <p class="ce-titulo">Seu Teste de Travas Mentais</p>
+      <p class="ce-info">Este é o link que você envia para os seus clientes. Na sua área do teste você gera os códigos e vê as respostas.</p>
+      <div class="link-teste ce-link"><input type="text" id="travasLink" readonly aria-label="Link do seu teste"><button type="button" class="btn peq" id="travasCopiar">Copiar</button></div>
+      <div class="ce-rodape" style="justify-content:flex-start"><a class="ce-btn" id="travasArea" href="#">Abrir minha área do teste →</a><a class="ce-btn ce-btn-sec" id="travasVer" href="#" target="_blank" rel="noopener">Ver como o cliente vê</a></div>
     </div>
-    <div class="cartao" id="cartaoTerapia" hidden>
-      <h2>Seu processo terapêutico</h2>
-      <p class="ajuda">Suas áreas de trabalho, ações combinadas, sessões e testes. Tudo sigiloso.</p>
-      <a class="btn auto" href="terapia.html">Abrir meu processo</a>
+    <div class="cartao cartao-escuro" id="cartaoClinicaOt" hidden>
+      <h2 class="ce-olho">Clínica Otimizada</h2>
+      <p class="ce-titulo">Sua clínica</p>
+      <div class="ce-rodape"><span class="ce-info">Seus clientes, sessões, pagamentos e anotações em um só lugar. Só você vê.</span><a class="ce-btn ce-btn-sec" href="minha-clinica.html#testes">Trazer quem fez o teste</a><a class="ce-btn" href="minha-clinica.html">Abrir minha clínica →</a></div>
     </div>
-    <div class="cartao" id="cartaoAcompanha" hidden>
-      <h2>Pessoas que você acompanha</h2>
-      <p class="ajuda">Você vê apenas o que o Mauricio liberou para você em cada processo.</p>
-      <ul class="acoes-lista" id="listaAcompanha"></ul>
+    <div class="cartao cartao-escuro" id="cartaoTerapia" hidden>
+      <h2 class="ce-olho">Processo terapêutico</h2>
+      <p class="ce-titulo">Seu processo terapêutico</p>
+      <div class="ce-rodape"><span class="ce-info">Suas áreas de trabalho, ações combinadas, sessões e testes. Tudo sigiloso.</span><a class="ce-btn" href="terapia.html">Abrir meu processo →</a></div>
     </div>
-    <div class="cartao" id="cartaoClinica" hidden>
-      <h2>Meu atendimento</h2>
-      <p class="ajuda" id="profissionalResponsavel"></p>
-      <div id="listaMinhasSessoes"></div>
+    <div class="cartao cartao-escuro" id="cartaoAcompanha" hidden>
+      <h2 class="ce-olho">Quem você acompanha</h2>
+      <p class="ce-titulo">Pessoas que você acompanha</p>
+      <p class="ce-info">Você vê apenas o que o Mauricio liberou para você em cada processo.</p>
+      <div class="ce-corpo"><ul class="acoes-lista" id="listaAcompanha"></ul></div>
     </div>
-    <div class="cartao" id="cartaoProjetos" hidden>
-      <h2>Projetos de melhoria</h2>
-      <p class="ajuda">Acompanhe os projetos de melhoria contínua da sua empresa, do problema até o resultado.</p>
-      <a class="btn auto contorno" href="projetos.html">Ver projetos</a>
-      <a class="btn auto contorno" href="melhoria-dashboard.html">Dashboard</a>
+    <div class="cartao cartao-escuro" id="cartaoClinica" hidden>
+      <h2 class="ce-olho">Atendimento</h2>
+      <p class="ce-titulo">Meu atendimento</p>
+      <p class="ce-info" id="profissionalResponsavel"></p>
+      <div class="ce-corpo" id="listaMinhasSessoes"></div>
     </div>
-    <div class="cartao" id="cartaoMentoria" hidden>
-      <h2>Sua mentoria</h2>
-      <p class="ajuda">Registre os seus ganhos, acompanhe as ações, o retorno sobre o investimento e as suas lives.</p>
-      <a class="btn auto" href="mentoria.html">Abrir minha mentoria</a>
+    <div class="cartao cartao-escuro" id="cartaoMentoria" hidden>
+      <h2 class="ce-olho">Mentoria</h2>
+      <p class="ce-titulo">Sua mentoria</p>
+      <div class="ce-rodape"><span class="ce-info">Registre os seus ganhos, acompanhe as ações, o retorno sobre o investimento e as suas lives.</span><a class="ce-btn" href="mentoria.html">Abrir minha mentoria →</a></div>
     </div>
-    <div class="cartao" id="cartaoAulas" hidden>
-      <h2>Aulas da mentoria</h2>
-      <p class="ajuda">Assista às aulas por módulo e baixe os materiais de apoio.</p>
-      <a class="btn auto" href="aulas.html">Ver as aulas</a>
+    <div class="cartao cartao-escuro" id="cartaoAulas" hidden>
+      <h2 class="ce-olho">Aulas</h2>
+      <p class="ce-titulo">Aulas da mentoria</p>
+      <div class="ce-rodape"><span class="ce-info">Assista às aulas por módulo e baixe os materiais de apoio.</span><a class="ce-btn" href="aulas.html">Ver as aulas →</a></div>
     </div>
-    <div class="cartao" id="cartaoChat">
-      <h2>Chat <span class="selo ouro" id="chatBadge" hidden></span></h2>
-      <p class="ajuda">Converse com o Mauricio e com a turma. Cada pessoa aparece só com o primeiro nome.</p>
-      <a class="btn auto" href="chat.html">Abrir o chat</a>
+    <div class="cartao cartao-escuro" id="cartaoEmpresas" hidden>
+      <h2 class="ce-olho">DRE</h2>
+      <p class="ce-titulo">Suas empresas e finanças</p>
+      <p class="ce-info">Lance as entradas e saídas do dia a dia. A DRE e os gráficos se montam sozinhos.</p>
+      <div class="lista-empresas ce-empresas" id="minhasEmpresas"></div>
     </div>
-    <div class="cartao">
-      <h2>Contratos</h2>
-      <p class="ajuda">Veja seus contratos e assine diretamente pela plataforma.</p>
-      <a class="btn auto contorno" href="contratos.html">Ver contratos</a>
-      <a class="btn auto contorno" href="pops.html">Ver POPs e manuais</a>
+    <div class="cartao cartao-escuro" id="cartaoContratos">
+      <h2 class="ce-olho">Contratos</h2>
+      <p class="ce-titulo">Seus contratos</p>
+      <div class="ce-rodape"><span class="ce-info">Veja os seus contratos e assine diretamente pela plataforma.</span><a class="ce-btn" href="contratos.html">Ver contratos →</a></div>
     </div>
-    <div class="cartao">
-      <h2>Produtos</h2>
-      <p class="ajuda">Veja o que você já tem e os próximos passos recomendados para você.</p>
-      <a class="btn auto contorno" href="produtos.html">Ver produtos</a>
+    <div class="cartao cartao-escuro" id="cartaoProjetos" hidden>
+      <h2 class="ce-olho">Projetos e melhorias</h2>
+      <p class="ce-titulo">Projetos de melhoria</p>
+      <div class="ce-rodape"><span class="ce-info">Acompanhe os projetos de melhoria contínua da sua empresa, do problema até o resultado.</span><a class="ce-btn ce-btn-sec" href="melhoria-dashboard.html">Dashboard</a><a class="ce-btn" href="projetos.html">Ver projetos →</a></div>
     </div>
-    <div class="cartao">
-      <h2>Suas empresas e finanças</h2>
-      <p class="ajuda">Lance as entradas e saídas do dia a dia. A DRE e os gráficos se montam sozinhos.</p>
-      <div class="lista-empresas" id="minhasEmpresas"><p class="vazio">Carregando...</p></div>
+    <div class="cartao cartao-escuro" id="cartaoPops">
+      <h2 class="ce-olho">POPs</h2>
+      <p class="ce-titulo">POPs e manuais</p>
+      <div class="ce-rodape"><span class="ce-info">Os procedimentos e manuais do seu negócio, sempre à mão.</span><a class="ce-btn" href="pops.html">Ver POPs e manuais →</a></div>
+    </div>
+    <div class="cartao cartao-escuro" id="cartaoProdutos">
+      <h2 class="ce-olho">Produtos</h2>
+      <p class="ce-titulo">Seus produtos</p>
+      <div class="ce-rodape"><span class="ce-info">Veja o que você já tem e os próximos passos recomendados para você.</span><a class="ce-btn" href="produtos.html">Ver produtos →</a></div>
+    </div>
+    <div class="cartao cartao-escuro" id="cartaoChat">
+      <h2 class="ce-olho">Chat <span class="selo ouro" id="chatBadge" hidden></span></h2>
+      <p class="ce-titulo">Converse com o Mauricio</p>
+      <div class="ce-rodape"><span class="ce-info">Converse com o Mauricio e com a turma. Cada pessoa aparece só com o primeiro nome.</span><a class="ce-btn" href="chat.html">Abrir o chat →</a></div>
     </div>
   </main>
 </div>
@@ -136,7 +140,8 @@
   const caixaS = document.getElementById("meusServicos");
   caixaS.innerHTML = (s.data && s.data.length)
     ? s.data.map(function (x) { return '<span class="selo ouro">' + ROTULO_SERVICO[x.tipo] + "</span>"; }).join(" ")
-    : '<p class="vazio">Nenhum serviço ativo no momento.</p>';
+    : "";
+  if (!(s.data && s.data.length)) caixaS.parentNode.hidden = true;
   if ((s.data || []).some(function (x) { return x.tipo === "terapia"; })) document.getElementById("cartaoTerapia").hidden = false;
   if ((s.data || []).some(function (x) { return x.tipo === "mentoria"; })) document.getElementById("cartaoMentoria").hidden = false;
   if ((s.data || []).some(function (x) { return x.tipo === "consultoria_empresarial" || x.tipo === "mentoria"; })) document.getElementById("cartaoProjetos").hidden = false;
@@ -235,7 +240,7 @@
     const temTravasPg = !testesPg || testesPg.indexOf("travas") > -1, temTracosPg = !!testesPg && testesPg.indexOf("tracos") > -1, temMpccPg = !!testesPg && testesPg.indexOf("mpcc") > -1;
     temTravas = !!rt.data && temTravasPg;
     if (rpg.data && rpg.data.slug) {
-      const tituloT = document.querySelector("#cartaoTravas h2");
+      const tituloT = document.querySelector("#cartaoTravas .ce-titulo");
       if (tituloT) {
         const nomesT = [temTravasPg ? "Travas Mentais" : "", temTracosPg ? "Traços de Caráter" : "", temMpccPg ? "MPCC" : ""].filter(Boolean);
         tituloT.textContent = nomesT.length > 1 ? "Seus testes: " + nomesT.slice(0, -1).join(", ") + " e " + nomesT[nomesT.length - 1]
@@ -262,12 +267,20 @@
       supa().from("cliente_produtos").select("produto_id").eq("perfil_id", eu.id).eq("situacao", "adquirido")
     ]);
     const jaTem = new Set((rcp.data || []).map(function (x) { return x.produto_id; }));
+    const ehTerapia = (s.data || []).some(function (x) { return x.tipo === "terapia"; });
+    let oferecidos = null;
+    if (ehTerapia) {
+      const rof = await supa().from("cliente_produtos").select("produto_id").eq("perfil_id", eu.id).eq("situacao", "oferecido");
+      oferecidos = new Set((rof.data || []).map(function (x) { return x.produto_id; }));
+      const cp = document.getElementById("cartaoProdutos"); if (cp) cp.hidden = true;
+      const inf = document.querySelector("#cartaoOfertas .ce-info"); if (inf) inf.textContent = "Escolhido pelo Mauricio especialmente para você.";
+    }
     /* condição especial desta pessoa (ex.: R$ 1 por ano): aparece no lugar do preço normal e vai junto no link */
     const resp = await supa().from("cliente_produtos").select("produto_id,preco_centavos,oferta_token").eq("perfil_id", eu.id).not("preco_centavos", "is", null);
     const esp = {}; (resp.data || []).forEach(function (x) { esp[x.produto_id] = x; });
     if ((rp.data || []).some(function (x) { return x.chave === "clinica" && jaTem.has(x.id); })) document.getElementById("cartaoClinicaOt").hidden = false;
     /* não oferece o que a pessoa já comprou (nem o Teste de Travas para quem já tem o teste) */
-    const prods = (rp.data || []).filter(function (x) { return !jaTem.has(x.id) && !(temTravas && x.chave === "travas"); }), pedidos = new Set((ri.data || []).map(function (i) { return i.produto_id; }));
+    const prods = (rp.data || []).filter(function (x) { return !jaTem.has(x.id) && !(temTravas && x.chave === "travas") && (!oferecidos || oferecidos.has(x.id)); }), pedidos = new Set((ri.data || []).map(function (i) { return i.produto_id; }));
     if (prods.length) {
       const nomes = document.getElementById("ofertasNomes"); nomes.innerHTML = "";
       prods.forEach(function (x) {
@@ -347,10 +360,8 @@
 
   const e = await supa().from("empresas").select("id,nome,segmento,tipo,empresa_membros(perfil_id,funcao)").order("nome");
   const caixaE = document.getElementById("minhasEmpresas");
-  if (!e.data || !e.data.length) {
-    caixaE.innerHTML = '<p class="vazio">Ainda não há empresa ligada ao seu acesso. Assim que o Mauricio cadastrar, ela aparece aqui.</p>';
-    return;
-  }
+  if (!e.data || !e.data.length) return;          /* sem empresa nem orçamento pessoal: o cartão da DRE não aparece */
+  document.getElementById("cartaoEmpresas").hidden = false;
   const idsEmpresa = e.data.filter(function (x) { return x.tipo === "empresa"; }).map(function (x) { return x.id; });
   const rmod = idsEmpresa.length ? await supa().from("empresa_modulos").select("empresa_id,modulo_chave").eq("ativo", true).in("empresa_id", idsEmpresa) : { data: [] };
   const modulosPorEmpresa = {};
