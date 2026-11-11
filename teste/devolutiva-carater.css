@@ -276,3 +276,10 @@ body.cv-on{overflow-x:clip}
 .cv-det-cta{max-width:420px;margin:16px auto 0}
 @media(min-width:760px){.cv-det-grade{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:900px){.cv-menu{grid-template-columns:1fr 1fr}.cv-menu-tit{grid-column:1/-1}}
+
+/* "Sobre você" na capa e botão "Editar minha página" na área da terapeuta */
+.cv-sobre{margin:10px auto 0;max-width:560px;font-size:15.5px;line-height:1.6;color:var(--tinta-suave,#4C5670);text-align:center}
+@media (min-width:900px){.capa-vendas .cv-sobre{text-align:left;margin-left:0}}
+.dv-editar-linha{margin:-4px 0 16px}
+.dv-editar{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1.5px solid var(--borda,#E3DCCD);background:var(--papel,#fff);color:var(--ardosia,#0B1F3A);font-weight:700;text-decoration:none;font-size:15px}
+.dv-editar small{font-weight:500;color:var(--tinta-suave,#4C5670);font-size:13px}

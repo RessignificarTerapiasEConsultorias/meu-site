@@ -632,6 +632,12 @@ function dvAbrirAssinatura(nome, aoConfirmar){
 const CV_IMG = 'https://ressignificarterapiaseconsultorias.com/teste/img/';
 /* acesso da terapeuta no topo da página: abre a mesma área do link do rodapé (entrar com a senha) */
 const CV_CADEADO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zm2 0V8a4 4 0 0 1 8 0v3"/></svg>';
+/* área da terapeuta (páginas do domínio Ressignificar): botão para editar a página (textos, foto e cores) */
+function dvBotaoEditar(){
+  if(!dvCad() || document.getElementById('dv-editar')) return;
+  const cab = document.querySelector('#painel-admin .cabecalho-admin'); if(!cab) return;
+  cab.insertAdjacentHTML('afterend', '<div class="dv-editar-linha nao-imprimir"><a class="dv-editar" id="dv-editar" href="/teste/editar/">✎ Editar minha página <small>texto, foto e cores</small></a></div>');
+}
 function dvBotaoArea(capa){
   const la = document.getElementById('link-admin');
   if(!capa || !la || document.getElementById('cv-area')) return;
@@ -698,6 +704,10 @@ function dvCapaVendas(modo){
     'Só ' + escV(quem) + ' vê as suas respostas', soTravas ? 'Resultado em números' : soMpcc ? 'Mapa em gráfico radar' : casal ? 'Individual ou em casal' : 'Resultado em números e gráfico'];
   const ass = lt.querySelector('.assinatura');
   (ass || h1).insertAdjacentHTML('afterend', `<p class="cv-lead">${lead}</p><ul class="cv-chips">${chips.map(c => '<li>' + c + '</li>').join('')}</ul>`);
+  /* "Sobre você", escrito pela terapeuta na montagem ou em "Editar minha página" */
+  const sobre = dd && String(dd.sobre || '').trim();
+  if(sobre && ass) ass.insertAdjacentHTML('afterend', `<p class="cv-sobre">${escV(sobre).replace(/\n+/g, '<br>')}</p>`);
+  dvBotaoEditar();
   /* páginas com testes extras (ex.: Miralene): logo no topo, um menu com todos os testes, cada um levando ao seu detalhe */
   const CV_NOME_CURTO = k => k === 'travas' ? 'Travas Mentais' : k === 'tracos' ? 'Traços de Caráter' : k === 'mpcc' ? 'MPCC' : (EX[k].curto || EX[k].rot);
   const CV_PERGUNTA = k => k === 'travas' ? 'O que está travando você hoje?' : k === 'tracos' ? 'Como a sua história moldou o seu jeito de ser?' : k === 'mpcc' ? 'Onde você já é forte e onde pode crescer?' : EX[k].pergunta;
@@ -707,7 +717,7 @@ function dvCapaVendas(modo){
       ${lista.map((k, i) => `<a class="cv-menu-i" href="#cv-t-${k}"><span class="cv-det-n">${i + 1}</span><span class="cv-menu-tx"><b>${escV(CV_NOME_CURTO(k))}</b><small>${escV(CV_PERGUNTA(k))}</small></span><span class="cv-menu-seta" aria-hidden="true">↓</span></a>`).join('')}</nav>`);
   }
   /* introdução desligada pela terapeuta (travas_paginas.dados.capa_intro = false): some o título, o convite e o texto de abertura */
-  if(dd && dd.capa_intro === false) [h1, ass, lt.querySelector('.cv-lead')].forEach(x => { if(x) x.style.display = 'none'; });
+  if(dd && dd.capa_intro === false) [h1, ass, lt.querySelector('.cv-lead'), lt.querySelector('.cv-sobre')].forEach(x => { if(x) x.style.display = 'none'; });
   cartao.insertAdjacentHTML('beforebegin', '<p class="cv-ja" id="cv-ja">Já recebeu o seu código? É só digitar aqui:</p>');
   const temCodigo = /[?&](c|codigo|code)=/.test(location.search) || !!(document.getElementById('campo-codigo') || {}).value;
   if(temCodigo) cartao.insertAdjacentHTML('afterend', ctas('cv-ctas-topo'));

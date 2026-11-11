@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Editar a minha página · Ressignificar</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0B1F3A">
+<link rel="icon" href="../../img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../teste-de-travas/loja.css">
+<style>
+  .moldura-prev{width:150px;aspect-ratio:3/4;border-radius:999px 999px 18px 18px;overflow:hidden;background:#E8E0CF center/cover no-repeat;box-shadow:0 0 0 2px var(--gold);display:flex;align-items:center;justify-content:center;font:600 44px var(--serif,serif);color:#4C5670;flex:none}
+  .foto-linha{display:flex;gap:16px;align-items:center}
+  .salvo{background:#E7F4EC;border:1.5px solid #1D5B37;color:#1D5B37;border-radius:12px;padding:12px 14px;margin-top:14px;font-weight:600}
+  .salvo a{color:#1D5B37}
+</style>
+</head>
+<body>
+<header class="topo">
+  <div class="w">
+    <a class="marca" href="../../" aria-label="Ressignificar, ir para o site">
+      <img src="../../img/logo.png" alt="" width="36" height="36">
+      <span><b>Ressignificar</b><small>Editar a minha página</small></span>
+    </a>
+  </div>
+</header>
+<main>
+<section>
+  <div class="w">
+    <div class="caixa">
+
+      <div id="eCarregando" class="passo-estado" role="status"><div class="girar" aria-hidden="true"></div><p>Carregando…</p></div>
+
+      <form id="eLogin" hidden novalidate>
+        <h2>Editar a minha página</h2>
+        <p class="lead" style="margin-bottom:20px">Entre com o mesmo e-mail e senha da sua Área do teste.</p>
+        <div class="campo"><label for="lEmail">E-mail</label><input type="email" id="lEmail" autocomplete="email" required></div>
+        <div class="campo"><label for="lSenha">Senha</label><input type="password" id="lSenha" autocomplete="current-password" required></div>
+        <div class="aviso" id="avisoLogin" role="alert"></div>
+        <button class="btn" type="submit" id="btnEntrar" style="width:100%">Entrar</button>
+        <p class="dica" style="margin-top:14px">Esqueceu a senha? <a href="#" data-wa="Olá, Mauricio! Quero editar a minha página do teste e não lembro a minha senha. Meu e-mail: ">Fale com a gente pelo WhatsApp</a>.</p>
+      </form>
+
+      <form id="eForm" hidden novalidate>
+        <h2>Editar a minha página</h2>
+        <p class="lead" style="margin-bottom:20px">O que você mudar aqui aparece na hora para os seus clientes.</p>
+        <div class="aviso" id="avisoTopo" role="status" style="background:#FFF6E0;border-color:#E8C24A;color:#5C4500"></div>
+        <div class="campo">
+          <span class="rotulo">Sua foto</span>
+          <div class="foto-linha">
+            <div class="moldura-prev" id="fotoPrev" aria-hidden="true"></div>
+            <div>
+              <label class="foto-btn" for="fFoto">Trocar ou ajustar a foto</label>
+              <input type="file" id="fFoto" accept="image/*">
+              <div class="dica">Depois de escolher, você arrasta e aproxima a foto dentro da moldura.</div>
+            </div>
+          </div>
+        </div>
+        <div class="campo"><label for="fNome">Seu nome, como vai aparecer</label><input type="text" id="fNome" maxlength="80" required></div>
+        <div class="campo">
+          <span class="rotulo" id="rotGen">Como os seus clientes te chamam</span>
+          <div class="generos" role="radiogroup" aria-labelledby="rotGen">
+            <label class="opcao"><input type="radio" name="genero" value="f" checked><span>a terapeuta</span></label>
+            <label class="opcao"><input type="radio" name="genero" value="m"><span>o terapeuta</span></label>
+          </div>
+        </div>
+        <div class="campo">
+          <label for="fTitulo">Como você se apresenta <span class="opc">(uma linha, aparece abaixo do seu nome)</span></label>
+          <input type="text" id="fTitulo" maxlength="70" placeholder="Ex.: Terapeuta integrativa e psicanalista" required>
+          <div class="dica" data-conta="fTitulo"></div>
+        </div>
+        <div class="campo">
+          <label for="fSobre">Sobre você e o seu trabalho <span class="opc">(opcional)</span></label>
+          <textarea id="fSobre" rows="6" maxlength="600" placeholder="Ex.: Sou terapeuta há mais de 8 anos e o meu trabalho é voltado ao desenvolvimento emocional feminino..."></textarea>
+          <div class="dica" data-conta="fSobre"></div>
+        </div>
+        <div class="campo"><label for="fRegistro">Registro profissional <span class="opc">(opcional)</span></label><input type="text" id="fRegistro" maxlength="40" placeholder="Ex.: CRT 00000"></div>
+        <div class="campo"><label for="fFrase">Uma frase sua <span class="opc">(opcional)</span></label><input type="text" id="fFrase" maxlength="140" placeholder="Ex.: Acolher para transformar"><div class="dica" data-conta="fFrase"></div></div>
+        <div class="campo"><label for="fZap">WhatsApp que recebe os resultados</label><input type="tel" id="fZap" inputmode="tel" maxlength="20" required></div>
+        <div class="campo"><label for="fInsta">Instagram <span class="opc">(opcional)</span></label><input type="text" id="fInsta" maxlength="40" placeholder="@seuperfil" autocapitalize="off"></div>
+        <div class="campo"><span class="rotulo" id="rotCor">Cores da sua página</span><div class="paletas" role="radiogroup" aria-labelledby="rotCor" id="paletas"></div></div>
+        <div class="aviso" id="aviso" role="alert"></div>
+        <button class="btn" type="submit" id="btnSalvar" style="width:100%">Salvar as alterações</button>
+        <div class="salvo" id="salvo" hidden></div>
+        <p style="margin-top:16px;text-align:center"><a href="#" id="linkPagina">Ver a minha página</a> · <a href="#" id="btnSair">Sair</a></p>
+      </form>
+
+    </div>
+  </div>
+</section>
+</main>
+<footer style="padding-bottom:30px"><div class="w"><p><b>Ressignificar Terapias &amp; Consultorias</b> · <a href="../../politica-de-privacidade.html">Política de Privacidade</a></p></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../../teste-de-travas/foto-moldura.js"></script>
+<script>
+(function () {
+  var SB = "https://gobjhepmnijoceirwgow.supabase.co";
+  var ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvYmpoZXBtbmlqb2NlaXJ3Z293Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyODgyMDQsImV4cCI6MjEwNzg2NDIwNH0.XPGLdSyG9rwg4VD0hlVAFFWdNeiJom86CSsqnMtMgx4";
+  var FUNCAO = SB + "/functions/v1/pagina-editar", ZAP = "5581992531561", SITE = "https://ressignificarterapiaseconsultorias.com";
+  var cli = window.supabase.createClient(SB, ANON, { auth: { persistSession: true, autoRefreshToken: true, storage: window.sessionStorage } });
+  var $ = function (s) { return document.querySelector(s); };
+  var fotoDados = null, fotoUrl = "", slug = "";
+  var PALETAS = [
+    { id: "azul", nome: "Azul e dourado", c: { "--areia": "#F4EFE5", "--areia-escura": "#E8E0CF", "--papel": "#FFFDF8", "--tinta": "#16203A", "--tinta-suave": "#4C5670", "--ardosia": "#0B1F3A", "--ardosia-escura": "#06142A", "--ardosia-clara": "#E3E8F2", "--argila": "#A8832F", "--argila-clara": "#F4ECD8", "--salvia": "#C9A24A", "--borda": "#E3DCCD" } },
+    { id: "verde", nome: "Verde sálvia", c: { "--areia": "#F5F5F5", "--areia-escura": "#E7EBEA", "--papel": "#FFFFFF", "--tinta": "#152D2E", "--tinta-suave": "#55706C", "--ardosia": "#152D2E", "--ardosia-escura": "#0D1F20", "--ardosia-clara": "#E3ECEA", "--argila": "#4E756D", "--argila-clara": "#E4EEEB", "--salvia": "#8DB0A7", "--borda": "#DDE4E2" } },
+    { id: "lilas", nome: "Lilás", c: { "--areia": "#F3EBEC", "--areia-escura": "#EADCF1", "--papel": "#FCF8FC", "--tinta": "#3F2A52", "--tinta-suave": "#6F4F7C", "--ardosia": "#5E4574", "--ardosia-escura": "#3F2A52", "--ardosia-clara": "#EADCF1", "--argila": "#7B4B9A", "--argila-clara": "#EFE3F6", "--salvia": "#B79CCB", "--borda": "#DFD0E0" } },
+    { id: "terracota", nome: "Terracota", c: { "--areia": "#F6EFE8", "--areia-escura": "#ECDFD2", "--papel": "#FFFCF8", "--tinta": "#3B2A22", "--tinta-suave": "#6E5A4E", "--ardosia": "#5A3A2C", "--ardosia-escura": "#3B2A22", "--ardosia-clara": "#F1E4DA", "--argila": "#A9542F", "--argila-clara": "#F6E3D9", "--salvia": "#D9A38A", "--borda": "#E7D9CC" } },
+    { id: "rosa", nome: "Rosa", c: { "--areia": "#FAF0F1", "--areia-escura": "#F0DDE0", "--papel": "#FFFBFB", "--tinta": "#4A2330", "--tinta-suave": "#7A5560", "--ardosia": "#8A3D57", "--ardosia-escura": "#5E2639", "--ardosia-clara": "#F5E1E7", "--argila": "#A84A6E", "--argila-clara": "#F8E4EC", "--salvia": "#DDA3B8", "--borda": "#EDD8DE" } },
+    { id: "petroleo", nome: "Azul petróleo", c: { "--areia": "#EFF4F5", "--areia-escura": "#DCE7E9", "--papel": "#FFFFFF", "--tinta": "#133A43", "--tinta-suave": "#4D6B72", "--ardosia": "#155563", "--ardosia-escura": "#0D3841", "--ardosia-clara": "#DDEDF0", "--argila": "#22777C", "--argila-clara": "#DCEFF0", "--salvia": "#86C0C3", "--borda": "#D3E2E5" } }
+  ];
+  $("#paletas").innerHTML = PALETAS.map(function (p) {
+    return '<label class="opcao paleta"><input type="radio" name="paleta" value="' + p.id + '"><span><i><b style="background:' + p.c["--ardosia"] + '"></b><b style="background:' + p.c["--argila"] + '"></b><b style="background:' + p.c["--areia"] + '"></b></i>' + p.nome + "</span></label>";
+  }).join("");
+  function mostrar(id) { ["eCarregando", "eLogin", "eForm"].forEach(function (x) { $("#" + x).hidden = x !== id; }); }
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("[data-wa]"); if (!a) return;
+    e.preventDefault(); window.open("https://wa.me/" + ZAP + "?text=" + encodeURIComponent(a.getAttribute("data-wa") + ($("#lEmail").value || "")), "_blank", "noopener");
+  });
+  function zapFormatado(d) { d = String(d || "").replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, ""); return d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d; }
+  $("#fZap").addEventListener("input", function () { var d = this.value.replace(/\D/g, "").slice(0, 11); this.value = zapFormatado(d); });
+  document.querySelectorAll("[data-conta]").forEach(function (d) {
+    var c = document.getElementById(d.getAttribute("data-conta")), max = +c.getAttribute("maxlength");
+    function at() { var n = c.value.length; d.textContent = n + " de " + max + " letras" + (n >= max ? " (limite)" : ""); }
+    c.addEventListener("input", at); c._conta = at; at();
+  });
+  function prevFoto() { var p = $("#fotoPrev"), src = fotoDados || fotoUrl; p.style.backgroundImage = src ? "url(" + src + ")" : ""; p.textContent = src ? "" : ($("#fNome").value.trim().charAt(0) || "?").toUpperCase(); }
+  $("#fFoto").addEventListener("change", function () {
+    var f = this.files && this.files[0], campo = this; if (!f) return;
+    FotoMoldura.abrir(f, function (dados) { fotoDados = dados; prevFoto(); campo.value = ""; },
+      function () { aviso("Não conseguimos abrir essa foto. Tente outra, em JPG ou PNG."); });
+  });
+  function aviso(msg, el) { el = el || $("#aviso"); el.textContent = msg; el.classList.add("on"); }
+  async function chamar(corpo) {
+    var s = (await cli.auth.getSession()).data.session;
+    var r = await fetch(FUNCAO, { method: "POST", headers: { "Content-Type": "application/json", apikey: ANON, Authorization: "Bearer " + (s ? s.access_token : ANON) }, body: JSON.stringify(corpo) });
+    var j = await r.json().catch(function () { return {}; }); j.__status = r.status; return j;
+  }
+  async function carregar() {
+    mostrar("eCarregando");
+    var j = await chamar({ acao: "ler" });
+    if (j.__status === 401) { mostrar("eLogin"); return; }
+    if (!j.ok) { mostrar("eLogin"); aviso(j.erro || "Não foi possível abrir a sua página.", $("#avisoLogin")); return; }
+    var d = j.dados; slug = j.slug; fotoUrl = d.foto_url || "";
+    /* apresentação antiga, longa demais para uma linha: vai para "Sobre você" para não ser cortada */
+    var longo = (d.titulo || "").length > 70 && !d.sobre;
+    $("#fNome").value = d.nome; $("#fTitulo").value = longo ? "" : d.titulo; $("#fSobre").value = longo ? d.titulo : d.sobre;
+    if (longo) aviso("A sua apresentação era maior que uma linha e foi cortada na página. Passamos o texto para \"Sobre você\": complete o final e escreva uma linha curta em \"Como você se apresenta\" (ex.: Terapeuta TAP).", $("#avisoTopo")); $("#fRegistro").value = d.registro;
+    $("#fFrase").value = d.frase; $("#fZap").value = zapFormatado(d.whatsapp); $("#fInsta").value = d.instagram ? "@" + d.instagram : "";
+    (document.querySelector('input[name="genero"][value="' + (d.genero === "m" ? "m" : "f") + '"]') || {}).checked = true;
+    var pal = PALETAS.filter(function (p) { return d.paleta && p.c["--ardosia"] === d.paleta["--ardosia"]; })[0];
+    if (pal) document.querySelector('input[name="paleta"][value="' + pal.id + '"]').checked = true;
+    document.querySelectorAll("[data-conta]").forEach(function (x) { var c = document.getElementById(x.getAttribute("data-conta")); if (c._conta) c._conta(); });
+    $("#linkPagina").href = SITE + "/teste/?t=" + slug;
+    prevFoto(); mostrar("eForm");
+  }
+  $("#eLogin").addEventListener("submit", async function (e) {
+    e.preventDefault(); $("#avisoLogin").classList.remove("on");
+    var b = $("#btnEntrar"); b.disabled = true; b.textContent = "Entrando…";
+    var r = await cli.auth.signInWithPassword({ email: $("#lEmail").value.trim().toLowerCase(), password: $("#lSenha").value });
+    b.disabled = false; b.textContent = "Entrar";
+    if (r.error) { aviso(/Invalid login/i.test(r.error.message) ? "E-mail ou senha incorretos." : "Não foi possível entrar agora. Tente de novo.", $("#avisoLogin")); return; }
+    carregar();
+  });
+  $("#btnSair").addEventListener("click", async function (e) { e.preventDefault(); await cli.auth.signOut(); location.reload(); });
+  $("#eForm").addEventListener("submit", async function (e) {
+    e.preventDefault(); $("#aviso").classList.remove("on"); $("#salvo").hidden = true;
+    var palId = (document.querySelector('input[name="paleta"]:checked') || {}).value;
+    var pal = PALETAS.filter(function (p) { return p.id === palId; })[0];
+    var campos = { nome: $("#fNome").value, genero: (document.querySelector('input[name="genero"]:checked') || {}).value || "f", titulo: $("#fTitulo").value,
+      sobre: $("#fSobre").value, registro: $("#fRegistro").value, frase: $("#fFrase").value, whatsapp: $("#fZap").value, instagram: $("#fInsta").value };
+    if (pal) campos.paleta = pal.c;
+    if ($("#fNome").value.trim().length < 3) return aviso("Escreva o seu nome.");
+    if (!$("#fTitulo").value.trim()) return aviso("Escreva como você se apresenta. Ex.: Terapeuta integrativa.");
+    var b = $("#btnSalvar"); b.disabled = true; b.textContent = "Salvando…";
+    var j = await chamar({ acao: "salvar", campos: campos, foto: fotoDados });
+    b.disabled = false; b.textContent = "Salvar as alterações";
+    if (!j.ok) return aviso(j.erro || "Não foi possível salvar agora. Tente de novo.");
+    if (j.foto_url) { fotoUrl = j.foto_url; fotoDados = null; }
+    $("#salvo").innerHTML = '✓ Alterações salvas. <a href="' + SITE + "/teste/?t=" + j.slug + '" target="_blank" rel="noopener">Ver a minha página</a>';
+    $("#salvo").hidden = false;
+  });
+  carregar();
+})();
+</script>
+</body>
+</html>

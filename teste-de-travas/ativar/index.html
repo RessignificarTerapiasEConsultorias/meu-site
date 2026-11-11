@@ -75,8 +75,14 @@
           </div>
         </div>
         <div class="campo">
-          <label for="fTitulo">Como você se apresenta</label>
-          <input type="text" id="fTitulo" maxlength="90" placeholder="Ex.: Terapeuta integrativa e psicanalista" required>
+          <label for="fTitulo">Como você se apresenta <span class="opc">(uma linha, aparece abaixo do seu nome)</span></label>
+          <input type="text" id="fTitulo" maxlength="70" placeholder="Ex.: Terapeuta integrativa e psicanalista" required>
+          <div class="dica" data-conta="fTitulo"></div>
+        </div>
+        <div class="campo">
+          <label for="fSobre">Sobre você e o seu trabalho <span class="opc">(opcional)</span></label>
+          <textarea id="fSobre" rows="5" maxlength="600" placeholder="Ex.: Sou terapeuta há mais de 8 anos e o meu trabalho é voltado ao desenvolvimento emocional feminino. Atendo online e presencial..."></textarea>
+          <div class="dica" data-conta="fSobre"></div>
         </div>
         <div class="campo">
           <label for="fRegistro">Registro profissional <span class="opc">(opcional)</span></label>
@@ -101,7 +107,7 @@
             <div>
               <label class="foto-btn" for="fFoto">Escolher foto</label>
               <input type="file" id="fFoto" accept="image/*">
-              <div class="dica">Foto de rosto, de preferência na vertical.</div>
+              <div class="dica">Foto de rosto. Depois de escolher, você ajusta a foto dentro da moldura.</div>
             </div>
           </div>
         </div>
@@ -156,6 +162,7 @@
   <div class="w"><p><b>Ressignificar Terapias &amp; Consultorias</b> · <a href="../../politica-de-privacidade.html">Política de Privacidade</a></p></div>
 </footer>
 
+<script src="../foto-moldura.js"></script>
 <script>
 (function () {
   var FUNCAO = "https://gobjhepmnijoceirwgow.supabase.co/functions/v1/travas-loja";
@@ -309,16 +316,16 @@
 
   /* foto: reduz no próprio celular antes de enviar (fica leve e rápida para os clientes) */
   $("#fFoto").addEventListener("change", function () {
-    var f = this.files && this.files[0]; if (!f) return;
-    var url = URL.createObjectURL(f), img = new Image();
-    img.onload = function () {
-      var max = 720, esc = Math.min(1, max / Math.max(img.width, img.height));
-      var cv = document.createElement("canvas"); cv.width = Math.round(img.width * esc); cv.height = Math.round(img.height * esc);
-      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
-      fotoDados = cv.toDataURL("image/jpeg", 0.85); URL.revokeObjectURL(url); atualizaInicial();
-    };
-    img.onerror = function () { URL.revokeObjectURL(url); erro("Não conseguimos abrir essa foto. Tente outra, em JPG ou PNG."); };
-    img.src = url;
+    var f = this.files && this.files[0], campo = this; if (!f) return;
+    FotoMoldura.abrir(f, function (dados) { fotoDados = dados; atualizaInicial(); campo.value = ""; },
+      function () { erro("Não conseguimos abrir essa foto. Tente outra, em JPG ou PNG."); });
+  });
+
+  /* contador de letras nos campos de texto */
+  document.querySelectorAll("[data-conta]").forEach(function (d) {
+    var c = document.getElementById(d.getAttribute("data-conta")), max = +c.getAttribute("maxlength");
+    function at() { var n = c.value.length; d.textContent = n + " de " + max + " letras" + (n >= max ? " (limite)" : ""); }
+    c.addEventListener("input", at); at();
   });
 
   var aviso = $("#aviso");
@@ -348,7 +355,12 @@
              senha: pedido.conta_existente ? "" : senha, link: link })
       .then(function (j) {
         if (!j.ok) throw new Error(j.erro || "Não foi possível criar a página.");
-        pronto(j.pagina, j.email, genero, nome);
+        var sobre = $("#fSobre").value.trim();
+        var fim = function () { pronto(j.pagina, j.email, genero, nome); };
+        if (!sobre) return fim();
+        /* o texto "Sobre você" entra na página logo depois de criada */
+        return fetch(FUNCAO.replace("travas-loja", "pagina-editar"), { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ acao: "salvar", token: token, campos: { sobre: sobre } }) }).then(fim, fim);
       })
       .catch(function (err) { b.disabled = false; b.textContent = document.body.dataset.tracos ? "Criar a minha página" : "Criar o meu teste"; erro(err.message, /link/i.test(err.message) ? $("#fLink") : null); if (/link/i.test(err.message)) conferirLink(); });
   });

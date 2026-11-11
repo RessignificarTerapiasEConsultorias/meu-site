@@ -67,8 +67,8 @@ section{padding:54px 0}
 .campo{margin-bottom:16px}
 .campo label,.rotulo{display:block;font-weight:600;font-size:15.5px;margin-bottom:6px;color:var(--navy)}
 .campo .opc{font-weight:400;color:var(--muted)}
-.campo input[type=text],.campo input[type=email],.campo input[type=tel],.campo input[type=password]{width:100%;min-height:52px;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font:400 17px var(--sans);color:var(--ink);background:#fff}
-.campo input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,74,.22)}
+.campo input[type=text],.campo input[type=email],.campo input[type=tel],.campo input[type=password],.campo textarea{width:100%;min-height:52px;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font:400 17px var(--sans);color:var(--ink);background:#fff}
+.campo input:focus,.campo textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,74,.22)}
 .dica{font-size:14px;color:var(--muted);margin-top:5px}
 .aviso{display:none;margin:4px 0 14px;padding:12px 14px;border-radius:12px;background:#FBEAE7;border:1px solid #EFC2BB;color:#7A2219;font-size:15.5px}
 .aviso.on{display:block}
@@ -116,7 +116,7 @@ footer a{color:#DCE3F1}
 .foto-area{display:flex;align-items:center;gap:16px}
 .foto-prev{width:92px;height:122px;flex:none;border-radius:999px 999px 14px 14px;background:var(--line) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:40px;color:var(--muted)}
 .foto-btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:10px 16px;border-radius:12px;border:1.5px dashed var(--goldtxt);color:var(--goldtxt);font-weight:700;cursor:pointer;background:#FFFBEF}
-.foto-area input{position:absolute;opacity:0;width:1px;height:1px}
+.foto-area input,.foto-linha input[type=file]{position:absolute;opacity:0;width:1px;height:1px}
 .pronto{text-align:center}
 .pronto .icone{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;background:#E7F4EC;display:flex;align-items:center;justify-content:center;font-size:34px;color:#1D5B37}
 .link-caixa{display:flex;gap:8px;margin:16px 0;align-items:stretch}
@@ -145,3 +145,4 @@ footer a{color:#DCE3F1}
 .grupo-aviso b.t{display:block;font-size:19px;color:#14532D;margin-bottom:6px}
 .grupo-aviso p{margin:0 0 12px;color:#1F3B2A;font-size:15px;line-height:1.5}
 .grupo-aviso .btn{width:100%}
+.campo textarea{min-height:120px;resize:vertical;line-height:1.5}
