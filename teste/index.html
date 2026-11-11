@@ -29,8 +29,8 @@
   --verde-zap:#2F7A52;
   --alta:#B23A2F;        /* trava alta — vermelho */
   --alta-clara:#F7E2DE;
-  --media:#3F6698;       /* trava média — azul */
-  --media-clara:#E2E9F3;
+  --media:#C8960C;       /* trava média — amarelo */
+  --media-clara:#FBF0D0;
   --baixa:#3F7D55;       /* trava baixa — verde */
   --baixa-clara:#E2EFE5;
   --borda:#DDE4E2;
@@ -160,7 +160,7 @@ img{max-width:100%;display:block}
 .placar b{display:block;font-family:'Fraunces',serif;font-size:34px;line-height:1;margin-bottom:4px}
 .placar span{font-size:13.5px;opacity:.92;display:block;line-height:1.3}
 .placar .pt-alta b{color:#FFB3A6}
-.placar .pt-media b{color:#B9D1F0}
+.placar .pt-media b{color:#F2C14E}
 .placar .pt-baixa b{color:#AFE0BD}
 .teia{background:var(--papel);border:1.4px solid var(--borda);border-radius:22px;padding:10px 4px 4px;margin-bottom:20px}
 .teia canvas{width:100%;height:auto;display:block}
@@ -212,7 +212,7 @@ img{max-width:100%;display:block}
 .etiqueta.livre{background:var(--ardosia-clara);color:var(--ardosia)}
 .etiqueta.usado{background:var(--areia-escura);color:var(--tinta-suave)}
 .etiqueta.e-alta{background:var(--alta-clara);color:#8A2B22}
-.etiqueta.e-media{background:var(--media-clara);color:#2F4E75}
+.etiqueta.e-media{background:var(--media-clara);color:#7A5A00}
 .etiqueta.e-baixa{background:var(--baixa-clara);color:#2F5E3F}
 .vazio,.carregando{text-align:center;color:var(--tinta-suave);padding:28px 10px;font-size:16px}
 .modo-local{background:var(--argila-clara);border:1.4px solid var(--borda);border-radius:12px;padding:12px 14px;font-size:14.5px;color:var(--tinta);margin-bottom:16px}
@@ -261,7 +261,7 @@ img{max-width:100%;display:block}
 .grupo-titulo{font-size:22px;margin:26px 0 4px}
 .grupo-sub{font-size:16px;color:var(--tinta-suave);margin-bottom:14px}
 .grupo-titulo.g-alta{color:#8A2B22}
-.grupo-titulo.g-media{color:#2F4E75}
+.grupo-titulo.g-media{color:#8A6500}
 .grupo-titulo.g-baixa{color:#2F5E3F}
 .bloco-trava.enfase{border-left-width:10px;border-color:#E3B5AE;background:#FFF9F8;box-shadow:0 10px 26px rgba(178,58,47,.13)}
 .bloco-trava.enfase h3{font-size:23px}
@@ -527,7 +527,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611110752">
+<meta name="versao-site" content="v202611111149">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -818,7 +818,7 @@ html.t-erro .t-girar{display:none}
     <canvas id="teia" role="img" aria-label="Gráfico de teia com as dez travas"></canvas>
     <div class="legenda">
       <span><i style="background:#B23A2F"></i>Alta (6 a 10)</span>
-      <span><i style="background:#3F6698"></i>Média (5 a 5,9)</span>
+      <span><i style="background:#C8960C"></i>Média (5 a 5,9)</span>
       <span><i style="background:#3F7D55"></i>Baixa (até 4,9)</span>
     </div>
   </div>
@@ -2161,7 +2161,7 @@ $('#voltar-pergunta').addEventListener('click', ()=>{ if(estado.indice>0){ estad
    11. RESULTADO
    ============================================================================ */
 function nivelDe(nota){ return nota >= CORTE_ALTA ? 'alta' : nota >= CORTE_MEDIA ? 'media' : 'baixa'; }
-function cor(nivel){ return nivel==='alta' ? '#B23A2F' : nivel==='media' ? '#3F6698' : '#3F7D55'; }
+function cor(nivel){ return nivel==='alta' ? '#B23A2F' : nivel==='media' ? '#C8960C' : '#3F7D55'; }
 function nomeNivel(nivel){ return nivel==='alta' ? 'Trava alta' : nivel==='media' ? 'Trava média' : 'Trava baixa'; }
 function num(n){ return n.toFixed(1).replace('.', ','); }
 const contarNivel = (r,n) => (r.travas||[]).filter(t => nivelDe(t.nota) === n).length;
@@ -2597,12 +2597,12 @@ function anexarAtencao(linhas, resps){
 
 function htmlBlocoTrava(l, pos, modo){
   const fundo = l.nivel==='alta' ? 'var(--alta-clara)' : l.nivel==='media' ? 'var(--media-clara)' : 'var(--baixa-clara)';
-  const corTexto = l.nivel==='alta' ? '#8A2B22' : l.nivel==='media' ? '#2F4E75' : '#2F5E3F';
+  const corTexto = l.nivel==='alta' ? '#8A2B22' : l.nivel==='media' ? '#7A5A00' : '#2F5E3F';
   let acao;
   if(l.nivel==='alta'){
     acao = `<div class="caixa caixa-urgencia"><b>Prioridade:</b> esta trava está ativa agora e cobra um preço todos os dias — em oportunidade, em relação e em saúde emocional. Quanto mais tempo ela fica solta, mais fundo o padrão se repete. Leve esta trava para ${T_A} ainda esta semana.</div>`;
   }else if(l.nivel==='media'){
-    acao = `<div class="caixa" style="background:var(--media-clara);color:#2F4E75;font-weight:600"><b>Atenção:</b> ela não domina o seu dia, mas aparece sempre que a vida aperta. Tratada agora, não vira uma trava alta.</div>`;
+    acao = `<div class="caixa" style="background:var(--media-clara);color:#7A5A00;font-weight:600"><b>Atenção:</b> ela não domina o seu dia, mas aparece sempre que a vida aperta. Tratada agora, não vira uma trava alta.</div>`;
   }else{
     acao = `<div class="caixa caixa-parabens"><b>Parabéns!</b> Ponto de força: aqui você já se sustenta bem. Essa é a base que ${T_A} vai usar para destravar as outras.</div>`;
   }
@@ -2827,7 +2827,7 @@ function abrirDetalhe(r){
     <div class="teia"><canvas id="teia-detalhe"></canvas>
       <div class="legenda">
         <span><i style="background:#B23A2F"></i>Alta (6 a 10)</span>
-        <span><i style="background:#3F6698"></i>Média (5 a 5,9)</span>
+        <span><i style="background:#C8960C"></i>Média (5 a 5,9)</span>
         <span><i style="background:#3F7D55"></i>Baixa (até 4,9)</span>
       </div>
     </div>
@@ -4432,7 +4432,7 @@ function tema(c){
   const tx = mix('#FFFFFF', ac, .05);
   return {'--bg':bg,'--bg2':mix(bg,'#FFFFFF',.05),'--card':mix(bg,'#FFFFFF',.08),'--ln':mix(bg,'#FFFFFF',.17),'--tx':tx,'--mut':mix(tx,bg,.45),'--ac':ac,'--ac2':mix(c.principal,'#FFFFFF',.55)};
 }
-const COR_NIVEL = {alta:'#E5645A', media:'#6F9BD6', baixa:'#5FB57F'};
+const COR_NIVEL = {alta:'#E5645A', media:'#F2C14E', baixa:'#5FB57F'};
 
 /* ============================ slides ============================ */
 function montarSlides(d){
