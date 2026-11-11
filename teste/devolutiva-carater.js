@@ -1232,3 +1232,169 @@ async function dvQuadroCliques(){
   };
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligar); else ligar();
 })();
+
+/* ============================================================================
+   CRONÔMETRO DE 60 s NO FIM DO TRAÇOS E DO MPCC (igual ao Teste de Travas)
+   O código diz se o cronômetro está ligado (travas_codigos.urgencia). Ao salvar, a resposta devolve um token;
+   o clique no WhatsApp e a notificação ficam anotados na resposta (teste_registrar_acao).
+   ============================================================================ */
+const DV_URG = { seg:60, adiarMax:600, cod:null, tok:null, teste:'', u:null, timer:null, btn:null };
+function dvUrgTextos(){
+  const A = typeof URG_A !== 'undefined' ? URG_A : 'a terapeuta', ELA = typeof URG_ELA !== 'undefined' ? URG_ELA : 'ela', DELA = typeof URG_DELA !== 'undefined' ? URG_DELA : 'dela';
+  const DA = typeof URG_DA !== 'undefined' ? URG_DA : 'da terapeuta', ELE = typeof URG_ELE !== 'undefined' && URG_ELE, AM = A.charAt(0).toUpperCase() + A.slice(1);
+  return { A, rot:{ janela:'Fale com ' + A + ' agora', encerrada:'Seu tempo acabou', zap:'Conversa aberta', notificada:'Notificação enviada' },
+    janela:'<b>Este é o momento de falar com ' + A + '.</b> O que você sentiu ao responder está vivo agora. Toque no botão verde e fale com ' + ELA + ' pelo WhatsApp <b>nos próximos 60 segundos</b>. Passado esse tempo, o atalho direto se fecha e você precisará aguardar o retorno ' + DELA + '.',
+    encerrada:'<b>O atalho direto para o WhatsApp ' + DA + ' foi encerrado.</b> Você ainda pode avisá-' + (ELE ? 'lo' : 'la') + ' de que quer conversar: ao enviar uma notificação, ' + ELA + ' vê o seu interesse no sistema ' + DELA + '. <b>Atenção: uma notificação não é uma conversa no WhatsApp.</b> ' + AM + ' responderá assim que puder.',
+    zap:'<b>Ótimo, você agiu a tempo.</b> A conversa com ' + A + ' está aberta no WhatsApp: é só enviar a mensagem que já está pronta.',
+    notificada:'<b>Pronto, ' + A + ' foi ' + (ELE ? 'avisado' : 'avisada') + ' do seu interesse.</b> Lembre-se: uma notificação não abre uma conversa no WhatsApp. ' + (ELE ? 'Ele' : 'Ela') + ' retornará assim que puder.' };
+}
+const dvUrgFmt = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+const dvUrgDec = () => DV_URG.u && DV_URG.u.inicio ? (Date.now() - DV_URG.u.inicio) / 1000 : 0;
+const dvUrgAdiou = () => DV_URG.u && DV_URG.u.fim ? Math.max(0, Math.floor((Date.now() - DV_URG.u.fim) / 1000)) : 0;
+/* escuta a validação do código e o salvamento das respostas (sem mexer no modelo da página) */
+function dvUrgEscutar(){
+  if(window.__dvUrgEsc) return; window.__dvUrgEsc = true;
+  /* o programa da página entra depois de carregar os dados da terapeuta: espera ele existir */
+  let n = 0; const espera = setInterval(() => { n++; if(dvUrgEmbrulhar() || n > 240) clearInterval(espera); }, 250);
+  /* o botão verde do fim do teste aparece: monta o cronômetro antes dele */
+  if('MutationObserver' in window) new MutationObserver(() => { clearTimeout(DV_URG.t); DV_URG.t = setTimeout(dvUrgProcurar, 80); }).observe(document.body, { childList:true, subtree:true });
+}
+function dvUrgEmbrulhar(){
+  if(typeof window.api !== 'function' || typeof window.compRpc !== 'function') return false;
+  if(window.api.__dv) return true;
+  {
+    const api0 = window.api;
+    window.api = async function(acao, dados){ const r = await api0.apply(this, arguments);
+      try{ if(typeof ACOES !== 'undefined' && acao === ACOES.validarCodigo && r && (r.valido === true || r.ok === true)) DV_URG.cod = { codigo:String(dados.codigo || '').toUpperCase(), teste:r.teste || 'travas', urgencia:r.urgencia !== false }; }catch(e){}
+      return r; }; window.api.__dv = true;
+  }
+  {
+    const rpc0 = window.compRpc;
+    window.compRpc = async function(nome, args){ const r = await rpc0.apply(this, arguments);
+      try{ if((nome === 'tracos_salvar_resposta' || nome === 'mpcc_salvar_resposta') && r && r.ok === true){
+        DV_URG.tok = r.acao_token || null; DV_URG.teste = nome.indexOf('tracos') === 0 ? 'tracos' : 'mpcc';
+        if(r.urgencia === false && DV_URG.cod) DV_URG.cod.urgencia = false;
+        DV_URG.u = null; clearInterval(DV_URG.timer); DV_URG.montado = false;
+      } }catch(e){}
+      return r; };
+  }
+  return true;
+}
+function dvUrgProcurar(){
+  if(!DV_URG.tok || DV_URG.montado) return;
+  const btn = DV_URG.teste === 'tracos' ? document.querySelector('#tr-zap, #tf-zap') : document.querySelector('#tela-mp-resultado .mp-devolutiva .mp-zap, #tela-mp .mp-zap');
+  if(!btn || btn.closest('#tela-admin')) return;
+  DV_URG.montado = true; dvUrgIniciarEm(btn);
+}
+function dvUrgIniciarEm(btn){
+  const T = dvUrgTextos(), ligado = !(DV_URG.cod && DV_URG.cod.urgencia === false);
+  ['#urg-card', '#urg-notif'].forEach(s => { const e = document.querySelector(s); if(e) e.remove(); });
+  DV_URG.btn = btn; btn.style.position = btn.style.position || 'relative'; btn.style.overflow = 'hidden';
+  if(!btn.querySelector('.zap-linha')) btn.insertAdjacentHTML('beforeend', '<span class="zap-linha" aria-hidden="true"><i></i></span>');
+  btn.addEventListener('click', dvUrgCliqueZap);
+  DV_URG.u = { fase: ligado ? 'espera' : 'livre', inicio:0, fim:0 };
+  if(ligado){
+    const card = document.createElement('div'); card.id = 'urg-card'; card.className = 'urg'; card.setAttribute('role', 'group'); card.setAttribute('aria-label', 'Convite para falar agora');
+    card.innerHTML = '<div class="urg-topo"><span class="urg-rot" id="urg-rot"></span><span><b class="urg-num" id="urg-num">01:00</b><small class="urg-legenda" id="urg-legenda"></small></span></div>'
+      + '<div class="urg-barra" aria-hidden="true"><i id="urg-barra"></i></div><p class="urg-msg" id="urg-msg" aria-live="polite"></p>';
+    const SINO = typeof URG_SINO !== 'undefined' ? URG_SINO : '';
+    const notif = document.createElement('div'); notif.id = 'urg-notif'; notif.className = 'notif-bloco'; notif.hidden = true;
+    notif.innerHTML = '<button type="button" id="btn-notif">' + SINO + '<span class="duas">Enviar notificação para ' + escV(T.A) + '<small>avisa que você quer conversar · não abre o WhatsApp</small></span><span class="notif-linha" aria-hidden="true"><i id="notif-linha"></i></span></button>'
+      + '<div class="notif-caixa" id="notif-caixa" hidden><label for="notif-texto">Quer deixar um recado para ' + escV(T.A) + '? <span>(opcional)</span></label>'
+      + '<textarea id="notif-texto" maxlength="500" rows="3" placeholder="Ex.: Quero entender melhor o meu resultado."></textarea>'
+      + '<p class="notif-aviso">Ao enviar, ' + escV(T.A) + ' recebe a sua notificação e o seu recado no sistema. <b>Isto não abre uma conversa no WhatsApp.</b></p><p class="notif-erro" id="notif-erro" role="alert"></p>'
+      + '<div class="notif-acoes"><button type="button" class="btn btn-primario" id="notif-enviar">Enviar notificação</button><button type="button" class="btn btn-contorno" id="notif-voltar">Voltar</button></div></div>';
+    btn.insertAdjacentElement('beforebegin', card); card.insertAdjacentElement('afterend', notif);
+    document.getElementById('btn-notif').onclick = () => { const c = document.getElementById('notif-caixa'); c.hidden = !c.hidden; if(!c.hidden) document.getElementById('notif-texto').focus(); };
+    document.getElementById('notif-voltar').onclick = () => { document.getElementById('notif-caixa').hidden = true; };
+    document.getElementById('notif-enviar').onclick = dvUrgNotificar;
+    const comecar = () => { const u = DV_URG.u; if(!u || u.inicio) return; u.inicio = Date.now(); if(u.fase === 'espera') u.fase = 'janela'; clearInterval(DV_URG.timer); DV_URG.timer = setInterval(dvUrgTick, 250); dvUrgRender(); };
+    if('IntersectionObserver' in window){ const io = new IntersectionObserver(es => { if(es.some(e => e.isIntersecting)){ io.disconnect(); comecar(); } }, { threshold:0.6 }); io.observe(card); } else comecar();
+  }
+  dvUrgRender();
+}
+function dvUrgRender(){
+  const u = DV_URG.u, btn = DV_URG.btn, T = dvUrgTextos(); if(!u) return;
+  const fechado = u.fase === 'encerrada' || u.fase === 'notificada';
+  if(btn){ btn.style.display = fechado ? 'none' : ''; btn.classList.toggle('calmo', u.fase === 'zap'); }
+  const card = document.getElementById('urg-card'); if(!card) return;
+  card.className = 'urg' + (u.fase === 'encerrada' ? ' encerrada' : u.fase === 'zap' ? ' zap' : u.fase === 'notificada' ? ' notificada' : '');
+  document.getElementById('urg-notif').hidden = u.fase !== 'encerrada';
+  const ch = (u.fase === 'espera' || u.fase === 'janela') ? 'janela' : u.fase;
+  document.getElementById('urg-rot').textContent = T.rot[ch] || '';
+  document.getElementById('urg-msg').innerHTML = T[ch] || T.janela;
+  dvUrgAtualizar();
+}
+function dvUrgAtualizar(){
+  const u = DV_URG.u, num = document.getElementById('urg-num'); if(!u || !num) return;
+  const leg = document.getElementById('urg-legenda'), barra = document.getElementById('urg-barra'), linha = DV_URG.btn && DV_URG.btn.querySelector('.zap-linha i');
+  if(u.fase === 'espera'){ num.textContent = dvUrgFmt(DV_URG.seg); leg.textContent = 'restantes'; barra.style.width = '100%'; }
+  else if(u.fase === 'janela'){ const dec = Math.min(DV_URG.seg, dvUrgDec()), resta = Math.max(0, Math.ceil(DV_URG.seg - dec)); num.textContent = dvUrgFmt(resta); leg.textContent = 'restantes'; barra.style.width = ((DV_URG.seg - dec) / DV_URG.seg * 100) + '%'; if(linha) linha.style.width = (dec / DV_URG.seg * 100) + '%'; }
+  else if(u.fase === 'encerrada'){ const ad = dvUrgAdiou(), m = Math.min(ad, DV_URG.adiarMax), pct = (m / DV_URG.adiarMax * 100) + '%'; num.textContent = dvUrgFmt(m); leg.textContent = ad >= DV_URG.adiarMax ? 'adiando há mais de' : 'você está adiando há'; barra.style.width = pct; const nl = document.getElementById('notif-linha'); if(nl) nl.style.width = pct; }
+  else if(u.fase === 'zap'){ num.textContent = '✔'; leg.textContent = 'você chegou a tempo'; barra.style.width = '100%'; }
+  else if(u.fase === 'notificada'){ num.textContent = dvUrgFmt(u.adiouFinal || 0); leg.textContent = 'até decidir'; barra.style.width = '100%'; }
+}
+function dvUrgTick(){
+  const u = DV_URG.u; if(!u || !document.getElementById('urg-card')){ clearInterval(DV_URG.timer); return; }
+  if(u.fase === 'janela' && dvUrgDec() >= DV_URG.seg){ u.fim = u.inicio + DV_URG.seg * 1000; u.fase = 'encerrada'; dvUrgRender(); return; }
+  if(u.fase === 'janela' || u.fase === 'encerrada') dvUrgAtualizar();
+}
+function dvUrgCliqueZap(ev){
+  const u = DV_URG.u; if(!u) return;
+  if(u.fase === 'encerrada' || u.fase === 'notificada'){ ev.preventDefault(); return; }
+  const seg = Math.round(dvUrgDec());
+  dvUrgRegistrar('whatsapp', { segundos:seg });
+  if(u.fase === 'janela' || u.fase === 'espera'){ u.fase = 'zap'; clearInterval(DV_URG.timer); dvUrgRender(); }
+}
+async function dvUrgNotificar(){
+  const u = DV_URG.u, b = document.getElementById('notif-enviar'); if(!u || u.fase !== 'encerrada') return;
+  const adiou = dvUrgAdiou(), texto = document.getElementById('notif-texto').value.trim().slice(0, 500);
+  b.disabled = true; b.textContent = 'Enviando...'; document.getElementById('notif-erro').textContent = '';
+  const r = await dvUrgRegistrar('notificacao', { segundos:DV_URG.seg + adiou, adiou_segundos:adiou, mensagem:texto });
+  if(!r || r.ok !== true){ b.disabled = false; b.textContent = 'Enviar notificação'; document.getElementById('notif-erro').textContent = 'Não consegui enviar agora. Confira a sua internet e tente de novo.'; return; }
+  u.fase = 'notificada'; u.adiouFinal = Math.min(adiou, DV_URG.adiarMax); clearInterval(DV_URG.timer); dvUrgRender();
+}
+async function dvUrgRegistrar(tipo, dados){
+  try{ if(!DV_URG.tok || typeof clienteMembros !== 'function') return { ok:false };
+    const { data, error } = await clienteMembros().rpc('teste_registrar_acao', { p_teste:DV_URG.teste, p_token:DV_URG.tok, p_tipo:tipo, p_dados:dados });
+    return error ? { ok:false } : data;
+  }catch(e){ return { ok:false }; }
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dvUrgEscutar); else dvUrgEscutar();
+
+/* escolha do cronômetro ao gerar o código do Traços (o do MPCC está no módulo do MPCC) */
+function dvUrgEscolhaTracos(){
+  const b = document.getElementById('tc-gerar'); if(!b || document.getElementById('tc-alt-urg')) return;
+  b.insertAdjacentHTML('beforebegin', '<div class="campo"><label id="rot-tc-urg">Cronômetro de urgência de 60 segundos no final?</label>'
+    + '<div class="alternar" id="tc-alt-urg" role="radiogroup" aria-labelledby="rot-tc-urg"><button type="button" class="ativa" data-v="1" role="radio" aria-checked="true">Sim, ligado<small>60 s para falar no WhatsApp; depois, só notificação</small></button>'
+    + '<button type="button" data-v="0" role="radio" aria-checked="false">Não<small>o WhatsApp fica sempre disponível</small></button></div>'
+    + '<div class="dica">Vale para o teste individual. O que a pessoa fizer fica anotado na resposta dela.</div></div>');
+  document.querySelectorAll('#tc-alt-urg button').forEach(x => x.addEventListener('click', () => {
+    document.querySelectorAll('#tc-alt-urg button').forEach(y => { const on = y === x; y.classList.toggle('ativa', on); y.setAttribute('aria-checked', on ? 'true' : 'false'); });
+  }));
+}
+function dvUrgSel(id){ const b = document.querySelector('#' + id + ' button.ativa'); return !b || b.dataset.v !== '0'; }
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dvUrgEscolhaTracos); else dvUrgEscolhaTracos();
+
+/* área da terapeuta: o que a pessoa fez no fim do Traços e do MPCC aparece em cada resposta da lista */
+async function dvUrgTagsLista(){
+  try{
+    if(typeof clienteMembros !== 'function') return;
+    const linhas = Array.from(document.querySelectorAll('.linha-item[data-dv-del="tracos"]:not([data-urg-ok]), .linha-item[data-dv-del="mpcc"]:not([data-urg-ok])'));
+    if(!linhas.length) return;
+    linhas.forEach(l => l.setAttribute('data-urg-ok', '1'));
+    const porTab = { tracos:[], mpcc:[] }; linhas.forEach(l => porTab[l.dataset.dvDel].push(l.dataset.id));
+    const c = clienteMembros(), mapa = {};
+    for(const t of ['tracos', 'mpcc']){ if(!porTab[t].length) continue;
+      const { data } = await c.from(t + '_respostas').select('id,interesse,urgencia').in('id', porTab[t]); (data || []).forEach(x => { mapa[x.id] = x; }); }
+    const dur = s => s == null ? '' : s < 60 ? Math.round(s) + ' s' : Math.floor(s / 60) + ' min';
+    linhas.forEach(l => { const x = mapa[l.dataset.id]; if(!x) return; const i = x.interesse || {}, t = [];
+      if(i.whatsapp) t.push('<span class="tag-int zap">WhatsApp · ' + dur(i.whatsapp.segundos) + '</span>');
+      if(i.notificacao) t.push('<span class="tag-int notif">Notificação · ' + dur(i.notificacao.adiou_segundos) + ' depois</span>' + (i.notificacao.mensagem ? '' : ''));
+      if(!t.length && x.urgencia === true) t.push('<span class="tag-int nada">Sem ação no fim</span>');
+      if(t.length){ const esq = l.querySelector('.esq') || l; esq.insertAdjacentHTML('beforeend', '<span class="tags-int">' + t.join('') + '</span>'); }
+    });
+  }catch(e){}
+}
+if('MutationObserver' in window) (function(){ const go = () => new MutationObserver(() => { clearTimeout(window.__dvUrgTg); window.__dvUrgTg = setTimeout(dvUrgTagsLista, 150); }).observe(document.body, { childList:true, subtree:true });
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); })();

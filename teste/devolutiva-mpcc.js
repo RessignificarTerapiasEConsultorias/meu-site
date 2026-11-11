@@ -500,6 +500,11 @@ function mpAdminMontar(){
               <button type="button" class="ativa" data-v="1" role="radio" aria-checked="true">Sim, vê<small>o mapa, o gráfico e o relatório em PDF</small></button>
               <button type="button" data-v="0" role="radio" aria-checked="false">Não, só eu vejo<small>recebe só um agradecimento</small></button>
             </div></div>
+          <div class="campo"><label id="rot-mp-urg">Cronômetro de urgência de 60 segundos no final?</label>
+            <div class="alternar" id="mp-alt-urg" role="radiogroup" aria-labelledby="rot-mp-urg">
+              <button type="button" class="ativa" data-v="1" role="radio" aria-checked="true">Sim, ligado<small>60 s para falar no WhatsApp; depois, só notificação</small></button>
+              <button type="button" data-v="0" role="radio" aria-checked="false">Não<small>o WhatsApp fica sempre disponível</small></button>
+            </div><div class="dica">O que a pessoa fizer no fim fica anotado na resposta dela.</div></div>
           <button class="btn btn-argila" id="mp-gerar">Gerar código</button>
         </div>
         <div id="mp-caixa-codigo"></div>
@@ -511,6 +516,9 @@ function mpAdminMontar(){
   mascaraTelefone(document.getElementById('mp-cod-whats'));
   document.querySelectorAll('#mp-abas button').forEach(b => b.addEventListener('click', () => mpAdminAba(b.dataset.mpAba)));
   let mostrarSel = true;
+  document.querySelectorAll('#mp-alt-urg button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('#mp-alt-urg button').forEach(x => { const on = x === b; x.classList.toggle('ativa', on); x.setAttribute('aria-checked', on ? 'true' : 'false'); });
+  }));
   document.querySelectorAll('#mp-alt-mostrar button').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('#mp-alt-mostrar button').forEach(x => { const on = x === b; x.classList.toggle('ativa', on); x.setAttribute('aria-checked', on ? 'true' : 'false'); }); mostrarSel = b.dataset.v === '1';
   }));
@@ -540,7 +548,7 @@ async function mpGerar(mostrar){
   b.disabled = true; b.textContent = 'Gerando...';
   let codigo = novoCodigo(), erro = null;
   for(let t = 0; t < 6; t++){
-    const { error } = await c.from('travas_codigos').insert({ terapeuta_id:sess.session.user.id, codigo, cliente:nomeCli || null, whatsapp:zapCli || null, mostrar_resultado:mostrar, urgencia:false, teste:'mpcc', tipo:'individual' });
+    const { error } = await c.from('travas_codigos').insert({ terapeuta_id:sess.session.user.id, codigo, cliente:nomeCli || null, whatsapp:zapCli || null, mostrar_resultado:mostrar, urgencia:(typeof dvUrgSel === 'function' ? dvUrgSel('mp-alt-urg') : false), teste:'mpcc', tipo:'individual' });
     erro = error; if(!error) break;
     if(error.code === '23505'){ codigo = novoCodigo(); continue; } break;
   }
