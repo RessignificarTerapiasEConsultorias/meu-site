@@ -1,0 +1,53 @@
+/* Modo campanha (link de anúncio com código marcado como campanha) */
+html.camp-espera #tela-capa, html.camp-espera .cv-barra, html.camp-espera .cv-faixa{visibility:hidden}
+html.camp-espera body::after{content:"";position:fixed;left:50%;top:42%;width:34px;height:34px;margin-left:-17px;border-radius:50%;border:3px solid rgba(0,0,0,.12);border-top-color:var(--argila,#9A5A38);animation:camp-gira .8s linear infinite}
+@keyframes camp-gira{to{transform:rotate(360deg)}}
+html.modo-campanha #tela-capa,html.modo-campanha .cv-barra,html.modo-campanha #cv-barra{display:none!important}
+html.modo-campanha .bt-aviso{font-weight:600}
+
+.camp-lp{max-width:520px;margin:0 auto;padding:18px 18px 28px;text-align:center}
+.camp-foto{width:132px;height:132px;border-radius:50%;object-fit:cover;display:block;margin:6px auto 12px;border:4px solid #fff;box-shadow:0 6px 20px rgba(0,0,0,.14);background:#eee}
+.camp-selo{display:inline-block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--argila,#9A5A38);background:rgba(154,90,56,.1);border-radius:999px;padding:6px 12px;margin:0 0 12px}
+.camp-lp h1{font-size:clamp(28px,8vw,40px);line-height:1.12;margin:0 0 12px}
+.camp-lp h1 em{font-style:normal;color:var(--argila,#9A5A38)}
+.camp-sub{font-size:17px;line-height:1.55;color:var(--tinta-suave,#4C5670);margin:0 0 16px}
+.camp-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 18px;padding:0;list-style:none}
+.camp-chips li{background:#fff;border:1px solid var(--borda,#E3DCCD);border-radius:999px;padding:7px 12px;font-size:14px;font-weight:600;color:var(--tinta,#16203A)}
+.camp-chips li::before{content:"✓ ";color:#2E7D4F;font-weight:800}
+.camp-btn{display:block;width:100%;font-size:19px!important;padding:18px 16px!important;border-radius:16px!important;box-shadow:0 10px 24px rgba(0,0,0,.16)}
+.camp-quem{font-size:14px;color:var(--tinta-suave,#4C5670);margin:12px 0 0}
+.camp-prova{margin:22px 0 0;text-align:left;background:#fff;border:1px solid var(--borda,#E3DCCD);border-radius:16px;padding:14px 16px}
+.camp-prova p{margin:0 0 8px;font-size:15px;line-height:1.5}
+.camp-prova p:last-child{margin:0}
+.camp-form{max-width:520px;margin:0 auto;padding:16px 18px 28px}
+.camp-form h1{font-size:clamp(26px,7vw,34px);margin:6px 0 8px}
+.camp-form .camp-sub{text-align:left}
+.camp-como{background:#fff;border:1px solid var(--borda,#E3DCCD);border-radius:14px;padding:12px 14px;margin:14px 0;font-size:15px;line-height:1.5}
+.camp-como ul{margin:0;padding-left:18px}.camp-como li{margin:4px 0}
+.camp-erro{color:#B23A2F;font-size:14px;min-height:18px;margin:6px 0 0}
+#camp-toast{position:fixed;left:50%;top:86px;transform:translate(-50%,-12px);opacity:0;z-index:60;background:var(--ardosia,#1F2F5A);color:#fff;font-weight:700;font-size:15px;padding:10px 16px;border-radius:999px;box-shadow:0 8px 22px rgba(0,0,0,.2);transition:all .3s ease;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+#camp-toast.ver{opacity:1;transform:translate(-50%,0)}
+html.modo-campanha #contador{font-weight:600;color:var(--argila,#9A5A38)}
+
+/* área: histórico de campanha */
+.camp-hist{background:#fff;border:1px solid var(--borda,#E3DCCD);border-radius:16px;padding:14px 16px;margin:0 0 18px}
+.camp-hist > summary{cursor:pointer;font-weight:800;font-size:18px;list-style:none}
+.camp-hist > summary::-webkit-details-marker{display:none}
+.camp-hist > summary small{display:block;font-weight:500;font-size:13px;color:var(--tinta-suave,#4C5670)}
+.camp-filtros{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.camp-filtros select,.camp-filtros button{font:inherit;font-size:14px;border:1px solid var(--borda,#D9D2C3);border-radius:10px;padding:8px 10px;background:#fff;cursor:pointer}
+.camp-filtros button.ativa{background:var(--ardosia,#1F2F5A);color:#fff;border-color:var(--ardosia,#1F2F5A)}
+.camp-funil{display:grid;gap:6px;margin:6px 0 14px}
+.camp-f{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;font-size:14px}
+.camp-f b{font-size:15px}
+.camp-f .tr{grid-column:1/-1;height:9px;border-radius:9px;background:#EEE7D8;overflow:hidden}
+.camp-f .tr i{display:block;height:100%;background:var(--argila,#9A5A38);border-radius:9px}
+.camp-pess{display:grid;gap:8px}
+.camp-p{border:1px solid #EEE7D8;border-radius:12px;padding:10px 12px}
+.camp-p .top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px}
+.camp-p .nm{font-weight:700}
+.camp-p .st{font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;background:#F1ECE2;color:#5B4A2E;white-space:nowrap}
+.camp-p .st.ok{background:#E3F6E9;color:#15502E}.camp-p .st.meio{background:#FFF1BF;color:#5C4500}.camp-p .st.fora{background:#FBEDEB;color:#8A2C22}
+.camp-p .sub{font-size:13px;color:var(--tinta-suave,#4C5670);margin:3px 0 0}
+.camp-p details{margin-top:6px;font-size:13px}.camp-p details ol{margin:6px 0 0;padding-left:20px}
+.camp-p .acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
