@@ -92,3 +92,12 @@
 .resumo-compra span{font-weight:700;color:var(--navy);white-space:nowrap}
 .esqueci{display:block;text-align:right;font-size:14px;margin-top:-6px;margin-bottom:14px;color:var(--goldtxt)}
 .campo input[type=password]{letter-spacing:.04em}
+
+/* quem criou o teste (foto da autora) */
+.autora{padding-top:8px}
+.autora-grade{display:grid;grid-template-columns:150px 1fr;gap:22px;align-items:center;max-width:860px}
+.autora-foto{margin:0}
+.autora-foto img{width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;object-position:50% 20%;border-radius:999px 999px 18px 18px;box-shadow:0 0 0 3px var(--gold),0 14px 34px rgba(6,20,42,.18)}
+.autora h2{margin:0 0 8px}
+.autora p{margin:0;line-height:1.6}
+@media (max-width:560px){.autora-grade{grid-template-columns:1fr;text-align:center}.autora-foto{width:170px;margin:0 auto}}
