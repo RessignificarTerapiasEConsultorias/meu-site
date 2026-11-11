@@ -527,7 +527,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611110653">
+<meta name="versao-site" content="v202611110658">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -565,6 +565,19 @@ html.t-erro .t-girar{display:none}
 .vit-teaser.vit-nome-d{border-left-color:#C62828;box-shadow:none}a.vit-teaser{text-decoration:none}
 .vit-teaser span{font-family:'Fraunces',serif;font-size:17px;line-height:1.35;font-weight:600}
 .vit-teaser small{display:inline-flex;align-self:flex-start;margin-top:4px;background:var(--argila);color:#fff;border-radius:999px;padding:6px 12px}
+
+/* ofertas na área da terapeuta: mesmo visual da Área de Membros */
+.vit-teasers{display:grid;gap:12px;margin:8px 0 14px}
+@media(min-width:760px){.vit-teasers{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}}
+.vit-teaser,.vit-teaser.vit-nome-d{position:relative;display:flex;flex-direction:column;gap:8px;width:100%;text-align:left;text-decoration:none;border:0;border-left:0;background:radial-gradient(120% 120% at 100% 0%,#1B3766 0%,#0B1F3A 60%,#06142A 100%);border-radius:16px;padding:18px 18px 16px;color:#fff;box-shadow:0 12px 28px rgba(6,20,42,.18);transition:transform .15s,box-shadow .15s;overflow:hidden;cursor:pointer;font:inherit}
+.vit-teaser::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;border:1px solid rgba(227,196,119,.25);pointer-events:none}
+.vit-teaser:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(6,20,42,.26)}
+.vit-teaser:focus-visible{outline:3px solid #C9A24A;outline-offset:3px}
+.vit-teaser .teaser-nome{display:block;margin:0;padding:0;background:none;border-radius:0;font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#E3C477}
+.vit-teaser .teaser-chamada{font-family:'Fraunces',Georgia,serif;font-size:clamp(19px,2.4vw,22px);line-height:1.3;font-weight:600;color:#fff;text-wrap:balance}
+.vit-teaser .teaser-rodape{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;font-family:inherit}
+.vit-teaser .teaser-preco{font-family:inherit;font-size:14px;font-weight:500;color:#C9D2E4}
+.vit-teaser .teaser-mais{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:999px;background:#C9A24A;color:#06142A;font-family:inherit;font-weight:700;font-size:14.5px}
 
 </style>
 <link rel="stylesheet" href="devolutiva-carater.css">
@@ -1233,7 +1246,7 @@ async function carregarVitrine() {
       '<a class="vit-link" href="' + AREA_MEMBROS + '">Abrir minha Área de Membros →</a></div>';
     caixa.innerHTML = topoVit + (prods.length
       ? '<div class="vit-resumo"><div class="vit-nomes"><span class="vit-nome vit-nome-d">' + prods.length + (prods.length === 1 ? " oferta" : " ofertas") + ' para você</span></div>' + botaoAlerta("vitOfertas", "Ver as ofertas") + '</div><div class="vit-detalhe" id="vitOfertas" hidden>' +
-        '<div class="vit-teasers">' + prods.map(p => (p.pagina ? '<a class="vit-teaser' + (p.destaque ? " vit-nome-d" : "") + '" href="' + escV(p.pagina) + '?de=teste' + (p._oferta ? '&oferta=' + escV(p._oferta) : '') + '" data-vit-pagar="' + p.id + '">' : '<button type="button" class="vit-teaser' + (p.destaque ? " vit-nome-d" : "") + '" data-vit-teaser="' + p.id + '">') + '<b>' + escV(p.nome) + '</b>' + (p.chamada ? '<span>' + escV(p.chamada) + '</span>' : '') + '<small>' + (p.preco_texto ? escV(p.preco_texto) + ' · ' : '') + 'Saber mais →</small>' + (p.pagina ? '</a>' : '</button>')).join("") + '</div>' + (prods.some(p => !p.pagina) ? '<div class="vit-resumo">' + botaoAlerta("vitDetalhe", "Ver detalhes e valores") + "</div>" : "") +
+        '<div class="vit-teasers">' + prods.map(p => (p.pagina ? '<a class="vit-teaser' + (p.destaque ? " vit-nome-d" : "") + '" href="' + escV(p.pagina) + '?de=teste' + (p._oferta ? '&oferta=' + escV(p._oferta) : '') + '" data-vit-pagar="' + p.id + '">' : '<button type="button" class="vit-teaser' + (p.destaque ? " vit-nome-d" : "") + '" data-vit-teaser="' + p.id + '">') + '<small class="teaser-nome">' + escV(p.nome) + '</small>' + '<span class="teaser-chamada">' + escV(p.chamada || p.nome) + '</span>' + '<span class="teaser-rodape">' + (p.preco_texto ? '<span class="teaser-preco">' + escV(String(p.preco_texto).split("·")[0].trim()) + '</span>' : '') + '<span class="teaser-mais">Saber mais →</span></span>' + (p.pagina ? '</a>' : '</button>')).join("") + '</div>' + (prods.some(p => !p.pagina) ? '<div class="vit-resumo">' + botaoAlerta("vitDetalhe", "Ver detalhes e valores") + "</div>" : "") +
         '<div class="vit-detalhe" id="vitDetalhe" hidden><div class="vit-grade">' + prods.map(card).join("") + '</div><button type="button" class="vit-fechar" data-vit-fechar="vitDetalhe">Recolher ↑</button></div>' +
         '<button type="button" class="vit-fechar" data-vit-fechar="vitOfertas">Recolher as ofertas ↑</button></div>'
       : '<p class="vit-vazio">Em breve novas ofertas por aqui.</p>');
