@@ -555,3 +555,11 @@ tr.sub>td{background:#FBF7EE;padding:10px 14px}
 .servicos-linha #meusServicos{display:flex;flex-wrap:wrap;gap:6px}
 .servicos-linha #meusServicos p{margin:0}
 .cartao-escuro .ce-link{position:relative;z-index:1;margin:0 0 12px}.cartao-escuro .ce-link input{background:#fff}
+/* DRE dentro do cartão azul: cada empresa numa faixa equilibrada (nome e etiquetas à esquerda, botões à direita) */
+.cartao-escuro .ce-empresas .cartao-empresa{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px;padding:14px 16px}
+.cartao-escuro .ce-empresas .cartao-empresa > div{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 100%;margin-top:-4px}
+.cartao-escuro .ce-empresas .cartao-empresa b{flex:1 1 auto;font-size:18px}
+.cartao-escuro .ce-empresas .cartao-empresa .btn{width:auto;min-height:42px;margin:0;padding:0 18px;font-size:14.5px;flex:0 0 auto}
+.cartao-escuro .ce-empresas .cartao-empresa .btn:first-of-type{order:3}
+@media(min-width:720px){.cartao-escuro .ce-empresas{grid-template-columns:1fr}}
+.cartao-escuro .ce-empresas .cartao-empresa .btn:only-of-type,.cartao-escuro .ce-empresas .cartao-empresa > .btn.contorno:nth-of-type(2){margin-left:auto}
