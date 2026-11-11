@@ -1398,3 +1398,46 @@ async function dvUrgTagsLista(){
 }
 if('MutationObserver' in window) (function(){ const go = () => new MutationObserver(() => { clearTimeout(window.__dvUrgTg); window.__dvUrgTg = setTimeout(dvUrgTagsLista, 150); }).observe(document.body, { childList:true, subtree:true });
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); })();
+
+/* ============================================================================
+   NOME DO TESTE POR TERAPEUTA (travas_paginas.dados.nome_teste, ex.: "Teste de Padrões Mentais").
+   Sem o campo, continua "Teste de Travas Mentais". Troca na página, no resultado, na área, no PDF,
+   nas mensagens de WhatsApp e e-mail e na apresentação.
+   ============================================================================ */
+function dvNomeTeste(){ const d = dvCad(); const n = d && String(d.nome_teste || '').trim(); return n && !/^teste de travas mentais$/i.test(n) ? n : ''; }
+function dvTrocarNomeTexto(t){
+  const novo = dvNomeTeste(); if(!novo || !t || !/travas mentais/i.test(t)) return t;
+  const resto = novo.replace(/^teste\s+(de\s+)?/i, '');            // "Padrões Mentais"
+  const caso = (m, s) => m === m.toUpperCase() ? s.toUpperCase() : m.charAt(0) === m.charAt(0).toLowerCase() ? s.toLowerCase() : s;
+  return t.replace(/teste de identifica[çc][ãa]o de travas mentais/gi, m => caso(m, novo))
+          .replace(/teste de travas mentais/gi, m => caso(m, novo))
+          .replace(/travas mentais/gi, m => caso(m, resto));
+}
+function dvNomeTesteAplicar(raiz){
+  if(!dvNomeTeste()) return;
+  const andar = document.createTreeWalker(raiz || document.body, NodeFilter.SHOW_TEXT, null); let no; const lista = [];
+  while((no = andar.nextNode())){ if(/travas mentais/i.test(no.nodeValue) && !(no.parentNode && no.parentNode.closest('script,style'))) lista.push(no); }
+  lista.forEach(n => { n.nodeValue = dvTrocarNomeTexto(n.nodeValue); });
+  (raiz || document).querySelectorAll && (raiz || document).querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(el => ['placeholder','title','aria-label','alt'].forEach(a => { const v = el.getAttribute(a); if(v && /travas mentais/i.test(v)) el.setAttribute(a, dvTrocarNomeTexto(v)); }));
+  if(/travas mentais/i.test(document.title)) document.title = dvTrocarNomeTexto(document.title);
+}
+(function(){
+  let feito = false;
+  const ligar = () => {
+    if(feito || !dvNomeTeste()) return false; feito = true;
+    dvNomeTesteAplicar(document.body);
+    if('MutationObserver' in window) new MutationObserver(ms => { ms.forEach(m => m.addedNodes.forEach(n => { if(n.nodeType === 1) dvNomeTesteAplicar(n); else if(n.nodeType === 3 && /travas mentais/i.test(n.nodeValue)) n.nodeValue = dvTrocarNomeTexto(n.nodeValue); })); }).observe(document.body, { childList:true, subtree:true });
+    /* links de WhatsApp e e-mail: a mensagem também leva o nome novo */
+    document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href*="wa.me/"], a[href^="mailto:"]'); if(!a) return;
+      try{ const h = decodeURIComponent(a.getAttribute('href')); if(/travas mentais/i.test(h)){ const u = a.getAttribute('href'); a.setAttribute('href', u.replace(/(text=|body=|subject=)([^&]*)/g, (m, k, v) => k + encodeURIComponent(dvTrocarNomeTexto(decodeURIComponent(v))))); } }catch(err){} }, true);
+    /* textos montados pelo programa (ficha, e-mail, mensagens) e a apresentação */
+    const embrulhar = () => {
+      ['textoFicha', 'mensagemCliente'].forEach(f => { if(typeof window[f] === 'function' && !window[f].__dvNome){ const o = window[f]; window[f] = function(){ return dvTrocarNomeTexto(o.apply(this, arguments)); }; window[f].__dvNome = true; } });
+      if(typeof window.apresAbrir === 'function' && !window.apresAbrir.__dvNome){ const o = window.apresAbrir; window.apresAbrir = function(lead, extra){ if(!extra) extra = { voc: { teste: dvNomeTeste() } }; return o.call(this, lead, extra); }; window.apresAbrir.__dvNome = true; }
+      if(typeof window.api === 'function' && !window.api.__dvNomeE){ const o = window.api; window.api = function(acao, dados){ try{ if(dados && typeof dados === 'object'){ ['assunto', 'corpo'].forEach(k => { if(typeof dados[k] === 'string') dados[k] = dvTrocarNomeTexto(dados[k]); }); } }catch(err){} return o.apply(this, arguments); }; Object.assign(window.api, o); window.api.__dvNomeE = true; }
+    };
+    embrulhar(); let n = 0; const t = setInterval(() => { embrulhar(); if(++n > 60) clearInterval(t); }, 500);
+    return true;
+  };
+  let n = 0; const t = setInterval(() => { if(ligar() || ++n > 120) clearInterval(t); }, 250);
+})();
