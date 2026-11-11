@@ -39,21 +39,30 @@
       <div class="link-teste"><input type="text" id="travasLink" readonly aria-label="Link do seu teste"><button type="button" class="btn peq" id="travasCopiar">Copiar</button></div>
       <div class="acoes"><a class="btn auto" id="travasArea" href="#">Abrir minha área do teste</a><a class="btn auto contorno" id="travasVer" href="#" target="_blank" rel="noopener">Ver como o cliente vê</a></div>
     </div>
+    <div class="cartao" id="cartaoPag" hidden>
+      <h2>Seus pagamentos</h2>
+      <div class="recolhe-resumo"><span class="ajuda" id="pagResumo" style="margin:0"></span>
+        <button type="button" class="btn-alerta" data-recolhe="pagCorpo" data-txt="Ver os pagamentos" aria-expanded="false" aria-controls="pagCorpo"><span class="ponto-pisca" aria-hidden="true"></span><span class="rec-txt">Ver os pagamentos</span></button></div>
+      <div id="pagCorpo" hidden>
+        <div id="avisoPag"></div>
+        <div class="tabela-wrap" style="margin-top:12px"><table class="t"><thead><tr><th>Serviço</th><th>Vencimento</th><th class="n">Valor</th></tr></thead><tbody id="listaPag"></tbody></table></div>
+        <div class="acoes"><button class="btn peq contorno" type="button" id="verTodosPag" hidden>Ver histórico completo</button><button type="button" class="btn peq contorno" data-recolhe-fechar="pagCorpo">Recolher os pagamentos ↑</button></div>
+      </div>
+    </div>
     <div class="cartao" id="cartaoOfertas" hidden>
-      <h2>Feito para o seu momento</h2>
-      <p class="ajuda">Ferramentas que o Mauricio usa com os clientes dele, agora prontas para você.</p>
-      <div class="ofertas-nomes" id="ofertasNomes"></div>
+      <h2>Ofertas para você</h2>
+      <div class="recolhe-resumo"><span class="ajuda" id="ofertasResumo" style="margin:0"></span>
+        <button type="button" class="btn-alerta" data-recolhe="ofertasCorpo" data-txt="Ver as ofertas" aria-expanded="false" aria-controls="ofertasCorpo"><span class="ponto-pisca" aria-hidden="true"></span><span class="rec-txt">Ver as ofertas</span></button></div>
+      <div id="ofertasCorpo" hidden>
+        <p class="ajuda">Ferramentas que o Mauricio usa com os clientes dele, agora prontas para você.</p>
+        <div class="ofertas-nomes" id="ofertasNomes"></div>
+        <button type="button" class="btn peq contorno" data-recolhe-fechar="ofertasCorpo" style="margin-top:12px">Recolher as ofertas ↑</button>
+      </div>
     </div>
     <div class="cartao" id="cartaoClinicaOt" hidden>
       <h2>Sua Clínica Otimizada</h2>
       <p class="ajuda">Seus clientes, sessões, pagamentos e anotações em um só lugar. Só você vê.</p>
       <div class="acoes"><a class="btn auto" href="minha-clinica.html">Abrir minha clínica</a><a class="btn auto contorno" href="minha-clinica.html#testes">Trazer quem fez o teste</a></div>
-    </div>
-    <div class="cartao" id="cartaoPag" hidden>
-      <h2>Seus pagamentos</h2>
-      <div id="avisoPag"></div>
-      <div class="tabela-wrap" style="margin-top:12px"><table class="t"><thead><tr><th>Serviço</th><th>Vencimento</th><th class="n">Valor</th></tr></thead><tbody id="listaPag"></tbody></table></div>
-      <div class="acoes"><button class="btn peq contorno" type="button" id="verTodosPag" hidden>Ver histórico completo</button></div>
     </div>
     <div class="cartao" id="cartaoTerapia" hidden>
       <h2>Seu processo terapêutico</h2>
@@ -143,6 +152,16 @@
       "</tbody></table></div>" : '<p class="vazio">Nenhuma sessão registrada ainda.</p>';
     document.getElementById("cartaoClinica").hidden = false;
   }
+  /* ---------- seções recolhidas (Ofertas e Pagamentos): o botão vermelho abre e recolhe ---------- */
+  document.addEventListener("click", function (ev) {
+    const f = ev.target.closest && ev.target.closest("[data-recolhe-fechar]");
+    if (f) { const ab = document.querySelector('[data-recolhe="' + f.dataset.recolheFechar + '"]'); if (ab) { ab.click(); ab.scrollIntoView({ behavior: "smooth", block: "center" }); } return; }
+    const b = ev.target.closest && ev.target.closest("[data-recolhe]"); if (!b) return;
+    const alvo = document.getElementById(b.dataset.recolhe); if (!alvo) return;
+    const abrir = alvo.hidden; alvo.hidden = !abrir;
+    b.setAttribute("aria-expanded", String(abrir)); b.classList.toggle("aberto", abrir);
+    b.querySelector(".rec-txt").textContent = abrir ? "Recolher ↑" : b.dataset.txt;
+  });
   /* ---------- alertas importantes (botão vermelho piscando) ---------- */
   const faixa = document.getElementById("alertasTopo");
   function alertar(chave, titulo, texto, rotulo, alvoId) {
@@ -153,6 +172,7 @@
     bt.innerHTML = '<span class="ponto-pisca" aria-hidden="true"></span><span></span>'; bt.lastChild.textContent = rotulo;
     bt.addEventListener("click", function () {
       const alvo = document.getElementById(alvoId); if (!alvo) return;
+      const rb = alvo.querySelector("[data-recolhe]"); if (rb && rb.getAttribute("aria-expanded") !== "true") rb.click();
       alvo.scrollIntoView({ behavior: "smooth", block: "start" }); alvo.classList.remove("piscar-cartao"); void alvo.offsetWidth; alvo.classList.add("piscar-cartao");
     });
     d.appendChild(t); d.appendChild(bt);
@@ -268,6 +288,7 @@
         nomes.appendChild(t);
       });
       document.getElementById("cartaoOfertas").hidden = false;
+      document.getElementById("ofertasResumo").textContent = nomes.children.length + (nomes.children.length === 1 ? " oferta" : " ofertas") + " do Mauricio para você.";
       const novas = prods.filter(function (x) { return !pedidos.has(x.id); });
       if (novas.length) alertar("ofertas", "Novidade para você", novas.length + (novas.length === 1 ? " ferramenta nova" : " ferramentas novas") + " do Mauricio para conhecer.", "Ver agora", "cartaoOfertas");
     }
@@ -308,6 +329,10 @@
       if (!historicoAberto) document.getElementById("cartaoPag").scrollIntoView({ behavior: "smooth", block: "start" });
     });
     document.getElementById("cartaoPag").hidden = false;
+    document.getElementById("pagResumo").textContent = atras.length ? atras.length + (atras.length === 1 ? " pagamento atrasado" : " pagamentos atrasados") + " · " + brl(totAtras) + (prox.length ? " · " + prox.length + " a vencer este mês" : "")
+      : prox.length ? prox.length + (prox.length === 1 ? " pagamento a vencer este mês · " : " pagamentos a vencer este mês · ") + brl(prox.reduce(function (t, c) { return t + +c.valor; }, 0))
+      : "Tudo em dia." + (futuras.length ? " Próxima cobrança em " + dataBR(futuras[0].vencimento) + "." : "");
+    if (!atras.length && !prox.length) { const rb = document.querySelector('[data-recolhe="pagCorpo"]'); if (rb) rb.classList.add("calmo"); }
     if (atras.length || prox.length) {
       const partes = [];
       if (atras.length) partes.push(atras.length + (atras.length === 1 ? " pagamento atrasado" : " pagamentos atrasados") + " (" + brl(totAtras) + ")");

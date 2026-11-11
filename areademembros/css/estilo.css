@@ -518,3 +518,7 @@ tr.sub>td{background:#FBF7EE;padding:10px 14px}
 .av-linha .btn{flex:none}
 .link-venda{margin-top:10px;padding:12px;border-radius:12px;background:#FBF7EE;border:1px dashed #CDBF9E}
 .link-venda .rotulo{margin-bottom:6px}
+/* seções recolhidas (Ofertas e Pagamentos) */
+.recolhe-resumo{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px}
+.btn-alerta.aberto,.btn-alerta.calmo{animation:none}
+.btn-alerta.aberto .ponto-pisca,.btn-alerta.calmo .ponto-pisca{animation:none;opacity:.5}

@@ -527,7 +527,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611110641">
+<meta name="versao-site" content="v202611110653">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -1232,8 +1232,10 @@ async function carregarVitrine() {
       '<span class="vit-sub">Produtos e serviços do Mauricio Pinho</span></div>' +
       '<a class="vit-link" href="' + AREA_MEMBROS + '">Abrir minha Área de Membros →</a></div>';
     caixa.innerHTML = topoVit + (prods.length
-      ? '<div class="vit-teasers">' + prods.map(p => (p.pagina ? '<a class="vit-teaser' + (p.destaque ? " vit-nome-d" : "") + '" href="' + escV(p.pagina) + '?de=teste' + (p._oferta ? '&oferta=' + escV(p._oferta) : '') + '" data-vit-pagar="' + p.id + '">' : '<button type="button" class="vit-teaser' + (p.destaque ? " vit-nome-d" : "") + '" data-vit-teaser="' + p.id + '">') + '<b>' + escV(p.nome) + '</b>' + (p.chamada ? '<span>' + escV(p.chamada) + '</span>' : '') + '<small>' + (p.preco_texto ? escV(p.preco_texto) + ' · ' : '') + 'Saber mais →</small>' + (p.pagina ? '</a>' : '</button>')).join("") + '</div>' + (prods.some(p => !p.pagina) ? '<div class="vit-resumo">' + botaoAlerta("vitDetalhe", "Ver detalhes e valores") + "</div>" : "") +
-        '<div class="vit-detalhe" id="vitDetalhe" hidden><div class="vit-grade">' + prods.map(card).join("") + '</div><button type="button" class="vit-fechar" data-vit-fechar="vitDetalhe">Recolher ↑</button></div>'
+      ? '<div class="vit-resumo"><div class="vit-nomes"><span class="vit-nome vit-nome-d">' + prods.length + (prods.length === 1 ? " oferta" : " ofertas") + ' para você</span></div>' + botaoAlerta("vitOfertas", "Ver as ofertas") + '</div><div class="vit-detalhe" id="vitOfertas" hidden>' +
+        '<div class="vit-teasers">' + prods.map(p => (p.pagina ? '<a class="vit-teaser' + (p.destaque ? " vit-nome-d" : "") + '" href="' + escV(p.pagina) + '?de=teste' + (p._oferta ? '&oferta=' + escV(p._oferta) : '') + '" data-vit-pagar="' + p.id + '">' : '<button type="button" class="vit-teaser' + (p.destaque ? " vit-nome-d" : "") + '" data-vit-teaser="' + p.id + '">') + '<b>' + escV(p.nome) + '</b>' + (p.chamada ? '<span>' + escV(p.chamada) + '</span>' : '') + '<small>' + (p.preco_texto ? escV(p.preco_texto) + ' · ' : '') + 'Saber mais →</small>' + (p.pagina ? '</a>' : '</button>')).join("") + '</div>' + (prods.some(p => !p.pagina) ? '<div class="vit-resumo">' + botaoAlerta("vitDetalhe", "Ver detalhes e valores") + "</div>" : "") +
+        '<div class="vit-detalhe" id="vitDetalhe" hidden><div class="vit-grade">' + prods.map(card).join("") + '</div><button type="button" class="vit-fechar" data-vit-fechar="vitDetalhe">Recolher ↑</button></div>' +
+        '<button type="button" class="vit-fechar" data-vit-fechar="vitOfertas">Recolher as ofertas ↑</button></div>'
       : '<p class="vit-vazio">Em breve novas ofertas por aqui.</p>');
     await carregarFinanceiroVit(c, uid, caixa);
   } catch (e) { caixa.innerHTML = ""; }
