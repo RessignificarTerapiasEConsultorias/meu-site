@@ -127,7 +127,7 @@
             <input type="password" id="fSenha2" minlength="8" autocomplete="new-password">
           </div>
         </div>
-        <p class="aviso ok on" id="contaExiste" hidden><b>Você não precisa criar senha.</b> O e-mail <b id="emailLogin2"></b> já tem acesso à Área de Membros da Ressignificar, então o seu teste vai usar a mesma senha que você já tem. <a href="#" data-wa="Olá, Mauricio! Comprei o Teste de Travas e não lembro a senha da minha Área de Membros. Meu e-mail: ">Não lembra a senha? Fale com a gente</a>.</p>
+        <p class="aviso ok on" id="contaExiste" hidden><b>Você não precisa criar senha.</b> O e-mail <b id="emailLogin2"></b> já tem acesso à Área de Membros da Ressignificar, então o seu teste vai usar a mesma senha que você já tem. <a href="../../areademembros/nova-senha.html" id="linkEsqueci" target="_blank" rel="noopener">Não lembra a senha? Crie uma nova aqui</a>.</p>
 
         <div class="aviso" id="aviso" role="alert"></div>
         <button class="btn" type="submit" id="btnCriar" style="width:100%">Criar o meu teste</button>
@@ -258,6 +258,7 @@
   function abrirForm(j) {
     $("#fNome").value = j.nome || ""; $("#fZap").value = zapFormatado(j.whatsapp);
     $("#emailLogin").textContent = j.email; $("#emailLogin2").textContent = j.email;
+    $("#linkEsqueci").href = "../../areademembros/nova-senha.html?email=" + encodeURIComponent(j.email || "");
     $("#blocoSenha").hidden = !!j.conta_existente; $("#contaExiste").hidden = !j.conta_existente;
     atualizaInicial();
     sugerirLink();

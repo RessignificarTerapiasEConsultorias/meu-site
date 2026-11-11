@@ -1052,3 +1052,21 @@ async function dvExcluirCodigo(codigo, linha, botao, lista){
   }catch(e){ botao.disabled = false; botao.textContent = 'Excluir'; alert('Não consegui excluir agora. Tente de novo em instantes.'); }
 }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dvExcluirCodigos); else dvExcluirCodigos();
+
+/* ============================================================================
+   "ESQUECI MINHA SENHA" na entrada da área da terapeuta: leva para a página de criar senha nova
+   (o link chega por e-mail) e, depois, de volta para esta área.
+   ============================================================================ */
+function dvEsqueciSenha(){
+  const b = document.getElementById('btn-senha');
+  if(!b || document.getElementById('dv-esqueci')) return;
+  const RS = 'https://ressignificarterapiaseconsultorias.com/areademembros/nova-senha.html', mesmo = /ressignificarterapiaseconsultorias\.com$/.test(location.hostname);
+  b.insertAdjacentHTML('afterend', '<p class="dv-esqueci"><a href="' + RS + '" id="dv-esqueci">Esqueci minha senha</a></p>');
+  document.getElementById('dv-esqueci').addEventListener('click', function(){
+    const em = typeof EMAIL_MEMBROS !== 'undefined' && EMAIL_MEMBROS ? String(EMAIL_MEMBROS) : '';
+    const volta = location.pathname + location.search + '#admin';
+    const ps = []; if(mesmo) ps.push('v=' + encodeURIComponent(volta)); if(em) ps.push('email=' + encodeURIComponent(em));
+    this.href = RS + (ps.length ? '?' + ps.join('&') : '');
+  });
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dvEsqueciSenha); else dvEsqueciSenha();

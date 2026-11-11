@@ -285,3 +285,5 @@ body.cv-on{overflow-x:clip}
 .dv-editar small{font-weight:500;color:var(--tinta-suave,#4C5670);font-size:13px}
 .mini-btn.dv-exc{color:#A3271B;border-color:#EFC2BB}
 .mini-btn.dv-exc:disabled{opacity:.45;cursor:not-allowed}
+.dv-esqueci{text-align:center;margin:14px 0 0;font-size:15px}
+.dv-esqueci a{color:var(--ardosia,#0B1F3A);font-weight:700}

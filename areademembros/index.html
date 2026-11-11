@@ -23,6 +23,7 @@
       <label class="campo"><span>Senha</span><input type="password" id="campoSenha" autocomplete="current-password" required></label>
       <div id="avisoLogin"></div>
       <button class="btn" type="submit" id="botaoEntrar">Entrar</button>
+      <p style="text-align:center;margin:14px 0 0"><a href="nova-senha.html" id="linkEsqueci" style="font-weight:600">Esqueci minha senha</a></p>
     </form>
     <p class="nota-login">Acesso apenas para convidados. Se você ainda não recebeu seu login, fale com o Mauricio.</p>
   </div>
@@ -58,6 +59,12 @@
     }
     const destino = PAINEL_DO_PAPEL[r.papel];
     location.href = destino || "painel-cliente.html";
+  });
+
+  // "Esqueci minha senha": leva o e-mail já digitado
+  document.getElementById("linkEsqueci").addEventListener("click", function () {
+    const em = document.getElementById("campoEmail").value.trim();
+    if (em) this.href = "nova-senha.html?email=" + encodeURIComponent(em);
   });
 
   // já logado? pula direto pro painel

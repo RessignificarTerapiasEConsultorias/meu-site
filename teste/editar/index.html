@@ -41,7 +41,7 @@
         <div class="campo"><label for="lSenha">Senha</label><input type="password" id="lSenha" autocomplete="current-password" required></div>
         <div class="aviso" id="avisoLogin" role="alert"></div>
         <button class="btn" type="submit" id="btnEntrar" style="width:100%">Entrar</button>
-        <p class="dica" style="margin-top:14px">Esqueceu a senha? <a href="#" data-wa="Olá, Mauricio! Quero editar a minha página do teste e não lembro a minha senha. Meu e-mail: ">Fale com a gente pelo WhatsApp</a>.</p>
+        <p class="dica" style="margin-top:14px;text-align:center"><a href="/areademembros/nova-senha.html?v=%2Fteste%2Feditar%2F" id="linkEsqueci" style="font-weight:700">Esqueci minha senha</a></p>
       </form>
 
       <form id="eForm" hidden novalidate>
@@ -164,6 +164,7 @@
     if (r.error) { aviso(/Invalid login/i.test(r.error.message) ? "E-mail ou senha incorretos." : "Não foi possível entrar agora. Tente de novo.", $("#avisoLogin")); return; }
     carregar();
   });
+  $("#linkEsqueci").addEventListener("click", function () { var em = $("#lEmail").value.trim(); if (em) this.href = "/areademembros/nova-senha.html?v=%2Fteste%2Feditar%2F&email=" + encodeURIComponent(em); });
   $("#btnSair").addEventListener("click", async function (e) { e.preventDefault(); await cli.auth.signOut(); location.reload(); });
   $("#eForm").addEventListener("submit", async function (e) {
     e.preventDefault(); $("#aviso").classList.remove("on"); $("#salvo").hidden = true;

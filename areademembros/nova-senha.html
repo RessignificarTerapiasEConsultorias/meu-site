@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Redefinir senha | Área de Membros — Ressignificar</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilo.css">
+<style>
+  .ns-ok{background:#E7F4EC;border:1.5px solid #1D5B37;color:#1D5B37;border-radius:12px;padding:12px 14px;font-weight:600;line-height:1.5;margin:6px 0 14px}
+  .ns-links{display:grid;gap:10px;margin-top:12px}
+  .ns-links a{text-align:center;text-decoration:none}
+  .ns-sub{color:#4C5670;font-size:15px;line-height:1.5;margin:0 0 16px}
+</style>
+</head>
+<body>
+<div class="tela-login">
+  <div class="cartao-login">
+    <div class="marca-login">
+      <img src="img/logo.png" alt="">
+      <span><b>Ressignificar</b><span>Redefinir senha</span></span>
+    </div>
+
+    <!-- 1. pedir o link por e-mail -->
+    <form id="fPedir" novalidate hidden>
+      <p class="ns-sub">Digite o e-mail que você usa para entrar. Vamos mandar um link para você criar uma senha nova. Vale para a Área de Membros e para a área do seu teste.</p>
+      <label class="campo"><span>E-mail</span><input type="email" id="pEmail" autocomplete="username" required></label>
+      <div id="avPedir"></div>
+      <button class="btn" type="submit" id="bPedir">Enviar o link para o meu e-mail</button>
+    </form>
+
+    <!-- 2. criar a senha nova (chegou pelo link do e-mail) -->
+    <form id="fNova" novalidate hidden>
+      <p class="ns-sub">Crie a sua senha nova. Use pelo menos 8 caracteres.</p>
+      <label class="campo"><span>Senha nova</span><input type="password" id="nSenha" autocomplete="new-password" minlength="8" required></label>
+      <label class="campo"><span>Repita a senha nova</span><input type="password" id="nSenha2" autocomplete="new-password" minlength="8" required></label>
+      <div id="avNova"></div>
+      <button class="btn" type="submit" id="bNova">Salvar a senha nova</button>
+    </form>
+
+    <div id="eFim" hidden></div>
+    <div id="eCarregando"><p class="ns-sub">Carregando…</p></div>
+
+    <p class="nota-login"><a href="index.html">← Voltar para o login</a></p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search), $ = function (id) { return document.getElementById(id); };
+  const th = q.get("th"), voltar = q.get("v") || "";
+  const voltarOk = /^\/[a-z0-9/?=&._#-]{0,120}$/i.test(voltar) ? voltar : "";
+  function mostrar(id) { ["fPedir", "fNova", "eFim", "eCarregando"].forEach(function (x) { $(x).hidden = x !== id; }); }
+  function erro(onde, msg) { $(onde).innerHTML = '<p class="aviso erro">' + msg + "</p>"; }
+
+  /* 1. pedir o link */
+  const em = (q.get("email") || q.get("e") || "").trim().toLowerCase();
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) $("pEmail").value = em;
+  $("fPedir").addEventListener("submit", async function (e) {
+    e.preventDefault(); $("avPedir").innerHTML = "";
+    const email = $("pEmail").value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return erro("avPedir", "Escreva um e-mail válido.");
+    const b = $("bPedir"); b.disabled = true; b.textContent = "Enviando...";
+    let j = {};
+    try {
+      const r = await fetch(SUPABASE_URL + "/functions/v1/senha", { method: "POST", headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
+        body: JSON.stringify({ acao: "pedir", email: email, voltar: voltarOk }) });
+      j = await r.json();
+    } catch (err) { j = {}; }
+    b.disabled = false; b.textContent = "Enviar o link para o meu e-mail";
+    if (!j.ok) return erro("avPedir", j.erro || "Não foi possível enviar agora. Tente de novo em instantes.");
+    $("eFim").innerHTML = '<div class="ns-ok">📩 ' + j.msg + "</div><p class=\"ns-sub\" style=\"overflow-wrap:anywhere\">O e-mail chega de <b>contato@ressignificarterapiaseconsultorias.com</b>, com o assunto “Crie a sua senha nova”.</p>";
+    mostrar("eFim");
+  });
+
+  /* 2. chegou pelo link: confirma e cria a senha nova */
+  async function confirmarLink() {
+    const r = await supa().auth.verifyOtp({ token_hash: th, type: "recovery" });
+    if (r.error) {
+      mostrar("fPedir");
+      erro("avPedir", "Este link já foi usado ou passou de 1 hora. Peça um link novo abaixo.");
+      return;
+    }
+    history.replaceState(null, "", location.pathname + (voltarOk ? "?v=" + encodeURIComponent(voltarOk) : ""));
+    mostrar("fNova"); $("nSenha").focus();
+  }
+  $("fNova").addEventListener("submit", async function (e) {
+    e.preventDefault(); $("avNova").innerHTML = "";
+    const s1 = $("nSenha").value, s2 = $("nSenha2").value;
+    if (s1.length < 8) return erro("avNova", "A senha precisa ter pelo menos 8 caracteres.");
+    if (s1 !== s2) return erro("avNova", "As duas senhas não estão iguais.");
+    const b = $("bNova"); b.disabled = true; b.textContent = "Salvando...";
+    const r = await supa().auth.updateUser({ password: s1 });
+    b.disabled = false; b.textContent = "Salvar a senha nova";
+    if (r.error) return erro("avNova", /same|different/i.test(r.error.message) ? "Escolha uma senha diferente da anterior." : "Não foi possível salvar. Tente de novo ou peça um link novo.");
+    /* para onde ir agora: Área de Membros e, se tiver, a área do teste */
+    let teste = "";
+    try {
+      const u = (await supa().auth.getUser()).data.user;
+      const pg = await supa().from("travas_paginas").select("slug").eq("terapeuta_id", u.id).maybeSingle();
+      if (pg.data && pg.data.slug) teste = "/teste/?t=" + encodeURIComponent(pg.data.slug) + "#admin";
+    } catch (err) {}
+    const perfil = await buscarPerfilLogado();
+    const painel = perfil ? (PAINEL_DO_PAPEL[perfil.papel] || "painel-cliente.html") : "index.html";
+    $("eFim").innerHTML = '<div class="ns-ok">✓ Senha nova salva! Use ela daqui para frente para entrar.</div><div class="ns-links">' +
+      (voltarOk ? '<a class="btn" href="' + voltarOk + '">Voltar para onde eu estava</a>' : "") +
+      (teste ? '<a class="btn' + (voltarOk ? " contorno" : "") + '" href="' + teste + '">Abrir a área do meu teste</a>' : "") +
+      '<a class="btn' + (voltarOk || teste ? " contorno" : "") + '" href="' + painel + '">Entrar na Área de Membros</a></div>';
+    mostrar("eFim");
+  });
+
+  if (th) confirmarLink(); else mostrar("fPedir");
+})();
+</script>
+</body>
+</html>

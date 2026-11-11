@@ -67,7 +67,7 @@
           <div><label for="nova">Nova senha</label><input id="nova" type="password" autocomplete="new-password" minlength="8" required></div>
           <div><label for="nova2">Repita a nova senha</label><input id="nova2" type="password" autocomplete="new-password" minlength="8" required></div>
         </div>
-        <div class="acoes"><button class="btn auto" type="submit">Trocar senha</button></div>
+        <div class="acoes"><button class="btn auto" type="submit">Trocar senha</button><a class="btn auto contorno" href="nova-senha.html" id="linkRedefinir">Não lembro a senha atual</a></div>
       </form>
     </div>
   </main>
@@ -84,6 +84,7 @@
   if (!eu) return;
   document.getElementById("voltar").href = PAINEL_DO_PAPEL[eu.papel];
   document.getElementById("meuEmail").textContent = "Acesso: " + eu.email;
+  document.getElementById("linkRedefinir").href = "nova-senha.html?email=" + encodeURIComponent(eu.email || "") + "&v=" + encodeURIComponent("/areademembros/conta.html");
   document.getElementById("nome").value = eu.nome;
 
   const rp = await supa().from("preferencias").select("dados").eq("perfil_id", eu.id).maybeSingle();
