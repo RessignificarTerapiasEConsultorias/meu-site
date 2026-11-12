@@ -667,6 +667,91 @@ function dvBotaoArea(capa){
 }
 const CV_ZAP_SVG ='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.2.1-1.9-.1a17 17 0 0 1-1.8-.7c-3.1-1.3-5.1-4.5-5.3-4.7-.2-.2-1.3-1.7-1.3-3.2 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .7.5l1 2.3c.1.2.1.4 0 .6l-.4.6-.5.5c-.2.2-.3.3-.1.6.2.3.8 1.4 1.8 2.2 1.2 1.1 2.3 1.4 2.6 1.6.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l2.2 1c.3.2.5.2.6.4.1.1.1.7-.1 1.3z"/></svg>';
 const mpJuntar = itens => { itens = itens.filter(Boolean); return itens.length > 1 ? itens.slice(0, -1).join(', ') + ' e ' + itens[itens.length - 1] : (itens[0] || ''); };
+/* ============================================================================
+   VÍDEOS DE APRESENTAÇÃO NA CAPA (por teste). Liga por terapeuta: travas_paginas.dados.videos = ['travas', ...]
+   O vídeo fica hospedado no site (começa a tocar na hora, sem o limite de visualizações do Drive);
+   se o arquivo falhar, entra o player do Google Drive, com a mesma moldura da Área de Membros.
+   Player limpo: capa, botão de play, só a barrinha de progresso (sem tempo), tela cheia e, no fim, o convite.
+   Lugar: página com um teste -> logo abaixo do texto do teste, antes de "Quero fazer o meu teste";
+          vários testes com seção própria -> dentro da seção do teste; cartões lado a lado -> logo abaixo dos cartões.
+   ============================================================================ */
+const DV_VIDEOS = {
+  travas:{ mp4:'https://ressignificarterapiaseconsultorias.com/teste/video/travas-cliente.mp4', poster:'https://ressignificarterapiaseconsultorias.com/teste/video/travas-cliente.jpg',
+    drive:'1NwcnDkixfrgvrN-CbTGhZ2k2M0LuS8pS', titulo:'Teste de Travas Mentais', legenda:'Assista antes de começar: o que são as travas mentais, como acessar o teste e como responder.' }
+};
+function dvVideoHtml(k){
+  const v = DV_VIDEOS[k];
+  return `<figure class="dv-video" data-video="${k}">
+    <div class="dv-video-caixa">
+      <video preload="none" playsinline webkit-playsinline poster="${v.poster}" controlslist="nodownload noplaybackrate noremoteplayback" disablepictureinpicture disableremoteplayback aria-label="Vídeo: ${escV(v.titulo)}">
+        <source src="${v.mp4}" type="video/mp4"></video>
+      <button type="button" class="dv-video-play" aria-label="Assistir ao vídeo"><span class="dv-video-circ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></span><span class="dv-video-rot">Assista ao vídeo</span></button>
+      <span class="dv-video-pausa" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg></span>
+      <button type="button" class="dv-video-cheia" aria-label="Tela cheia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM4 15h2v3h3v2H4zm14 0h2v5h-5v-2h3z"/></svg></button>
+      <div class="dv-video-fim" hidden><p>E agora, o seu primeiro passo:</p><a class="btn btn-primario dv-video-cta" href="#" target="_blank" rel="noopener">Quero fazer o meu teste</a><button type="button" class="dv-video-denovo">↻ Ver de novo</button></div>
+      <div class="dv-video-barra" aria-hidden="true"><i></i></div>
+    </div>
+    <figcaption>${escV(v.legenda)}</figcaption>
+  </figure>`;
+}
+function dvVideoLigar(fig){
+  const cx = fig.querySelector('.dv-video-caixa'), vd = fig.querySelector('video'), play = fig.querySelector('.dv-video-play'), barra = fig.querySelector('.dv-video-barra i'), fim = fig.querySelector('.dv-video-fim');
+  const k = fig.dataset.video, v = DV_VIDEOS[k];
+  cx.addEventListener('contextmenu', e => e.preventDefault());
+  /* o convite do fim fala do teste do vídeo: botão da seção do teste, depois o cartão do teste, depois o botão do topo */
+  const sec = fig.closest('.cv-det'), cartao = [...document.querySelectorAll('.cv-teste')].find(c => (c.querySelector('h3') || {}).textContent === v.titulo);
+  const cta = (sec && sec.querySelector('.cv-det-cta a')) || (cartao && cartao.querySelector('.cv-link')) || document.querySelector('.cv-ctas a.btn-primario');
+  if(cta) fig.querySelector('.dv-video-cta').href = cta.href; else fig.querySelector('.dv-video-cta').remove();
+  let falhou = false;
+  const drive = () => {   // plano B: o player do Google Drive, como na Área de Membros
+    if(falhou) return; falhou = true;
+    cx.innerHTML = `<iframe title="${escV(v.titulo)}" src="https://drive.google.com/file/d/${v.drive}/preview" allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"></iframe><div class="dv-video-bloqueio" aria-hidden="true"></div>`;
+    cx.classList.add('dv-video-drive');
+  };
+  vd.addEventListener('error', drive, true);
+  const src = vd.querySelector('source'); if(src) src.addEventListener('error', drive);
+  const tocar = () => { fim.hidden = true; cx.classList.remove('acabou'); cx.classList.add('tocando'); const p = vd.play(); if(p && p.catch) p.catch(() => { cx.classList.remove('tocando'); }); };
+  play.addEventListener('click', tocar);
+  vd.addEventListener('click', () => { if(vd.paused) tocar(); else vd.pause(); });
+  fig.querySelector('.dv-video-pausa').addEventListener('click', tocar);
+  vd.addEventListener('play', () => { cx.classList.add('tocando'); cx.classList.remove('pausado'); document.querySelectorAll('.dv-video video').forEach(o => { if(o !== vd && !o.paused) o.pause(); }); });
+  vd.addEventListener('pause', () => { if(!vd.ended) cx.classList.add('pausado'); });
+  vd.addEventListener('waiting', () => cx.classList.add('carregando'));
+  vd.addEventListener('playing', () => cx.classList.remove('carregando'));
+  vd.addEventListener('timeupdate', () => { if(vd.duration) barra.style.width = (vd.currentTime / vd.duration * 100).toFixed(2) + '%'; });
+  vd.addEventListener('ended', () => { barra.style.width = '100%'; cx.classList.remove('tocando', 'pausado'); cx.classList.add('acabou'); fim.hidden = false; try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){} });
+  fig.querySelector('.dv-video-denovo').addEventListener('click', () => { vd.currentTime = 0; tocar(); });
+  fig.querySelector('.dv-video-cheia').addEventListener('click', () => {
+    try{ if(document.fullscreenElement) return document.exitFullscreen();
+      if(cx.requestFullscreen) cx.requestFullscreen(); else if(vd.webkitEnterFullscreen){ vd.webkitEnterFullscreen(); } }catch(e){}
+  });
+  /* saiu da tela: pausa */
+  if('IntersectionObserver' in window) new IntersectionObserver(es => es.forEach(e => { if(!e.isIntersecting && !vd.paused && !document.fullscreenElement) vd.pause(); }), { threshold:0.2 }).observe(cx);
+}
+function dvVideosCapa(lista){
+  try{
+    const dd = dvCad(), lig = dd && Array.isArray(dd.videos) ? dd.videos : [];
+    const ks = (lista || []).filter(k => lig.indexOf(k) > -1 && DV_VIDEOS[k]);
+    if(!ks.length) return;
+    const capa = document.getElementById('tela-capa'), lt = capa && capa.querySelector('.lado-texto');
+    const sobra = [];
+    ks.forEach(k => {
+      if(document.querySelector('.dv-video[data-video="' + k + '"]')) return;
+      const sec = document.getElementById('cv-t-' + k);
+      if(lista.length === 1 && lt){   // um teste só: no topo, antes das chamadas
+        const alvo = lt.querySelector('.cv-chips') || lt.querySelector('.cv-lead');
+        if(alvo) alvo.insertAdjacentHTML('afterend', dvVideoHtml(k));
+      } else if(sec){ const t = sec.querySelector('.cv-det-topo'); (t || sec.firstElementChild).insertAdjacentHTML('afterend', dvVideoHtml(k)); }
+      else sobra.push(k);
+    });
+    if(sobra.length){   // cartões lado a lado: logo abaixo dos cartões, cada vídeo com o nome do teste
+      const grade = document.querySelector('.cv-testes');
+      if(grade) grade.insertAdjacentHTML('afterend', `<div class="dv-videos">${sobra.map(k => `<div class="dv-videos-i"><h3>${escV(DV_VIDEOS[k].titulo)} em vídeo</h3>${dvVideoHtml(k)}</div>`).join('')}</div>`);
+    }
+    document.querySelectorAll('.dv-video:not([data-ok])').forEach(f => { f.setAttribute('data-ok', '1'); dvVideoLigar(f); });
+  }catch(e){ console.log('vídeos da capa', e); }
+}
+
 function dvCapaVendas(modo){
   /* modo: 'travas', 'tracos', 'mpcc', 'ambos' (travas + traços) ou uma lista com os testes da terapeuta.
      Testes extras (Mente Serena, Esquemas e TDAH da Miralene) chegam em window.CV_EXTRA, cada um com os seus textos. */
@@ -990,6 +1075,7 @@ function dvCapaVendas(modo){
   </div>
   <div class="cv-barra" id="cv-barra">${bt('btn-primario', Z.ind, 'Quero fazer o meu teste', 'receba o seu código pelo WhatsApp', true)}</div>`);
 
+  dvVideosCapa(lista);   // vídeos de apresentação de cada teste (só para quem tem dados.videos)
   /* barra fixa no celular: aparece depois do topo e some quando há outra chamada na tela */
   const barra = document.getElementById('cv-barra');
   document.body.appendChild(barra);   // fora da capa: a capa tem animação (transform) que prendia a barra no fim da página, em cima do rodapé
