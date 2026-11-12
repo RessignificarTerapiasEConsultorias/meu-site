@@ -238,7 +238,7 @@
   /* ================= LIBERAR TESTE MANUALMENTE ================= */
   const fLib = document.getElementById("formLib");
   if (fLib) {
-    const PRECO = { travas: { v: "147", per: "anual" }, tracos: { v: "97", per: "anual" }, mpcc: { v: "97", per: "anual" }, disc: { v: "97", per: "anual" } };
+    const PRECO = { travas: { v: "147", per: "anual" }, tracos: { v: "97", per: "anual" }, mpcc: { v: "97", per: "anual" }, disc: { v: "97", per: "anual" }, ansiedade: { v: "97", per: "anual" } };
     const libModo = document.getElementById("libModo"), libTeste = document.getElementById("libTeste");
     function ajustarLib() {
       const m = libModo.value;

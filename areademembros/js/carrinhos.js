@@ -125,7 +125,7 @@
         break;
       case "venda": t = "Comprou em " + dataHora(p.pago_em || p.criado_em) + (forma(p, evs) ? " (" + forma(p, evs) + ")" : "") + (/travas/i.test(p.produto || "") ? " e ativou o teste em " : " e o acesso foi liberado em ") + dataHora(p.ativado_em) + "."; break;
     }
-    if ((p._sit === "venda" || p._sit === "sem_ativar") && ["travas", "tracos", "mpcc", "disc"].indexOf(p.produto_chave || "travas") > -1) {
+    if ((p._sit === "venda" || p._sit === "sem_ativar") && ["travas", "tracos", "mpcc", "disc", "ansiedade"].indexOf(p.produto_chave || "travas") > -1) {
       const lemb = evs.filter(function (e) { return e.tipo === "lembrete_grupo"; }).length;
       t += p.grupo_entrou_em ? " ✅ Entrou no grupo do WhatsApp em " + dataHora(p.grupo_entrou_em) + "." :
         " ⚠️ Ainda não entrou no grupo do WhatsApp" + (lemb ? " (" + lemb + (lemb === 1 ? " lembrete enviado)." : " lembretes enviados).") : "; recebe um lembrete por e-mail todo dia.");

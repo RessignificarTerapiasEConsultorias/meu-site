@@ -531,7 +531,7 @@ async function anCarregarRespostas(){
   const caixa = document.getElementById('an-lista-respostas'); caixa.innerHTML = '<div class="carregando">Carregando...</div>';
   const c = clienteMembros(), { data:sess } = await c.auth.getSession(); if(!sess || !sess.session) return;
   const [rr, rc] = await Promise.all([
-    c.from('ansiedade_respostas').select('id,codigo,aplicacao,nome,dados,criado_em').eq('terapeuta_id', sess.session.user.id).order('criado_em', { ascending:true }).limit(2000),
+    c.from('ansiedade_respostas').select('id,codigo,aplicacao,nome,dados,criado_em,interesse,urgencia').eq('terapeuta_id', sess.session.user.id).order('criado_em', { ascending:true }).limit(2000),
     c.from('travas_codigos').select('codigo,cliente,whatsapp,usado,usado_em,proxima_em,intervalo_dias,mostrar_resultado').eq('terapeuta_id', sess.session.user.id).eq('teste', 'ansiedade').limit(500)]);
   if(rr.error){ caixa.innerHTML = anErro('Não consegui carregar as aplicações agora.'); return; }
   anCache = rr.data || []; anCodigos = rc.data || anCodigos; anDesenharLista();
@@ -551,8 +551,10 @@ function anDesenharLista(){
   caixa.innerHTML = lista.map(gp => { const c = anDeRegistro(gp.ult.dados), cl = AN.CLASSE[c.gad_classe] || AN.CLASSE.minima, n = gp.apls.length;
     const ant = n > 1 ? anDeRegistro(gp.apls[n - 2].dados) : null, dif = ant ? c.gad_total - ant.gad_total : null;
     const prox = gp.info.proxima_em, vencida = prox && new Date(prox).getTime() <= agora && !gp.info.usado;
-    return `<button type="button" class="linha-item" data-an-cod="${escV(gp.codigo)}" data-dv-del="ansiedade" data-id="${gp.ult.id}"><span class="esq"><span class="nome">${escV(gp.ult.nome)}</span>
-      <span class="sub">${n} ${n === 1 ? 'aplicação' : 'aplicações'} · última em ${anData(gp.ult.criado_em)} · GAD-7 ${c.gad_total}${dif != null ? ' (' + (dif > 0 ? '+' : '') + dif + ')' : ''} · índice ${c.geral}${gp.info.usado ? ' · encerrado' : prox ? (vencida ? ' · <b style="color:#B03A2E">nova aplicação liberada desde ' + anData(prox) + '</b>' : ' · próxima em ' + anData(prox)) : ''}</span></span>
+    const it = gp.ult.interesse || {}, dur = s => s == null ? '' : s < 60 ? Math.round(s) + ' s' : Math.floor(s / 60) + ' min';
+    const tags = it.whatsapp ? '<span class="tag-int zap">WhatsApp · ' + dur(it.whatsapp.segundos) + '</span>' : it.notificacao ? '<span class="tag-int notif">Notificação · ' + dur(it.notificacao.adiou_segundos) + ' depois</span>' : gp.ult.urgencia === true ? '<span class="tag-int nada">Sem ação no fim</span>' : '';
+    return `<button type="button" class="linha-item" data-an-cod="${escV(gp.codigo)}"><span class="esq"><span class="nome">${escV(gp.ult.nome)}</span>
+      <span class="sub">${n} ${n === 1 ? 'aplicação' : 'aplicações'} · última em ${anData(gp.ult.criado_em)} · GAD-7 ${c.gad_total}${dif != null ? ' (' + (dif > 0 ? '+' : '') + dif + ')' : ''} · índice ${c.geral}${gp.info.usado ? ' · encerrado' : prox ? (vencida ? ' · <b style="color:#B03A2E">nova aplicação liberada desde ' + anData(prox) + '</b>' : ' · próxima em ' + anData(prox)) : ''}</span>${tags ? '<span class="tags-int">' + tags + '</span>' : ''}</span>
       <span class="etiqueta livre" style="background:${cl.cor};color:#fff">${escV(cl.rot.replace('Ansiedade ', ''))}</span></button>`; }).join('');
   caixa.querySelectorAll('[data-an-cod]').forEach(b => b.addEventListener('click', () => anAbrirDetalhe(b.dataset.anCod)));
 }
@@ -645,6 +647,7 @@ function anAbrirDetalhe(codigo, idApl){
       <button type="button" class="btn btn-contorno" data-an-pdf><span class="duas">Salvar em PDF ou imprimir<small>nível, mapa, evolução e leitura das áreas</small></span></button>
       <button type="button" class="btn btn-contorno" data-an-copiar>Copiar a ficha completa</button>
     </div>
+    <p style="text-align:right;margin:0 0 8px"><button type="button" class="mini-btn" data-an-excluir>Excluir esta aplicação (${x.aplicacao}ª)</button></p>
     <div class="an-rel-tela"><div class="an-secao">${s.gad}${s.sos}</div>${s.evol ? `<div class="an-secao">${s.evol}</div>` : ''}<div class="an-secao">${s.mapa}</div><div class="an-secao">${s.leitura}</div>
       ${abertas ? `<div class="an-secao an-abertas"><h2>Nas palavras de ${escV(prim)}</h2>${abertas}</div>` : ''}</div>
     <details class="an-resp tc-respostas"><summary>As 37 respostas desta aplicação</summary><table><thead><tr><th>Pergunta</th><th>Resposta</th></tr></thead><tbody>
@@ -661,6 +664,14 @@ function anAbrirDetalhe(codigo, idApl){
     anEnviarEmail(eu ? CONFIG.emailTerapeuta : d.email, 'Teste de Ansiedade — ' + x.nome + ' (' + x.aplicacao + 'ª aplicação, ' + anData(x.criado_em) + ')', resumo, codigo, b);
   }));
   const recarregar = async () => { await anCarregarRespostas(); anAbrirDetalhe(codigo, x.id); };
+  raiz.querySelector('[data-an-excluir]').addEventListener('click', async e => {
+    if(!confirm('Excluir a ' + x.aplicacao + 'ª aplicação de ' + x.nome + '?\n\nEla some do acompanhamento e não dá para recuperar depois.')) return;
+    const b = e.currentTarget; b.disabled = true; b.textContent = 'Excluindo...';
+    try{ const c = clienteMembros(), { data:sess } = await c.auth.getSession(); const { data, error } = await c.from('ansiedade_respostas').delete().eq('terapeuta_id', sess.session.user.id).eq('id', x.id).select('id');
+      if(error || !data || !data.length) throw error || new Error('nada'); await anCarregarRespostas();
+      if(anGrupos().some(g => g.codigo === codigo)) anAbrirDetalhe(codigo); else anAdminAba('respostas');
+    }catch(err){ b.disabled = false; b.textContent = 'Excluir esta aplicação'; alert('Não consegui excluir agora. Tente de novo em instantes.'); }
+  });
   raiz.querySelectorAll('[data-an-ciclo]').forEach(b => b.addEventListener('click', async () => {
     const acao = b.dataset.anCiclo;
     if(acao === 'encerrar' && !confirm('Encerrar o acompanhamento de ' + x.nome + '? A pessoa não vai mais conseguir responder com este código (você pode reabrir depois).')) return;
