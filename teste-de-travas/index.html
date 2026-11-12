@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="loja.css">
+<link rel="stylesheet" href="loja.css?v=202611121200">
 </head>
 <body>
 
@@ -45,6 +45,24 @@
     <figure>
       <div class="celular"><img src="previa.jpg" alt="Exemplo de um Teste de Travas Mentais personalizado aberto no celular" width="500" height="1056" loading="eager"></div>
       <figcaption>Exemplo. O seu terá o seu nome, a sua foto e as suas cores.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="sec-video" id="video">
+  <div class="w">
+    <h2>Veja como funciona na prática</h2>
+    <p class="lead">Em menos de 2 minutos: do código enviado ao cliente até a proposta pronta para fechar o atendimento.</p>
+    <figure class="lv">
+      <div class="lv-caixa" id="lvCaixa">
+        <video id="lvVideo" preload="none" playsinline webkit-playsinline poster="../teste/video/travas-terapeuta.jpg" controlslist="nodownload noplaybackrate noremoteplayback" disablepictureinpicture disableremoteplayback aria-label="Vídeo: como funciona o Teste de Travas Mentais">
+          <source src="../teste/video/travas-terapeuta.mp4" type="video/mp4"></video>
+        <button type="button" class="lv-play" id="lvPlay" aria-label="Assistir ao vídeo"><span class="lv-circ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></span><span class="lv-rot">Assista ao vídeo</span></button>
+        <span class="lv-pausa" id="lvPausa" aria-hidden="true"></span>
+        <button type="button" class="lv-cheia" id="lvCheia" aria-label="Tela cheia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM4 15h2v3h3v2H4zm14 0h2v5h-5v-2h3z"/></svg></button>
+        <div class="lv-fim" id="lvFim" hidden><p>Pronta para ter o seu?</p><a class="btn" href="#comprar" data-ref="video">Quero o meu teste · R$ 147</a><button type="button" class="lv-denovo" id="lvDenovo">↻ Ver de novo</button></div>
+        <div class="lv-barra" aria-hidden="true"><i id="lvBarra"></i></div>
+      </div>
     </figure>
   </div>
 </section>
@@ -230,6 +248,35 @@
     }
   });
   evento("ver_produto", { produto: "teste_travas" });
+})();
+/* vídeo de apresentação: hospedado no site; se o arquivo falhar, entra o player do Google Drive */
+(function () {
+  var cx = document.getElementById("lvCaixa"); if (!cx) return;
+  var vd = document.getElementById("lvVideo"), fim = document.getElementById("lvFim"), barra = document.getElementById("lvBarra"), falhou = false;
+  var drive = function () {
+    if (falhou) return; falhou = true;
+    cx.innerHTML = '<iframe title="Como funciona o Teste de Travas Mentais" src="https://drive.google.com/file/d/1dyj6v8_7tXh2js8gZdFZD6dNkxb6aqpC/preview" allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe><div class="lv-bloqueio" aria-hidden="true"></div>';
+  };
+  vd.addEventListener("error", drive, true);
+  vd.querySelector("source").addEventListener("error", drive);
+  cx.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  var tocar = function () { fim.hidden = true; cx.classList.remove("acabou"); cx.classList.add("tocando"); var p = vd.play(); if (p && p.catch) p.catch(function () { cx.classList.remove("tocando"); }); };
+  document.getElementById("lvPlay").addEventListener("click", tocar);
+  document.getElementById("lvPausa").addEventListener("click", tocar);
+  vd.addEventListener("click", function () { if (vd.paused) tocar(); else vd.pause(); });
+  vd.addEventListener("play", function () { cx.classList.add("tocando"); cx.classList.remove("pausado"); });
+  vd.addEventListener("pause", function () { if (!vd.ended) cx.classList.add("pausado"); });
+  vd.addEventListener("waiting", function () { cx.classList.add("carregando"); });
+  vd.addEventListener("playing", function () { cx.classList.remove("carregando"); });
+  vd.addEventListener("timeupdate", function () { if (vd.duration) barra.style.width = (vd.currentTime / vd.duration * 100).toFixed(2) + "%"; });
+  vd.addEventListener("ended", function () { barra.style.width = "100%"; cx.classList.remove("tocando", "pausado"); cx.classList.add("acabou"); fim.hidden = false; try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} });
+  document.getElementById("lvDenovo").addEventListener("click", function () { vd.currentTime = 0; tocar(); });
+  fim.querySelector("a").addEventListener("click", function () { try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} });
+  document.getElementById("lvCheia").addEventListener("click", function () {
+    try { if (document.fullscreenElement) return document.exitFullscreen();
+      if (cx.requestFullscreen) cx.requestFullscreen(); else if (vd.webkitEnterFullscreen) vd.webkitEnterFullscreen(); } catch (e) {}
+  });
+  if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { es.forEach(function (e) { if (!e.isIntersecting && !vd.paused && !document.fullscreenElement) vd.pause(); }); }, { threshold: 0.2 }).observe(cx);
 })();
 </script>
 </body>

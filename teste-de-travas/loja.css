@@ -146,3 +146,34 @@ footer a{color:#DCE3F1}
 .grupo-aviso p{margin:0 0 12px;color:#1F3B2A;font-size:15px;line-height:1.5}
 .grupo-aviso .btn{width:100%}
 .campo textarea{min-height:120px;resize:vertical;line-height:1.5}
+
+/* vídeo de apresentação (logo abaixo do topo) */
+.sec-video{padding:46px 0 10px}
+.sec-video .lead{margin-bottom:18px}
+.lv{max-width:880px}
+.lv-caixa{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:16px;overflow:hidden;box-shadow:0 18px 40px -18px rgba(11,31,58,.55);isolation:isolate}
+@supports not (aspect-ratio:16/9){.lv-caixa{height:0;padding-bottom:56.25%}}
+.lv-caixa video,.lv-caixa iframe{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:contain;background:#000;display:block}
+.lv-play{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border:0;padding:0;cursor:pointer;color:#fff;background:linear-gradient(180deg,rgba(6,20,42,.05),rgba(6,20,42,.45))}
+.lv-circ{width:76px;height:76px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.4);transition:transform .2s}
+.lv-circ svg{width:32px;height:32px;fill:var(--deep);margin-left:4px}
+.lv-play:hover .lv-circ{transform:scale(1.06)}
+.lv-rot{font:700 15px/1 var(--sans);text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.lv-caixa.tocando .lv-play,.lv-caixa.acabou .lv-play{display:none}
+.lv-pausa{position:absolute;inset:0;z-index:2;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);cursor:pointer}
+.lv-pausa::after{content:"";width:0;height:0;border-left:38px solid #fff;border-top:23px solid transparent;border-bottom:23px solid transparent;margin-left:8px;opacity:.95}
+.lv-caixa.pausado .lv-pausa{display:flex}
+.lv-cheia{position:absolute;right:10px;bottom:14px;z-index:3;width:38px;height:38px;border-radius:10px;border:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;cursor:pointer}
+.lv-cheia svg{width:22px;height:22px;fill:#fff}
+.lv-caixa.tocando .lv-cheia,.lv-caixa.pausado .lv-cheia{display:flex}
+.lv-barra{position:absolute;left:0;right:0;bottom:0;height:5px;z-index:3;background:rgba(255,255,255,.22);pointer-events:none}
+.lv-barra i{display:block;height:100%;width:0;background:var(--gold);transition:width .25s linear}
+.lv-caixa.carregando::after{content:"";position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;animation:lvGira .8s linear infinite;z-index:2}
+@keyframes lvGira{to{transform:rotate(360deg)}}
+.lv-fim{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(6,20,42,.88);padding:16px;text-align:center}
+.lv-fim[hidden]{display:none}
+.lv-fim p{color:#fff;font:600 22px/1.2 var(--serif)}
+.lv-fim .btn{width:auto;min-width:240px;min-height:50px}
+.lv-denovo{border:0;background:none;color:#fff;font:inherit;font-size:14px;text-decoration:underline;cursor:pointer;opacity:.9}
+.lv-bloqueio{position:absolute;top:0;right:0;width:72px;height:72px;z-index:2}
+@media (max-width:420px){.lv-fim p{font-size:18px}.lv-fim .btn{min-width:0;font-size:15px;min-height:44px;padding:10px 16px}.lv-fim{gap:8px}.lv-circ{width:64px;height:64px}}
