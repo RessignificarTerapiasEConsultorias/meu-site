@@ -317,7 +317,7 @@ html.tp .tela:not(#tela-admin) .dc-nota-peq{color:var(--tinta-suave)}
 html.tp .tela:not(#tela-admin) .disc-graf{background:#F7F4EC;border-color:rgba(232,203,126,.6);box-shadow:0 18px 40px -22px rgba(0,0,0,.9)}
 
 /* ---------- Traços de Caráter: a devolutiva é um documento (também vira PDF): folha clara com moldura dourada ---------- */
-html.tp .dv{--areia:var(--L-areia);--areia-escura:var(--L-areia-escura);--papel:var(--L-papel);--tinta:var(--L-tinta);--tinta-suave:var(--L-tinta-suave);
+html.tp .dv,html.tp .dv-pad{--areia:var(--L-areia);--areia-escura:var(--L-areia-escura);--papel:var(--L-papel);--tinta:var(--L-tinta);--tinta-suave:var(--L-tinta-suave);
   --ardosia:var(--L-ardosia);--ardosia-escura:var(--L-ardosia-escura);--ardosia-clara:var(--L-ardosia-clara);--argila:var(--L-argila);--argila-clara:var(--L-argila-clara);
   --salvia:var(--L-salvia);--borda:var(--L-borda);color:var(--L-tinta);
   border:1px solid rgba(232,203,126,.7);box-shadow:0 0 0 4px rgba(201,162,74,.12),0 30px 60px -24px rgba(0,0,0,.95)}
@@ -330,3 +330,10 @@ html.tp .tela:not(#tela-admin) .tc-op.escolhida b{background:rgba(26,20,5,.18);c
 html.tp .dv .dv-caixa,html.tp .dv .dv-card,html.tp .dv .dv-acao,html.tp .dv .dv-final,html.tp .dv .dv-pico,html.tp .dv .teia,html.tp .dv .cartao{
   background:var(--L-papel);border-color:var(--L-borda);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--L-tinta)}
 html.tp .dv .dv-caixa h3,html.tp .dv .dv-card h3,html.tp .dv .dv-acao h4,html.tp .dv .dv-final h3{color:var(--L-ardosia)}
+
+/* janela de assinatura do acordo do casal: clara, como o relatório */
+html.tp .dv-pad h2{color:var(--L-ardosia)}
+html.tp .dv-pad .btn-contorno{color:var(--L-tinta);border-color:var(--L-borda);background:transparent}
+html.tp .dv-pad-acordo,html.tp .dv-pad-dica,html.tp .dv-pad-ok{color:var(--L-tinta)}
+html.tp .dv-pad-x,html.tp .dv-pad-nome{color:var(--L-tinta-suave)}
+html.tp .dv-pad-fundo{background:rgba(3,6,12,.72)}
