@@ -16,6 +16,28 @@
   const COD = (q.get('c') || q.get('codigo') || q.get('code') || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 9);
   const H = document.documentElement;
   const CAMP = window.CAMP = { codigo:COD, ativo:false, info:null, sessao:null, maior:0, perfilFeito:false, comecou:false, concluiu:false };
+  /* Pixel do Meta da terapeuta (travas_paginas.dados.pixel_meta; hoje só a Mônica).
+     PageView em toda visita à página dela e, no link de campanha, os passos do funil:
+     chegou → ViewContent · Começar → ComecouTeste · nome e WhatsApp → Lead · terminou → CompleteRegistration · WhatsApp no fim → Contact.
+     Nenhum dado pessoal (nome, WhatsApp, respostas) vai para o Meta. */
+  const PIX = window.PIX = { fila:[], pronto:false, desligado:false };
+  PIX.track = (tipo, nome, extra) => { if(PIX.desligado) return; if(PIX.pronto && window.fbq) window.fbq(tipo, nome, extra || {}); else PIX.fila.push([tipo, nome, extra]); };
+  (function esperarPagina(n){
+    const T = window.__T;
+    if(!T){ if(n < 160) setTimeout(() => esperarPagina(n + 1), 125); else { PIX.desligado = true; PIX.fila = []; } return; }
+    const id = String((T.dados || {}).pixel_meta || '');
+    if(!/^\d{10,20}$/.test(id)){ PIX.desligado = true; PIX.fila = []; return; }
+    if(!window.fbq){
+      const f = window.fbq = function(){ f.callMethod ? f.callMethod.apply(f, arguments) : f.queue.push(arguments); };
+      if(!window._fbq) window._fbq = f; f.push = f; f.loaded = true; f.version = '2.0'; f.queue = [];
+      const s = document.createElement('script'); s.async = true; s.src = 'https://connect.facebook.net/en_US/fbevents.js'; document.head.appendChild(s);
+    }
+    window.fbq('init', id); window.fbq('track', 'PageView');
+    PIX.pronto = true; PIX.fila.splice(0).forEach(a => window.fbq(a[0], a[1], a[2] || {}));
+  })(0);
+  const PIX_MAPA = { chegou:['track', 'ViewContent', { content_name:'Teste de Travas Mentais (campanha)' }], comecar:['trackCustom', 'ComecouTeste'],
+    contato:['track', 'Lead', { content_name:'Teste de Travas Mentais' }], concluiu:['track', 'CompleteRegistration', { content_name:'Teste de Travas Mentais' }], whatsapp:['track', 'Contact'] };
+
   if(!COD) return;
   H.classList.add('camp-espera');
   const soltar = () => H.classList.remove('camp-espera');
@@ -29,6 +51,7 @@
   function evento(e, p, dados){
     if(!CAMP.ativo) return;
     try{ rpc('campanha_evento', { p_codigo:COD, p_sessao:CAMP.sessao, p_evento:e, p_pergunta:p || null, p_dados:dados || {} }, true).catch(() => {}); }catch(err){}
+    try{ const m = PIX_MAPA[e]; if(m) PIX.track(m[0], m[1], m[2]); }catch(err){}
   }
   CAMP.evento = evento;
   function origem(){
