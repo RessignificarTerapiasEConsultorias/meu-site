@@ -563,3 +563,7 @@ tr.sub>td{background:#FBF7EE;padding:10px 14px}
 .cartao-escuro .ce-empresas .cartao-empresa .btn:first-of-type{order:3}
 @media(min-width:720px){.cartao-escuro .ce-empresas{grid-template-columns:1fr}}
 .cartao-escuro .ce-empresas .cartao-empresa .btn:only-of-type,.cartao-escuro .ce-empresas .cartao-empresa > .btn.contorno:nth-of-type(2){margin-left:auto}
+/* pagar qualquer cobrança em aberto (inclusive adiantado), no painel do cliente */
+.pagar-cob{display:inline-flex;margin-top:8px;white-space:nowrap;background:#1F7A4D;color:#fff!important;text-decoration:none}
+.pagar-cob.adiantado{background:transparent;color:#1F7A4D!important;border:1.5px solid #1F7A4D}
+.cartao-escuro .pagar-cob.adiantado{color:#9BE6B8!important;border-color:#9BE6B8}

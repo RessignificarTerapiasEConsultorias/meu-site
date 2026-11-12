@@ -378,6 +378,9 @@ img{max-width:100%;display:block}
 .fin-tabela th{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;opacity:.7}
 .fin-tabela td.n,.fin-tabela th.n{text-align:right;white-space:nowrap}
 .fin-aviso{margin:10px 0 0;font-size:14px}
+.fin-pagar{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;min-height:36px;padding:6px 12px;border-radius:999px;background:#1F7A4D;color:#fff!important;font-size:13px;font-weight:700;text-decoration:none!important}
+.fin-pagar.antecipar{background:transparent;color:#1F5E3F!important;border:1.5px solid #1F7A4D}
+.fin-pagar:hover{filter:brightness(1.08)}
 .fin-rolagem{overflow-x:auto}
 @media print{#financeiroRessignificar{display:none!important}}
 </style>
@@ -527,7 +530,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611121214">
+<meta name="versao-site" content="v202611121222">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -1212,12 +1215,18 @@ document.addEventListener("click", function (e) {
   b.setAttribute("aria-expanded", String(abrir)); b.classList.toggle("aberto", abrir);
   b.querySelector(".vit-alerta-txt").textContent = abrir ? "Recolher" : b.dataset.txt;
 });
+/* botão de pagar de cada cobrança em aberto (antes do vencimento também) */
+function finPagar(x, hoje) {
+  if (!x.token) return "";
+  const ant = x.vencimento > hoje;
+  return '<a class="fin-pagar' + (ant ? ' antecipar' : '') + '" href="https://ressignificarterapiaseconsultorias.com/cobranca/?t=' + encodeURIComponent(x.token) + '&a=pagar" target="_blank" rel="noopener">' + (ant ? "Pagar adiantado" : "Pagar agora") + "</a>";
+}
 async function carregarFinanceiroVit(c, uid, caixa) {
   let fin = document.getElementById("financeiroRessignificar");
   if (!fin) { fin = document.createElement("div"); fin.id = "financeiroRessignificar"; caixa.insertAdjacentElement("afterend", fin); }
   fin.innerHTML = "";
   try {
-    const r = await c.from("cobrancas").select("id,descricao,vencimento,valor,pago_em").eq("perfil_id", uid).is("pago_em", null).order("vencimento");
+    const r = await c.from("cobrancas").select("id,descricao,vencimento,valor,pago_em,token").eq("perfil_id", uid).is("pago_em", null).order("vencimento");
     const lista = r.data || []; if (!lista.length) return;
     const d = new Date(), hoje = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
     const brl = v => Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -1229,9 +1238,9 @@ async function carregarFinanceiroVit(c, uid, caixa) {
     fin.innerHTML = '<div class="vit-topo"><div><b class="vit-titulo">Seus pagamentos</b><span class="vit-sub">' + (atr.length + pen.length) + ((atr.length + pen.length) === 1 ? " pagamento" : " pagamentos") + " em aberto neste mês · " + brl(atr.concat(pen).reduce((q, x) => q + Number(x.valor), 0)) + '</span></div></div>' +
       '<div class="vit-resumo"><div class="vit-nomes">' + (atr.length ? '<span class="fin-chip atrasado">' + atr.length + " atrasado" + (atr.length > 1 ? "s" : "") + "</span>" : "") +
       (pen.length ? '<span class="fin-chip pendente">' + pen.length + (pen.length > 1 ? " vencimentos próximos" : " vencimento próximo") + "</span>" : "") + (fut.length ? '<span class="fin-chip proxima">' + fut.length + (fut.length > 1 ? " próximas" : " próxima") + "</span>" : "") + "</div>" + botaoAlerta("finDetalhe", "Importante: confira valores e datas de pagamento") + "</div>" +
-      '<div class="vit-detalhe" id="finDetalhe" hidden><div class="fin-rolagem"><table class="fin-tabela"><thead><tr><th>Pagamento</th><th>Vencimento</th><th class="n">Valor</th><th>Situação</th></tr></thead><tbody>' +
-      lista.map(x => "<tr><td>" + escV(x.descricao) + "</td><td>" + dataBR(x.vencimento) + '</td><td class="n">' + brl(x.valor) + "</td><td>" + chip(x) + "</td></tr>").join("") + "</tbody></table></div>" +
-      '<p class="fin-aviso">' + (atr.length ? "Há pagamento em atraso. Se você já pagou, envie o comprovante ao Mauricio. Se precisar, fale com ele para combinar." : "Fique de olho nas datas de vencimento. Qualquer dúvida, fale com o Mauricio.") + '</p><button type="button" class="vit-fechar" data-vit-fechar="finDetalhe">Recolher ↑</button></div>';
+      '<div class="vit-detalhe" id="finDetalhe" hidden><div class="fin-rolagem"><table class="fin-tabela"><thead><tr><th>Pagamento</th><th>Vencimento</th><th class="n">Valor</th><th>Situação</th><th></th></tr></thead><tbody>' +
+      lista.map(x => "<tr><td>" + escV(x.descricao) + "</td><td>" + dataBR(x.vencimento) + '</td><td class="n">' + brl(x.valor) + "</td><td>" + chip(x) + "</td><td>" + finPagar(x, hoje) + "</td></tr>").join("") + "</tbody></table></div>" +
+      '<p class="fin-aviso">' + (atr.length ? "Há pagamento em atraso. Se você já pagou, envie o comprovante ao Mauricio. Se precisar, fale com ele para combinar." : "Fique de olho nas datas de vencimento. Qualquer dúvida, fale com o Mauricio.") + (lista.some(x => x.vencimento > hoje && x.token) ? " Se preferir, você pode pagar antes do vencimento: toque em <b>Pagar adiantado</b>." : "") + '</p><button type="button" class="vit-fechar" data-vit-fechar="finDetalhe">Recolher ↑</button></div>';
   } catch (e) { fin.innerHTML = ""; }
 }
 async function carregarVitrine() {

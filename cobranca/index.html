@@ -157,6 +157,11 @@
         });
         if (lnk) $("#blocoPix").insertAdjacentHTML("afterbegin", '<p class="dica" style="text-align:center;margin:4px 0 10px">ou pague no Pix:</p>');
       }
+      /* pagamento adiantado (antes do vencimento): pode pagar já; "outra data" não faz sentido aqui */
+      if (j.vencimento > j.hoje) {
+        var nd = document.querySelector('input[name="op"][value="nova_data"]'); if (nd) nd.closest("label").hidden = true;
+        $("#resumo").insertAdjacentHTML("beforeend", '<p class="dica" style="margin-top:10px">Vence em ' + dataBR(j.vencimento) + ', mas você pode pagar adiantado agora, se preferir.</p>');
+      }
       var d = $("#fData"); d.min = j.hoje; var m = new Date(j.hoje + "T12:00:00"); m.setDate(m.getDate() + 60); d.max = m.toISOString().slice(0, 10);
       if (j.ultima_resposta) {
         var u = j.ultima_resposta;

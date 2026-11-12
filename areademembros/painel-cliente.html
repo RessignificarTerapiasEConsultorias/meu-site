@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="img/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/estilo.css?v=202611120412">
+<link rel="stylesheet" href="css/estilo.css?v=202611121300">
 </head>
 <body>
 <div class="carregando" id="carregando">Carregando...</div>
@@ -329,7 +329,7 @@
   } catch (e) { /* sem ofertas, sem problema */ }
 
   /* ---------- pagamentos do próprio cliente ---------- */
-  const rc = await supa().from("cobrancas").select("id,contrato_id,descricao,vencimento,valor,pago_em").eq("perfil_id", eu.id).order("vencimento");
+  const rc = await supa().from("cobrancas").select("id,contrato_id,descricao,vencimento,valor,pago_em,token").eq("perfil_id", eu.id).order("vencimento");
   const rk = await supa().from("contratos").select("id,servico,produto").eq("perfil_id", eu.id);
   const cobs = rc.data || [], ks = rk.data || [];
   if (cobs.length) {
@@ -343,11 +343,13 @@
     let avisoHtml = "";
     if (atras.length) avisoHtml += '<div class="aviso erro" style="margin-top:0">Você tem <b>' + brl(totAtras) + "</b> em atraso desde " + dataBR(atras[0].vencimento) + ". Se já pagou, envie o comprovante ao Mauricio. Se precisar, fale com ele para combinar.</div>";
     if (prox.length) avisoHtml += '<div class="aviso" style="background:#FFF6D6;color:#6B5000;border:1px solid #E8C24A">Vencimento próximo: <b>' + brl(prox[0].valor) + "</b> em " + dataBR(prox[0].vencimento) + " (" + esc(prox[0].descricao) + ").</div>";
-    if (!atras.length && !prox.length) avisoHtml = '<div class="aviso ok" style="margin-top:0">Tudo em dia. Obrigado!' + (futuras.length ? " Próxima cobrança em " + dataBR(futuras[0].vencimento) + "." : "") + "</div>";
+    if (!atras.length && !prox.length) avisoHtml = '<div class="aviso ok" style="margin-top:0">Tudo em dia. Obrigado!' + (futuras.length ? " Próxima cobrança em " + dataBR(futuras[0].vencimento) + ". Se preferir, você já pode pagar adiantado, pelo botão abaixo." : "") + "</div>";
     document.getElementById("avisoPag").innerHTML = avisoHtml;
     const linha = function (c) {
       const sit = c.pago_em ? '<span class="selo ok">Pago em ' + dataBR(c.pago_em) + "</span>" : (c.vencimento < hoje ? '<span class="selo off">Atrasado</span>' : (c.vencimento > fimMes ? '<span class="selo">Próxima</span>' : '<span class="selo pendente">Vencimento próximo</span>'));
-      return '<tr><td class="quebra"><b>' + servDe(c) + '</b><br><span class="vazio" style="padding:0">' + esc(c.descricao) + "</span></td><td>" + dataBR(c.vencimento) + "<br>" + sit + '</td><td class="n">' + brl(c.valor) + "</td></tr>";
+      /* pagar qualquer cobrança em aberto: a atrasada, a do mês e também adiantado (antes do vencimento) */
+      const pagar = !c.pago_em && c.token ? '<br><a class="btn peq pagar-cob' + (c.vencimento > hoje ? ' adiantado' : '') + '" href="../cobranca/?t=' + encodeURIComponent(c.token) + '&a=pagar">' + (c.vencimento > hoje ? "Pagar adiantado" : "Pagar agora") + "</a>" : "";
+      return '<tr><td class="quebra"><b>' + servDe(c) + '</b><br><span class="vazio" style="padding:0">' + esc(c.descricao) + "</span></td><td>" + dataBR(c.vencimento) + "<br>" + sit + pagar + '</td><td class="n">' + brl(c.valor) + "</td></tr>";
     };
     const resumo = atras.concat(prox.slice(0, 4), prox.length ? [] : futuras.slice(0, 1));
     const tb = document.getElementById("listaPag");
