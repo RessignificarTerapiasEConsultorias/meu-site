@@ -1,0 +1,276 @@
+/* ============================================================================
+   TEMA PREMIUM (o design do vídeo de apresentação): azul-noite profundo, dourado e luz suave.
+   Liga por página: travas_paginas.dados.tema = 'premium' (o boot coloca a classe .tp no <html>).
+   Só as telas de quem responde mudam; a área da terapeuta continua clara, com a paleta dela.
+   ============================================================================ */
+html.tp{
+  /* guarda a paleta da terapeuta (aplicada no :root) para devolver à área dela */
+  --L-areia:var(--areia);--L-areia-escura:var(--areia-escura);--L-papel:var(--papel);--L-tinta:var(--tinta);--L-tinta-suave:var(--tinta-suave);
+  --L-ardosia:var(--ardosia);--L-ardosia-escura:var(--ardosia-escura);--L-ardosia-clara:var(--ardosia-clara);--L-argila:var(--argila);
+  --L-argila-clara:var(--argila-clara);--L-salvia:var(--salvia);--L-borda:var(--borda);--L-alta-clara:var(--alta-clara);--L-media-clara:var(--media-clara);--L-baixa-clara:var(--baixa-clara);
+  --L-sombra:var(--sombra);--L-sombra-leve:var(--sombra-leve);
+  background:#050B17;color-scheme:dark;
+}
+html.tp body{
+  --noite:#050B17;--noite2:#0A1426;--vidro:rgba(17,31,56,.72);--vidro2:rgba(23,40,70,.85);
+  --ouro:#C9A24A;--ouro2:#E8CB7E;--ouro3:#F6E3AE;--ouro-esc:#8F6E22;--creme:#F4ECDD;
+  --areia:#050B17;--areia-escura:rgba(255,255,255,.07);--papel:var(--vidro);--tinta:#F1E9DA;--tinta-suave:#A7B0C3;
+  --ardosia:#E2C27A;--ardosia-escura:#F0D898;--ardosia-clara:rgba(201,162,74,.12);--argila:#D4AF5A;--argila-clara:rgba(201,162,74,.10);
+  --salvia:#C9A24A;--borda:rgba(201,162,74,.24);--verde-zap:#1E9E57;
+  --alta:#FF7A64;--alta-clara:rgba(255,106,84,.13);--media:#F4BE4F;--media-clara:rgba(244,190,79,.12);--baixa:#62CC8E;--baixa-clara:rgba(98,204,142,.12);
+  --sombra:0 22px 50px -20px rgba(0,0,0,.75);--sombra-leve:0 12px 30px -16px rgba(0,0,0,.7);
+  background:radial-gradient(120% 70% at 85% -10%,#173262 0%,rgba(12,26,52,.6) 38%,transparent 62%),
+             radial-gradient(90% 55% at -10% 105%,rgba(201,162,74,.16) 0%,transparent 55%),
+             linear-gradient(180deg,#071226 0%,#050B17 55%,#04080F 100%);
+  background-attachment:fixed;color:var(--tinta);
+}
+/* poeira dourada e estrelas (fixas, leves) */
+html.tp body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55;
+  background-image:radial-gradient(1.2px 1.2px at 12% 18%,rgba(246,227,174,.9),transparent 60%),radial-gradient(1px 1px at 78% 12%,rgba(255,255,255,.8),transparent 60%),
+    radial-gradient(1.4px 1.4px at 64% 44%,rgba(232,203,126,.85),transparent 60%),radial-gradient(1px 1px at 30% 72%,rgba(255,255,255,.6),transparent 60%),
+    radial-gradient(1.6px 1.6px at 88% 80%,rgba(232,203,126,.8),transparent 60%),radial-gradient(1px 1px at 46% 92%,rgba(255,255,255,.55),transparent 60%),
+    radial-gradient(1.2px 1.2px at 6% 50%,rgba(232,203,126,.7),transparent 60%),radial-gradient(1px 1px at 92% 36%,rgba(255,255,255,.6),transparent 60%);
+  background-size:420px 520px;animation:tpBrilho 9s ease-in-out infinite alternate}
+html.tp body::after{content:"";position:fixed;left:-20%;right:-20%;top:42%;height:280px;z-index:-1;pointer-events:none;opacity:.32;filter:blur(.3px);
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 280' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23C9A24A' stop-opacity='0'/%3E%3Cstop offset='.5' stop-color='%23E8CB7E'/%3E%3Cstop offset='1' stop-color='%23C9A24A' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='none' stroke='url(%23g)'%3E%3Cpath d='M0 170C200 60 360 250 600 140S1000 40 1200 150' stroke-width='1.4'/%3E%3Cpath d='M0 190C220 90 380 260 610 160S1010 70 1200 170' stroke-width='.8' opacity='.7'/%3E%3Cpath d='M0 150C190 40 350 230 590 120S990 20 1200 130' stroke-width='.6' opacity='.5'/%3E%3C/g%3E%3C/svg%3E") center/100% 100% no-repeat;
+  animation:tpOnda 14s ease-in-out infinite alternate}
+@keyframes tpBrilho{from{opacity:.4}to{opacity:.7}}
+@keyframes tpOnda{from{transform:translateX(-3%) scaleY(1)}to{transform:translateX(3%) scaleY(1.15)}}
+@media (prefers-reduced-motion:reduce){html.tp body::before,html.tp body::after{animation:none}}
+
+/* tipografia */
+html.tp body h1,html.tp body h2,html.tp body h3{color:var(--creme)}
+html.tp .tela:not(#tela-admin) h1{font-weight:500;letter-spacing:-.015em;text-shadow:0 2px 24px rgba(201,162,74,.12)}
+html.tp a{color:var(--ouro2)}
+html.tp #t-estado{color:var(--tinta)}
+
+/* botões */
+html.tp .btn-primario,html.tp .btn-argila{color:#1A1405;border:0;
+  background:linear-gradient(180deg,#F3DC9C 0%,#D9B65E 48%,#B88E35 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 -2px 0 rgba(120,85,20,.35) inset,0 14px 30px -12px rgba(201,162,74,.65),0 0 0 1px rgba(246,227,174,.35)}
+html.tp .btn-primario:hover,html.tp .btn-argila:hover{background:linear-gradient(180deg,#F8E6B2 0%,#E2C170 48%,#C49A3E 100%)}
+html.tp .btn-primario .duas small,html.tp .btn-argila .duas small{opacity:.78}
+html.tp .btn-primario svg,html.tp .btn-argila svg{color:#1A1405}
+html.tp .btn-contorno{color:var(--creme);border:1.4px solid rgba(201,162,74,.45);background:rgba(255,255,255,.02)}
+html.tp .btn-contorno:hover{background:rgba(201,162,74,.08)}
+html.tp .btn[disabled]{background:rgba(255,255,255,.06)!important;color:#6F7A90!important;box-shadow:none!important;border:1px solid rgba(255,255,255,.08)}
+html.tp .btn-zap{background:linear-gradient(180deg,#2BC26D 0%,#169552 100%);color:#fff;box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 16px 34px -12px rgba(31,190,100,.55),0 0 0 1px rgba(120,240,170,.25)}
+html.tp .btn-zap:hover{background:linear-gradient(180deg,#33CF78 0%,#1AA35A 100%)}
+html.tp .voltar{color:var(--tinta-suave)}
+
+/* cartões em vidro escuro com fio dourado */
+html.tp .cartao,html.tp .passos-orient li,html.tp .bloco-trava,html.tp .insight,html.tp .aviso-clinico,html.tp .teia,html.tp .cv-teste,html.tp .dv-caixa,html.tp .dv-card,html.tp .dv-acao,html.tp .dv-final,html.tp .dv-pico{
+  background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.22);
+  box-shadow:0 0 0 1px rgba(255,255,255,.03) inset,0 20px 44px -24px rgba(0,0,0,.85);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+html.tp .selo{background:rgba(201,162,74,.12);color:var(--ouro2);border:1px solid rgba(201,162,74,.35);letter-spacing:.03em}
+html.tp .lista-leve li::before{background:var(--ouro)}
+
+/* campos */
+html.tp .tela:not(#tela-admin) .campo input,html.tp .tela:not(#tela-admin) .campo select,html.tp .tela:not(#tela-admin) .campo textarea,html.tp .tela:not(#tela-admin) textarea{
+  background:rgba(6,14,28,.75);border-color:rgba(201,162,74,.28);color:var(--creme)}
+html.tp .tela:not(#tela-admin) .campo input::placeholder,html.tp .tela:not(#tela-admin) textarea::placeholder{color:#6F7A90}
+html.tp .tela:not(#tela-admin) .campo input:focus,html.tp .tela:not(#tela-admin) .campo select:focus,html.tp .tela:not(#tela-admin) .campo textarea:focus{border-color:var(--ouro);box-shadow:0 0 0 3px rgba(201,162,74,.22)}
+html.tp .tela:not(#tela-admin) .campo select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path d='M1 1l6 6 6-6' stroke='%23C9A24A' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 18px center}
+html.tp .tela:not(#tela-admin) .campo select option{background:#0A1426;color:var(--creme)}
+html.tp .campo.ruim input,html.tp .campo.ruim select,html.tp .campo.ruim textarea{border-color:#E06A55!important;background:rgba(224,106,85,.08)!important}
+html.tp .campo .erro{color:#FF9A86}
+html.tp .codigo-input{color:var(--ouro2)!important;letter-spacing:.22em!important;text-shadow:0 0 18px rgba(201,162,74,.35)}
+html.tp .aviso{background:rgba(201,162,74,.10);border-color:rgba(201,162,74,.3);color:var(--creme)}
+html.tp .check input{accent-color:var(--ouro)}
+
+/* capa: foto em arco com fio de ouro */
+html.tp .moldura::after{border-color:var(--ouro);opacity:.75;box-shadow:0 0 22px rgba(201,162,74,.25)}
+html.tp .moldura img{box-shadow:0 30px 60px -20px rgba(0,0,0,.9),0 0 0 1px rgba(246,227,174,.25)}
+html.tp .moldura::before{content:"";position:absolute;inset:-30px -40px;z-index:0;border-radius:50%;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(201,162,74,.22),transparent 70%)}
+html.tp .capa .assinatura,html.tp #t-assinatura{color:var(--tinta-suave)}
+html.tp .capa .assinatura strong,html.tp #t-assinatura strong{color:var(--ouro2)}
+html.tp .rodape{border-top-color:rgba(201,162,74,.2)}
+html.tp .rodape .nome-rodape{color:var(--creme)}
+
+/* capa de vendas (cv) */
+html.tp .cv h2,html.tp .cv h3{color:var(--creme)}
+html.tp .cv-olho,html.tp .dv-olho{color:var(--ouro)}
+html.tp .cv-lead b,html.tp .cv-virada b,html.tp .cv-ja{color:var(--ouro2)}
+html.tp .cv-chips li{background:rgba(201,162,74,.08);border-color:rgba(201,162,74,.3);color:var(--creme)}
+html.tp .cv-chips li::before{border-color:var(--ouro)}
+html.tp .cv-areia{background:rgba(255,255,255,.025);border-top:1px solid rgba(201,162,74,.12);border-bottom:1px solid rgba(201,162,74,.12)}
+html.tp .cv-escura{background:linear-gradient(180deg,rgba(201,162,74,.10),rgba(201,162,74,.02));border-top:1px solid rgba(201,162,74,.25);border-bottom:1px solid rgba(201,162,74,.25)}
+html.tp .cv-dores li{background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border:1px solid rgba(201,162,74,.2);color:var(--tinta)}
+html.tp .cv-dores li::before{background:rgba(201,162,74,.15);border-color:var(--ouro)}
+html.tp .cv-virada{border-left-color:var(--ouro)}
+html.tp .cv-teste-destaque{border-color:var(--ouro);box-shadow:0 0 0 1px rgba(246,227,174,.25),0 0 40px -10px rgba(201,162,74,.45)}
+html.tp .vit-card{background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.2);color:var(--tinta)}
+
+/* avisos claros do caminho */
+html.tp .aviso-fechar{background:linear-gradient(180deg,rgba(201,162,74,.16),rgba(201,162,74,.07));border:1px solid rgba(232,203,126,.5);color:var(--creme);box-shadow:0 0 30px -14px rgba(201,162,74,.6)}
+html.tp .aviso-fechar b{color:var(--ouro3)}
+html.tp .cv-barra{background:rgba(6,12,25,.94);box-shadow:0 -10px 30px rgba(0,0,0,.6);border-top:1px solid rgba(201,162,74,.3);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+
+/* barra de tempo */
+html.tp #barra-tempo{background:linear-gradient(180deg,rgba(9,18,36,.96),rgba(6,12,25,.94))!important;border-bottom:1px solid rgba(201,162,74,.35);box-shadow:0 10px 30px -12px rgba(0,0,0,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+html.tp #barra-tempo .bt-num{color:var(--ouro2);text-shadow:0 0 14px rgba(201,162,74,.45);font-variant-numeric:tabular-nums}
+html.tp #barra-tempo .bt-aviso,html.tp #barra-tempo #bt-rot{color:#C9D0DE}
+
+/* orientação e perguntas */
+html.tp .como-responder{background:rgba(201,162,74,.07);border:1px solid rgba(201,162,74,.22)}
+html.tp .passos-orient li::before{background:linear-gradient(180deg,#F3DC9C,#C49A3E);color:#1A1405;box-shadow:0 0 12px rgba(201,162,74,.4)}
+html.tp .mini-escala i{background:rgba(255,255,255,.04);border-color:rgba(201,162,74,.3);color:var(--creme)}
+html.tp .barra-topo{background:linear-gradient(180deg,rgba(5,11,23,.97) 70%,rgba(5,11,23,0))}
+html.tp .progresso{background:rgba(255,255,255,.08)}
+html.tp .progresso i{background:linear-gradient(90deg,#8F6E22,#E8CB7E);box-shadow:0 0 12px rgba(232,203,126,.6)}
+html.tp .linha-progresso .tema{color:var(--ouro2)}
+html.tp .pergunta{color:var(--creme);font-weight:400}
+html.tp .nota{background:linear-gradient(180deg,rgba(28,48,84,.85),rgba(12,24,45,.9));border:1.4px solid rgba(201,162,74,.32);color:var(--creme);border-radius:12px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 8px 18px -12px rgba(0,0,0,.9)}
+html.tp .nota:hover{border-color:var(--ouro2);box-shadow:0 0 0 1px rgba(232,203,126,.4),0 0 18px -4px rgba(201,162,74,.5)}
+html.tp .nota.escolhida{background:linear-gradient(180deg,#F6E3AE 0%,#D9B65E 55%,#B88E35 100%);color:#1A1405;border-color:#F6E3AE;
+  box-shadow:0 0 0 1px rgba(246,227,174,.6),0 0 26px -2px rgba(232,203,126,.75)}
+html.tp .pontas{color:var(--tinta-suave)}
+
+/* resultado */
+html.tp .painel-geral{background:linear-gradient(160deg,#13284D 0%,#0B1730 60%,#08101F 100%);border:1px solid rgba(201,162,74,.3);
+  box-shadow:0 0 0 1px rgba(255,255,255,.03) inset,0 30px 60px -28px rgba(0,0,0,.95),0 0 50px -24px rgba(201,162,74,.35)}
+html.tp .painel-geral h2{color:var(--creme)}
+html.tp .placar div{background:rgba(255,255,255,.04);border:1px solid rgba(201,162,74,.18)}
+html.tp .placar .pt-alta b{color:#FF8A75;text-shadow:0 0 18px rgba(255,106,84,.45)}
+html.tp .placar .pt-media b{color:#F4C35A;text-shadow:0 0 18px rgba(244,190,79,.4)}
+html.tp .placar .pt-baixa b{color:#7FDCA4;text-shadow:0 0 18px rgba(98,204,142,.4)}
+html.tp .insight{border-left:6px solid var(--ouro)}
+html.tp .legenda{color:var(--tinta-suave)}
+html.tp .legenda span:nth-child(1) i{background:#FF7A64!important}
+html.tp .legenda span:nth-child(2) i{background:#F4BE4F!important}
+html.tp .legenda span:nth-child(3) i{background:#62CC8E!important}
+html.tp .secao-titulo{color:var(--creme)}
+/* barras do mapa: brilho em degradê e o selo PRIORIDADE */
+html.tp .barras{background:linear-gradient(180deg,rgba(19,36,66,.75),rgba(9,18,35,.85));border:1px solid rgba(201,162,74,.22);border-radius:20px;padding:18px 16px 6px;box-shadow:0 24px 50px -28px rgba(0,0,0,.9)}
+html.tp .barra-item{position:relative}
+html.tp .barra-item .topo{color:var(--creme)}
+html.tp .barra-item .trilho{height:14px;background:rgba(255,255,255,.07);box-shadow:0 1px 2px rgba(0,0,0,.5) inset;overflow:visible}
+html.tp .barra-item .trilho i{position:relative}
+html.tp .barra-item .trilho i[style*="#B23A2F"]{background:linear-gradient(90deg,#6E1626 0%,#C93B33 45%,#FF7A55 80%,#FFB37A 100%)!important;box-shadow:0 0 16px -2px rgba(255,106,84,.65)}
+html.tp .barra-item .trilho i[style*="#C8960C"]{background:linear-gradient(90deg,#6B4A06 0%,#C8960C 50%,#F6CF6A 100%)!important;box-shadow:0 0 14px -3px rgba(244,190,79,.55)}
+html.tp .barra-item .trilho i[style*="#3F7D55"]{background:linear-gradient(90deg,#1C4A31 0%,#3F9A62 55%,#8BE0AE 100%)!important;box-shadow:0 0 12px -3px rgba(98,204,142,.5)}
+html.tp .barra-item .trilho i::after{content:"";position:absolute;right:-3px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:#FFF6DA;box-shadow:0 0 10px 2px rgba(255,236,190,.8)}
+html.tp .barra-item .topo b[style*="#B23A2F"]{color:#FF8A75!important}
+html.tp .barra-item .topo b[style*="#C8960C"]{color:#F4C35A!important}
+html.tp .barra-item .topo b[style*="#3F7D55"]{color:#7FDCA4!important}
+html.tp .tp-prio{display:inline-flex;align-items:center;gap:5px;margin-left:8px;padding:3px 9px 3px 8px;border-radius:6px;vertical-align:1px;
+  font:800 10.5px/1.2 'Karla',sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#fff;
+  background:linear-gradient(180deg,#E2483A,#A51F22);box-shadow:0 0 0 1px rgba(255,170,150,.35),0 6px 16px -6px rgba(226,72,58,.9);transform:rotate(-2deg)}
+/* blocos das travas */
+html.tp .bloco-trava[style*="#B23A2F"]{border-left-color:#FF6A54!important}
+html.tp .bloco-trava[style*="#C8960C"]{border-left-color:#F4BE4F!important}
+html.tp .bloco-trava[style*="#3F7D55"]{border-left-color:#62CC8E!important}
+html.tp .bloco-trava.enfase{background:linear-gradient(180deg,rgba(70,22,30,.55),rgba(14,24,45,.88));border-color:rgba(255,120,100,.35);box-shadow:0 0 0 1px rgba(255,120,100,.12) inset,0 24px 50px -24px rgba(226,72,58,.45)}
+html.tp .bloco-trava .pontos[style*="#B23A2F"]{color:#FF8A75!important}
+html.tp .bloco-trava .pontos[style*="#C8960C"]{color:#F4C35A!important}
+html.tp .bloco-trava .pontos[style*="#3F7D55"]{color:#7FDCA4!important}
+html.tp .faixa[style*="#8A2B22"],html.tp [style*="color:#8A2B22"]{color:#FFB0A2!important}
+html.tp .faixa[style*="#7A5A00"],html.tp .tela:not(#tela-admin) [style*="color:#7A5A00"]{color:#F6D27E!important}
+html.tp .faixa[style*="#2F5E3F"],html.tp .tela:not(#tela-admin) [style*="color:#2F5E3F"]{color:#9BE6B8!important}
+html.tp .selo-prioridade{background:linear-gradient(180deg,#E2483A,#A51F22);box-shadow:0 6px 16px -6px rgba(226,72,58,.9)}
+html.tp .caixa-tecnica{background:rgba(255,255,255,.045)!important;border:1px solid rgba(201,162,74,.14)}
+html.tp .caixa-urgencia{background:rgba(255,106,84,.12)!important;color:#FFC2B6!important;border:1px solid rgba(255,106,84,.28)}
+html.tp .caixa-parabens{background:rgba(98,204,142,.10)!important;color:#A9EEC4!important;border:1px solid rgba(98,204,142,.25)}
+html.tp .grupo-titulo.g-alta{color:#FF8A75}
+html.tp .grupo-titulo.g-media{color:#F4C35A}
+html.tp .grupo-titulo.g-baixa{color:#7FDCA4}
+html.tp .tag-atencao{background:rgba(244,190,79,.14)!important;color:#F6D27E!important;border-color:rgba(244,190,79,.35)!important}
+html.tp .aviso-clinico{border-style:dashed;color:var(--tinta-suave)}
+
+/* os 60 segundos: anel de luz em contagem */
+html.tp .urg{background:linear-gradient(180deg,rgba(64,16,22,.85),rgba(20,12,24,.9));border:1px solid rgba(255,95,80,.45);color:#FBE3DE;
+  box-shadow:0 0 0 1px rgba(255,120,100,.12) inset,0 0 46px -14px rgba(255,70,60,.55),0 24px 50px -26px rgba(0,0,0,.95)}
+html.tp .urg-rot,html.tp .urg-legenda{color:#FF9C8B}
+html.tp .urg-num{color:#fff;text-shadow:0 0 18px rgba(255,90,70,.75)}
+html.tp .urg-barra{background:rgba(255,255,255,.1)}
+html.tp .urg-barra i{background:linear-gradient(90deg,#FF5A47,#FFB085);box-shadow:0 0 12px rgba(255,90,70,.7)}
+html.tp .urg-msg b,html.tp .urg-msg strong{color:#fff}
+html.tp .urg.encerrada{background:linear-gradient(180deg,rgba(40,18,24,.9),rgba(14,12,22,.92));border-color:rgba(255,120,100,.3)}
+html.tp .urg.zap,html.tp .urg.notificada{background:linear-gradient(180deg,rgba(12,58,36,.85),rgba(8,26,22,.9));border-color:rgba(98,204,142,.45);color:#DDF6E7;box-shadow:0 0 40px -14px rgba(60,200,120,.5)}
+html.tp .urg.zap .urg-rot,html.tp .urg.notificada .urg-rot,html.tp .urg.zap .urg-num,html.tp .urg.notificada .urg-num,html.tp .urg.zap .urg-legenda,html.tp .urg.notificada .urg-legenda{color:#8BE6B0;text-shadow:none}
+html.tp .urg.zap .urg-barra i,html.tp .urg.notificada .urg-barra i{background:#3FCB7C}
+html.tp .tp-anel{position:relative;width:96px;height:96px;flex:none;display:grid;place-items:center;margin:-4px -4px 0 0}
+html.tp .tp-anel svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+html.tp .tp-anel .fundo{fill:none;stroke:rgba(255,255,255,.1);stroke-width:5}
+html.tp .tp-anel .luz{fill:none;stroke:url(#tpAnelCor);stroke-width:5.5;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(120,220,255,.8));transition:stroke-dashoffset .25s linear}
+html.tp .tp-anel .urg-num{font-size:25px;text-align:center}
+html.tp .tp-anel .urg-legenda{position:absolute;bottom:-17px;font-size:9.5px!important;left:50%;transform:translateX(-50%);white-space:nowrap;text-align:center}
+html.tp .urg .urg-topo{align-items:center}
+html.tp .urg:has(.tp-anel) .urg-barra{display:none}
+html.tp .urg:has(.tp-anel) .urg-msg{margin-top:16px}
+html.tp .notif-bloco button,html.tp #btn-notif{background:linear-gradient(180deg,rgba(25,44,78,.95),rgba(12,24,45,.95))!important;color:var(--creme)!important;border:1px solid rgba(201,162,74,.45)!important;box-shadow:0 0 30px -12px rgba(201,162,74,.6)!important}
+html.tp .notif-caixa{background:rgba(9,18,35,.9);border-color:rgba(201,162,74,.25);color:var(--tinta)}
+html.tp .nota-rodape{color:var(--tinta-suave)}
+
+/* telas extras de quem responde */
+html.tp .tela:not(#tela-admin) .tag-vis{background:rgba(201,162,74,.12);color:var(--ouro2)}
+html.tp .alternar button{background:rgba(255,255,255,.04);border-color:rgba(201,162,74,.28);color:var(--creme)}
+html.tp .alternar button.ativa{background:rgba(201,162,74,.14);border-color:var(--ouro);box-shadow:inset 0 0 0 1.5px var(--ouro)}
+
+/* área da terapeuta (e o que é aberto por ela): volta à paleta clara da terapeuta */
+html.tp #tela-admin,html.tp #tela-form,html.tp #tela-deck,html.tp .tp-claro{
+  --areia:var(--L-areia);--areia-escura:var(--L-areia-escura);--papel:var(--L-papel);--tinta:var(--L-tinta);--tinta-suave:var(--L-tinta-suave);
+  --ardosia:var(--L-ardosia);--ardosia-escura:var(--L-ardosia-escura);--ardosia-clara:var(--L-ardosia-clara);--argila:var(--L-argila);--argila-clara:var(--L-argila-clara);
+  --salvia:var(--L-salvia);--borda:var(--L-borda);--alta-clara:var(--L-alta-clara);--media-clara:var(--L-media-clara);--baixa-clara:var(--L-baixa-clara);
+  --sombra:var(--L-sombra);--sombra-leve:var(--L-sombra-leve);color:var(--tinta)}
+html.tp:has(body.tp-admin),html.tp body.tp-admin{background:var(--L-areia)}
+html.tp body.tp-admin::before,html.tp body.tp-admin::after{display:none}
+html.tp #tela-admin h1,html.tp #tela-admin h2,html.tp #tela-admin h3{color:var(--L-tinta)}
+html.tp #tela-admin a{color:var(--L-ardosia)}
+html.tp #tela-admin .btn-primario{background:var(--L-ardosia);color:#fff;box-shadow:var(--L-sombra-leve)}
+html.tp #tela-admin .btn-argila{background:var(--L-argila);color:#fff;box-shadow:var(--L-sombra-leve)}
+html.tp #tela-admin .btn-contorno{color:var(--L-tinta);border-color:var(--L-borda);background:transparent}
+html.tp #tela-admin .cartao,html.tp #tela-admin .bloco-trava,html.tp #tela-admin .teia,html.tp #tela-admin .insight,html.tp #tela-admin .aviso-clinico{background:var(--L-papel);border-color:var(--L-borda);box-shadow:var(--L-sombra-leve);-webkit-backdrop-filter:none;backdrop-filter:none}
+html.tp #tela-admin .painel-geral{background:var(--L-ardosia);border:0}
+html.tp #tela-admin .barras{background:none;border:0;padding:0;box-shadow:none}
+html.tp #tela-admin .barra-item .trilho i::after{display:none}
+html.tp #tela-admin .barra-item .topo{color:var(--L-tinta)}
+html.tp #tela-admin .nota{background:var(--L-papel);color:var(--L-tinta)}
+
+/* "Quem sou" e detalhes dos testes na capa */
+html.tp .cv-sobre{color:var(--tinta-suave)}
+html.tp .cv-sobre.cv-sobre-cartao{background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.22);border-left-color:var(--ouro);box-shadow:0 20px 44px -24px rgba(0,0,0,.85);color:var(--tinta)}
+html.tp .cv-sobre-rot,html.tp .cv-divisor{color:var(--ouro)}
+html.tp .cv-det-n{background:linear-gradient(180deg,#F3DC9C,#C49A3E);color:#1A1405;box-shadow:0 0 14px rgba(201,162,74,.45)}
+html.tp .cv-det-bloco{background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.22)}
+html.tp .cv-det-bloco h3,html.tp .cv-det-mapa{color:var(--ouro2)}
+
+/* modo campanha (link de anúncio) */
+html.tp .camp-chips li,html.tp .camp-prova,html.tp .camp-como{background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.24);color:var(--tinta)}
+
+/* Teste de Ansiedade (telas de quem responde) */
+html.tp .an-selo,html.tp .an-parte{background:rgba(201,162,74,.12)!important;color:var(--ouro2)!important;border:1px solid rgba(201,162,74,.3)}
+html.tp .an-pergunta{color:var(--creme)}
+html.tp .an-gad button{background:linear-gradient(180deg,rgba(28,48,84,.85),rgba(12,24,45,.9));border-color:rgba(201,162,74,.3);color:var(--creme)}
+html.tp .an-gad button b{background:rgba(201,162,74,.14);color:var(--ouro2)}
+html.tp .an-gad button.on{border-color:var(--ouro2);background:rgba(201,162,74,.16);box-shadow:0 0 22px -6px rgba(232,203,126,.6)}
+html.tp .an-gad button.on b{background:linear-gradient(180deg,#F3DC9C,#C49A3E);color:#1A1405}
+html.tp .an-regua button{background:linear-gradient(180deg,rgba(28,48,84,.85),rgba(12,24,45,.9));border-color:rgba(201,162,74,.32);color:var(--creme)}
+html.tp .an-regua button.on{background:linear-gradient(180deg,#F6E3AE 0%,#D9B65E 55%,#B88E35 100%);border-color:#F6E3AE;color:#1A1405;box-shadow:0 0 22px -2px rgba(232,203,126,.7)}
+html.tp .tela:not(#tela-admin) .an-secao,html.tp .tela:not(#tela-admin) .an-card{background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.22);color:var(--tinta)}
+html.tp .tela:not(#tela-admin) .an-card{border-left-color:var(--c)}
+html.tp .tela:not(#tela-admin) .an-area .an-tr{background:rgba(255,255,255,.08)}
+html.tp .tela:not(#tela-admin) .an-faixa-rot,html.tp .tela:not(#tela-admin) .an-pontas,html.tp .tela:not(#tela-admin) .an-enunciado{color:var(--tinta-suave)}
+html.tp .tela:not(#tela-admin) .an-faixa .an-marca{background:#fff;box-shadow:0 0 10px rgba(255,255,255,.8)}
+html.tp .tela:not(#tela-admin) .an-nivel.baixo{background:rgba(98,204,142,.14);color:#9BE6B8}
+html.tp .tela:not(#tela-admin) .an-nivel.moderado{background:rgba(244,190,79,.14);color:#F6D27E}
+html.tp .tela:not(#tela-admin) .an-nivel.alto{background:rgba(255,106,84,.14);color:#FFB0A2}
+html.tp .tela:not(#tela-admin) .an-alerta{background:rgba(255,106,84,.12);border-color:rgba(255,106,84,.3);color:#FFC2B6}
+html.tp .tela:not(#tela-admin) .an-proxima{background:rgba(201,162,74,.12);color:var(--creme);border:1px solid rgba(201,162,74,.3)}
+html.tp .tela:not(#tela-admin) .an-evol th,html.tp .tela:not(#tela-admin) .an-evol td{border-bottom-color:rgba(255,255,255,.08)}
+html.tp .tela:not(#tela-admin) .an-sobe{color:#FF8A75}
+html.tp .tela:not(#tela-admin) .an-desce{color:#7FDCA4}
+html.tp .tela:not(#tela-admin) .an-gadnum{box-shadow:0 0 30px -6px var(--c)}
+/* gráficos SVG do Teste de Ansiedade: linhas e textos claros */
+html.tp .tela:not(#tela-admin) svg [stroke="#E3DCCD"]{stroke:rgba(232,203,126,.2)}
+html.tp .tela:not(#tela-admin) svg text[fill="#4C5670"],html.tp .tela:not(#tela-admin) svg text[fill="#6B7486"]{fill:#C3CADA}
+html.tp .tela:not(#tela-admin) svg text[fill="#16203A"]{fill:#F4ECDD}
+html.tp .tela:not(#tela-admin) svg [stroke="#1E4A45"]{stroke:#E8CB7E}
+html.tp .tela:not(#tela-admin) svg circle[fill="#1E4A45"]{fill:#E8CB7E}
+html.tp .tela:not(#tela-admin) svg [stroke="#fff"]{stroke:#0A1426}
+html.tp .tela:not(#tela-admin) svg [stroke="#8A97A0"]{stroke:#9AA6BC}
+html.tp .tela:not(#tela-admin) svg rect[fill="#E3F2E9"]{fill:rgba(98,204,142,.09)}
+html.tp .tela:not(#tela-admin) svg rect[fill="#FFF6DA"]{fill:rgba(244,190,79,.08)}
+html.tp .tela:not(#tela-admin) svg rect[fill="#FBE9E5"]{fill:rgba(255,106,84,.10)}
