@@ -280,6 +280,10 @@ body.cv-on{overflow-x:clip}
 /* "Sobre você" na capa e botão "Editar minha página" na área da terapeuta */
 .cv-sobre{margin:10px auto 0;max-width:560px;font-size:15.5px;line-height:1.6;color:var(--tinta-suave,#4C5670);text-align:center}
 @media (min-width:900px){.capa-vendas .cv-sobre{text-align:left;margin-left:0}}
+.cv-sobre.cv-sobre-cartao{background:#fff;border:1px solid var(--borda,#E3DCCD);border-left:4px solid var(--argila,#9A5A38);border-radius:14px;padding:14px 16px;text-align:left;margin:14px auto 0;box-shadow:0 4px 14px rgba(64,31,13,.06)}
+.cv-sobre-rot{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--argila,#9A5A38);margin:0 0 4px}
+.cv-divisor{display:flex;align-items:center;gap:12px;margin:26px 0 14px;color:var(--argila,#9A5A38);font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.cv-divisor::before,.cv-divisor::after{content:"";flex:1;height:1px;background:var(--borda,#E3DCCD)}
 .dv-editar-linha{margin:-4px 0 16px}
 .dv-editar{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1.5px solid var(--borda,#E3DCCD);background:var(--papel,#fff);color:var(--ardosia,#0B1F3A);font-weight:700;text-decoration:none;font-size:15px}
 .dv-editar small{font-weight:500;color:var(--tinta-suave,#4C5670);font-size:13px}

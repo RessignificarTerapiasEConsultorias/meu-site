@@ -707,6 +707,12 @@ function dvCapaVendas(modo){
   /* "Sobre você", escrito pela terapeuta na montagem ou em "Editar minha página" */
   const sobre = dd && String(dd.sobre || '').trim();
   if(sobre && ass) ass.insertAdjacentHTML('afterend', `<p class="cv-sobre">${escV(sobre).replace(/\n+/g, '<br>')}</p>`);
+  /* opção da página (dados.sobre_separado): a apresentação vira um cartão "Quem sou" e uma linha "Sobre o teste" separa do texto do teste */
+  if(sobre && dd && dd.sobre_separado){
+    const cs = lt.querySelector('.cv-sobre'), cl = lt.querySelector('.cv-lead');
+    if(cs){ cs.classList.add('cv-sobre-cartao'); cs.insertAdjacentHTML('afterbegin', '<span class="cv-sobre-rot">Quem sou</span>'); }
+    if(cl) cl.insertAdjacentHTML('beforebegin', '<div class="cv-divisor" role="separator"><span>Sobre o teste</span></div>');
+  }
   dvBotaoEditar();
   /* páginas com testes extras (ex.: Miralene): logo no topo, um menu com todos os testes, cada um levando ao seu detalhe */
   const CV_NOME_CURTO = k => k === 'travas' ? 'Travas Mentais' : k === 'tracos' ? 'Traços de Caráter' : k === 'mpcc' ? 'MPCC' : (EX[k].curto || EX[k].rot);
