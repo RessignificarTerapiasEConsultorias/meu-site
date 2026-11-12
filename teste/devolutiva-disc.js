@@ -86,7 +86,7 @@ function dcMontarTelas(){
       <p class="assinatura" id="dc-assinatura"></p>
       <p class="texto-capa">Uma avaliação do seu jeito de agir no trabalho: como você decide, se comunica, lida com ritmo e mudanças e com regras e detalhes.</p>
       <ul class="lista-leve">
-        <li>24 blocos com 4 palavras, de 8 a 12 minutos</li>
+        <li>Blocos de 4 palavras, cerca de 7 minutos</li>
         <li>Em cada bloco você marca a palavra que MAIS e a que MENOS descreve você</li>
         <li>No final, 3 perfis (Adaptado, Natural e Resultante), gráficos e laudo</li>
         <li>Análise comportamental para o trabalho, não é avaliação psicológica nem terapia</li>
@@ -159,7 +159,7 @@ function dcTelaCadastro(nomeSugerido){
     <p>Esta é uma análise do seu comportamento <b>no ambiente de trabalho</b>. Não existem respostas certas ou erradas, nem perfil melhor ou pior: cada perfil tem forças diferentes.</p>
     <div class="dc-aviso-corp">${escV(DC.AVISO)}</div>
     <div class="como-responder"><ul>
-      <li>São 24 blocos com 4 palavras cada.</li>
+      <li>Cada bloco tem 4 palavras. A maioria termina em cerca de 7 minutos.</li>
       <li>Em cada bloco, marque <b>uma</b> palavra com <b>+ MAIS</b> (a que mais descreve você) e <b>uma</b> com <b>− MENOS</b> (a que menos descreve).</li>
       <li>Responda pensando em como você <b>age de verdade</b> no trabalho, não em como gostaria de agir. Vá pela primeira impressão.</li>
       <li>Se a página fechar, ao abrir o link de novo neste aparelho você continua de onde parou.</li></ul></div>
@@ -174,7 +174,7 @@ function dcTelaCadastro(nomeSugerido){
       <div class="campo campo-check"><label class="check" for="dk-contato"><input id="dk-contato" type="checkbox">
         <span>Autorizo o contato por WhatsApp ou e-mail sobre o meu resultado <span class="opc">(opcional)</span>.</span></label></div>
       <div class="aviso" id="dk-aviso"></div>
-      <button class="btn btn-primario" id="dk-ir">Começar os 24 blocos</button>
+      <button class="btn btn-primario" id="dk-ir">Começar</button>
     </div>`);
   mascaraTelefone(document.getElementById('dk-tel'));
   document.getElementById('dk-ir').addEventListener('click', () => {
@@ -199,7 +199,7 @@ function dcComecar(prog){
 const dcGuardar = () => guardar(dcChave(dc.codigo), { cad:dc.cad, resp:dc.resp });
 function dcDesenhar(){
   const i = dc.indice, N = DISC.BLOCOS.length, b = DISC.BLOCOS[i], r = dc.resp[i];
-  document.getElementById('dc-contador').textContent = 'Bloco ' + (i + 1) + ' de ' + N;
+  (typeof TX_INC === 'function' ? TX_INC(document.getElementById('dc-contador'), i, N, 'disc') : (document.getElementById('dc-contador').textContent = ''));
   document.getElementById('dc-barra').style.width = (i / N * 100) + '%';
   document.getElementById('dc-voltar').style.visibility = i === 0 ? 'hidden' : 'visible';
   const ops = document.getElementById('dc-ops');
@@ -333,7 +333,7 @@ function dcConvite(primeiro, codigo, mostrar){
     'Separei para você a Análise Comportamental DISC. Ela mostra como você age no trabalho: como decide, se comunica, lida com ritmo e mudanças e com regras e detalhes.', '',
     'É só tocar no link abaixo. O código já vai preenchido:', dcLink(codigo), '',
     'Se o link não abrir direto, o código é: *' + codigo + '*', '',
-    'São 24 blocos com 4 palavras, de 8 a 12 minutos. Em cada um, você marca a palavra que MAIS e a que MENOS descreve você. Não existe resposta certa ou errada.',
+    'Leva cerca de 7 minutos. Em cada bloco de 4 palavras, você marca a palavra que MAIS e a que MENOS descreve você. Não existe resposta certa ou errada.',
     mostrar ? 'No final, você vê o seu perfil e baixa o relatório em PDF.' : 'Quando terminar, eu preparo a sua devolutiva.'].join('\n');
 }
 async function dcGerar(mostrar){
@@ -477,7 +477,7 @@ function dcSeletor(ativos){
   const alt = document.getElementById('alt-teste'); if(!alt) return;
   const campo = alt.closest('.campo');
   if(!alt.querySelector('[data-v=disc]')){
-    alt.insertAdjacentHTML('beforeend', '<button type="button" data-v="disc" role="radio" aria-checked="false">DISC<small>24 blocos · 4 fatores</small></button>');
+    alt.insertAdjacentHTML('beforeend', '<button type="button" data-v="disc" role="radio" aria-checked="false">DISC<small>4 fatores</small></button>');
     const b = alt.querySelector('[data-v=disc]');
     b.addEventListener('click', () => {
       alt.querySelectorAll('button').forEach(x => { const on = x === b; x.classList.toggle('ativa', on); x.setAttribute('aria-checked', on ? 'true' : 'false'); });
@@ -493,17 +493,17 @@ function dcSeletor(ativos){
 window.CV_EXTRA = Object.assign(window.CV_EXTRA || {}, { disc:{
   rot:'Análise Comportamental DISC', curto:'DISC', tag:'Individual · Ambiente corporativo', titulo:'Análise Comportamental DISC',
   objetivo:'Mostrar como você age no trabalho: como decide, se comunica, lida com ritmo e mudanças e com regras e detalhes. É análise comportamental para a vida profissional, não é terapia nem avaliação psicológica.',
-  como:['24 blocos com 4 palavras, de 8 a 12 minutos', 'Em cada bloco, você marca a palavra que MAIS e a que MENOS descreve você', 'Feito para o ambiente de trabalho: seleção, equipes, liderança e vendas'],
+  como:['A maioria termina em cerca de 7 minutos', 'Em cada bloco, você marca a palavra que MAIS e a que MENOS descreve você', 'Feito para o ambiente de trabalho: seleção, equipes, liderança e vendas'],
   resultado:q => 'Os seus 3 perfis (Adaptado, Natural e Resultante) em gráficos, o perfil predominante e um laudo com áreas recomendadas e estilo de liderança. Depois, a devolutiva com ' + q + '.',
   mapaTitulo:'Os 4 fatores que a análise mede',
   itens:['D', 'I', 'S', 'C'].map(f => ({ nome:DISC.FATORES[f].nome + ' (' + f + ')', desc:DISC.FATORES[f].eixo + ': ' + DISC.FATORES[f].palavras + '.' })),
   pergunta:'Como você age no trabalho?',
   texto:'Análise comportamental para o ambiente corporativo: mostra como você decide, se comunica, lida com ritmo e com regras, com 3 perfis em gráficos e um laudo profissional. Não é ferramenta terapêutica.',
-  meta:'24 blocos · 8 a 12 minutos',
+  meta:'4 fatores · cerca de 7 minutos',
   zap:'quero fazer a Análise Comportamental DISC. Como recebo o meu código?',
   descobre:'<b>como você age no trabalho e onde rende mais</b>',
   recebe:q => 'Na análise DISC, os seus 3 perfis em gráficos e o laudo com áreas recomendadas e estilo de liderança',
-  tempo:'a análise DISC, de 8 a 12 minutos',
+  tempo:'a análise DISC, cerca de 7 minutos',
   faq:q => ['O DISC é um teste psicológico ou terapêutico?', 'Não. É uma análise comportamental para o ambiente de trabalho: mostra tendências de comportamento em quatro fatores (Dominância, Influência, Estabilidade e Conformidade). Não é diagnóstico nem avaliação clínica, e não deve ser o único critério de uma decisão.']
 } });
 function dcInit(){

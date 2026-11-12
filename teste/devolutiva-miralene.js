@@ -306,7 +306,7 @@ function pontuarSerena(r){
    ============================================================================ */
 const MI_TESTES = ['serena', 'esquemas', 'tdah'];
 const MI_ROT = { serena:'Diagnóstico Mente Serena', esquemas:'Esquemas e Necessidades Emocionais', tdah:'Escala de TDAH (ETDAH-AD)' };
-const MI_SUB = { serena:'7 pilares · mapa em teia', esquemas:'5 partes · modelo de Young', tdah:'69 frases · triagem' };
+const MI_SUB = { serena:'7 pilares · mapa em teia', esquemas:'5 partes · modelo de Young', tdah:'triagem' };
 /* testes deste arquivo que a página da terapeuta tem ligados */
 function miLista(){ const d = window.__T && __T.dados; return d && Array.isArray(d.testes) ? MI_TESTES.filter(k => d.testes.indexOf(k) > -1) : []; }
 
@@ -501,7 +501,7 @@ function salvarRascunho(){ if(estado) guardar.set(chaveRascunho(estado.codigo), 
 function renderCampo(c){
   const v = estado.r[c.id];
   const obrig = c.opcional ? '' : '<span class="obrig" aria-hidden="true"> *</span>';
-  const num = c.num ? `<span class="num">${esc(c.num)}.</span>` : '';
+  const num = '';   // quem responde não vê o número da pergunta
   const erro = `<div class="erro" id="erro-${c.id}">Responda esta pergunta para continuar.</div>`;
   if(c.tipo==='escala'){
     const n = c.max-c.min+1, nm = Math.ceil(n/2);
@@ -557,7 +557,7 @@ function renderPasso(retomando){
   const P = T.passos[estado.passo];
   const total = T.passos.length;
   const ultimo = estado.passo === total-1;
-  $('#passo-teste').textContent = `Etapa ${estado.passo+1} de ${total}`;
+  $('#passo-teste').textContent = typeof TX_FRASE === 'function' ? TX_FRASE(estado.passo, total) : '';
   $('#barra-teste').style.width = ((estado.passo)/(total))*100 + '%';
   $('#folha-teste').innerHTML = `
     ${retomando?'<div class="msg info" role="status" style="margin:0 0 18px">Continuando de onde você parou.</div>':''}
@@ -782,7 +782,7 @@ Preparei o seu acesso à *Escala de TDAH em adultos (ETDAH-AD)*, que me ajuda a 
 👉 Acesse: {link}
 🔑 Seu código: *{codigo}*
 
-São 69 frases e leva cerca de 15 a 20 minutos. Responda com sinceridade, pensando em como você é. Não existe resposta certa ou errada. Se precisar parar, o progresso fica salvo no aparelho. O código é pessoal e vale para um único envio.
+Leva cerca de 15 a 20 minutos. Responda com sinceridade, pensando em como você é. Não existe resposta certa ou errada. Se precisar parar, o progresso fica salvo no aparelho. O código é pessoal e vale para um único envio.
 
 Quando terminar, me avise por aqui. 🌷
 *Miralene Souto*`;
@@ -911,7 +911,7 @@ function construirEsquemas(def){
     bl.forEach(([a,b], k)=>{
       passos.push({
         titulo:`Parte ${num} · ${titulo}`,
-        intro:`<h2>Parte ${num} de 5 · ${titulo}</h2><p class="meta-bloco">Bloco ${k+1} de ${bl.length}</p>
+        intro:`<h2>${titulo}</h2>
           ${k===0 && instrucao ? `<p>${esc(adaptarInstrucao(instrucao))}</p>` : ''}${nota||''}${legendaEscala(p.rotulos, 1, k===0)}`,
         campos:camposEscala(prefixo, p.itens, a, b, 1, 6, 'Completamente falso', 'Descreve-me perfeitamente', opcional)
       });
@@ -938,7 +938,7 @@ function construirTdah(def){
     titulo:'Boas-vindas',
     intro:`<h1>Escala de TDAH em adultos (ETDAH-AD)</h1>
       <p class="lead">Este questionário me ajuda a entender como funcionam a sua atenção, a sua impulsividade e a sua energia no dia a dia.</p>
-      <p>São <b>${total} frases</b> e leva cerca de <b>15 a 20 minutos</b>. Leia cada uma e marque com que frequência ela descreve você. Não existe resposta certa ou errada.</p>
+      <p>Leva cerca de <b>15 a 20 minutos</b>. Leia cada uma e marque com que frequência ela descreve você. Não existe resposta certa ou errada.</p>
       <p>Ele é uma <b>triagem</b> que apoia a avaliação: <b>não é um diagnóstico</b>. A leitura do resultado é feita por mim, junto com você.</p>`,
     campos:[
       { id:'nome', label:'Seu nome completo', tipo:'text', auto:'name' },
@@ -949,7 +949,7 @@ function construirTdah(def){
   bl.forEach(([a,b],k)=>{
     passos.push({
       titulo:`Bloco ${k+1}`,
-      intro:`<h2>Bloco ${k+1} de ${bl.length}</h2>${k===0?'<p>Para cada frase, marque com que frequência ela descreve você.</p>':''}${legendaEscala(rot, 0, k===0)}`,
+      intro:`<h2>${k===0 ? 'Vamos começar' : 'Continue no seu ritmo'}</h2>${k===0?'<p>Para cada frase, marque com que frequência ela descreve você.</p>':''}${legendaEscala(rot, 0, k===0)}`,
       campos:camposEscala('t', def.itens, a, b, 0, 5, rot[0], rot[5], false)
     });
   });
@@ -1373,13 +1373,13 @@ const CV_EXTRA = {
   serena:{
     rot:'Diagnóstico Mente Serena', curto:'Mente Serena', tag:'Individual · Mapa em teia', titulo:'Diagnóstico Mente Serena',
     objetivo:'Mostrar como estão os 7 pilares da mulher serena: onde você já tem força e o que pede cuidado agora, para saber por onde começar a cuidar de si com mais calma, segurança e equilíbrio.',
-    como:['49 afirmações e um termômetro inicial, de 10 a 15 minutos', 'Feito para mulheres que querem mais calma, segurança e equilíbrio', 'Se precisar parar, o progresso fica salvo no aparelho'],
+    como:['De 10 a 15 minutos, no seu tempo', 'Feito para mulheres que querem mais calma, segurança e equilíbrio', 'Se precisar parar, o progresso fica salvo no aparelho'],
     resultado:q => 'O seu Termômetro Mente Serena, logo ao terminar: uma nota de 1 a 10 para cada pilar, em um gráfico de teia. Depois, a leitura aprofundada com ' + q + '.',
     mapaTitulo:'Os 7 pilares que o diagnóstico mapeia',
     itens:Object.keys(EXPLICA_PILARES).map(n => ({ nome:n, desc:EXPLICA_PILARES[n] })),
     pergunta:'Onde estão as suas forças e o que pede cuidado?',
     texto:'Mapeia os 7 pilares da mulher serena (essência, segurança, amor-próprio, organização da mente, espiritualidade, regulação emocional e posicionamento) e mostra, em um gráfico de teia, onde estão as suas forças e o que precisa de cuidado.',
-    meta:'49 afirmações · 10 a 15 minutos',
+    meta:'7 pilares · 10 a 15 minutos',
     zap:'quero fazer o Diagnóstico Mente Serena. Como recebo o meu código?',
     descobre:'<b>onde estão as suas forças e o que pede cuidado nos 7 pilares da mente serena</b>',
     recebe:() => 'No Diagnóstico Mente Serena, o seu Termômetro: um gráfico de teia com a nota de cada um dos 7 pilares',
@@ -1413,20 +1413,20 @@ const CV_EXTRA = {
   tdah:{
     rot:'Escala de TDAH em adultos (ETDAH-AD)', curto:'TDAH em adultos (ETDAH-AD)', tag:'Individual · Triagem', titulo:'Escala de TDAH em adultos (ETDAH-AD)',
     objetivo:'Uma triagem que ajuda a entender como funcionam a sua atenção, a sua impulsividade, as suas emoções e a sua energia no dia a dia. Ela apoia a avaliação, mas não é um diagnóstico.',
-    como:['69 frases, de 15 a 20 minutos', 'Você marca com que frequência cada frase descreve você', 'O resultado leva em conta a sua escolaridade, como na escala original'],
+    como:['De 15 a 20 minutos', 'Você marca com que frequência cada frase descreve você', 'O resultado leva em conta a sua escolaridade, como na escala original'],
     resultado:q => 'A pontuação em cada um dos 5 fatores, comparada com a de adultos da mesma escolaridade, com a leitura feita junto com ' + q + ' na devolutiva.',
     mapaTitulo:'Os 5 fatores da escala',
     itens:[
-      { nome:'Desatenção', desc:'Foco, esquecimentos e distrações no dia a dia (23 frases).' },
-      { nome:'Impulsividade', desc:'Agir ou falar antes de pensar, impaciência e dificuldade de esperar (23 frases).' },
-      { nome:'Aspectos emocionais', desc:'Como as emoções e o humor afetam o dia a dia (4 frases).' },
-      { nome:'Autorregulação da atenção, da motivação e da ação', desc:'Organizar-se, manter a motivação e levar as tarefas até o fim (12 frases).' },
-      { nome:'Hiperatividade', desc:'Inquietação e excesso de energia no corpo e na mente (7 frases).' }
+      { nome:'Desatenção', desc:'Foco, esquecimentos e distrações no dia a dia.' },
+      { nome:'Impulsividade', desc:'Agir ou falar antes de pensar, impaciência e dificuldade de esperar.' },
+      { nome:'Aspectos emocionais', desc:'Como as emoções e o humor afetam o dia a dia.' },
+      { nome:'Autorregulação da atenção, da motivação e da ação', desc:'Organizar-se, manter a motivação e levar as tarefas até o fim.' },
+      { nome:'Hiperatividade', desc:'Inquietação e excesso de energia no corpo e na mente.' }
     ],
     tituloHtml:'Escala de TDAH em adultos <span style="white-space:nowrap">(ETDAH-AD)</span>',
     pergunta:'Como funcionam a sua atenção, a sua impulsividade e a sua energia?',
     texto:'Uma triagem que ajuda a entender como funcionam a sua atenção, a sua impulsividade e a sua energia no dia a dia. Apoia a avaliação, mas não é um diagnóstico: a leitura do resultado é feita junto com você.',
-    meta:'69 frases · 15 a 20 minutos',
+    meta:'Triagem · 15 a 20 minutos',
     zap:'quero fazer a Escala de TDAH em adultos (ETDAH-AD). Como recebo o meu código?',
     descobre:'<b>como funcionam a sua atenção, a sua impulsividade e a sua energia</b>',
     recebe:q => 'Na Escala de TDAH, uma triagem que apoia a avaliação, com a leitura feita junto com ' + q,

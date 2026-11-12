@@ -300,7 +300,7 @@ function mpMontarTelas(){
       <p class="texto-capa">Este instrumento foi desenvolvido para proporcionar uma visão mais clara sobre características comportamentais, formas de relacionamento, tomada de decisão, comunicação e competências que podem ser desenvolvidas.</p>
       <p class="texto-capa"><b>Não existem respostas certas ou erradas.</b> Responda considerando como você normalmente age no seu dia a dia.</p>
       <ul class="lista-leve">
-        <li>40 afirmações, de 10 a 15 minutos, no celular ou no computador</li>
+        <li>A maioria termina em cerca de 7 minutos, no celular ou no computador</li>
         <li>Você responde de 1 (nunca me identifico) a 5 (sempre me identifico)</li>
         <li>No final, o seu mapa em 8 dimensões, com gráfico e relatório em PDF</li>
         <li>Ferramenta de autoconhecimento e desenvolvimento, não é diagnóstico</li>
@@ -368,7 +368,7 @@ function mpComoResponder(){
     <li><b>Não existem respostas certas ou erradas.</b> Responda pensando em como você normalmente age, e não em como gostaria de agir.</li>
     <li>Para cada afirmação, escolha de 1 a 5:</li></ul>
     <table class="mp-escala"><tbody>${MP_ESCALA.map((t, i) => `<tr><td><b>${i + 1}</b></td><td>${t}</td></tr>`).join('')}</tbody></table>
-    <ul><li>São 40 afirmações, de 10 a 15 minutos. Se a página fechar, ao abrir o link de novo neste aparelho você continua de onde parou.</li></ul></div>`;
+    <ul><li>A maioria termina em cerca de 7 minutos. Se a página fechar, ao abrir o link de novo neste aparelho você continua de onde parou.</li></ul></div>`;
 }
 function mpTelaCadastro(nomeSugerido){
   mpMostrar(`
@@ -415,8 +415,8 @@ function mpComecar(prog){
 const mpGuardar = () => guardar(mpChave(mp.codigo), { cad:mp.cad, resp:mp.resp });
 function mpDesenhar(){
   const i = mp.indice, total = MP_PERGUNTAS.length;
-  document.getElementById('mp-texto').textContent = (i + 1) + '. ' + MP_PERGUNTAS[i].q;
-  document.getElementById('mp-contador').textContent = 'Afirmação ' + (i + 1) + ' de ' + total;
+  document.getElementById('mp-texto').textContent = MP_PERGUNTAS[i].q;
+  (typeof TX_INC === 'function' ? TX_INC(document.getElementById('mp-contador'), i, total, 'mpcc') : (document.getElementById('mp-contador').textContent = ''));
   document.getElementById('mp-barra').style.width = (i / total * 100) + '%';
   document.getElementById('mp-voltar').style.visibility = i === 0 ? 'hidden' : 'visible';
   const ops = document.getElementById('mp-opcoes');
@@ -538,7 +538,7 @@ function mpConvite(primeiro, codigo, mostrar){
     'Separei para você o ' + MP.SIGLA + ' · ' + MP.NOME + '. Ele mostra, em um gráfico, as suas características de comportamento e as competências que você já tem e pode desenvolver: iniciativa, comunicação, relacionamento, decisão, adaptação, organização, autoconfiança e equilíbrio emocional.', '',
     'É só tocar no link abaixo. Ao abrir, o código já vai preenchido: é só tocar em “Começar a avaliação”:', mpLink(codigo), '',
     'Se o link não abrir direto, o código é: *' + codigo + '*', '',
-    'São 40 afirmações, de 10 a 15 minutos. Não existem respostas certas ou erradas: responda pensando em como você normalmente age.',
+    'Leva cerca de 7 minutos. Não existem respostas certas ou erradas: responda pensando em como você normalmente age.',
     mostrar ? 'No final, você vê o seu mapa e baixa o seu relatório em PDF. Depois a gente conversa sobre ele.' : 'Quando você terminar, eu preparo a sua devolutiva com carinho.'].join('\n');
 }
 async function mpGerar(mostrar){
@@ -695,7 +695,7 @@ function mpSeletor(ativos){
   const alt = document.getElementById('alt-teste'); if(!alt) return;
   const campo = alt.closest('.campo');
   if(!alt.querySelector('[data-v=mpcc]')){
-    alt.insertAdjacentHTML('beforeend', '<button type="button" data-v="mpcc" role="radio" aria-checked="false">MPCC<small>40 afirmações · 8 dimensões</small></button>');
+    alt.insertAdjacentHTML('beforeend', '<button type="button" data-v="mpcc" role="radio" aria-checked="false">MPCC<small>8 dimensões</small></button>');
     const b = alt.querySelector('[data-v=mpcc]');
     b.addEventListener('click', () => {
       alt.querySelectorAll('button').forEach(x => { const on = x === b; x.classList.toggle('ativa', on); x.setAttribute('aria-checked', on ? 'true' : 'false'); });

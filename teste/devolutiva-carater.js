@@ -1,4 +1,24 @@
 /* ============================================================================
+   SEM NÚMERO E SEM TOTAL (vale para todos os testes): no lugar de "Pergunta X de Y",
+   uma frase de incentivo que muda com o avanço, e um aviso rápido a cada 5 respostas.
+   ============================================================================ */
+window.TX_FRASES = [[0, 'Responda pensando em como você está hoje.'], [.1, 'Ótimo começo! Vá no primeiro impulso.'], [.2, 'Você está indo muito bem.'],
+  [.3, 'Isso, sem pensar demais.'], [.4, 'Já passou de um terço!'], [.5, 'Metade feita! 🎉'], [.6, 'Mais da metade. Continue assim.'],
+  [.7, 'Faltam poucas.'], [.8, 'Reta final!'], [.9, 'Últimas, você está quase lá.']];
+window.TX_FRASE = function(i, total){ const f = total ? i / total : 0; let t = TX_FRASES[0][1]; TX_FRASES.forEach(x => { if(f >= x[0] - 1e-9) t = x[1]; }); return t; };
+window.TX_TOAST = function(t){
+  let el = document.getElementById('tx-toast');
+  if(!el){ el = document.createElement('div'); el.id = 'tx-toast'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
+  el.textContent = t; el.classList.add('ver'); clearTimeout(TX_TOAST._t); TX_TOAST._t = setTimeout(() => el.classList.remove('ver'), 2200);
+};
+/* el: onde fica a frase; i: quantas já respondeu (começa em 0); chave: um nome por teste */
+window.TX_INC = function(el, i, total, chave){
+  if(el) el.textContent = TX_FRASE(i, total);
+  const m = TX_INC.max || (TX_INC.max = {}), k = chave || 'x';
+  if(i > (m[k] || 0)){ m[k] = i; if(i % 5 === 0 && i < total) TX_TOAST(TX_FRASE(i, total)); }
+};
+
+/* ============================================================================
    DEVOLUTIVA DO TESTE DE TRAÇOS DE CARÁTER (individual e casal)
    No mesmo formato dos relatórios da Tatiana:
    - Individual: alinhamento, distribuição, picos, complementares, síntese,
@@ -545,7 +565,7 @@ function dvCapaDoisTestes(){
   const ps = lt.querySelectorAll('.texto-capa');
   if(ps[1]) ps[1].innerHTML = 'Aqui você encontra dois testes. O <b>Teste de Travas Mentais</b> mapeia 10 travas e mostra, em números, quais estão mais ativas em você hoje. O <b>Teste de Traços de Caráter</b> identifica os 5 traços de caráter que se formaram na sua história e como eles aparecem no seu dia a dia. Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d' + escV(quem) + '.';
   const ul = lt.querySelector('.lista-leve');
-  if(ul) ul.innerHTML = '<li>Teste de Travas Mentais: 50 perguntas, de 10 a 15 minutos</li><li>Teste de Traços de Caráter: 40 afirmações, de 8 a 12 minutos, individual ou casal</li>' +
+  if(ul) ul.innerHTML = '<li>Teste de Travas Mentais: a maioria termina em cerca de 7 minutos</li><li>Teste de Traços de Caráter: a maioria termina em cerca de 7 minutos, individual ou casal</li>' +
     '<li>O código que você recebeu já abre o teste certo</li><li>O resultado vai direto para ' + escV(quem) + ', para vocês conversarem a partir dele</li>';
   document.title = 'Teste de Travas Mentais e Teste de Traços de Caráter' + (window.T_NOME ? ' · ' + T_NOME : '');
 }
@@ -700,15 +720,15 @@ function dvCapaVendas(modo){
     ? 'Iniciativa, comunicação, decisão, adaptação, organização, autoconfiança: cada um de nós é mais forte em algumas áreas e mais travado em outras, quase sempre sem perceber. Em poucos minutos, você descobre <b>onde já é forte</b> e <b>onde pode crescer</b>, em um mapa de 8 dimensões.'
     : 'Quase sempre é um padrão antigo, que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. ' + (comExtras ? 'No seu tempo, você descobre ' : 'Em poucos minutos, você descobre ') +
       mpJuntar([tem('travas') ? '<b>o que trava você hoje</b>' : '', tem('tracos') ? '<b>como a sua história moldou o seu jeito de ser</b>' : '', tem('mpcc') ? '<b>onde você já é forte e onde pode crescer</b>' : ''].concat(extras.map(k => EX[k].descobre))) + '.' + (casal ? ' Sozinho(a) ou em casal.' : '');
-  const chips = [soTravas || soMpcc ? 'No celular, de 10 a 15 minutos' : soTracos ? 'No celular, de 8 a 12 minutos' : comExtras ? 'No celular, no seu tempo' : 'No celular, de 8 a 15 minutos',
+  const chips = [extras.some(k => k !== 'disc') ? 'No celular, no seu tempo' : 'No celular, cerca de 7 minutos',
     'Só ' + escV(quem) + ' vê as suas respostas', soTravas ? 'Resultado em números' : soMpcc ? 'Mapa em gráfico radar' : casal ? 'Individual ou em casal' : 'Resultado em números e gráfico'];
   const ass = lt.querySelector('.assinatura');
   (ass || h1).insertAdjacentHTML('afterend', `<p class="cv-lead">${lead}</p><ul class="cv-chips">${chips.map(c => '<li>' + c + '</li>').join('')}</ul>`);
   /* "Sobre você", escrito pela terapeuta na montagem ou em "Editar minha página" */
   const sobre = dd && String(dd.sobre || '').trim();
   if(sobre && ass) ass.insertAdjacentHTML('afterend', `<p class="cv-sobre">${escV(sobre).replace(/\n+/g, '<br>')}</p>`);
-  /* opção da página (dados.sobre_separado): a apresentação vira um cartão "Quem sou" e uma linha "Sobre o teste" separa do texto do teste */
-  if(sobre && dd && dd.sobre_separado){
+  /* padrão de todas as páginas (dados.sobre_separado = false desliga): a apresentação vira um cartão "Quem sou" e uma linha "Sobre o teste" separa do texto do teste */
+  if(sobre && !(dd && dd.sobre_separado === false)){
     const cs = lt.querySelector('.cv-sobre'), cl = lt.querySelector('.cv-lead');
     if(cs){ cs.classList.add('cv-sobre-cartao'); cs.insertAdjacentHTML('afterbegin', '<span class="cv-sobre-rot">Quem sou</span>'); }
     if(cl) cl.insertAdjacentHTML('beforebegin', '<div class="cv-divisor" role="separator"><span>Sobre o teste</span></div>');
@@ -741,7 +761,7 @@ function dvCapaVendas(modo){
         <h3>Teste de Travas Mentais</h3>
         <p class="cv-pergunta">O que está travando você hoje?</p>
         <p>Mapeia 10 travas mentais e mostra, em números, quais estão mais ativas em você agora: as que pesam no trabalho, nas relações e nas decisões.</p>
-        <p class="cv-meta">50 perguntas · 10 a 15 minutos</p>
+        <p class="cv-meta">Cerca de 7 minutos</p>
         <a class="cv-link" href="${Z.travas}" ${ext}>Quero fazer este teste →</a>
       </article>`,
     tracos:`<article class="cv-teste cv-teste-destaque">
@@ -749,7 +769,7 @@ function dvCapaVendas(modo){
         <h3>Teste de Traços de Caráter</h3>
         <p class="cv-pergunta">Como a sua história moldou o seu jeito de ser?</p>
         <p>Identifica os 5 traços de caráter que se formaram na sua história e mostra, em porcentagem, como eles aparecem no seu dia a dia, junto com os talentos que cada um traz.</p>
-        <p class="cv-meta">40 afirmações · 8 a 12 minutos</p>
+        <p class="cv-meta">Individual ou casal · cerca de 7 minutos</p>
         <a class="cv-link" href="${Z.tracos}" ${ext}>Quero fazer este teste →</a>
       </article>`,
     mpcc:`<article class="cv-teste cv-teste-destaque">
@@ -757,7 +777,7 @@ function dvCapaVendas(modo){
         <h3>MPCC · Mapa de Perfil Comportamental e Competências</h3>
         <p class="cv-pergunta">Onde você já é forte e onde pode crescer?</p>
         <p>Mostra, em um gráfico radar, 8 dimensões do seu comportamento: iniciativa, comunicação, relacionamento, decisão, adaptação, organização, autoconfiança e equilíbrio emocional.</p>
-        <p class="cv-meta">40 afirmações · 10 a 15 minutos</p>
+        <p class="cv-meta">8 dimensões · cerca de 7 minutos</p>
         <a class="cv-link" href="${Z.mpcc}" ${ext}>Quero fazer este teste →</a>
       </article>`
   };
@@ -773,16 +793,16 @@ function dvCapaVendas(modo){
     const listaTravas = (typeof TRAVAS !== 'undefined' && Array.isArray(TRAVAS)) ? TRAVAS : [];
     const DET = Object.assign({ travas:{ tag:'Individual · Resultado em números', titulo:'Teste de Identificação de Travas Mentais', pergunta:'O que está travando você hoje?',
       objetivo:'Identificar os padrões de pensamento e de comportamento que estão segurando você hoje, no trabalho, nas relações e nas decisões, para o acompanhamento começar pelo lugar certo.',
-      como:['50 perguntas, de 10 a 15 minutos', 'No celular, uma pergunta de cada vez', 'Você marca o quanto cada frase combina com você hoje'],
+      como:['A maioria termina em cerca de 7 minutos', 'No celular, uma pergunta de cada vez', 'Você marca o quanto cada frase combina com você hoje'],
       resultado:q => 'O mapa das 10 travas, em números, com as mais ativas em destaque, para você conversar com ' + q + ' a partir dele.',
       mapaTitulo:'As 10 travas que o teste mapeia', itens:listaTravas.map(t => ({ nome:t.nome, desc:primFrase(t.contexto) })) },
       tracos:{ tag:'Individual ou em casal', titulo:'Teste de Traços de Caráter', pergunta:'Como a sua história moldou o seu jeito de ser?',
         objetivo:'Identificar os 5 traços de caráter que se formaram na sua história e mostrar, em porcentagem, como eles aparecem no seu dia a dia, junto com os talentos que cada um traz.',
-        como:['40 afirmações, de 8 a 12 minutos', 'Pode ser feito sozinho(a) ou em casal', 'No celular, uma afirmação de cada vez'],
+        como:['A maioria termina em cerca de 7 minutos', 'Pode ser feito sozinho(a) ou em casal', 'No celular, uma afirmação de cada vez'],
         resultado:q => 'Os seus 5 traços em porcentagem, com o pico primário e o secundário, para você conversar com ' + q + ' a partir deles.' },
       mpcc:{ tag:'Individual · Mapa em 8 dimensões', titulo:'MPCC · Mapa de Perfil Comportamental e Competências', pergunta:'Onde você já é forte e onde pode crescer?',
         objetivo:'Mostrar, em um gráfico radar, 8 dimensões do seu comportamento: iniciativa, comunicação, relacionamento, decisão, adaptação, organização, autoconfiança e equilíbrio emocional.',
-        como:['40 afirmações, de 10 a 15 minutos', 'Você responde de 1 a 5', 'No final, gráfico radar e relatório em PDF'],
+        como:['A maioria termina em cerca de 7 minutos', 'Você responde de 1 a 5', 'No final, gráfico radar e relatório em PDF'],
         resultado:q => 'O seu mapa em 8 dimensões, com pontos fortes e oportunidades de desenvolvimento, para conversar com ' + q + '.' } }, EX);
     const detalhe = (k, i) => { const e = DET[k];
       return `<section class="cv-faixa${i % 2 ? '' : ' cv-areia'} cv-det" id="cv-t-${k}"><div class="cv-in">
@@ -878,20 +898,20 @@ function dvCapaVendas(modo){
       pq('O que é uma trava mental?', 'É um padrão de pensamento e de comportamento que se repete e segura você, mesmo quando você sabe o que precisa fazer. O teste mostra quais estão mais ativas hoje.'),
       pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. O resultado serve para a conversa de vocês, com cuidado e sigilo.'),
       pq('O resultado é um diagnóstico?', 'Não. É uma ferramenta de autoconhecimento que mostra por onde começar. Ela não substitui um acompanhamento profissional.'),
-      pq('Quanto tempo leva?', 'De 10 a 15 minutos, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
+      pq('Quanto tempo leva?', 'Você tem até 30 minutos, mas a maioria termina em cerca de 7 minutos, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
     ] : soTracos ? [
       pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre o teste.'),
       pq('Como funciona em casal? Precisamos estar juntos?', 'Não precisam. Cada um responde no próprio celular, quando puder, com o mesmo código. Se preferirem, dá para responder juntos, no mesmo aparelho, um de cada vez. Cada um recebe a sua devolutiva individual, e vocês recebem a do casal.'),
       pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. No casal, cada um responde sozinho(a), sem ver as respostas do outro.'),
       pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.'),
-      pq('Quanto tempo leva?', 'De 8 a 12 minutos, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
+      pq('Quanto tempo leva?', 'A maioria termina em cerca de 7 minutos, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
     ] : soMpcc ? [
       pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre a avaliação.'),
       pq('O MPCC é um teste psicológico?', 'Não. É uma ferramenta de autoconhecimento e desenvolvimento pessoal. Ele mostra tendências de comportamento neste momento e não é diagnóstico nem avaliação clínica.'),
       pq('Existe resposta certa ou errada?', 'Não. Responda pensando em como você normalmente age no seu dia a dia, e não em como gostaria de agir.'),
       pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. Você aceita os termos de privacidade antes de começar, e os seus dados são usados para gerar o seu resultado e para a sua devolutiva.'),
       pq('Eu recebo o resultado?', 'Sim, se ' + escV(comQuem) + ' deixar liberado, você vê o mapa na hora e baixa o relatório em PDF. Depois, é possível agendar a devolutiva individual.'),
-      pq('Quanto tempo leva?', 'De 10 a 15 minutos, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
+      pq('Quanto tempo leva?', 'A maioria termina em cerca de 7 minutos, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
     ] : [
       pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre o teste certo.'),
       pq('Preciso fazer ' + (lista.length > 2 ? 'todos os testes' : 'os dois testes') + '?', 'Não. Você pode fazer ' + (lista.length > 2 ? 'só um deles, ou todos' : 'um deles ou os dois') + '. ' + (tem('travas') && tem('tracos') ? 'Eles se completam: as travas mostram o que pesa em você hoje, e os traços mostram de onde isso vem.' : 'Eles se completam: cada um olha para o seu jeito de funcionar por um ângulo diferente.')),
@@ -900,8 +920,8 @@ function dvCapaVendas(modo){
       casal ? pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.') : '',
       tem('mpcc') ? pq('O MPCC é um teste psicológico?', 'Não. É uma ferramenta de autoconhecimento e desenvolvimento pessoal, que mostra tendências de comportamento neste momento. Não é diagnóstico.') : ''
     ].concat(extras.map(k => pq.apply(null, EX[k].faq(escV(comQuem)))), [
-      comExtras ? pq('Quanto tempo leva?', 'Depende do teste: ' + (tem('travas') ? ['o Teste de Travas, de 10 a 15 minutos'] : []).concat(extras.map(k => EX[k].tempo)).join('; ') + '. Escolha um momento tranquilo e responda com sinceridade.')
-        : pq('Quanto tempo leva?', 'De 8 a 15 minutos por teste, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
+      comExtras ? pq('Quanto tempo leva?', 'Depende do teste: ' + (tem('travas') ? ['o Teste de Travas, cerca de 7 minutos'] : []).concat(extras.map(k => EX[k].tempo)).join('; ') + '. Escolha um momento tranquilo e responda com sinceridade.')
+        : pq('Quanto tempo leva?', 'A maioria termina em cerca de 7 minutos por teste, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
     ]).filter(Boolean);
 
   rodape.insertAdjacentHTML('beforebegin', `<div class="cv">
@@ -998,7 +1018,7 @@ function dvSoTracos(){
   if(ps[0]) ps[0].innerHTML = 'Desde a gestação até os primeiros anos de vida, o corpo e a mente aprendem a se proteger. Esses jeitos de se proteger viram traços que aparecem até hoje na sua postura, nas suas relações e nas suas decisões.';
   if(ps[1]) ps[1].innerHTML = 'Este teste identifica os 5 traços de caráter que se formaram na sua história e mostra, em porcentagem, quais predominam em você, junto com os talentos de cada um. Pode ser feito sozinho(a) ou em casal. Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d' + escV(quem) + '.';
   const ul = lt.querySelector('.lista-leve');
-  if(ul) ul.innerHTML = '<li>40 afirmações, de 8 a 12 minutos</li><li>Sozinho(a) ou em casal: no casal, cada um recebe a sua devolutiva e vocês recebem a do casal</li>' +
+  if(ul) ul.innerHTML = '<li>A maioria termina em cerca de 7 minutos</li><li>Sozinho(a) ou em casal: no casal, cada um recebe a sua devolutiva e vocês recebem a do casal</li>' +
     '<li>O código que você recebeu já abre o teste</li><li>O resultado vai direto para ' + escV(quem) + ', para vocês conversarem a partir dele</li>';
   document.title = 'Teste de Traços de Caráter' + (window.T_NOME ? ' · ' + T_NOME : '');
   /* área da terapeuta: só o Teste de Traços de Caráter */

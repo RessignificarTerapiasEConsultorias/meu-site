@@ -4,7 +4,7 @@
    - página de chegada curta, que repete a promessa do anúncio, com um único botão
    - nome e sobrenome + WhatsApp logo no começo (quem parar no meio vira contato)
    - instruções em poucas linhas; cronômetro de 30 min e de 60 s continuam
-   - perguntas sem número, com uma frase de incentivo a cada 5
+   - perguntas sem número, com uma frase de incentivo a cada 5 (igual para todos: TX_INC em devolutiva-carater.js)
    - idade, gênero e "o que pesa" ficam para depois das perguntas
    - cada passo é registrado (campanha_evento) e aparece na aba "Histórico de campanha" da área
    Funciona com o resultado visível ou não (configuração do código).
@@ -108,7 +108,6 @@
     <button class="btn btn-primario camp-btn" id="camp-enviar" type="button">${I.mostrar ? 'Ver o meu resultado' : 'Enviar para ' + esc(A)}</button>
   </div>
 </div></section>`);
-    document.body.insertAdjacentHTML('beforeend', '<div id="camp-toast" role="status" aria-live="polite"></div>');
     const bt = document.getElementById('bt-aviso'); if(bt) bt.textContent = 'Sem pressa: a maioria termina em cerca de 7 minutos.';
     if(typeof mascaraTelefone === 'function') mascaraTelefone(document.getElementById('camp-zap'));
     document.getElementById('camp-comecar').addEventListener('click', () => { evento('comecar'); mostrarTela('#tela-camp-dados'); setTimeout(() => document.getElementById('camp-nome').focus(), 150); });
@@ -148,21 +147,14 @@
     mostrarTela('#tela-teste'); desenharPergunta();
   }
 
-  /* 4) perguntas sem número + incentivo a cada 5 */
-  const FRASES = { 5:'Ótimo começo! Vá no primeiro impulso.', 10:'Você está indo muito bem.', 15:'Isso, sem pensar demais.', 20:'Já passou de um terço!',
-                   25:'Metade feita! 🎉', 30:'Mais da metade. Continue assim.', 35:'Faltam poucas.', 40:'Reta final!', 45:'Últimas perguntas, você está quase lá.' };
-  function fraseDe(i){ let f = 'Responda pensando em hoje.'; Object.keys(FRASES).forEach(k => { if(i >= +k) f = FRASES[k]; }); return f; }
-  let toastT;
-  function toast(t){ const el = document.getElementById('camp-toast'); if(!el) return; el.textContent = t; el.classList.add('ver'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('ver'), 2200); }
+  /* 4) as perguntas já aparecem sem número e com incentivo a cada 5 para todo mundo (TX_INC); aqui só se registra o avanço */
   function embrulhar(){
     const desenhar0 = window.desenharPergunta;
     window.desenharPergunta = function(){
       const r = desenhar0.apply(this, arguments);
       if(CAMP.ativo){
-        const i = estado.indice, tp = document.getElementById('texto-pergunta'), ct = document.getElementById('contador');
-        if(tp) tp.textContent = tp.textContent.replace(/^\d+\.\s*/, '');
-        if(ct) ct.textContent = fraseDe(i);
-        if(i > CAMP.maior){ CAMP.maior = i; evento('pergunta', i); if(FRASES[i]) toast(FRASES[i]); }
+        const i = estado.indice;
+        if(i > CAMP.maior){ CAMP.maior = i; evento('pergunta', i); }
       }
       return r;
     };

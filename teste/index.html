@@ -527,7 +527,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611112243">
+<meta name="versao-site" content="v202611120235">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -628,7 +628,7 @@ html.t-erro .t-girar{display:none}
       <p class="texto-capa">Tem coisa que a gente carrega há tanto tempo que já parece parte de nós: o medo de errar, a cobrança, a dificuldade de dizer não. Antes de transformar, é preciso acolher — olhar para esses padrões com cuidado, sem culpa e sem pressa.</p>
       <p class="texto-capa">Este teste mapeia 10 travas mentais e mostra, em números, quais estão mais ativas em você hoje. Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d{{A}}, que usa o resultado para conversar com você sobre os próximos passos.</p>
       <ul class="lista-leve">
-        <li>50 perguntas, de 10 a 15 minutos</li>
+        <li>A maioria termina em cerca de 7 minutos</li>
         <li>No fim, o mapa das suas 10 travas, com as mais ativas em destaque</li>
         <li>O resultado vai direto para {{A}}, para vocês conversarem a partir dele</li>
       </ul>
@@ -664,7 +664,7 @@ html.t-erro .t-girar{display:none}
   <h2 class="orient-h2">Como o teste funciona</h2>
   <ol class="passos-orient">
     <li><b>Você conta um pouco sobre você.</b> São 2 etapas rápidas: os seus dados e a sua história.</li>
-    <li><b>Você responde 50 perguntas.</b> Uma de cada vez, na tela, em 10 a 15 minutos.</li>
+    <li><b>Você responde uma pergunta de cada vez</b>, na tela. Você tem até 30 minutos, mas a maioria termina em cerca de 7 minutos.</li>
     <li id="orient-passo3"><b>Você recebe o seu resultado.</b></li>
     <li><b>Vocês conversam a partir dele.</b> O que você respondeu vai direto para {{A}}, para a conversa de vocês começar do ponto certo.</li>
   </ol>
@@ -687,7 +687,7 @@ html.t-erro .t-girar{display:none}
 
   <h2 class="orient-h2">Antes de começar</h2>
   <ul class="cuidados">
-    <li>Escolha um lugar tranquilo, sem interrupções, e reserve de 10 a 15 minutos.</li>
+    <li>Escolha um lugar tranquilo, sem interrupções. A maioria termina em cerca de 7 minutos.</li>
     <li>Não feche nem atualize a página no meio. Se isso acontecer, você recomeça do início. O seu código só é usado quando você termina.</li>
     <li>As suas respostas são confidenciais: só você e {{A}} têm acesso a elas.</li>
     <li>Este teste é uma ferramenta de autoconhecimento. Ele não é um diagnóstico nem substitui o acompanhamento profissional.</li>
@@ -793,7 +793,7 @@ html.t-erro .t-girar{display:none}
   <div class="barra-topo">
     <div class="progresso"><i id="barra-progresso"></i></div>
     <div class="linha-progresso">
-      <span id="contador" aria-live="polite">Pergunta 1 de 50</span>
+      <span id="contador" aria-live="polite"></span>
       <span class="tema" id="tema-atual"></span>
     </div>
   </div>
@@ -885,7 +885,7 @@ html.t-erro .t-girar{display:none}
       <p class="texto-capa">Desde a gestação até os primeiros anos de vida, o corpo e a mente aprendem a se proteger. Esses jeitos de se proteger viram traços que aparecem até hoje na sua postura, nas suas relações e nas suas decisões.</p>
       <p class="texto-capa">Este teste identifica cinco traços de caráter (Esquizoide, Oral, Psicopata, Masoquista e Rígido) e mostra, em porcentagem, quais predominam em você. Os nomes vêm da psicanálise do século passado e não têm relação com doenças nem diagnósticos: são estilos de funcionamento, e cada um traz talentos próprios.</p>
       <ul class="lista-leve">
-        <li>40 afirmações, de 8 a 12 minutos</li>
+        <li>A maioria termina em cerca de 7 minutos</li>
         <li>Você responde de “Nunca” a “Sempre”, no seu tempo</li>
         <li>O resultado vira a sua devolutiva com {{A}}</li>
         <li>Sozinho(a) ou em casal: no casal, cada um recebe a sua devolutiva e vocês recebem a do casal</li>
@@ -947,8 +947,8 @@ html.t-erro .t-girar{display:none}
     <div class="campo" style="margin-bottom:18px">
       <label id="rot-alt-teste">Qual teste?</label>
       <div class="alternar" id="alt-teste" role="radiogroup" aria-labelledby="rot-alt-teste">
-        <button type="button" class="ativa" data-v="travas" role="radio" aria-checked="true">Teste de Travas Mentais<small>50 perguntas · 10 travas</small></button>
-        <button type="button" data-v="tracos" role="radio" aria-checked="false">Traços de Caráter<small>40 afirmações · individual ou casal</small></button>
+        <button type="button" class="ativa" data-v="travas" role="radio" aria-checked="true">Teste de Travas Mentais<small>10 travas</small></button>
+        <button type="button" data-v="tracos" role="radio" aria-checked="false">Traços de Caráter<small>individual ou casal</small></button>
       </div>
     </div>
     <div id="painel-tc">
@@ -1733,7 +1733,7 @@ function compLocalValido(c){
     const c = bruto.toUpperCase().replace(/[^A-Z0-9-]/g,'').slice(0,9);
     if(!c) return;
     const r = await validarCodigo(c);
-    if(r.ok && r.compartilhado) { $('#dica-codigo').innerHTML = '<span class="ok-pre" aria-hidden="true">✔</span> Código já preenchido. Ao tocar em <b>“Fazer o teste agora”</b>, você terá ' + (r.duracao || 30) + ' minutos para responder, com cronômetro na tela. Não feche a página depois de entrar.'; $('#dica-codigo').classList.add('pronto'); }
+    if(r.ok && r.compartilhado) { $('#dica-codigo').innerHTML = '<span class="ok-pre" aria-hidden="true">✔</span> Código já preenchido. Ao tocar em <b>“Fazer o teste agora”</b>, você terá ' + (r.duracao || 30) + ' minutos para responder, com cronômetro na tela (a maioria termina em cerca de 7 minutos). Não feche a página depois de entrar.'; $('#dica-codigo').classList.add('pronto'); }
     else if(!r.ok) avisar('#aviso-codigo', r.msg);
   }catch(e){}
 })();
@@ -1771,7 +1771,7 @@ async function compGerar(){
       <div class="valor">${codigo}</div>
       <div class="para">${nome ? escH(nome) + ' · ' : ''}vale para ${usosMax} ${usosMax === 1 ? 'pessoa' : 'pessoas'} · ${mostrar ? 'a pessoa vê o resultado no final' : 'só você vê o resultado'} · ${urgSel ? 'com cronômetro de 60 s' : 'sem cronômetro de 60 s'}</div>
     </div>
-    <div class="aviso ver" style="margin-top:12px">Coloque <b>este link</b> no seu anúncio, post ou página. Cada pessoa que entrar ocupa uma vaga numerada (${codigo}-1, ${codigo}-2…) e tem 30 minutos para responder.</div>
+    <div class="aviso ver" style="margin-top:12px">Coloque <b>este link</b> no seu anúncio, post ou página. Cada pessoa que entrar ocupa uma vaga numerada (${codigo}-1, ${codigo}-2…) e tem 30 minutos para responder. <b>Este link abre no modo campanha</b>: página de chegada curta, nome e WhatsApp logo no início e perguntas sem número. Você acompanha quem chegou e até onde foi na aba <b>Histórico de campanha</b>, aqui na sua área.</div>
     <div class="linha-item" style="margin-top:10px"><span class="esq"><span class="sub" style="white-space:normal;word-break:break-all">${linkDoTeste(codigo)}</span></span></div>
     <button class="btn btn-argila" id="btn-copiar-link-c">Copiar o link da campanha</button>
     <button class="btn btn-contorno" id="btn-copiar-codigo-c">Copiar só o código</button>`;
@@ -2098,7 +2098,7 @@ $('#btn-orient').addEventListener('click', ()=>{ mostrarTela('#tela-dados1'); se
 mascaraTelefone($('#campo-whats'));
 mascaraTelefone($('#cod-whats'));
 const checar1 = vigiar(CAMPOS1, '#btn-etapa1', 'Continuar');
-const checar2 = vigiar(CAMPOS2, '#btn-etapa2', 'Começar as 50 perguntas');
+const checar2 = vigiar(CAMPOS2, '#btn-etapa2', 'Começar as perguntas');
 
 $('#btn-etapa1').addEventListener('click', () => {
   if(!checar1(true)) return;
@@ -2128,8 +2128,8 @@ $('#btn-etapa2').addEventListener('click', () => {
 function desenharPergunta(){
   const i = estado.indice, p = PERGUNTAS[i];
   const trava = TRAVAS.find(t => t.id === p.t);
-  $('#texto-pergunta').textContent = (i+1) + '. ' + p.q;
-  $('#contador').textContent = 'Pergunta ' + (i+1) + ' de ' + PERGUNTAS.length;
+  $('#texto-pergunta').textContent = p.q;
+  if(typeof TX_INC === 'function') TX_INC($('#contador'), i, PERGUNTAS.length, 'travas'); else $('#contador').textContent = '';
   $('#tema-atual').textContent = '';   // o nome da trava não aparece para quem responde
   $('#barra-progresso').style.width = (i / PERGUNTAS.length * 100) + '%';
   $('#voltar-pergunta').style.visibility = i===0 ? 'hidden' : 'visible';
@@ -2446,7 +2446,7 @@ function mensagemConvite(primeiro, codigo, mostrar){
     '',
     'Se o link não abrir direto, o seu código é: *' + codigo + '*',
     '',
-    'São 50 perguntas, de 10 a 15 minutos. Escolha um momento tranquilo e responda com sinceridade, pensando em como você está HOJE.',
+    'A maioria termina em cerca de 7 minutos. Escolha um momento tranquilo e responda com sinceridade, pensando em como você está HOJE.',
     mostrar ? 'No final, você vê o seu mapa, e depois a gente conversa sobre ele.'
             : 'Quando você terminar, eu mesma olho o seu resultado com carinho e a gente conversa.'
   ].join('\n');
@@ -3214,7 +3214,7 @@ function tcComoResponder(){
     <li><b>Para cada afirmação, escolha de “Nunca” a “Sempre”</b>, pensando em como você é e se sente de verdade, no seu dia a dia.</li>
     <li>Algumas afirmações falam do seu <b>corpo</b> e da sua <b>infância</b>: responda como você percebe, sem precisar ter certeza.</li>
     <li>Não existe resposta certa ou errada. A primeira resposta costuma ser a mais verdadeira.</li>
-    <li>São 40 afirmações, de 8 a 12 minutos. Se a página fechar, ao abrir o link de novo neste aparelho você continua de onde parou.</li>
+    <li>A maioria termina em cerca de 7 minutos. Se a página fechar, ao abrir o link de novo neste aparelho você continua de onde parou.</li>
   </ul></div>`;
 }
 /* dados de quem responde (individual: slot = null; casal: slot 1 ou 2) */
@@ -3264,8 +3264,8 @@ function tcIniciarTeste(chave, quem, onFim){
 }
 function tcDesenhar(){
   const i = tc.indice, total = TC_PERGUNTAS.length;
-  $('#tc-texto').textContent = (i + 1) + '. ' + TC_PERGUNTAS[i].q;
-  $('#tc-contador').textContent = 'Afirmação ' + (i + 1) + ' de ' + total;
+  $('#tc-texto').textContent = TC_PERGUNTAS[i].q;
+  if(typeof TX_INC === 'function') TX_INC($('#tc-contador'), i, total, 'tracos-' + ($('#tc-quem').textContent || '')); else $('#tc-contador').textContent = '';
   $('#tc-barra').style.width = (i / total * 100) + '%';
   $('#tc-voltar').style.visibility = i === 0 ? 'hidden' : 'visible';
   $('#tc-opcoes').innerHTML = TC_ESCALA.map((txt, k) => `<button type="button" class="tc-op${tc.respostas[i] === k + 1 ? ' escolhida' : ''}" data-v="${k + 1}"><b>${k + 1}</b>${txt}</button>`).join('');
@@ -3339,7 +3339,7 @@ function tcTelaSetup(){
   tcMostrar(`
     <span class="selo">${escV(TC_NOME)} · Casal</span>
     <h1 class="tc-h1">Vamos preparar o teste de vocês</h1>
-    <p>Cada um responde as suas 40 afirmações, sozinho(a) e com sinceridade. Quando os dois terminarem, ${tc.mostrar ? 'aparece o mapa do casal: os traços de cada um lado a lado, onde vocês se encontram e onde se diferenciam.' : `as respostas vão para ${escV(T_A)}, que prepara a devolutiva de vocês.`}</p>
+    <p>Cada um responde as suas afirmações, sozinho(a) e com sinceridade. Quando os dois terminarem, ${tc.mostrar ? 'aparece o mapa do casal: os traços de cada um lado a lado, onde vocês se encontram e onde se diferenciam.' : `as respostas vão para ${escV(T_A)}, que prepara a devolutiva de vocês.`}</p>
     <div class="cartao">
       <div class="campo"><label for="ts-nome1">O seu nome completo</label><input id="ts-nome1" type="text" autocomplete="name" placeholder="Nome e sobrenome"></div>
       <div class="campo"><label for="ts-tel1">O seu WhatsApp (com DDD)</label><input id="ts-tel1" type="tel" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000"></div>
@@ -3407,9 +3407,9 @@ function tcTelaComecarCasal(slot){
   const nm = tc.nomes[slot], outro = tc.nomes[3 - slot], prog = ler(tcProgKey(tc.codigo, slot), null);
   const temProg = prog && Array.isArray(prog.respostas) && prog.respostas.some(v => v);
   tcMostrar(`<span class="selo">Vez de ${escV(nm)}</span>
-    <h1 class="tc-h1">${escV(nm)}, agora são as suas 40 afirmações</h1>
+    <h1 class="tc-h1">${escV(nm)}, agora é a sua vez</h1>
     ${tcComoResponder().replace('<ul>', `<ul><li><b>Responda sozinho(a), sem combinar com ${escV(outro)}.</b> O valor do mapa do casal está em ver como cada um é.</li>`)}
-    <button class="btn btn-primario" id="tcc-ir">${temProg ? 'Continuar de onde parei' : 'Começar as 40 afirmações'}</button>`);
+    <button class="btn btn-primario" id="tcc-ir">${temProg ? 'Continuar de onde parei' : 'Começar as afirmações'}</button>`);
   $('#tcc-ir').addEventListener('click', () => { tc.slot = slot; tcIniciarTeste(tcProgKey(tc.codigo, slot), 'Vez de ' + nm, tcFinalizarParte); });
 }
 async function tcFinalizarParte(){
@@ -3434,7 +3434,7 @@ function tcTelaVez(outro){ tcTelaEnviar(3 - outro, 'pendente'); }
 function tcTelaEnviar(meu, statusOutro){
   const o = 3 - meu, nmO = tc.nomes[o], juntos = tc.modo === 'juntos', pend = statusOutro === 'pendente';
   const msg = ['Oi, ' + nmO + '! Já fiz a minha parte do ' + TC_NOME + ' que ' + T_A + ' nos enviou.', '', 'Agora falta a sua. Toque no link abaixo; o código já vai preenchido:', tcLink(tc.codigo), '',
-    'Se o link não abrir direto, o código é: *' + tc.codigo + '*', '', 'São 40 afirmações, de 8 a 12 minutos. Responda com sinceridade, pensando em como você é no seu dia a dia.'].join('\n');
+    'Se o link não abrir direto, o código é: *' + tc.codigo + '*', '', 'A maioria termina em cerca de 7 minutos. Responda com sinceridade, pensando em como você é no seu dia a dia.'].join('\n');
   const agora = pend ? `<button class="btn btn-primario" id="tp-agora"><span class="duas">Sou ${escV(nmO)}, quero responder agora<small>neste aparelho, com o mesmo código</small></span></button>` : '';
   const enviar = `<div class="campo" style="margin:6px 0 10px"><label for="tp-zap-num">WhatsApp de ${escV(nmO)} <span class="opc">(opcional)</span></label>
       <input id="tp-zap-num" type="tel" inputmode="tel" autocomplete="off" placeholder="(00) 00000-0000">
@@ -3593,8 +3593,8 @@ function tcConvite(primeiro, codigo, tipo, mostrar){
           : 'Separei para você o ' + TC_NOME + '. Ele mostra como o seu corpo e a sua história moldaram o seu jeito de ser, de sentir e de se relacionar.', '',
     'É só tocar no link abaixo. Ao abrir, o código já vai preenchido: é só tocar em “Fazer o teste agora”:', tcLink(codigo), '',
     'Se o link não abrir direto, o código é: *' + codigo + '*', '',
-    casal ? 'Quem abrir primeiro informa o próprio nome e o do(a) parceiro(a) e escolhe se vocês vão responder juntos, no mesmo aparelho, ou cada um no seu. Cada parte tem 40 afirmações, de 8 a 12 minutos. Respondam com sinceridade, cada um por si.'
-          : 'São 40 afirmações, de 8 a 12 minutos. Responda com sinceridade, pensando em como você é no seu dia a dia.',
+    casal ? 'Quem abrir primeiro informa o próprio nome e o do(a) parceiro(a) e escolhe se vocês vão responder juntos, no mesmo aparelho, ou cada um no seu. Cada parte leva cerca de 7 minutos. Respondam com sinceridade, cada um por si.'
+          : 'A maioria termina em cerca de 7 minutos. Responda com sinceridade, pensando em como você é no seu dia a dia.',
     mostrar ? (casal ? 'Depois que os dois terminarem, esse mesmo link abre o resultado de vocês sempre que quiserem.' : 'No final, você vê o seu mapa de traços, e depois a gente conversa sobre ele.')
             : (casal ? 'Quando os dois terminarem, eu preparo a devolutiva de vocês com carinho.' : 'Quando você terminar, eu preparo a sua devolutiva com carinho.')].join('\n');
 }
