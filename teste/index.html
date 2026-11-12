@@ -530,7 +530,7 @@ body.com-tempo{padding-top:60px}
 #dica-codigo.pronto{color:#1B6B3E;font-weight:600;font-size:15.5px;line-height:1.4}
 #dica-codigo .ok-pre{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1B6B3E;color:#fff;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 </style>
-<meta name="versao-site" content="v202611121245">
+<meta name="versao-site" content="v202611121355">
 <style id="css-atualizacao">
 .versao-site{font-size:11.5px;color:var(--tinta-suave);opacity:.75;margin-top:10px;text-align:center;letter-spacing:.02em}
 #atu-banner{position:fixed;left:10px;right:10px;top:10px;z-index:3500;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#FFF1BF;border:1.6px solid #E8C24A;color:#5C4500;border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
@@ -601,16 +601,11 @@ html.t-erro .t-girar{display:none}
 <link rel="stylesheet" href="devolutiva-carater.css">
 <script src="devolutiva-carater.js"></script>
 <link rel="stylesheet" href="devolutiva-mpcc.css">
-<script src="devolutiva-mpcc.js"></script>
 <link rel="stylesheet" href="devolutiva-miralene.css">
-<script src="devolutiva-miralene.js"></script>
-<script src="disc-nucleo.js"></script>
 <link rel="stylesheet" href="devolutiva-disc.css">
-<script src="devolutiva-disc.js"></script>
 <link rel="stylesheet" href="campanha.css">
 <script src="campanha.js"></script>
 <link rel="stylesheet" href="devolutiva-ansiedade.css">
-<script src="devolutiva-ansiedade.js"></script>
 <link rel="stylesheet" href="tema-premium.css">
 <script src="tema-premium.js"></script>
 </head>
@@ -1161,14 +1156,28 @@ html.t-erro .t-girar{display:none}
       if (zapRod) zapRod.insertAdjacentHTML("afterend", '&nbsp;·&nbsp;<a href="https://instagram.com/' + esc(d.instagram) + '" target="_blank" rel="noopener">Instagram</a>');
     }
 
-    /* liga o teste: roda os scripts principais na ordem, já com os dados prontos */
-    Array.prototype.forEach.call(document.querySelectorAll('script[type="text/x-app"]'), function (s) {
-      var n = document.createElement("script");
-      n.textContent = s.textContent;
-      s.replaceWith(n);
-    });
-    document.documentElement.classList.add("t-pronto");
-    if (document.readyState === "complete") soltar(); else window.addEventListener("load", soltar);
+    /* página leve: baixa só os módulos dos testes desta terapeuta (na mesma ordem de antes) */
+    var tst = Array.isArray(d.testes) ? d.testes : [], tem = function (k) { return tst.indexOf(k) > -1; }, mods = [];
+    if (tem("mpcc") || tem("disc") || tem("ansiedade")) mods.push("devolutiva-mpcc.js");
+    if (tem("serena") || tem("esquemas") || tem("tdah")) mods.push("devolutiva-miralene.js");
+    if (tem("disc")) mods.push("disc-nucleo.js", "devolutiva-disc.js");
+    if (tem("ansiedade")) mods.push("devolutiva-ansiedade.js");
+    var ligar = function () {
+      /* liga o teste: roda os scripts principais na ordem, já com os dados prontos */
+      Array.prototype.forEach.call(document.querySelectorAll('script[type="text/x-app"]'), function (s) {
+        var n = document.createElement("script");
+        n.textContent = s.textContent;
+        s.replaceWith(n);
+      });
+      document.documentElement.classList.add("t-pronto");
+      if (document.readyState === "complete") soltar(); else window.addEventListener("load", soltar);
+    };
+    if (!mods.length) ligar();
+    else {
+      var faltam = mods.length, foi = false, fim = function () { if (!foi && --faltam <= 0) { foi = true; ligar(); } };
+      mods.forEach(function (src) { var s = document.createElement("script"); s.src = src; s.async = false; s.onload = fim; s.onerror = fim; document.head.appendChild(s); });
+      setTimeout(function () { if (!foi) { foi = true; ligar(); } }, 20000);
+    }
   }).catch(function () { falha("Não foi possível abrir o teste agora. Verifique a internet e tente de novo."); });
 })();
 </script>
