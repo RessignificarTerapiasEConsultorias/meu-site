@@ -720,7 +720,7 @@ function dvCapaVendas(modo){
     ? 'Iniciativa, comunicação, decisão, adaptação, organização, autoconfiança: cada um de nós é mais forte em algumas áreas e mais travado em outras, quase sempre sem perceber. Em poucos minutos, você descobre <b>onde já é forte</b> e <b>onde pode crescer</b>, em um mapa de 8 dimensões.'
     : 'Quase sempre é um padrão antigo, que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. ' + (comExtras ? 'No seu tempo, você descobre ' : 'Em poucos minutos, você descobre ') +
       mpJuntar([tem('travas') ? '<b>o que trava você hoje</b>' : '', tem('tracos') ? '<b>como a sua história moldou o seu jeito de ser</b>' : '', tem('mpcc') ? '<b>onde você já é forte e onde pode crescer</b>' : ''].concat(extras.map(k => EX[k].descobre))) + '.' + (casal ? ' Sozinho(a) ou em casal.' : '');
-  const chips = [extras.some(k => k !== 'disc') ? 'No celular, no seu tempo' : 'No celular, cerca de 7 minutos',
+  const chips = [extras.some(k => k !== 'disc' && k !== 'ansiedade') ? 'No celular, no seu tempo' : 'No celular, cerca de 7 minutos',
     'Só ' + escV(quem) + ' vê as suas respostas', soTravas ? 'Resultado em números' : soMpcc ? 'Mapa em gráfico radar' : casal ? 'Individual ou em casal' : 'Resultado em números e gráfico'];
   const ass = lt.querySelector('.assinatura');
   (ass || h1).insertAdjacentHTML('afterend', `<p class="cv-lead">${lead}</p><ul class="cv-chips">${chips.map(c => '<li>' + c + '</li>').join('')}</ul>`);
@@ -1001,6 +1001,8 @@ function dvCapaVendas(modo){
       barra.classList.toggle('on', capa.classList.contains('ativa') && passou && ![...vis.values()].some(Boolean)); });
     alvos.forEach(a => io.observe(a));
   }
+  /* saiu da capa (abriu um teste): a barra some na hora */
+  if('MutationObserver' in window) new MutationObserver(() => { if(!capa.classList.contains('ativa')) barra.classList.remove('on'); }).observe(capa, { attributes:true, attributeFilter:['class'] });
   new MutationObserver(() => { if(!capa.classList.contains('ativa')) barra.classList.remove('on'); }).observe(capa, { attributes:true, attributeFilter:['class'] });
 }
 
@@ -1109,7 +1111,7 @@ if(document.readyState === 'loading') document.addEventListener('DOMContentLoade
    EXCLUIR RESPOSTAS (Travas, Traços individual e MPCC): "Excluir" em cada linha da lista de respostas.
    As linhas vêm marcadas com data-dv-del (tipo do teste) e o id (ou, no Travas, código + nome + data).
    ============================================================================ */
-const DV_TAB_RESP = { travas:'travas_respostas', tracos:'tracos_respostas', mpcc:'mpcc_respostas', disc:'disc_respostas' };
+const DV_TAB_RESP = { travas:'travas_respostas', tracos:'tracos_respostas', mpcc:'mpcc_respostas', disc:'disc_respostas', ansiedade:'ansiedade_respostas' };
 function dvExcluirRespostas(){
   if(window.__dvExcR) return; window.__dvExcR = true;
   function marcar(){
@@ -1148,6 +1150,7 @@ async function dvExcluirResposta(linha, botao){
       if(tipo === 'tracos' && typeof tcRespCache !== 'undefined') tcRespCache = tcRespCache.filter(r => r.id !== linha.dataset.id);
       if(tipo === 'mpcc' && typeof mpCache !== 'undefined') mpCache = mpCache.filter(r => r.id !== linha.dataset.id);
       if(tipo === 'disc' && typeof dcCache !== 'undefined') dcCache = dcCache.filter(r => r.id !== linha.dataset.id);
+      if(tipo === 'ansiedade' && typeof anCache !== 'undefined') anCache = anCache.filter(r => r.id !== linha.dataset.id);
     }catch(e){}
     linha.style.transition = 'opacity .25s'; linha.style.opacity = '0';
     setTimeout(() => { const box = linha.parentNode; linha.remove(); if(box && !box.querySelector('.linha-item')) box.innerHTML = '<div class="vazio">Nenhuma resposta por enquanto.</div>'; }, 260);
@@ -1178,7 +1181,8 @@ function dvCodigoAtual(){
   try{
     if(typeof estado !== 'undefined' && estado && estado.codigo) return estado.codigo;
     if(typeof tc !== 'undefined' && tc && tc.codigo) return tc.codigo;
-    const q = new URLSearchParams(location.search), c = q.get('c') || q.get('codigo') || q.get('code') || q.get('mp') || q.get('ct');
+    if(typeof an !== 'undefined' && an && an.codigo) return an.codigo;
+    const q = new URLSearchParams(location.search), c = q.get('c') || q.get('codigo') || q.get('code') || q.get('mp') || q.get('ct') || q.get('dc') || q.get('an');
     return c || sessionStorage.getItem('dv_ultimo_codigo') || '';
   }catch(e){ return ''; }
 }
@@ -1187,6 +1191,7 @@ function dvTesteAtual(tela){
   if(/^tela-tc/.test(id)) return 'tracos';
   if(/^tela-mp/.test(id)) return 'mpcc';
   if(/^tela-dc/.test(id)) return 'disc';
+  if(/^tela-an/.test(id)) return 'ansiedade';
   if(/^tela-(orientacao|dados|teste|resultado|obrigada|expirou)/.test(id)) return 'travas';
   return '';
 }
@@ -1235,10 +1240,10 @@ async function dvQuadroCliques(){
     const cods = Array.from(new Set(data.filter(x => x.codigo).map(x => x.codigo)));
     const nomes = {};
     if(cods.length){
-      const rs = await Promise.all(['travas_respostas', 'tracos_respostas', 'mpcc_respostas', 'disc_respostas'].map(t => c.from(t).select('codigo,nome').eq('terapeuta_id', uid).in('codigo', cods)));
+      const rs = await Promise.all(['travas_respostas', 'tracos_respostas', 'mpcc_respostas', 'disc_respostas', 'ansiedade_respostas'].map(t => c.from(t).select('codigo,nome').eq('terapeuta_id', uid).in('codigo', cods)));
       rs.forEach(r => (r.data || []).forEach(x => { if(x.nome) nomes[x.codigo] = x.nome; }));
     }
-    const ROT = { travas:'Travas', tracos:'Traços', mpcc:'MPCC', disc:'DISC' }, MOM = { pagina:'pela página, sem teste', durante:'durante o teste', resultado:'depois do resultado' };
+    const ROT = { travas:'Travas', tracos:'Traços', mpcc:'MPCC', disc:'DISC', ansiedade:'Ansiedade' }, MOM = { pagina:'pela página, sem teste', durante:'durante o teste', resultado:'depois do resultado' };
     const quando = iso => new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
     const pag = data.filter(x => x.momento === 'pagina'), teste = data.filter(x => x.momento !== 'pagina');
     const porOrigem = {}; pag.forEach(x => { porOrigem[x.origem || 'Link direto'] = (porOrigem[x.origem || 'Link direto'] || 0) + 1; });
@@ -1307,8 +1312,8 @@ function dvUrgEmbrulhar(){
   {
     const rpc0 = window.compRpc;
     window.compRpc = async function(nome, args){ const r = await rpc0.apply(this, arguments);
-      try{ if((nome === 'tracos_salvar_resposta' || nome === 'mpcc_salvar_resposta' || nome === 'disc_salvar_resposta') && r && r.ok === true){
-        DV_URG.tok = r.acao_token || null; DV_URG.teste = nome.indexOf('tracos') === 0 ? 'tracos' : nome.indexOf('disc') === 0 ? 'disc' : 'mpcc';
+      try{ if((nome === 'tracos_salvar_resposta' || nome === 'mpcc_salvar_resposta' || nome === 'disc_salvar_resposta' || nome === 'ansiedade_salvar_resposta') && r && r.ok === true){
+        DV_URG.tok = r.acao_token || null; DV_URG.teste = nome.indexOf('tracos') === 0 ? 'tracos' : nome.indexOf('disc') === 0 ? 'disc' : nome.indexOf('ansiedade') === 0 ? 'ansiedade' : 'mpcc';
         if(r.urgencia === false && DV_URG.cod) DV_URG.cod.urgencia = false;
         DV_URG.u = null; clearInterval(DV_URG.timer); DV_URG.montado = false;
       } }catch(e){}
@@ -1318,7 +1323,7 @@ function dvUrgEmbrulhar(){
 }
 function dvUrgProcurar(){
   if(!DV_URG.tok || DV_URG.montado) return;
-  const btn = DV_URG.teste === 'tracos' ? document.querySelector('#tr-zap, #tf-zap') : DV_URG.teste === 'disc' ? document.querySelector('#tela-dc-resultado .dc-zap, #tela-dc .dc-zap') : document.querySelector('#tela-mp-resultado .mp-devolutiva .mp-zap, #tela-mp .mp-zap');
+  const btn = DV_URG.teste === 'tracos' ? document.querySelector('#tr-zap, #tf-zap') : DV_URG.teste === 'disc' ? document.querySelector('#tela-dc-resultado .dc-zap, #tela-dc .dc-zap') : DV_URG.teste === 'ansiedade' ? document.querySelector('#tela-an-resultado .an-zap, #tela-an .an-zap') : document.querySelector('#tela-mp-resultado .mp-devolutiva .mp-zap, #tela-mp .mp-zap');
   if(!btn || btn.closest('#tela-admin')) return;
   DV_URG.montado = true; dvUrgIniciarEm(btn);
 }
@@ -1416,12 +1421,12 @@ if(document.readyState === 'loading') document.addEventListener('DOMContentLoade
 async function dvUrgTagsLista(){
   try{
     if(typeof clienteMembros !== 'function') return;
-    const linhas = Array.from(document.querySelectorAll('.linha-item[data-dv-del="tracos"]:not([data-urg-ok]), .linha-item[data-dv-del="mpcc"]:not([data-urg-ok]), .linha-item[data-dv-del="disc"]:not([data-urg-ok])'));
+    const linhas = Array.from(document.querySelectorAll('.linha-item[data-dv-del="tracos"]:not([data-urg-ok]), .linha-item[data-dv-del="mpcc"]:not([data-urg-ok]), .linha-item[data-dv-del="disc"]:not([data-urg-ok]), .linha-item[data-dv-del="ansiedade"]:not([data-urg-ok])'));
     if(!linhas.length) return;
     linhas.forEach(l => l.setAttribute('data-urg-ok', '1'));
-    const porTab = { tracos:[], mpcc:[], disc:[] }; linhas.forEach(l => porTab[l.dataset.dvDel].push(l.dataset.id));
+    const porTab = { tracos:[], mpcc:[], disc:[], ansiedade:[] }; linhas.forEach(l => porTab[l.dataset.dvDel].push(l.dataset.id));
     const c = clienteMembros(), mapa = {};
-    for(const t of ['tracos', 'mpcc', 'disc']){ if(!porTab[t].length) continue;
+    for(const t of ['tracos', 'mpcc', 'disc', 'ansiedade']){ if(!porTab[t].length) continue;
       const { data } = await c.from(t + '_respostas').select('id,interesse,urgencia').in('id', porTab[t]); (data || []).forEach(x => { mapa[x.id] = x; }); }
     const dur = s => s == null ? '' : s < 60 ? Math.round(s) + ' s' : Math.floor(s / 60) + ' min';
     linhas.forEach(l => { const x = mapa[l.dataset.id]; if(!x) return; const i = x.interesse || {}, t = [];
