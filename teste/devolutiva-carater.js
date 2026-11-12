@@ -668,7 +668,7 @@ function dvBotaoArea(capa){
 const CV_ZAP_SVG ='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.2.1-1.9-.1a17 17 0 0 1-1.8-.7c-3.1-1.3-5.1-4.5-5.3-4.7-.2-.2-1.3-1.7-1.3-3.2 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .7.5l1 2.3c.1.2.1.4 0 .6l-.4.6-.5.5c-.2.2-.3.3-.1.6.2.3.8 1.4 1.8 2.2 1.2 1.1 2.3 1.4 2.6 1.6.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l2.2 1c.3.2.5.2.6.4.1.1.1.7-.1 1.3z"/></svg>';
 const mpJuntar = itens => { itens = itens.filter(Boolean); return itens.length > 1 ? itens.slice(0, -1).join(', ') + ' e ' + itens[itens.length - 1] : (itens[0] || ''); };
 /* ============================================================================
-   VÍDEOS DE APRESENTAÇÃO NA CAPA (por teste). Liga por terapeuta: travas_paginas.dados.videos = ['travas', ...]
+   VÍDEOS DE APRESENTAÇÃO NA CAPA (por teste). Padrão: o do Travas em toda página com o Travas; travas_paginas.dados.videos escolhe ([] desliga)
    O vídeo fica hospedado no site (começa a tocar na hora, sem o limite de visualizações do Drive);
    se o arquivo falhar, entra o player do Google Drive, com a mesma moldura da Área de Membros.
    Player limpo: capa, botão de play, só a barrinha de progresso (sem tempo), tela cheia e, no fim, o convite.
@@ -730,7 +730,8 @@ function dvVideoLigar(fig){
 }
 function dvVideosCapa(lista){
   try{
-    const dd = dvCad(), lig = dd && Array.isArray(dd.videos) ? dd.videos : [];
+    /* padrão: o vídeo do Teste de Travas aparece em toda página com o Travas; dados.videos = [] desliga, ['travas', ...] escolhe */
+    const dd = dvCad(), lig = dd && Array.isArray(dd.videos) ? dd.videos : ['travas'];
     const ks = (lista || []).filter(k => lig.indexOf(k) > -1 && DV_VIDEOS[k]);
     if(!ks.length) return;
     const capa = document.getElementById('tela-capa'), lt = capa && capa.querySelector('.lado-texto');
