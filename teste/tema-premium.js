@@ -89,9 +89,43 @@
     document.body.classList.toggle('tp-admin', !!(a && a.classList.contains('ativa')));
   }
 
+  /* "premium nas cores da terapeuta" (dados.tema_cor = 'terapeuta'): o azul-noite do tema ganha o tom da cor principal dela.
+     Mantém a luz (claro/escuro) de cada tom e o dourado; só troca o matiz e a intensidade. */
+  function hexRgb(h) { h = String(h || '').trim().replace('#', ''); if (h.length === 3) h = h.replace(/./g, '$&$&'); if (!/^[0-9a-f]{6}$/i.test(h)) return null; return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; }
+  function rgbHsl(r, g, b) { r /= 255; g /= 255; b /= 255; var M = Math.max(r, g, b), m = Math.min(r, g, b), l = (M + m) / 2, h = 0, s = 0;
+    if (M !== m) { var d = M - m; s = l > .5 ? d / (2 - M - m) : d / (M + m); h = M === r ? (g - b) / d + (g < b ? 6 : 0) : M === g ? (b - r) / d + 2 : (r - g) / d + 4; h /= 6; } return [h, s, l]; }
+  function hslRgb(h, s, l) { if (!s) { var v = Math.round(l * 255); return [v, v, v]; } var q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+    var f = function (t) { if (t < 0) t += 1; if (t > 1) t -= 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+    return [Math.round(f(h + 1 / 3) * 255), Math.round(f(h) * 255), Math.round(f(h - 1 / 3) * 255)]; }
+  function tingir() {
+    var raiz = getComputedStyle(document.documentElement), base = hexRgb(raiz.getPropertyValue('--ardosia')) || hexRgb(raiz.getPropertyValue('--ardosia-escura'));
+    if (!base) return;
+    var alvo = rgbHsl(base[0], base[1], base[2]), H = alvo[0], S = Math.min(.62, Math.max(.18, alvo[1]));
+    var troca = function (r, g, b) { var x = rgbHsl(r, g, b), hg = x[0] * 360;
+      if (!(b > r && b >= g && x[2] < .4 && hg > 198 && hg < 260)) return null;      // só os azuis-noite do tema
+      return hslRgb(H, Math.min(x[1], S), x[2]); };
+    var mexer = function (txt) {
+      return txt.replace(/rgba?\((\d+),\s*(\d+),\s*(\d+)/g, function (t, r, g, b) { var n = troca(+r, +g, +b); return n ? t.slice(0, t.indexOf('(') + 1) + n.join(', ') : t; })
+                .replace(/#([0-9a-f]{6})\b/gi, function (t, h) { var c = hexRgb(h), n = c && troca(c[0], c[1], c[2]); return n ? 'rgb(' + n.join(', ') + ')' : t; });
+    };
+    var folha = Array.prototype.filter.call(document.styleSheets, function (f) { return /tema-premium\.css/.test(f.href || ''); })[0]; if (!folha) return;
+    var regras; try { regras = folha.cssRules; } catch (e) { return; }
+    var andar = function (lista) {
+      Array.prototype.forEach.call(lista, function (r) {
+        if (r.cssRules && !r.style) return andar(r.cssRules);
+        if (!r.style) return;
+        for (var i = 0; i < r.style.length; i++) { var p = r.style[i], v = r.style.getPropertyValue(p); if (!/rgb|#/.test(v)) continue;
+          var nv = mexer(v); if (nv !== v) r.style.setProperty(p, nv, r.style.getPropertyPriority(p)); }
+      });
+    };
+    andar(regras);
+    var meta = document.querySelector('meta[name="theme-color"]'), fundo = troca(5, 11, 23); if (meta && fundo) meta.content = 'rgb(' + fundo.join(',') + ')';
+  }
+
   function ligar() {
     if (!ativo()) return;
     var meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = '#050B17';
+    if (document.documentElement.classList.contains('tp-cor')) tingir();
     var tentativas = 0, t = setInterval(function () { if (trocarTeia() || ++tentativas > 80) clearInterval(t); }, 150);
     var agendado = 0;
     var olhar = function () { clearTimeout(agendado); agendado = setTimeout(function () { prioridade(); anel(); admin(); }, 60); };

@@ -274,3 +274,59 @@ html.tp .tela:not(#tela-admin) svg [stroke="#8A97A0"]{stroke:#9AA6BC}
 html.tp .tela:not(#tela-admin) svg rect[fill="#E3F2E9"]{fill:rgba(98,204,142,.09)}
 html.tp .tela:not(#tela-admin) svg rect[fill="#FFF6DA"]{fill:rgba(244,190,79,.08)}
 html.tp .tela:not(#tela-admin) svg rect[fill="#FBE9E5"]{fill:rgba(255,106,84,.10)}
+
+/* ---------- MPCC (telas de quem responde) ---------- */
+html.tp .tela:not(#tela-admin) .mp-secao{background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.22);box-shadow:0 20px 44px -24px rgba(0,0,0,.85)}
+html.tp .tela:not(#tela-admin) .mp-secao h2{color:var(--creme);border-bottom-color:rgba(201,162,74,.35)}
+html.tp .tela:not(#tela-admin) .mp-secao h3,html.tp .tela:not(#tela-admin) .mp-card h3{color:var(--ouro2)}
+html.tp .tela:not(#tela-admin) .mp-geral-nota,html.tp .tela:not(#tela-admin) .mp-faixa{background:rgba(6,14,28,.7)}
+html.tp .tela:not(#tela-admin) .mp-card,html.tp .tela:not(#tela-admin) .mp-reco,html.tp .tela:not(#tela-admin) .mp-meio li{background:rgba(255,255,255,.035);border-color:rgba(201,162,74,.2)}
+html.tp .tela:not(#tela-admin) .mp-card{border-left-color:var(--ouro)}
+html.tp .tela:not(#tela-admin) .mp-reco-forte,html.tp .tela:not(#tela-admin) .mp-hist-i.atual{background:rgba(201,162,74,.09);border-color:rgba(232,203,126,.45)}
+html.tp .tela:not(#tela-admin) .mp-final{background:linear-gradient(180deg,rgba(201,162,74,.12),rgba(12,24,45,.85));border-color:rgba(232,203,126,.45)}
+html.tp .tela:not(#tela-admin) .mp-aviso{background:rgba(201,162,74,.12);color:var(--ouro3);border:1px solid rgba(201,162,74,.3)}
+html.tp .tela:not(#tela-admin) .mp-devolutiva{background:linear-gradient(160deg,#13284D 0%,#0B1730 60%,#08101F 100%);border:1px solid rgba(232,203,126,.4);box-shadow:0 0 50px -20px rgba(201,162,74,.45)}
+html.tp .tela:not(#tela-admin) .mp-devolutiva h2{color:var(--ouro3)}
+html.tp .tela:not(#tela-admin) .mp-devolutiva p{color:#D5DCEA}
+html.tp .mp-selo{background:rgba(201,162,74,.12)!important;color:var(--ouro2)!important;border-color:rgba(201,162,74,.35)}
+html.tp .tela:not(#tela-admin) .mp-leg-n{background:linear-gradient(180deg,#F3DC9C,#C49A3E);color:#1A1405}
+html.tp .tela:not(#tela-admin) .mp-barra{background:rgba(255,255,255,.08)}
+html.tp .tela:not(#tela-admin) .mp-escala td:first-child{color:var(--ouro2)}
+
+/* ---------- DISC (telas de quem responde) ---------- */
+html.tp .dc-selo{background:rgba(201,162,74,.12)!important;color:var(--ouro2)!important;border:1px solid rgba(201,162,74,.35)}
+html.tp .tela:not(#tela-admin) .dc-aviso-corp{background:rgba(255,255,255,.04);border-color:rgba(201,162,74,.22);color:var(--tinta)}
+html.tp .tela:not(#tela-admin) .dc-instrucao b.mais{color:#7FDCA4}
+html.tp .tela:not(#tela-admin) .dc-instrucao b.menos{color:#FF9A86}
+html.tp .tela:not(#tela-admin) .dc-op{background:linear-gradient(180deg,rgba(28,48,84,.85),rgba(12,24,45,.9));border-color:rgba(201,162,74,.3)}
+html.tp .tela:not(#tela-admin) .dc-op .dc-pal{color:var(--creme)}
+html.tp .tela:not(#tela-admin) .dc-op.mais{background:rgba(63,203,124,.12);border-color:#3FCB7C}
+html.tp .tela:not(#tela-admin) .dc-op.menos{background:rgba(255,106,84,.12);border-color:#FF6A54}
+html.tp .tela:not(#tela-admin) .dc-bt{background:rgba(6,14,28,.75);border-color:rgba(201,162,74,.3);color:var(--creme)}
+html.tp .tela:not(#tela-admin) .dc-bt.mais.on{background:#1F9E57;border-color:#3FCB7C;color:#fff;box-shadow:0 0 16px -4px rgba(63,203,124,.7)}
+html.tp .tela:not(#tela-admin) .dc-bt.menos.on{background:#C23A2E;border-color:#FF6A54;color:#fff;box-shadow:0 0 16px -4px rgba(255,106,84,.7)}
+html.tp .tela:not(#tela-admin) .dc-falta{color:var(--ouro2)}
+html.tp .tela:not(#tela-admin) .dc-secao{background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.22);box-shadow:0 20px 44px -24px rgba(0,0,0,.85);color:var(--tinta)}
+html.tp .tela:not(#tela-admin) .dc-secao h2,html.tp .tela:not(#tela-admin) .dc-secao h3{color:var(--creme)}
+html.tp .tela:not(#tela-admin) .dc-caixa{background:rgba(255,255,255,.04);border-color:rgba(201,162,74,.18)}
+html.tp .tela:not(#tela-admin) .dc-caixa h3,html.tp .tela:not(#tela-admin) .dc-caixa h4{color:var(--ouro2)}
+html.tp .tela:not(#tela-admin) .dc-tabela th,html.tp .tela:not(#tela-admin) .dc-tabela td{border-bottom-color:rgba(255,255,255,.08)}
+html.tp .tela:not(#tela-admin) .dc-alto{color:#7FDCA4}
+html.tp .tela:not(#tela-admin) .dc-nota-peq{color:var(--tinta-suave)}
+/* os gráficos do DISC ficam em cartão claro (os rótulos são escuros) */
+html.tp .tela:not(#tela-admin) .disc-graf{background:#F7F4EC;border-color:rgba(232,203,126,.6);box-shadow:0 18px 40px -22px rgba(0,0,0,.9)}
+
+/* ---------- Traços de Caráter: a devolutiva é um documento (também vira PDF): folha clara com moldura dourada ---------- */
+html.tp .dv{--areia:var(--L-areia);--areia-escura:var(--L-areia-escura);--papel:var(--L-papel);--tinta:var(--L-tinta);--tinta-suave:var(--L-tinta-suave);
+  --ardosia:var(--L-ardosia);--ardosia-escura:var(--L-ardosia-escura);--ardosia-clara:var(--L-ardosia-clara);--argila:var(--L-argila);--argila-clara:var(--L-argila-clara);
+  --salvia:var(--L-salvia);--borda:var(--L-borda);color:var(--L-tinta);
+  border:1px solid rgba(232,203,126,.7);box-shadow:0 0 0 4px rgba(201,162,74,.12),0 30px 60px -24px rgba(0,0,0,.95)}
+html.tp .dv h1,html.tp .dv h3,html.tp .dv h4{color:var(--L-ardosia)}
+html.tp .dv h2{color:var(--L-argila)}
+html.tp .dv .dv-tabela,html.tp .dv .dv-tabela td{color:var(--L-tinta)}
+html.tp .tela:not(#tela-admin) .tc-op.escolhida{background:linear-gradient(180deg,#F6E3AE 0%,#D9B65E 55%,#B88E35 100%);border-color:#F6E3AE;color:#1A1405;box-shadow:0 0 22px -4px rgba(232,203,126,.7)}
+html.tp .tela:not(#tela-admin) .tc-op b{background:rgba(201,162,74,.14);color:var(--ouro2)}
+html.tp .tela:not(#tela-admin) .tc-op.escolhida b{background:rgba(26,20,5,.18);color:#1A1405}
+html.tp .dv .dv-caixa,html.tp .dv .dv-card,html.tp .dv .dv-acao,html.tp .dv .dv-final,html.tp .dv .dv-pico,html.tp .dv .teia,html.tp .dv .cartao{
+  background:var(--L-papel);border-color:var(--L-borda);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--L-tinta)}
+html.tp .dv .dv-caixa h3,html.tp .dv .dv-card h3,html.tp .dv .dv-acao h4,html.tp .dv .dv-final h3{color:var(--L-ardosia)}
