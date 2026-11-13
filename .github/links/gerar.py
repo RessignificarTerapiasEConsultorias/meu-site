@@ -69,7 +69,7 @@ PAGINA_404 = '''<!doctype html>
 (function(){var p=location.pathname.split('/').filter(Boolean);
 if(p.length<1||p.length>2||!/^[a-z0-9-]{3,60}$/i.test(p[0])||(p[1]&&!/^[a-z0-9-]{2,40}$/i.test(p[1]))){document.documentElement.className='nao';return;}
 fetch('https://gobjhepmnijoceirwgow.supabase.co/rest/v1/rpc/travas_pagina_publica',{method:'POST',headers:{'Content-Type':'application/json',apikey:'__CHAVE__',Authorization:'Bearer __CHAVE__'},body:JSON.stringify({p_slug:p[0].toLowerCase()})})
-.then(function(r){return r.json();}).then(function(t){if(!(t&&t.ok)){document.documentElement.className='nao';return;}var K=__CHAVES__,ts=(t.dados&&t.dados.testes)||['travas'];if(p[1]&&ts.indexOf(K[p[1].toLowerCase()])<0){location.replace('/'+p[0].toLowerCase()+'/');return;}__REDIRECIONA__})
+.then(function(r){return r.json();}).then(function(t){if(!(t&&t.ok)){document.documentElement.className='nao';return;}var K=__CHAVES__,ts=(t.dados&&t.dados.testes)||['travas'];if(p[1]&&ts.indexOf(K[p[1].toLowerCase()])<0){location.replace('/'+p[0].toLowerCase()+'/');return;}(function(){__REDIRECIONA__})();})
 .catch(function(){document.documentElement.className='nao';});})();
 </script><style>html.nao #n{display:block}html.nao #a{display:none}</style></head>
 <body><main><p id="a">Abrindo…</p><div id="n"><h1 style="font-weight:500">Página não encontrada</h1><p>Confira o link que você recebeu ou <a href="/">volte para o início</a>.</p></div></main></body></html>
