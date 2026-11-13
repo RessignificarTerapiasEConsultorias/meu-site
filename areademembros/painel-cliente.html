@@ -70,7 +70,7 @@
     </div>
     <div class="cartao cartao-escuro" id="cartaoRaiox" hidden>
       <h2 class="ce-olho">Consultoria</h2>
-      <p class="ce-titulo">Raio-X da gestão</p>
+      <p class="ce-titulo">Raio-X Empresarial</p>
       <div class="ce-rodape"><span class="ce-info" id="raioxInfo">O diagnóstico da sua empresa, uma pergunta de cada vez.</span><a class="ce-btn" id="raioxBtn" href="raio-x.html">Abrir o Raio-X →</a></div>
     </div>
     <div class="cartao cartao-escuro" id="cartaoAcompanha" hidden>
@@ -151,7 +151,7 @@
   if ((s.data || []).some(function (x) { return x.tipo === "terapia"; })) document.getElementById("cartaoTerapia").hidden = false;
   if ((s.data || []).some(function (x) { return x.tipo === "mentoria"; })) document.getElementById("cartaoMentoria").hidden = false;
   if ((s.data || []).some(function (x) { return x.tipo === "consultoria_empresarial" || x.tipo === "mentoria"; })) document.getElementById("cartaoProjetos").hidden = false;
-  // Raio-X da gestão (clientes de consultoria): aparece quando o Mauricio cria o Raio-X ou há consultoria ativa
+  // Raio-X Empresarial (clientes de consultoria): aparece quando o Mauricio cria o Raio-X ou há consultoria ativa
   try {
     const rx = await supa().from("raiox_rodadas").select("id,status,raiox_liberacoes(pode_responder,pode_ver_resultado)").eq("perfil_id", eu.id).order("numero", { ascending: false }).limit(1);
     const r0 = rx.data && rx.data[0], consultoria = (s.data || []).some(function (x) { return x.tipo === "consultoria_empresarial"; });
