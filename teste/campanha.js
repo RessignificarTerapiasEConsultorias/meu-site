@@ -64,6 +64,7 @@
 
   /* 1) o código é de campanha? */
   rpc('travas_validar_codigo', { p_codigo:COD }).then(r => r.json()).then(r => {
+    if(r && r.teste === 'familia' && (r.ok === true || r.valido === true)){ window.FM_LINK_VALIDO = r; return; }   // Travas em Família: o módulo dele assume (e solta a tela)
     if(!r || !r.campanha || !(r.ok === true || r.valido === true)){ clearTimeout(seguranca); soltar(); return; }
     CAMP.info = { mostrar:r.mostrar_resultado !== false, urgencia:r.urgencia !== false, duracao:r.duracao_min || 30, compartilhado:r.compartilhado === true };
     CAMP.ativo = true; H.classList.add('modo-campanha');

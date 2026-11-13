@@ -1,0 +1,185 @@
+/* TRAVAS EM FAMÍLIA · telas de quem responde, área da terapeuta e PDF (segue o tema premium e as cores da terapeuta) */
+html.fm-espera #tela-capa,html.fm-espera .cv-barra,html.fm-espera .cv-faixa{visibility:hidden}
+#painel-fm{display:none}
+#painel-admin.modo-fm #painel-fm{display:block}
+#painel-admin.modo-fm .abas,#painel-admin.modo-fm .aba-conteudo,#painel-admin.modo-fm #detalhe-resposta,#painel-admin.modo-fm #aviso-modo-local,#painel-admin.modo-fm #painel-tc,#painel-admin.modo-fm #painel-mp,#painel-admin.modo-fm #painel-dc,#painel-admin.modo-fm #painel-an,#painel-admin.modo-fm #resumo-interesse,#painel-admin.modo-fm #camp-hist{display:none!important}
+:root{--fm-ok:#3F7D55;--fm-at:#C8960C;--fm-pr:#B23A2F}
+html.tp{--fm-ok:#62CC8E;--fm-at:#F4BE4F;--fm-pr:#FF7A64}
+
+/* abertura e cadastro */
+.fm-abertura,.fm-form{max-width:620px;margin:0 auto;text-align:center;padding:8px 0 40px}
+.fm-form{text-align:left}
+.fm-foto{width:112px;height:112px;border-radius:50%;object-fit:cover;display:block;margin:6px auto 14px;box-shadow:0 0 0 3px rgba(232,203,126,.85),0 0 0 9px rgba(201,162,74,.18),0 18px 40px -14px rgba(0,0,0,.7)}
+.fm-selo{display:inline-block;margin-bottom:12px}
+.fm-h1{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(34px,8vw,52px);line-height:1.05;margin:4px 0 12px;letter-spacing:-.015em}
+.fm-h1-p{font-size:clamp(26px,6.4vw,36px)}
+.fm-sub{font-size:18px;line-height:1.5;color:var(--tinta-suave);margin:0 0 18px}
+html.tp .fm-sub{color:#C9D0DE}
+.fm-txt{font-size:15.5px;line-height:1.55;color:var(--tinta-suave);margin:0 auto 20px;max-width:520px}
+.fm-chips{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:0;margin:0 0 18px}
+.fm-chips li{padding:7px 13px;border-radius:999px;font-size:13.5px;font-weight:700;border:1px solid var(--borda);background:var(--ardosia-clara)}
+html.tp .fm-chips li{background:rgba(201,162,74,.1);border-color:rgba(232,203,126,.4);color:#F6E3AE}
+.fm-btn{width:100%;max-width:520px;margin:8px auto 0;display:flex;justify-content:center}
+.fm-nota{font-size:13px;line-height:1.5;color:var(--tinta-suave);margin:14px 0 0}
+.fm-escolha{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fm-escolha button{min-height:48px;border-radius:13px;border:1.4px solid var(--borda);background:var(--papel);color:var(--tinta);font:700 15px 'Karla',sans-serif;cursor:pointer}
+.fm-escolha button.ativa{border-color:var(--ardosia);box-shadow:inset 0 0 0 1.5px var(--ardosia);background:var(--ardosia-clara)}
+html.tp .fm-escolha button{background:rgba(255,255,255,.04);border-color:rgba(201,162,74,.3);color:#F4ECDD}
+html.tp .fm-escolha button.ativa{background:rgba(201,162,74,.16);border-color:#E8CB7E;box-shadow:inset 0 0 0 1.5px #E8CB7E}
+.fm-consent{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;margin:14px 0;cursor:pointer}
+.fm-consent input{width:22px;height:22px;flex:none;margin-top:1px;accent-color:#C9A24A}
+.opc{font-weight:500;opacity:.75}
+
+/* perguntas */
+#tela-fm-teste{max-width:640px;margin:0 auto}
+.fm-topo{position:sticky;top:0;z-index:5;padding:12px 0 10px;background:inherit}
+.fm-topo .progresso{height:8px;border-radius:999px;overflow:hidden;background:var(--areia-escura)}
+html.tp .fm-topo .progresso{background:rgba(255,255,255,.08)}
+.fm-topo .progresso i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#C49A3E,#F3DC9C);transition:width .35s ease}
+.fm-parte{display:inline-block;margin-top:10px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--argila)}
+html.tp .fm-parte{color:#E8CB7E}
+.fm-card{padding:22px 4px 8px}
+.fm-lead{font-family:'Fraunces',serif;font-style:italic;font-size:19px;margin:0 0 4px;color:var(--tinta-suave)}
+html.tp .fm-lead{color:#E8CB7E}
+.fm-q{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(24px,6vw,30px);line-height:1.25;margin:0 0 22px}
+.fm-intro{font-size:16.5px;line-height:1.55;margin:-8px 0 20px;color:var(--tinta-suave)}
+html.tp .fm-intro{color:#C9D0DE}
+.fm-opcoes{display:grid;gap:10px}
+.fm-op{min-height:56px;padding:12px 18px;border-radius:16px;text-align:left;font:700 17px 'Karla',sans-serif;cursor:pointer;border:1.4px solid var(--borda);background:var(--papel);color:var(--tinta);
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s,background .18s;-webkit-tap-highlight-color:transparent}
+.fm-op:hover{transform:translateY(-1px)}
+.fm-op.sel{border-color:var(--ardosia);background:var(--ardosia-clara);box-shadow:inset 0 0 0 1.5px var(--ardosia)}
+.fm-op.fm-ns{font-weight:600;opacity:.88}
+html.tp .fm-op{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border-color:rgba(232,203,126,.28);color:#F4ECDD;box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 12px 22px -16px rgba(0,0,0,.8)}
+html.tp .fm-op.sel{background:linear-gradient(180deg,rgba(232,203,126,.26),rgba(201,162,74,.12));border-color:#E8CB7E;box-shadow:0 0 0 1px rgba(232,203,126,.6),0 0 24px -6px rgba(201,162,74,.7)}
+.fm-duas{grid-template-columns:1fr 1fr}
+#fm-texto{width:100%;border-radius:14px;padding:14px;font:16px/1.5 'Karla',sans-serif;border:1.4px solid var(--borda);background:var(--papel);color:var(--tinta);margin-bottom:14px}
+html.tp #fm-texto{background:rgba(6,14,28,.7);border-color:rgba(201,162,74,.3);color:#F4ECDD}
+.fm-nav{display:flex;justify-content:flex-start;margin:22px 0 40px}
+.fm-nav .btn{width:auto;min-height:44px;padding:8px 18px}
+
+/* resultado */
+#tela-fm-resultado{padding-bottom:110px}
+.fm-res{max-width:720px;margin:0 auto}
+.fm-res-cab{text-align:center;margin:8px 0 22px}
+.fm-secao{margin:0 0 18px;padding:20px 18px;border-radius:22px;border:1px solid var(--borda);background:var(--papel);box-shadow:var(--sombra-leve)}
+html.tp .fm-secao{background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.26);box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 26px 46px -26px rgba(0,0,0,.85)}
+.fm-secao h2{font-family:'Fraunces',serif;font-weight:500;font-size:24px;margin:0 0 12px}
+.fm-leg{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:12.5px;color:var(--tinta-suave);margin:0 0 12px}
+.fm-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:-6px}
+.fm-dot.tranquilo{background:var(--fm-ok)}.fm-dot.atencao{background:var(--fm-at)}.fm-dot.prioridade{background:var(--fm-pr)}
+.fm-barra{margin:0 0 14px}
+.fm-barra-topo{display:flex;justify-content:space-between;gap:10px;font-weight:700;font-size:15.5px;margin-bottom:6px}
+.fm-barra-topo b{font-size:15px;white-space:nowrap}
+.fm-barra-topo em{font-style:normal;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;margin-right:4px;vertical-align:1px}
+.fm-trilho{height:14px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden;box-shadow:0 2px 3px rgba(0,0,0,.18) inset}
+html.tp .fm-trilho{background:rgba(255,255,255,.08);box-shadow:0 2px 3px rgba(0,0,0,.55) inset}
+.fm-trilho i{display:block;height:100%;border-radius:inherit;animation:fmCresce 1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes fmCresce{from{width:0!important}}
+.fm-barra p{margin:6px 0 0;font-size:14.5px;line-height:1.5;color:var(--tinta-suave)}
+html.tp .fm-barra p{color:#C3CCDD}
+.fm-tranquilo .fm-trilho i{background:linear-gradient(90deg,#1C4A31,var(--fm-ok))}.fm-tranquilo b{color:var(--fm-ok)}.fm-tranquilo em{background:rgba(98,204,142,.16)}
+.fm-atencao .fm-trilho i{background:linear-gradient(90deg,#6B4A06,var(--fm-at))}.fm-atencao b{color:var(--fm-at)}.fm-atencao em{background:rgba(244,190,79,.16)}
+.fm-prioridade .fm-trilho i{background:linear-gradient(90deg,#6E1626,var(--fm-pr))}.fm-prioridade b{color:var(--fm-pr)}.fm-prioridade em{background:rgba(255,106,84,.16)}
+html.tp .fm-prioridade .fm-trilho i{box-shadow:0 0 16px -2px rgba(255,106,84,.6)}
+.fm-insuf b{color:var(--tinta-suave);font-weight:600}
+.fm-destaque{padding:12px 14px;border-radius:14px;margin:0 0 14px;font-weight:700;line-height:1.5;border:1px solid rgba(255,106,84,.45);background:rgba(255,106,84,.1)}
+html.tp .fm-destaque{color:#FFC2B6}
+.fm-elo{display:flex;gap:14px;padding:16px;border-radius:18px;margin:0 0 12px;border:1px solid var(--borda);background:rgba(0,0,0,.02)}
+html.tp .fm-elo{background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border-color:rgba(232,203,126,.32);box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 18px 30px -20px rgba(0,0,0,.85)}
+.fm-elo-num{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:800 17px 'Karla',sans-serif;color:#1A1405;background:linear-gradient(145deg,#F6E3AE,#C49A3E);box-shadow:0 0 0 3px rgba(201,162,74,.22)}
+.fm-elo h3{font-family:'Fraunces',serif;font-weight:500;font-size:19px;margin:2px 0 6px}
+.fm-elo p{margin:0 0 6px;line-height:1.55;font-size:15.5px}
+.fm-geracao{font-style:italic;color:var(--argila)}
+html.tp .fm-geracao{color:#E8CB7E}
+.fm-elo-par{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px!important;color:var(--tinta-suave)}
+.fm-elo-par b{color:var(--fm-pr)}
+.fm-elo-vazio{border-style:dashed}
+.fm-ns-card{margin-top:12px;padding:14px;border-radius:16px;border:1px dashed rgba(201,162,74,.55);background:rgba(201,162,74,.08)}
+.fm-ns-card h3{margin:0 0 4px;font-size:17px}
+.fm-ns-card p{margin:0;line-height:1.5}
+.fm-passo{text-align:center}
+.fm-passo .btn{margin-left:auto;margin-right:auto}
+.fm-acoes{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:14px}
+.fm-acoes .btn{width:auto;min-height:46px;padding:10px 18px}
+.fm-rodape-fixo{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:9px 16px calc(9px + env(safe-area-inset-bottom));font-size:11.5px;line-height:1.4;text-align:center;
+  background:rgba(253,251,249,.96);color:#4C5670;border-top:1px solid var(--borda);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+html.tp .fm-rodape-fixo{background:rgba(5,11,23,.9);color:#AEB8CB;border-top-color:rgba(201,162,74,.25)}
+#tela-fm-resultado:not(.ativa) .fm-rodape-fixo{display:none}
+
+/* área da terapeuta */
+#fm-abas{display:flex;gap:8px;margin:0 0 16px}
+#fm-abas button{flex:1;border:1.4px solid var(--borda);background:var(--papel);color:var(--ardosia);border-radius:12px;padding:11px 8px;font:inherit;font-weight:700;cursor:pointer}
+#fm-abas button.ativa{background:var(--ardosia);color:#fff;border-color:var(--ardosia)}
+.fm-filtros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 10px}
+.fm-filtros input[type=search]{grid-column:1/-1}
+.fm-filtros select,.fm-filtros input{width:100%;min-height:44px;border-radius:12px;padding:8px 10px;font:inherit;font-size:14px;border:1.4px solid var(--borda);background:var(--papel);color:var(--tinta)}
+.fm-f-data{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
+@media (max-width:620px){.fm-filtros{grid-template-columns:1fr 1fr}}
+.fm-linha{cursor:pointer;flex-wrap:wrap}
+.fm-ofs{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.etiqueta.fm-prio-alta{background:linear-gradient(180deg,#E2483A,#A51F22)!important;color:#fff!important}
+.etiqueta.fm-prio-media{background:linear-gradient(180deg,#F6CF6A,#C8960C)!important;color:#2A1E00!important}
+.etiqueta.fm-prio-baixa{background:linear-gradient(180deg,#5FCB8C,#2E7D4F)!important;color:#fff!important}
+.fm-zap-mini{flex:none;align-self:center;padding:7px 12px;border-radius:999px;font:800 12.5px 'Karla',sans-serif;text-decoration:none;color:#fff!important;background:linear-gradient(180deg,#2BC26D,#169552)}
+html.p3d #tela-admin .fm-linha:hover,html.p3d #tela-admin .fm-linha:focus-visible{transform:perspective(900px) rotateX(4deg) translateY(-3px) translateZ(14px) scale(1.01);border-color:rgba(246,227,174,.85);
+  box-shadow:0 1px 0 rgba(255,255,255,.16) inset,0 30px 46px -18px rgba(0,0,0,.75),0 0 32px -6px rgba(232,203,126,.55)}
+.fm-ficha-cab{display:flex;gap:14px;justify-content:space-between;align-items:flex-start;padding:18px;border-radius:22px;margin:8px 0 16px;border:1px solid var(--borda);background:var(--papel)}
+html.p3d #tela-admin .fm-ficha-cab{background:var(--p3-vidro);border-color:rgba(232,203,126,.45);box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 30px 50px -24px rgba(0,0,0,.75),0 0 40px -18px rgba(232,203,126,.55)}
+.fm-ficha-cab h2{margin:0 0 6px;font-size:26px}
+.fm-ficha-cab p{margin:0 0 4px;font-size:14.5px;line-height:1.5}
+.fm-ficha-grade{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fm-ficha-grade .cartao{margin:0}
+@media (max-width:760px){.fm-ficha-grade{grid-template-columns:1fr}.fm-ficha-cab{flex-direction:column}}
+#painel-fm .cartao{margin-bottom:14px}
+#painel-fm .cartao h3{margin:0 0 10px;font-size:19px}
+.fm-plano h3{margin-top:0}
+.fm-plano p{line-height:1.55;margin:0 0 10px}
+.fm-livre p{white-space:pre-wrap;line-height:1.6}
+.fm-ok{font-weight:700;color:var(--fm-ok)}
+.fm-atual{outline:2px solid #E8CB7E}
+.fm-evol{width:100%;max-width:560px;height:auto;display:block;margin:6px 0;color:var(--tinta)}
+.fm-momento-novo{display:grid;gap:8px;margin-top:12px}
+.fm-momento-novo select{min-height:44px;border-radius:12px;padding:8px;font:inherit;border:1.4px solid var(--borda);background:var(--papel);color:var(--tinta)}
+.fm-link-gerado{display:flex;gap:18px;align-items:center;flex-wrap:wrap;text-align:left}
+.fm-qr{flex:none;width:200px;height:200px;border-radius:16px;background:#fff;padding:8px;display:grid;place-items:center}
+.fm-qr img{width:100%;height:100%;image-rendering:pixelated}
+.fm-url{word-break:break-all;font-size:13.5px;margin:8px 0}
+.fm-link-gerado .fm-acoes{justify-content:flex-start}
+
+/* impressão (PDF): papel claro com a foto/logo da terapeuta */
+#fm-impressao{display:none}
+@media print{
+  body.fm-imprimindo > *:not(#fm-impressao){display:none!important}
+  body.fm-imprimindo #fm-impressao{display:block!important}
+  body.fm-imprimindo{background:#fff!important}
+  body.fm-imprimindo::before,body.fm-imprimindo::after{display:none!important}
+  @page{size:A4;margin:14mm}
+}
+#fm-impressao .fm-doc{--fm-ok:#3F7D55;--fm-at:#B07F06;--fm-pr:#B23A2F;color:#17191D;font:13.5px/1.5 'Karla',sans-serif;background:#fff}
+#fm-impressao .fm-doc-cab{display:flex;gap:12px;align-items:center;border-bottom:2px solid #C9A24A;padding-bottom:10px;margin-bottom:14px}
+#fm-impressao .fm-doc-cab img{width:56px;height:56px;border-radius:50%;object-fit:cover}
+#fm-impressao .fm-doc-cab b{display:block;font-size:16px}
+#fm-impressao .fm-doc-cab span{font-size:12px;color:#555}
+#fm-impressao .fm-doc-tit{font-family:'Fraunces',serif;font-size:22px;margin:0 0 8px}
+#fm-impressao .fm-secao,#fm-impressao .fm-elo,#fm-impressao .fm-plano{background:#fff!important;border:1px solid #E7DBCA!important;box-shadow:none!important;color:#17191D!important;padding:12px;border-radius:12px;margin-bottom:10px}
+#fm-impressao .fm-h1{font-size:24px;color:#17191D}
+#fm-impressao .fm-sub,#fm-impressao .fm-barra p,#fm-impressao .fm-nota,#fm-impressao .fm-leg,#fm-impressao .fm-elo-par{color:#4C5670!important}
+#fm-impressao .fm-trilho{background:#EEE;box-shadow:none}
+#fm-impressao .fm-trilho i{animation:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#fm-impressao .fm-elo-num,#fm-impressao .fm-dot,#fm-impressao em{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#fm-impressao .fm-geracao{color:#8F6E22}
+#fm-impressao .fm-destaque{color:#8A2B22}
+#fm-impressao .selo{background:#F3E9CF;color:#6B4E12;border:0}
+#fm-impressao .fm-doc-rod{margin-top:14px;font-size:11px;color:#555;border-top:1px solid #ddd;padding-top:8px}
+@media (prefers-reduced-motion:reduce){.fm-trilho i{animation:none}.fm-op{transition:none}}
+/* nas telas do Família, a barra flutuante do Teste de Travas não aparece */
+body:has(#tela-fm.ativa) .cv-barra,body:has(#tela-fm-teste.ativa) .cv-barra,body:has(#tela-fm-resultado.ativa) .cv-barra,html.fm-ativo .cv-barra{display:none!important}
+#fm-resumo .ri-grade>div:nth-child(1) b{color:#FF8A75!important;text-shadow:0 0 20px rgba(255,106,84,.5)!important}
+#fm-resumo .ri-grade>div:nth-child(2) b{color:#F6D27E!important}
+#fm-resumo .ri-grade>div:nth-child(3) b{color:#7FE3A8!important;text-shadow:0 0 20px rgba(43,194,109,.45)!important}
+#painel-fm .fm-linha .sub{white-space:normal;overflow:visible;text-overflow:clip}
+@media print{html.fm-imprimindo,html.fm-imprimindo body{background:#fff!important;background-image:none!important;color-scheme:light!important}}
+#fm-impressao h1,#fm-impressao h2,#fm-impressao h3,#fm-impressao .fm-barra-topo span{color:#17191D!important}
+#fm-impressao .fm-secao h2{font-size:19px;margin-bottom:8px}
+#fm-impressao .fm-elo,#fm-impressao .fm-barra{break-inside:avoid}
