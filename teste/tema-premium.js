@@ -77,8 +77,8 @@
     if (typeof window.desenharTeia !== 'function' || window.desenharTeia.__tp) return !!(window.desenharTeia && window.desenharTeia.__tp);
     var orig = window.desenharTeia;
     var nova = function (canvas, linhas) {
-      /* na área da terapeuta (fundo claro) fica o desenho original */
-      if (!ativo() || (canvas && canvas.closest && canvas.closest('#tela-admin'))) return orig(canvas, linhas);
+      /* na área da terapeuta (fundo claro) fica o desenho original, a não ser no painel 3D */
+      if (!ativo() || (canvas && canvas.closest && canvas.closest('#tela-admin') && !document.documentElement.classList.contains('p3d'))) return orig(canvas, linhas);
       return teiaPremium(canvas, linhas);
     };
     nova.__tp = true; window.desenharTeia = nova; return true;

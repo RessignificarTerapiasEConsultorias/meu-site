@@ -206,8 +206,8 @@ html.tp .nota-rodape{color:var(--tinta-suave)}
 
 /* telas extras de quem responde */
 html.tp .tela:not(#tela-admin) .tag-vis{background:rgba(201,162,74,.12);color:var(--ouro2)}
-html.tp .alternar button{background:rgba(255,255,255,.04);border-color:rgba(201,162,74,.28);color:var(--creme)}
-html.tp .alternar button.ativa{background:rgba(201,162,74,.14);border-color:var(--ouro);box-shadow:inset 0 0 0 1.5px var(--ouro)}
+html.tp .tela:not(#tela-admin):not(#tela-form) .alternar button{background:rgba(255,255,255,.04);border-color:rgba(201,162,74,.28);color:var(--creme)}
+html.tp .tela:not(#tela-admin):not(#tela-form) .alternar button.ativa{background:rgba(201,162,74,.14);border-color:var(--ouro);box-shadow:inset 0 0 0 1.5px var(--ouro)}
 
 /* área da terapeuta (e o que é aberto por ela): volta à paleta clara da terapeuta */
 html.tp #tela-admin,html.tp #tela-form,html.tp #tela-deck,html.tp .tp-claro{
