@@ -266,7 +266,7 @@
     const etapas = [['Chegaram pelo link', L.length], ['Tocaram em “Começar”', cnt(s => s.comecou_em)], ['Deixaram nome e WhatsApp', cnt(s => s.contato_em)],
       ['Responderam 10 ou mais', cnt(s => s.maior_pergunta >= 10)], ['Responderam 25 ou mais', cnt(s => s.maior_pergunta >= 25)], ['Responderam 40 ou mais', cnt(s => s.maior_pergunta >= 40)],
       ['Terminaram o teste', cnt(s => s.concluiu_em)], ['Clicaram no WhatsApp no final', cnt(s => s.whatsapp_em)]];
-    const link = cod => location.origin + location.pathname + '?t=' + encodeURIComponent(window.T_SLUG || '') + '&c=' + encodeURIComponent(cod);
+    const link = cod => linkTeste('travas', cod);
     const prim = typeof PRIM_TER !== 'undefined' ? PRIM_TER : '';
     el.innerHTML = `<div class="camp-filtros">
         ${codigos.length > 1 ? `<select id="camp-cod"><option value="">Todos os links</option>${codigos.map(x => `<option value="${esc(x.codigo)}"${x.codigo === codSel ? ' selected' : ''}>${esc(x.codigo)}${x.cliente ? ' · ' + esc(x.cliente) : ''}</option>`).join('')}</select>` : `<span style="font-size:14px;align-self:center">Link ${esc(codigos[0].codigo)}${codigos[0].cliente ? ' · ' + esc(codigos[0].cliente) : ''}</span>`}

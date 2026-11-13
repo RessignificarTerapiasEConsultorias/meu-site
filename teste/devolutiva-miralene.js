@@ -1078,14 +1078,15 @@ function ligarDetalheNovo(reg){
 }
 
 /* ---------- área da terapeuta: mensagens, links e copiar (copiado do site antigo) ---------- */
-function linkCliente(codigo){
-  return location.origin + location.pathname + '?t=' + encodeURIComponent(window.T_SLUG || '') + '&c=' + encodeURIComponent(codigo);   // mesmo formato do link do Teste de Travas
+function linkCliente(codigo, teste){
+  if(!teste){ try{ const c = (mi.codigos || []).find(x => x.codigo === codigo); teste = c && c.teste; }catch(e){} }
+  return linkTeste(teste || 'travas', codigo);   // o nome do teste vai no endereço
 }
 function mensagemCodigo(c){
   const primeiro = c.cliente ? c.cliente.trim().split(' ')[0] : '';
   return preencher(MENSAGENS.envioCodigo[c.teste], {
     saudacao: primeiro ? `Olá, ${primeiro}!` : 'Olá!',
-    nome: primeiro, link: linkCliente(c.codigo), codigo: c.codigo
+    nome: primeiro, link: linkCliente(c.codigo, c.teste), codigo: c.codigo
   });
 }
 function linkZap(c, numero){
@@ -1296,7 +1297,7 @@ async function miGerar(){
     <button type="button" class="btn btn-contorno" data-mi-lnk="${i}">Copiar o link com o código</button>
     <button type="button" class="btn btn-contorno" data-mi-cod="${i}">Copiar só o código</button>`).join('<hr class="mi-sep">');
   caixa.querySelectorAll('[data-mi-msg]').forEach(x => x.addEventListener('click', () => miCopiar(mensagemCodigo(j.codigos[x.dataset.miMsg]), x, 'Copiar mensagem')));
-  caixa.querySelectorAll('[data-mi-lnk]').forEach(x => x.addEventListener('click', () => miCopiar(linkCliente(j.codigos[x.dataset.miLnk].codigo), x, 'Copiar o link com o código')));
+  caixa.querySelectorAll('[data-mi-lnk]').forEach(x => x.addEventListener('click', () => miCopiar(linkCliente(j.codigos[x.dataset.miLnk].codigo, j.codigos[x.dataset.miLnk].teste), x, 'Copiar o link com o código')));
   caixa.querySelectorAll('[data-mi-cod]').forEach(x => x.addEventListener('click', () => miCopiar(j.codigos[x.dataset.miCod].codigo, x, 'Copiar só o código')));
   document.getElementById('mi-cod-nome').value = ''; document.getElementById('mi-cod-whats').value = ''; document.getElementById('mi-cod-qtd').value = 1;
   miCarregar();

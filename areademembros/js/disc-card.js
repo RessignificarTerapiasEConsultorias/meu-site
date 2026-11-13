@@ -32,7 +32,7 @@
     if (livre && livre.slug) {
       por(cartao("Seu DISC: análise comportamental",
         "Liberado para você. São 24 blocos com 4 palavras, de 8 a 12 minutos: em cada um, marque a que MAIS e a que MENOS descreve você no trabalho. Não é terapia nem avaliação psicológica.",
-        [{ txt: "Fazer o meu DISC →", href: "/teste/?t=" + encodeURIComponent(livre.slug) + "&dc=" + encodeURIComponent(livre.codigo) }]));
+        [{ txt: "Fazer o meu DISC →", href: "/" + encodeURIComponent(livre.slug) + "/disc/?c=" + encodeURIComponent(livre.codigo) }]));
     } else if (feito) {
       por(cartao("Seu DISC: análise comportamental", "Você respondeu em " + dataBR(feito.usado_em) + ". O resultado é conversado na devolutiva com o Mauricio.", []));
     }

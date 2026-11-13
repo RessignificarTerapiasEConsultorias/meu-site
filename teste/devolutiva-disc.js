@@ -12,7 +12,7 @@ const dcPrim = n => String(n || '').trim().split(/\s+/)[0] || '';
 const dcEmail = v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v || '').trim());
 const dcDig = v => String(v || '').replace(/\D/g, '');
 const dcAp = () => typeof T_A !== 'undefined' ? T_A : 'quem enviou o código';
-const dcLink = codigo => location.origin + location.pathname + '?t=' + encodeURIComponent(T_SLUG) + '&dc=' + encodeURIComponent(codigo);
+const dcLink = codigo => linkTeste('disc', codigo);
 const dcQuando = iso => iso ? new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
 const dcData = iso => iso ? new Date(iso).toLocaleDateString('pt-BR') : '';
 const dcZapTer = texto => 'https://wa.me/' + (CONFIG.whatsappNumero || '') + (texto ? '?text=' + encodeURIComponent(texto) : '');

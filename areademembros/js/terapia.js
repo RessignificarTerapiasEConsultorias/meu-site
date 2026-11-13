@@ -601,7 +601,8 @@
   /* ================= TESTES AGENDADOS ================= */
   const SLUG_TESTE = "mauricio";
   const NOME_T = { travas: "Teste de Travas Mentais", tracos: "Teste de Traços de Caráter", mpcc: "MPCC · Perfil Comportamental" };
-  const linkTeste = function (c) { return "https://ressignificarterapiaseconsultorias.com/teste/?t=" + SLUG_TESTE + "&c=" + encodeURIComponent(c); };
+  const PASTA_T = { travas: "teste-de-travas", tracos: "tracos-de-carater", mpcc: "mpcc", disc: "disc", ansiedade: "teste-de-ansiedade", familia: "travas-em-familia" };
+  const linkTeste = function (c, teste) { return "https://ressignificarterapiaseconsultorias.com/" + SLUG_TESTE + "/" + (PASTA_T[teste] || PASTA_T.travas) + "/?c=" + encodeURIComponent(c); };   // o nome do teste vai no endereço
   const somarDias = function (iso, n) { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
   const fAg = document.getElementById("formAgendar");
   if (fAg) {
@@ -631,14 +632,14 @@
       else info = libera ? (master ? "Disponível para o cliente desde " + dataBR(t.disponivel_em) + "." : "Já pode fazer. Separe uns minutos com calma.") : "Disponível a partir de " + dataBR(t.disponivel_em) + ".";
       if (master) {
         info += " Código <b>" + esc(t.codigo) + "</b>.";
-        const msg = "Olá, " + primeiroNome + "! Deixei um teste para você: " + nome + ". " + (libera ? "Já pode fazer pelo link: " : "Ele fica disponível em " + dataBR(t.disponivel_em) + ", pelo link: ") + linkTeste(t.codigo);
+        const msg = "Olá, " + primeiroNome + "! Deixei um teste para você: " + nome + ". " + (libera ? "Já pode fazer pelo link: " : "Ele fica disponível em " + dataBR(t.disponivel_em) + ", pelo link: ") + linkTeste(t.codigo, t.teste);
         acoesHtml = '<div class="acoes" style="margin-top:6px">' +
           '<label style="display:flex;gap:6px;align-items:center;font-weight:500"><input type="checkbox" data-ver-res="' + t.id + '"' + (t.mostrar_resultado ? " checked" : "") + "> Cliente vê o resultado</label>" +
-          (feito ? "" : '<button class="btn peq contorno" type="button" data-copiar="' + esc(linkTeste(t.codigo)) + '">Copiar link</button>' +
+          (feito ? "" : '<button class="btn peq contorno" type="button" data-copiar="' + esc(linkTeste(t.codigo, t.teste)) + '">Copiar link</button>' +
             '<a class="btn peq" style="background:#1FA855;color:#fff" target="_blank" rel="noopener" href="https://wa.me/' + String(pessoa.telefone || "").replace(/\D/g, "") + "?text=" + encodeURIComponent(msg) + '">Mandar no WhatsApp</a>' +
             '<button class="btn peq perigo" type="button" data-cancelar="' + t.id + '">Cancelar</button>') + "</div>";
       } else if (!feito && libera) {
-        acoesHtml = '<div style="margin-top:8px"><a class="btn auto" href="' + linkTeste(t.codigo) + '" target="_blank" rel="noopener">Fazer o teste agora</a></div>';
+        acoesHtml = '<div style="margin-top:8px"><a class="btn auto" href="' + linkTeste(t.codigo, t.teste) + '" target="_blank" rel="noopener">Fazer o teste agora</a></div>';
       }
       return '<li class="acao' + (!feito && libera && !master ? " atrasada" : "") + '"><div class="acao-linha"><b>' + esc(nome) + "</b>" +
         '<span class="selo' + (feito ? " ok" : "") + '">' + (feito ? "Feito" : (libera ? "Disponível" : "Agendado")) + "</span></div>" +

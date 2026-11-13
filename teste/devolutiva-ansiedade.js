@@ -81,7 +81,7 @@ const anPrim = n => String(n || '').trim().split(/\s+/)[0] || '';
 const anEmail = v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v || '').trim());
 const anDig = v => String(v || '').replace(/\D/g, '');
 const anAp = () => typeof T_A !== 'undefined' ? T_A : 'quem te atende';
-const anLink = codigo => location.origin + location.pathname + '?t=' + encodeURIComponent(T_SLUG) + '&an=' + encodeURIComponent(codigo);
+const anLink = codigo => linkTeste('ansiedade', codigo);
 const anQuando = iso => iso ? new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
 const anData = iso => iso ? new Date(iso).toLocaleDateString('pt-BR') : '';
 const anDataCurta = iso => iso ? new Date(iso).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' }) : '';

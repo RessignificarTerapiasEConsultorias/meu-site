@@ -107,10 +107,7 @@ const fmQuando = iso => iso ? new Date(iso).toLocaleString('pt-BR', { day:'2-dig
 const fmUuid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); });
 const fmLS = { get:(k, p) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : p; }catch(e){ return p; } }, set:(k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }, del:k => { try{ localStorage.removeItem(k); }catch(e){} } };
 const fmChave = (c, s) => 't_' + (window.T_SLUG || '') + '_fm_' + c + (s ? '_' + s : '');
-function fmLink(codigo, origem){
-  const base = location.origin + '/familia/' + encodeURIComponent(window.T_SLUG || '') + '/';
-  return base + '?c=' + encodeURIComponent(codigo) + (origem ? '&origem=' + encodeURIComponent(origem) : '');
-}
+function fmLink(codigo, origem){ return linkTeste('familia', codigo, origem ? 'origem=' + encodeURIComponent(origem) : ''); }
 function fmLinkDireto(codigo, origem){
   return location.origin + '/teste/?t=' + encodeURIComponent(window.T_SLUG || '') + '&c=' + encodeURIComponent(codigo) + '&f=1' + (origem ? '&origem=' + encodeURIComponent(origem) : '');
 }

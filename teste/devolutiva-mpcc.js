@@ -161,7 +161,7 @@ const mpEhMeire = () => /^meire/i.test(window.T_SLUG || '');
 const mpComQuem = () => mpEhMeire() ? MP.AUTORIA : (window.T_NOME || (typeof T_A !== 'undefined' ? T_A : 'a terapeuta'));
 const mpAp = () => typeof T_A !== 'undefined' ? T_A : 'a terapeuta';
 const mpZapTer = texto => 'https://wa.me/' + (CONFIG.whatsappNumero || '') + (texto ? '?text=' + encodeURIComponent(texto) : '');
-const mpLink = codigo => location.origin + location.pathname + '?t=' + encodeURIComponent(T_SLUG) + '&mp=' + encodeURIComponent(codigo);
+const mpLink = codigo => linkTeste('mpcc', codigo);
 const mpQuando = iso => iso ? new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
 const mpDataCurta = iso => iso ? new Date(iso).toLocaleDateString('pt-BR') : '';
 
