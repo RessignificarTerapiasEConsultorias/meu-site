@@ -23,10 +23,17 @@
   function fotoDe(ks) { for (var i = 0; i < ks.length; i++) if (FOTOS[ks[i]]) return FOTOS[ks[i]]; return null; }
   function iniciais(nome) { var p = String(nome || '?').trim().split(/\s+/); return ((p[0] || '?')[0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase(); }
   function corDe(nome) { var h = 0, s = semAcento(nome); for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return 'cor' + (h % 5 || ''); }
-  function avatar(nome, ks, on) {
+  /* cods: códigos do cliente (a bolinha verde acende quando ele está no site com um deles); base: linha de código (vale qualquer número do link) */
+  function avatar(nome, ks, cods, base) {
     var f = fotoDe(ks);
-    return '<span class="p3-av ' + (f ? '' : corDe(nome)) + '" aria-hidden="true">' + (f ? '<img src="' + esc(f) + '" alt="">' : esc(iniciais(nome))) + (on ? '<span class="p3-on"></span>' : '') + '</span>';
+    return '<span class="p3-av ' + (f ? '' : corDe(nome)) + '" aria-hidden="true"' + attrCods(cods, base) + '>' + (f ? '<img src="' + esc(f) + '" alt="">' : esc(iniciais(nome))) + '</span>';
   }
+  function attrCods(cods, base) {
+    var l = (cods || []).filter(Boolean).map(function (c) { return String(c).toUpperCase().trim(); });
+    return l.length ? ' data-p3c="' + esc(l.join(' ')) + '"' + (base ? ' data-p3b="1"' : '') : '';
+  }
+  var RX_COD = /\b[A-Z0-9]{2,3}-[A-Z0-9]{4}(?:-\d{1,4})?\b/g;
+  function codsDoTexto(t) { return String(t || '').match(RX_COD) || []; }
   function cliente() { try { return typeof clienteMembros === 'function' ? clienteMembros() : null; } catch (e) { return null; } }
   function respostas() { try { return typeof respostasCache !== 'undefined' && Array.isArray(respostasCache) ? respostasCache : []; } catch (e) { return []; } }
 
@@ -60,21 +67,21 @@
       var r = null;
       if (cod || el.getAttribute('data-nome')) r = rs.find(function (x) { return (x.codigo || '') === cod && (x.nome || '') === (el.getAttribute('data-nome') || ''); }) || null;
       var codigoLinha = /^[A-Z0-9]{2,3}-[A-Z0-9]{4}/.test(nomeEl.textContent.trim());
+      var cods = cod ? [cod] : codsDoTexto(el.textContent);
       var html;
       if (codigoLinha) {
         var m = nomeEl.textContent.match(/·\s*([^·]+)/), quem = m ? m[1].replace(/só você vê|cliente vê/g, '').trim() : '';
-        var c = nomeEl.textContent.trim().slice(0, 9), rr = rs.find(function (x) { return String(x.codigo || '').indexOf(c) === 0; });
+        var c = (nomeEl.textContent.trim().match(/^[A-Z0-9]{2,3}-[A-Z0-9]{4}/) || [''])[0], rr = rs.find(function (x) { return String(x.codigo || '').indexOf(c) === 0; });
         var ks = rr ? chaves(rr) : (quem ? chaves({ nome: quem }) : []);
-        html = (quem || rr) && fotoDe(ks) ? avatar(quem || rr.nome, ks) : (quem ? avatar(quem, ks) : '<span class="p3-av p3-chave" aria-hidden="true">' + ICONE_CHAVE + '</span>');
+        html = (quem || rr) && fotoDe(ks) ? avatar(quem || rr.nome, ks, [c], true) : (quem ? avatar(quem, ks, [c], true) : '<span class="p3-av p3-chave" aria-hidden="true"' + attrCods([c], true) + '>' + ICONE_CHAVE + '</span>');
       } else {
         var ks2 = r ? chaves(r) : chaves({ nome: nome });
-        var on = !!(r && String(r.whatsapp || '').replace(/\D/g, '').length >= 10);
-        html = avatar(nome, ks2, on);
+        html = avatar(nome, ks2, cods);
       }
       el.insertAdjacentHTML('afterbegin', html);
       if (primeira && el.closest('#lista-respostas')) { el.classList.add('p3-foco'); primeira = false; }
     });
-    prioridadeDetalhe();
+    prioridadeDetalhe(); marcarOnline();
   }
 
   function prioridadeDetalhe() {
@@ -94,7 +101,7 @@
     if (!h2) return;
     var ks = chaves(r), tem = !!fotoDe(ks);
     var cab = document.createElement('div'); cab.className = 'p3-cab';
-    cab.innerHTML = avatar(r.nome, ks, String(r.whatsapp || '').replace(/\D/g, '').length >= 10) + '<div class="p3-txt"></div>';
+    cab.innerHTML = avatar(r.nome, ks, [r.codigo]) + '<div class="p3-txt"></div>';
     var txt = cab.querySelector('.p3-txt'); h2.parentNode.insertBefore(cab, h2); txt.appendChild(h2); if (p) txt.appendChild(p);
     txt.insertAdjacentHTML('beforeend', '<button type="button" class="p3-foto-bt">' + ICONE_CAM + (tem ? 'Trocar a foto' : 'Adicionar foto do cliente') + '</button>' +
       (tem ? '<button type="button" class="p3-foto-tira">remover</button>' : '') + '<input type="file" accept="image/*" hidden><p class="p3-aviso" role="status"></p>');
@@ -146,7 +153,7 @@
   function refazerDetalhe(r) {
     var cab = document.querySelector('#detalhe-conteudo .p3-cab'); if (!cab) return;
     var ks = chaves(r), velho = cab.querySelector(':scope > .p3-av');
-    velho.insertAdjacentHTML('afterend', avatar(r.nome, ks, String(r.whatsapp || '').replace(/\D/g, '').length >= 10)); velho.remove();
+    velho.insertAdjacentHTML('afterend', avatar(r.nome, ks, [r.codigo])); marcarOnline(); velho.remove();
     var bt = cab.querySelector('.p3-foto-bt'), tem = !!fotoDe(ks);
     bt.innerHTML = ICONE_CAM + (tem ? 'Trocar a foto' : 'Adicionar foto do cliente');
     var tira = cab.querySelector('.p3-foto-tira');
@@ -160,7 +167,55 @@
     novo.__p3 = true; window.abrirDetalhe = novo; return true;
   }
 
+  /* ===== ONLINE DE VERDADE (presença em tempo real do Supabase) =====
+     Quem responde: enquanto está no site com um código (fazendo o teste ou vendo o resultado), entra no canal
+     da página informando só o código, sem nome nem telefone. A área da terapeuta escuta o mesmo canal e
+     acende a bolinha verde de quem está online agora. Fechou a página ou perdeu a conexão: apaga sozinha. */
+  var ONLINE = new Set(), canal = null, canalPronto = false, ultimos = null;
+  function slugPagina() { return String(window.T_SLUG || (window.__T && window.__T.slug) || new URLSearchParams(location.search).get('t') || (location.hostname + location.pathname)).toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 80); }
+  function abrirCanal() {
+    if (canal) return canal;
+    var c = cliente(), s = slugPagina(); if (!c || !c.channel || !s) return null;
+    canal = c.channel('p3on:' + s, { config: { presence: { key: 'k' + Math.random().toString(36).slice(2, 10) } } });
+    canal.on('presence', { event: 'sync' }, function () {
+      var st = canal.presenceState(), novo = new Set();
+      Object.keys(st).forEach(function (k) { (st[k] || []).forEach(function (m) { (m.c || []).forEach(function (x) { novo.add(String(x).toUpperCase()); }); }); });
+      ONLINE = novo; marcarOnline();
+    });
+    canal.subscribe(function (status) { if (status === 'SUBSCRIBED') { canalPronto = true; ultimos = null; enviarMeus(); } });
+    return canal;
+  }
+  function meusCodigos() {
+    var l = [];
+    try { if (typeof estado !== 'undefined' && estado) { if (estado.acesso && estado.acesso.exibicao) l.push(estado.acesso.exibicao); if (estado.codigo) l.push(estado.codigo); } } catch (e) {}
+    try { if (typeof tc !== 'undefined' && tc && tc.codigo) l.push(tc.codigo); } catch (e) {}
+    Array.prototype.forEach.call(document.querySelectorAll('input.codigo-input'), function (i) { l.push(i.value); });
+    return Array.from(new Set(l.map(function (x) { return String(x || '').toUpperCase().trim(); })
+      .filter(function (x) { return /^[A-Z0-9]{2,3}-[A-Z0-9]{4}(-\d{1,4})?$/.test(x); }))).slice(0, 6);
+  }
+  function enviarMeus() {
+    if (!canal || !canalPronto) return;
+    var adm = document.getElementById('tela-admin'), naArea = !!(adm && adm.classList.contains('ativa'));
+    var l = naArea ? [] : meusCodigos(), k = l.join(' ');
+    if (k === ultimos) return; ultimos = k;
+    try { canal.track({ c: l }); } catch (e) {}            // a área também se anuncia (sem código): só assim o servidor manda a lista de quem está online
+  }
+  function marcarOnline() {
+    Array.prototype.forEach.call(document.querySelectorAll('#tela-admin .p3-av[data-p3c]'), function (av) {
+      var cs = av.getAttribute('data-p3c').split(' '), base = av.getAttribute('data-p3b') === '1', on = false;
+      ONLINE.forEach(function (o) { cs.forEach(function (c) { if (o === c || (base && o.indexOf(c + '-') === 0)) on = true; }); });
+      var dot = av.querySelector('.p3-on');
+      if (on && !dot) av.insertAdjacentHTML('beforeend', '<span class="p3-on" title="Online agora"></span>');
+      if (!on && dot) dot.remove();
+      var linha = av.closest('.linha-item, .p3-cab'); if (linha) linha.classList.toggle('p3-online', on);
+    });
+  }
+  window.addEventListener('pagehide', function () { try { if (canal) canal.untrack(); } catch (e) {} });
+  window.__p3online = function () { return Array.from(ONLINE); };
+  window.__p3dbg = function () { return { canal: !!canal, pronto: canalPronto, enviados: ultimos, pagina: slugPagina(), meus: meusCodigos() }; };
+
   function ligar() {
+    setInterval(function () { if (abrirCanal()) enviarMeus(); }, 2500);
     var t = 0, iv = setInterval(function () { if (envolver() || ++t > 120) clearInterval(iv); }, 150);
     var ag = 0;
     var olhar = function () {

@@ -241,7 +241,7 @@ body.cv-on{overflow-x:clip}
 @media(min-width:900px){
   .cv-barra{display:none}
   .cv-topo{position:relative;left:50%;transform:translateX(-50%);width:min(996px,calc(100vw - 48px));margin:-14px 0 6px}
-  #tela-capa.capa-vendas .capa{display:grid;grid-template-columns:minmax(0,580px) 360px;justify-content:center;align-items:center;gap:56px;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding:8px 24px 36px;text-align:left}
+  #tela-capa.capa-vendas .capa{display:grid;grid-template-columns:minmax(0,580px) 360px;justify-content:center;align-items:start;gap:56px;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding:8px 24px 36px;text-align:left}
   #tela-capa.capa-vendas .moldura{order:2;width:100%;margin:0}
   #tela-capa.capa-vendas .lado-texto{order:1}
   #tela-capa.capa-vendas .selo{margin-bottom:14px}

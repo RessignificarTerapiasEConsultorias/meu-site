@@ -167,15 +167,17 @@ const mpDataCurta = iso => iso ? new Date(iso).toLocaleDateString('pt-BR') : '';
 
 /* ---- 3. O GRÁFICO RADAR (8 dimensões, escala de 1 a 5) ---- */
 const mpRadares = [];
-function mpCores(){
-  const g = n => (getComputedStyle(document.documentElement).getPropertyValue(n) || '').trim();
-  return { linha:g('--ardosia') || '#1F4B6B', fundo:g('--argila') || '#34769C', suave:g('--borda') || '#CEDEE7', tinta:g('--tinta') || '#132D40', ouro:'#B8913F' };
+function mpCores(canvas){
+  /* painel 3D: dentro da área escura, usa as cores da própria área (texto claro) */
+  const escuro = !!(canvas && canvas.closest && canvas.closest('#tela-admin') && document.documentElement.classList.contains('p3d'));
+  const g = n => (getComputedStyle(escuro ? canvas : document.documentElement).getPropertyValue(n) || '').trim();
+  return { linha:g('--ardosia') || '#1F4B6B', fundo:g('--argila') || '#34769C', suave:g('--borda') || '#CEDEE7', tinta:g('--tinta') || '#132D40', ouro:'#B8913F', escala: escuro ? '#AEB8CB' : '#8A97A0', escuro };
 }
 function mpRadar(canvas, dims, ladoFixo, dprFixo){
   const dpr = dprFixo || window.devicePixelRatio || 1;
   const lado = ladoFixo || Math.max(280, Math.min((canvas.parentElement ? canvas.parentElement.clientWidth : 360) - 8, 560));
   canvas.style.width = lado + 'px'; canvas.style.height = lado + 'px'; canvas.width = Math.round(lado * dpr); canvas.height = Math.round(lado * dpr);
-  const c = canvas.getContext('2d'), k = mpCores(), n = dims.length, largo = lado >= 440;
+  const c = canvas.getContext('2d'), k = mpCores(canvas), n = dims.length, largo = lado >= 440;
   c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, lado, lado);
   const cx = lado / 2, cy = lado / 2, raio = largo ? lado * 0.27 : lado * 0.34;
   const ponto = (i, f) => { const a = Math.PI * 2 * i / n - Math.PI / 2; return [cx + Math.cos(a) * raio * f, cy + Math.sin(a) * raio * f]; };
@@ -184,11 +186,11 @@ function mpRadar(canvas, dims, ladoFixo, dprFixo){
     c.closePath(); c.strokeStyle = anel === 5 ? k.ouro : k.suave; c.lineWidth = anel === 5 ? 1.6 : 1; c.stroke();
   }
   for(let i = 0; i < n; i++){ const [x, y] = ponto(i, 1); c.beginPath(); c.moveTo(cx, cy); c.lineTo(x, y); c.strokeStyle = k.suave; c.lineWidth = 1; c.stroke(); }
-  c.font = '600 ' + (largo ? 11 : 10) + 'px Karla, sans-serif'; c.fillStyle = '#8A97A0'; c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.font = '600 ' + (largo ? 11 : 10) + 'px Karla, sans-serif'; c.fillStyle = k.escala; c.textAlign = 'left'; c.textBaseline = 'middle';
   for(let anel = 1; anel <= 5; anel++){ const [x, y] = ponto(0, anel / 5); c.fillText(String(anel), x + 4, y); }
   c.beginPath(); dims.forEach((d, i) => { const [x, y] = ponto(i, d.media / 5); i ? c.lineTo(x, y) : c.moveTo(x, y); });
   c.closePath(); c.globalAlpha = .22; c.fillStyle = k.fundo; c.fill(); c.globalAlpha = 1; c.strokeStyle = k.linha; c.lineWidth = 2.4; c.stroke();
-  dims.forEach((d, i) => { const [x, y] = ponto(i, d.media / 5); c.beginPath(); c.arc(x, y, 4.6, 0, Math.PI * 2); c.fillStyle = k.linha; c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); });
+  dims.forEach((d, i) => { const [x, y] = ponto(i, d.media / 5); c.beginPath(); c.arc(x, y, 4.6, 0, Math.PI * 2); c.fillStyle = k.linha; c.fill(); c.strokeStyle = k.escuro ? '#0A1426' : '#fff'; c.lineWidth = 2; c.stroke(); });
   dims.forEach((d, i) => {
     const a = Math.PI * 2 * i / n - Math.PI / 2, folga = largo ? 16 : 17, x = cx + Math.cos(a) * (raio + folga), y = cy + Math.sin(a) * (raio + folga);
     if(!largo){

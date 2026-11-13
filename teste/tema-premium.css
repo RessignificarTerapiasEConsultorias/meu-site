@@ -337,3 +337,127 @@ html.tp .dv-pad .btn-contorno{color:var(--L-tinta);border-color:var(--L-borda);b
 html.tp .dv-pad-acordo,html.tp .dv-pad-dica,html.tp .dv-pad-ok{color:var(--L-tinta)}
 html.tp .dv-pad-x,html.tp .dv-pad-nome{color:var(--L-tinta-suave)}
 html.tp .dv-pad-fundo{background:rgba(3,6,12,.72)}
+
+/* ==== P3D: INICIO (gerado por gerar_tp_p3d.py) ==== */
+/* área da terapeuta com fundo premium (painel 3D) */
+html.tp.p3d #tela-admin{
+  --areia:#050B17;--areia-escura:rgba(255,255,255,.06);--papel:rgba(17,31,56,.72);--tinta:#F1E9DA;--tinta-suave:#B3BCCD;
+  --ardosia:#E2C27A;--ardosia-escura:#F0D898;--ardosia-clara:rgba(201,162,74,.12);--argila:#D4AF5A;--argila-clara:rgba(201,162,74,.10);
+  --salvia:#C9A24A;--borda:rgba(201,162,74,.26);--alta-clara:rgba(255,106,84,.13);--media-clara:rgba(244,190,79,.12);--baixa-clara:rgba(98,204,142,.12);
+  --sombra:0 22px 50px -20px rgba(0,0,0,.75);--sombra-leve:0 12px 30px -16px rgba(0,0,0,.7);color:var(--tinta)}
+html.tp.p3d:has(body.tp-admin){background:#050B17}
+html.tp.p3d body.tp-admin{
+  background:radial-gradient(120% 70% at 85% -10%,#173262 0%,rgba(12,26,52,.6) 38%,transparent 62%),
+             radial-gradient(90% 55% at -10% 105%,rgba(201,162,74,.16) 0%,transparent 55%),
+             linear-gradient(180deg,#071226 0%,#050B17 55%,#04080F 100%);background-attachment:fixed}
+html.tp.p3d body.tp-admin::before{display:block}
+html.tp.p3d #tela-admin h1,html.tp.p3d #tela-admin h2,html.tp.p3d #tela-admin h3,html.tp.p3d #tela-admin h4{color:#F4ECDD}
+html.tp.p3d #tela-admin a{color:#E8CB7E}
+html.tp.p3d #tela-admin .btn-primario,html.tp.p3d #tela-admin .btn-argila{color:#1A1405;border:0;background:linear-gradient(180deg,#F3DC9C 0%,#D9B65E 48%,#B88E35 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 -2px 0 rgba(120,85,20,.35) inset,0 14px 30px -12px rgba(201,162,74,.65),0 0 0 1px rgba(246,227,174,.35)}
+html.tp.p3d #tela-admin .btn-contorno{color:#F4ECDD;border-color:rgba(201,162,74,.45);background:rgba(255,255,255,.03)}
+html.tp.p3d #tela-admin .cartao,html.tp.p3d #tela-admin .bloco-trava,html.tp.p3d #tela-admin .insight,html.tp.p3d #tela-admin .aviso-clinico,html.tp.p3d #tela-admin .ficha{
+  background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.24);
+  box-shadow:0 0 0 1px rgba(255,255,255,.03) inset,0 20px 44px -24px rgba(0,0,0,.85);color:var(--tinta)}
+html.tp.p3d #tela-admin .nota{background:rgba(255,255,255,.06);color:#F4ECDD}
+html.tp.p3d #tela-admin .barra-item .topo{color:#F4ECDD}
+html.tp.p3d #tela-admin .campo input,html.tp.p3d #tela-admin .campo select,html.tp.p3d #tela-admin .campo textarea,html.tp.p3d #tela-admin textarea,html.tp.p3d #tela-admin input[type=search],html.tp.p3d #tela-admin input[type=text],html.tp.p3d #tela-admin input[type=tel],html.tp.p3d #tela-admin input[type=email],html.tp.p3d #tela-admin input[type=number],html.tp.p3d #tela-admin input[type=date],html.tp.p3d #tela-admin select{
+  background-color:rgba(6,14,28,.75);border-color:rgba(201,162,74,.3);color:#F4ECDD;color-scheme:dark}
+html.tp.p3d #tela-admin input::placeholder,html.tp.p3d #tela-admin textarea::placeholder{color:#7D889E}
+html.tp.p3d #tela-admin select option{background:#0A1426;color:#F4ECDD}
+html.tp.p3d #tela-admin a:not(.btn){color:#E8CB7E}
+html.tp.p3d #tela-admin a.btn-zap,html.tp.p3d #tela-admin a.btn-zap *{color:#fff}
+html.tp.p3d #tela-admin .bloco-interesse{background:linear-gradient(180deg,rgba(43,194,109,.12),rgba(12,24,45,.6));border-color:rgba(127,227,168,.4);color:#F4ECDD}
+html.tp.p3d #tela-admin .bloco-trava .caixa-atencao{background:rgba(244,190,79,.1);border-color:rgba(244,190,79,.45);color:#F6D27E}
+html.tp.p3d #tela-admin .caixa-urgencia{color:#FFB0A2}
+html.tp.p3d #tela-admin .caixa-parabens{color:#9BE6B8}
+html.tp.p3d #tela-admin [style*="color:#7A5A00"]{color:#F6D27E!important}
+html.tp.p3d #tela-admin [style*="color:#2F5E3F"]{color:#9BE6B8!important}
+html.tp.p3d #tela-admin td small,html.tp.p3d #tela-admin .an-nota-peq{color:#AEB8CB!important}
+html.tp.p3d #tela-admin [style*="color:#6B7486"],html.tp.p3d #tela-admin [style*="color:#4C5670"],html.tp.p3d #tela-admin [style*="color:#5C5642"]{color:#AEB8CB!important}
+html.tp.p3d #tela-admin .bi-titulo{color:#F6E3AE}
+html.tp.p3d #tela-admin .an-abertas b{color:#C9A24A}
+html.tp.p3d #tela-admin .bi-titulo span{color:#AEB8CB}
+html.tp.p3d #tela-admin .bi-linha .sim{color:#7FE3A8}
+html.tp.p3d #tela-admin .bi-linha .nao{color:#F6D27E}
+html.tp.p3d #tela-admin .mp-nota{filter:brightness(1.7) saturate(.9)}
+html.tp.p3d #tela-admin .an-apls button{background:rgba(255,255,255,.05);border-color:rgba(201,162,74,.35);color:#F4ECDD}
+html.tp.p3d #tela-admin .an-apls button.ativa{background:linear-gradient(180deg,#F3DC9C,#C49A3E);border-color:#E8CB7E;color:#1A1405}
+/* o relatório de devolutiva (documento) continua em papel claro, como sai no PDF */
+html.tp.p3d #tela-admin .dv{--areia:var(--L-areia);--papel:var(--L-papel);--tinta:var(--L-tinta);--tinta-suave:var(--L-tinta-suave);--ardosia:var(--L-ardosia);
+  --ardosia-escura:var(--L-ardosia-escura);--ardosia-clara:var(--L-ardosia-clara);--argila:var(--L-argila);--argila-clara:var(--L-argila-clara);--borda:var(--L-borda);color:var(--L-tinta)}
+html.tp.p3d #tela-admin .dv h1,html.tp.p3d #tela-admin .dv h3,html.tp.p3d #tela-admin .dv h4{color:var(--L-ardosia)}
+html.tp.p3d #tela-admin .dv h2{color:var(--L-tinta)}
+
+/* cópias das regras das telas de quem responde */
+html.tp.p3d #tela-admin h1{font-weight:500;letter-spacing:-.015em;text-shadow:0 2px 24px rgba(201,162,74,.12)}
+html.tp.p3d #tela-admin .campo input,html.tp.p3d #tela-admin .campo select,html.tp.p3d #tela-admin .campo textarea,html.tp.p3d #tela-admin textarea{background:rgba(6,14,28,.75);border-color:rgba(201,162,74,.28);color:var(--creme)}
+html.tp.p3d #tela-admin .campo input::placeholder,html.tp.p3d #tela-admin textarea::placeholder{color:#6F7A90}
+html.tp.p3d #tela-admin .campo input:focus,html.tp.p3d #tela-admin .campo select:focus,html.tp.p3d #tela-admin .campo textarea:focus{border-color:var(--ouro);box-shadow:0 0 0 3px rgba(201,162,74,.22)}
+html.tp.p3d #tela-admin .campo select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path d='M1 1l6 6 6-6' stroke='%23C9A24A' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 18px center}
+html.tp.p3d #tela-admin .campo select option{background:#0A1426;color:var(--creme)}
+html.tp.p3d #tela-admin .tag-vis{background:rgba(201,162,74,.12);color:var(--ouro2)}
+html.tp.p3d #tela-admin .alternar button{background:rgba(255,255,255,.04);border-color:rgba(201,162,74,.28);color:var(--creme)}
+html.tp.p3d #tela-admin .alternar button.ativa{background:rgba(201,162,74,.14);border-color:var(--ouro);box-shadow:inset 0 0 0 1.5px var(--ouro)}
+html.tp.p3d #tela-admin .an-secao,html.tp.p3d #tela-admin .an-card{background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.22);color:var(--tinta)}
+html.tp.p3d #tela-admin .an-card{border-left-color:var(--c)}
+html.tp.p3d #tela-admin .an-area .an-tr{background:rgba(255,255,255,.08)}
+html.tp.p3d #tela-admin .an-faixa-rot,html.tp.p3d #tela-admin .an-pontas,html.tp.p3d #tela-admin .an-enunciado{color:var(--tinta-suave)}
+html.tp.p3d #tela-admin .an-faixa .an-marca{background:#fff;box-shadow:0 0 10px rgba(255,255,255,.8)}
+html.tp.p3d #tela-admin .an-nivel.baixo{background:rgba(98,204,142,.14);color:#9BE6B8}
+html.tp.p3d #tela-admin .an-nivel.moderado{background:rgba(244,190,79,.14);color:#F6D27E}
+html.tp.p3d #tela-admin .an-nivel.alto{background:rgba(255,106,84,.14);color:#FFB0A2}
+html.tp.p3d #tela-admin .an-alerta{background:rgba(255,106,84,.12);border-color:rgba(255,106,84,.3);color:#FFC2B6}
+html.tp.p3d #tela-admin .an-proxima{background:rgba(201,162,74,.12);color:var(--creme);border:1px solid rgba(201,162,74,.3)}
+html.tp.p3d #tela-admin .an-evol th,html.tp.p3d #tela-admin .an-evol td{border-bottom-color:rgba(255,255,255,.08)}
+html.tp.p3d #tela-admin .an-sobe{color:#FF8A75}
+html.tp.p3d #tela-admin .an-desce{color:#7FDCA4}
+html.tp.p3d #tela-admin .an-gadnum{box-shadow:0 0 30px -6px var(--c)}
+html.tp.p3d #tela-admin svg [stroke="#E3DCCD"]{stroke:rgba(232,203,126,.2)}
+html.tp.p3d #tela-admin svg text[fill="#4C5670"],html.tp.p3d #tela-admin svg text[fill="#6B7486"]{fill:#C3CADA}
+html.tp.p3d #tela-admin svg text[fill="#16203A"]{fill:#F4ECDD}
+html.tp.p3d #tela-admin svg [stroke="#1E4A45"]{stroke:#E8CB7E}
+html.tp.p3d #tela-admin svg circle[fill="#1E4A45"]{fill:#E8CB7E}
+html.tp.p3d #tela-admin svg [stroke="#fff"]{stroke:#0A1426}
+html.tp.p3d #tela-admin svg [stroke="#8A97A0"]{stroke:#9AA6BC}
+html.tp.p3d #tela-admin svg rect[fill="#E3F2E9"]{fill:rgba(98,204,142,.09)}
+html.tp.p3d #tela-admin svg rect[fill="#FFF6DA"]{fill:rgba(244,190,79,.08)}
+html.tp.p3d #tela-admin svg rect[fill="#FBE9E5"]{fill:rgba(255,106,84,.10)}
+html.tp.p3d #tela-admin .mp-secao{background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.22);box-shadow:0 20px 44px -24px rgba(0,0,0,.85)}
+html.tp.p3d #tela-admin .mp-secao h2{color:var(--creme);border-bottom-color:rgba(201,162,74,.35)}
+html.tp.p3d #tela-admin .mp-secao h3,html.tp.p3d #tela-admin .mp-card h3{color:var(--ouro2)}
+html.tp.p3d #tela-admin .mp-geral-nota,html.tp.p3d #tela-admin .mp-faixa{background:rgba(6,14,28,.7)}
+html.tp.p3d #tela-admin .mp-card,html.tp.p3d #tela-admin .mp-reco,html.tp.p3d #tela-admin .mp-meio li{background:rgba(255,255,255,.035);border-color:rgba(201,162,74,.2)}
+html.tp.p3d #tela-admin .mp-card{border-left-color:var(--ouro)}
+html.tp.p3d #tela-admin .mp-reco-forte,html.tp.p3d #tela-admin .mp-hist-i.atual{background:rgba(201,162,74,.09);border-color:rgba(232,203,126,.45)}
+html.tp.p3d #tela-admin .mp-final{background:linear-gradient(180deg,rgba(201,162,74,.12),rgba(12,24,45,.85));border-color:rgba(232,203,126,.45)}
+html.tp.p3d #tela-admin .mp-aviso{background:rgba(201,162,74,.12);color:var(--ouro3);border:1px solid rgba(201,162,74,.3)}
+html.tp.p3d #tela-admin .mp-devolutiva{background:linear-gradient(160deg,#13284D 0%,#0B1730 60%,#08101F 100%);border:1px solid rgba(232,203,126,.4);box-shadow:0 0 50px -20px rgba(201,162,74,.45)}
+html.tp.p3d #tela-admin .mp-devolutiva h2{color:var(--ouro3)}
+html.tp.p3d #tela-admin .mp-devolutiva p{color:#D5DCEA}
+html.tp.p3d #tela-admin .mp-leg-n{background:linear-gradient(180deg,#F3DC9C,#C49A3E);color:#1A1405}
+html.tp.p3d #tela-admin .mp-barra{background:rgba(255,255,255,.08)}
+html.tp.p3d #tela-admin .mp-escala td:first-child{color:var(--ouro2)}
+html.tp.p3d #tela-admin .dc-aviso-corp{background:rgba(255,255,255,.04);border-color:rgba(201,162,74,.22);color:var(--tinta)}
+html.tp.p3d #tela-admin .dc-instrucao b.mais{color:#7FDCA4}
+html.tp.p3d #tela-admin .dc-instrucao b.menos{color:#FF9A86}
+html.tp.p3d #tela-admin .dc-op{background:linear-gradient(180deg,rgba(28,48,84,.85),rgba(12,24,45,.9));border-color:rgba(201,162,74,.3)}
+html.tp.p3d #tela-admin .dc-op .dc-pal{color:var(--creme)}
+html.tp.p3d #tela-admin .dc-op.mais{background:rgba(63,203,124,.12);border-color:#3FCB7C}
+html.tp.p3d #tela-admin .dc-op.menos{background:rgba(255,106,84,.12);border-color:#FF6A54}
+html.tp.p3d #tela-admin .dc-bt{background:rgba(6,14,28,.75);border-color:rgba(201,162,74,.3);color:var(--creme)}
+html.tp.p3d #tela-admin .dc-bt.mais.on{background:#1F9E57;border-color:#3FCB7C;color:#fff;box-shadow:0 0 16px -4px rgba(63,203,124,.7)}
+html.tp.p3d #tela-admin .dc-bt.menos.on{background:#C23A2E;border-color:#FF6A54;color:#fff;box-shadow:0 0 16px -4px rgba(255,106,84,.7)}
+html.tp.p3d #tela-admin .dc-falta{color:var(--ouro2)}
+html.tp.p3d #tela-admin .dc-secao{background:linear-gradient(180deg,rgba(25,44,78,.78),rgba(12,24,45,.82));border-color:rgba(201,162,74,.22);box-shadow:0 20px 44px -24px rgba(0,0,0,.85);color:var(--tinta)}
+html.tp.p3d #tela-admin .dc-secao h2,html.tp.p3d #tela-admin .dc-secao h3{color:var(--creme)}
+html.tp.p3d #tela-admin .dc-caixa{background:rgba(255,255,255,.04);border-color:rgba(201,162,74,.18)}
+html.tp.p3d #tela-admin .dc-caixa h3,html.tp.p3d #tela-admin .dc-caixa h4{color:var(--ouro2)}
+html.tp.p3d #tela-admin .dc-tabela th,html.tp.p3d #tela-admin .dc-tabela td{border-bottom-color:rgba(255,255,255,.08)}
+html.tp.p3d #tela-admin .dc-alto{color:#7FDCA4}
+html.tp.p3d #tela-admin .dc-nota-peq{color:var(--tinta-suave)}
+html.tp.p3d #tela-admin .disc-graf{background:#F7F4EC;border-color:rgba(232,203,126,.6);box-shadow:0 18px 40px -22px rgba(0,0,0,.9)}
+html.tp.p3d #tela-admin .tc-op.escolhida{background:linear-gradient(180deg,#F6E3AE 0%,#D9B65E 55%,#B88E35 100%);border-color:#F6E3AE;color:#1A1405;box-shadow:0 0 22px -4px rgba(232,203,126,.7)}
+html.tp.p3d #tela-admin .tc-op b{background:rgba(201,162,74,.14);color:var(--ouro2)}
+html.tp.p3d #tela-admin .tc-op.escolhida b{background:rgba(26,20,5,.18);color:#1A1405}
+/* ==== P3D: FIM ==== */

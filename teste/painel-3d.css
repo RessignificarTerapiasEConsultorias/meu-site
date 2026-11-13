@@ -4,7 +4,7 @@
    Liga por página: travas_paginas.dados.painel_3d = true (o boot põe a classe .p3d no <html>).
    ============================================================================ */
 html.p3d #tela-admin{
-  --p3-fundo:var(--ardosia-escura,#0B1F3A); --p3-ouro:#C9A24A; --p3-ouro2:#E8CB7E; --p3-ouro3:#F6E3AE;
+  --p3-fundo:var(--L-ardosia-escura,var(--ardosia-escura,#0B1F3A)); --p3-ouro:#C9A24A; --p3-ouro2:#E8CB7E; --p3-ouro3:#F6E3AE;
   --p3-vidro:linear-gradient(160deg,color-mix(in srgb,var(--p3-fundo) 88%,#fff 12%) 0%,var(--p3-fundo) 55%,color-mix(in srgb,var(--p3-fundo) 80%,#000 20%) 100%);
 }
 /* ---------- listas: cada linha vira um cartão 3D ---------- */
@@ -30,7 +30,7 @@ html.p3d #tela-admin .linha-item .etiqueta{border:1px solid rgba(255,255,255,.18
 html.p3d #tela-admin .linha-item .etiqueta.e-alta{background:linear-gradient(180deg,#E2483A,#A51F22);color:#fff}
 html.p3d #tela-admin .linha-item .etiqueta.e-media{background:linear-gradient(180deg,#F6CF6A,#C8960C);color:#2A1E00}
 html.p3d #tela-admin .linha-item .etiqueta.e-baixa{background:linear-gradient(180deg,#5FCB8C,#2E7D4F);color:#fff}
-html.p3d #tela-admin .linha-item .etiqueta.livre{background:linear-gradient(180deg,#F3DC9C,#C49A3E);color:#1A1405}
+html.p3d #tela-admin .linha-item .etiqueta.livre{background:linear-gradient(180deg,#F3DC9C,#C49A3E);color:#1A1405!important}
 html.p3d #tela-admin .linha-item .etiqueta.usado{background:rgba(255,255,255,.08);color:#C9D0DE}
 /* selos do WhatsApp / notificação (urgTags) */
 html.p3d #tela-admin .linha-item [class*="urg-tag"],html.p3d #tela-admin .linha-item .urg-tags span{border-radius:999px;box-shadow:0 1px 0 rgba(255,255,255,.25) inset}
@@ -40,8 +40,8 @@ html.p3d #tela-admin .linha-item [class*="urg-tag"],html.p3d #tela-admin .linha-
   background:linear-gradient(145deg,#F6E3AE 0%,#D9B65E 50%,#A87F2C 100%);
   box-shadow:0 0 0 2px rgba(246,227,174,.9),0 0 0 5px rgba(201,162,74,.22),0 10px 22px -8px rgba(0,0,0,.7)}
 .p3-av img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
-.p3-av.cor1{background:linear-gradient(145deg,#8FD3FF,#3B7BD8)}.p3-av.cor2{background:linear-gradient(145deg,#FFB3A6,#D9534F)}
-.p3-av.cor3{background:linear-gradient(145deg,#B8F0C8,#3F9A62)}.p3-av.cor4{background:linear-gradient(145deg,#E3C7FF,#8B5CC9)}
+.p3-av.cor1{background:linear-gradient(145deg,#3C7FD0,#1D4C93)}.p3-av.cor2{background:linear-gradient(145deg,#C9544A,#8E2A24)}
+.p3-av.cor3{background:linear-gradient(145deg,#3E8F60,#1F5A3A)}.p3-av.cor4{background:linear-gradient(145deg,#8A5CC4,#5A3590)}
 .p3-av.cor1,.p3-av.cor2,.p3-av.cor3,.p3-av.cor4{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35)}
 .p3-av .p3-on{position:absolute;right:0;bottom:1px;width:13px;height:13px;border-radius:50%;background:#2BC26D;border:2px solid var(--p3-fundo,#0B1F3A);box-shadow:0 0 8px rgba(43,194,109,.8)}
 .p3-av.p3-chave{background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.04));color:var(--p3-ouro2,#E8CB7E);box-shadow:0 0 0 1.5px rgba(232,203,126,.6),0 10px 22px -8px rgba(0,0,0,.7)}
@@ -94,9 +94,6 @@ html.p3d #tela-admin #detalhe-conteudo .barra-item .topo b[style*="#3F7D55"]{col
 html.p3d #tela-admin #detalhe-conteudo .tp-prio{display:inline-flex;align-items:center;margin-left:8px;padding:3px 9px;border-radius:6px;vertical-align:1px;
   font:800 10.5px/1.2 'Karla',sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#fff;background:linear-gradient(180deg,#E2483A,#A51F22);
   box-shadow:0 0 0 1px rgba(255,170,150,.35),0 6px 16px -6px rgba(226,72,58,.9);transform:rotate(-2deg)}
-/* abas e campos da área com mais profundidade */
-html.p3d #tela-admin .abas,html.p3d #tela-admin #tc-abas{box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 10px 24px -16px rgba(0,0,0,.4)}
-html.p3d #tela-admin .abas button.ativa,html.p3d #tela-admin #tc-abas button.ativa{background:var(--p3-vidro);color:#fff;box-shadow:0 10px 20px -10px rgba(0,0,0,.6),0 0 0 1px rgba(232,203,126,.4)}
 html.p3d #tela-admin .codigo-gerado{background:var(--p3-vidro);border:1.4px solid rgba(232,203,126,.6);color:#fff;box-shadow:0 26px 50px -24px rgba(0,0,0,.8),0 0 40px -16px rgba(232,203,126,.6);transform:perspective(900px) rotateX(4deg)}
 html.p3d #tela-admin .codigo-gerado .valor{color:var(--p3-ouro2);text-shadow:0 0 22px rgba(232,203,126,.6)}
 html.p3d #tela-admin .codigo-gerado .para{color:#C9D0DE}
@@ -105,15 +102,6 @@ html.p3d #tela-admin .codigo-gerado .para{color:#C9D0DE}
 @media print{.p3-cab{background:#fff!important;color:#000!important;box-shadow:none!important;transform:none!important}.p3-foto-bt,.p3-foto-tira,.p3-aviso{display:none!important}
   html.p3d #tela-admin #detalhe-conteudo .teia,html.p3d #tela-admin #detalhe-conteudo .barras,html.p3d #tela-admin #detalhe-conteudo .painel-geral{transform:none!important}}
 
-/* botões de escolha (qual teste, cliente vê, cronômetro, tipo de código) também em 3D */
-html.p3d #tela-admin .alternar{perspective:900px}
-html.p3d #tela-admin .alternar button{background:linear-gradient(180deg,#fff 0%,#F4EFE4 100%);border:1px solid rgba(201,162,74,.35);color:var(--tinta);
-  box-shadow:0 1px 0 #fff inset,0 10px 18px -12px rgba(0,0,0,.35);transition:transform .25s ease,box-shadow .25s ease}
-html.p3d #tela-admin .alternar button:hover{transform:translateY(-2px) rotateX(5deg);box-shadow:0 1px 0 #fff inset,0 16px 24px -14px rgba(0,0,0,.4)}
-html.p3d #tela-admin .alternar button.ativa{background:var(--p3-vidro);color:#fff;border-color:var(--p3-ouro);
-  box-shadow:0 0 0 1px rgba(232,203,126,.5),0 14px 26px -12px rgba(0,0,0,.55),0 0 22px -6px rgba(201,162,74,.55)}
-html.p3d #tela-admin .alternar button.ativa small{color:#E8CB7E}
-@media (prefers-reduced-motion:reduce){html.p3d #tela-admin .alternar button{transition:none}html.p3d #tela-admin .alternar button:hover{transform:none}}
 /* "Excluir" dentro do cartão escuro: pílula de vidro discreta */
 html.p3d #tela-admin .linha-item .dv-exc,html.p3d #tela-admin .linha-item .dv-exc-resp,html.p3d #tela-admin .linha-item .mini-btn{background:rgba(255,255,255,.06);color:#F3C9C2;border:1px solid rgba(243,201,194,.35);box-shadow:0 1px 0 rgba(255,255,255,.08) inset}
 html.p3d #tela-admin .linha-item .dv-exc:hover,html.p3d #tela-admin .linha-item .dv-exc-resp:hover,html.p3d #tela-admin .linha-item .mini-btn:hover{background:rgba(178,58,47,.35);color:#fff}
@@ -124,3 +112,48 @@ html.p3d #tela-admin .linha-item .dv-exc:hover,html.p3d #tela-admin .linha-item 
   html.p3d #tela-admin .linha-item .nome,html.p3d #tela-admin .linha-item .sub{white-space:normal;overflow:visible;text-overflow:clip}
   html.p3d #tela-admin .linha-item > .etiqueta{margin-left:66px}
 }
+
+/* ---------- topo da área: abas, busca e escolhas no mesmo vidro 3D dos cartões ---------- */
+html.p3d #tela-admin .abas,html.p3d #tela-admin #tc-abas,html.p3d #tela-admin #mp-abas,html.p3d #tela-admin #dc-abas,html.p3d #tela-admin #an-abas,html.p3d #tela-admin #mi-abas{display:flex;gap:6px;padding:6px;margin-bottom:18px;border-radius:18px;
+  background:rgba(255,255,255,.035);border:1px solid rgba(232,203,126,.22);box-shadow:0 3px 10px rgba(0,0,0,.45) inset,0 1px 0 rgba(255,255,255,.05)}
+html.p3d #tela-admin .abas button,html.p3d #tela-admin #tc-abas button,html.p3d #tela-admin #mp-abas button,html.p3d #tela-admin #dc-abas button,html.p3d #tela-admin #an-abas button,html.p3d #tela-admin #mi-abas button{flex:1;min-height:50px;border:1px solid transparent;border-radius:13px;background:transparent;
+  color:#B9C3D6;font:700 15.5px 'Karla',sans-serif;letter-spacing:.01em;cursor:pointer;transition:background .25s,color .25s,box-shadow .25s,transform .25s}
+html.p3d #tela-admin .abas button:hover,html.p3d #tela-admin #tc-abas button:hover,html.p3d #tela-admin #mp-abas button:hover,html.p3d #tela-admin #dc-abas button:hover,html.p3d #tela-admin #an-abas button:hover,html.p3d #tela-admin #mi-abas button:hover{color:#F4ECDD;background:rgba(255,255,255,.04)}
+html.p3d #tela-admin .abas button.ativa,html.p3d #tela-admin #tc-abas button.ativa,html.p3d #tela-admin #mp-abas button.ativa,html.p3d #tela-admin #dc-abas button.ativa,html.p3d #tela-admin #an-abas button.ativa,html.p3d #tela-admin #mi-abas button.ativa{background:var(--p3-vidro);color:#fff;border-color:rgba(232,203,126,.55);transform:translateY(-1px);
+  box-shadow:0 1px 0 rgba(255,255,255,.14) inset,0 12px 22px -12px rgba(0,0,0,.8),0 0 22px -8px rgba(232,203,126,.6)}
+html.p3d #tela-admin input[type=search],html.p3d #tela-admin .campo input[type=search]{min-height:52px;border-radius:16px;padding-left:46px;
+  background:rgba(6,14,28,.6) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23E8CB7E' stroke-width='2.2' stroke-linecap='round'><circle cx='11' cy='11' r='7'/><path d='m20 20-3.5-3.5'/></svg>") no-repeat 16px center;
+  border:1px solid rgba(232,203,126,.3);box-shadow:0 3px 10px rgba(0,0,0,.4) inset}
+html.p3d #tela-admin input[type=search]:focus,html.p3d #tela-admin .campo input[type=search]:focus{border-color:#E8CB7E;box-shadow:0 3px 10px rgba(0,0,0,.4) inset,0 0 0 3px rgba(201,162,74,.22)}
+html.p3d #tela-admin .alternar{perspective:900px}
+html.p3d #tela-admin .alternar button{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid rgba(232,203,126,.26);color:#F4ECDD;border-radius:16px;
+  box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 12px 22px -16px rgba(0,0,0,.8);transition:transform .25s ease,box-shadow .25s ease,border-color .25s}
+html.p3d #tela-admin .alternar button small{color:#AEB8CB}
+html.p3d #tela-admin .alternar button:hover{transform:translateY(-2px) rotateX(5deg);border-color:rgba(232,203,126,.5)}
+html.p3d #tela-admin .alternar button.ativa{background:var(--p3-vidro);color:#fff;border-color:var(--p3-ouro2);
+  box-shadow:0 1px 0 rgba(255,255,255,.14) inset,0 14px 26px -12px rgba(0,0,0,.7),0 0 22px -6px rgba(201,162,74,.6)}
+html.p3d #tela-admin .alternar button.ativa small{color:var(--p3-ouro2)}
+/* quadro "Interesse depois do resultado" */
+html.p3d #tela-admin .resumo-interesse{position:relative;padding:18px;margin:0 0 18px;border-radius:22px;background:var(--p3-vidro);border:1px solid rgba(232,203,126,.4);
+  box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 26px 46px -26px rgba(0,0,0,.85),0 0 40px -22px rgba(232,203,126,.5)}
+html.p3d #tela-admin .ri-titulo{color:#F6E3AE;font:800 13px 'Karla',sans-serif;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
+html.p3d #tela-admin .ri-grade{gap:10px}
+html.p3d #tela-admin .ri-grade>div{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid rgba(232,203,126,.2);border-radius:16px;padding:12px 14px;
+  color:#F4ECDD;box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 14px 24px -16px rgba(0,0,0,.8)}
+html.p3d #tela-admin .ri-grade b{font:800 34px/1 'Fraunces','Karla',serif;margin-bottom:4px}
+html.p3d #tela-admin .ri-grade>div:nth-child(1) b{color:#7FE3A8;text-shadow:0 0 20px rgba(43,194,109,.55)}
+html.p3d #tela-admin .ri-grade>div:nth-child(2) b{color:#F6D27E;text-shadow:0 0 20px rgba(244,190,79,.5)}
+html.p3d #tela-admin .ri-grade>div:nth-child(3) b{color:#C9D0DE}
+html.p3d #tela-admin .ri-grade small{color:#AEB8CB}
+html.p3d #tela-admin .ri-nome{background:rgba(232,203,126,.1);border:1px solid rgba(232,203,126,.4);color:#F6E3AE;box-shadow:0 1px 0 rgba(255,255,255,.08) inset}
+html.p3d #tela-admin .ri-nome:hover{background:rgba(232,203,126,.22)}
+html.p3d #tela-admin .ri-base{color:#AEB8CB}
+@media (max-width:560px){html.p3d #tela-admin .ri-grade{grid-template-columns:1fr!important}}
+/* online agora */
+html.p3d #tela-admin .p3-online .nome::after{content:"online agora";display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;vertical-align:2px;
+  font:800 10.5px/1.4 'Karla',sans-serif;letter-spacing:.05em;color:#062A15;background:linear-gradient(180deg,#7FE3A8,#2BC26D);box-shadow:0 0 12px rgba(43,194,109,.6)}
+.p3-av .p3-on{animation:p3pulso 2s ease-in-out infinite}
+@keyframes p3pulso{50%{box-shadow:0 0 0 4px rgba(43,194,109,.25),0 0 12px rgba(43,194,109,.9)}}
+@media (prefers-reduced-motion:reduce){.p3-av .p3-on{animation:none}html.p3d #tela-admin .alternar button:hover{transform:none}}
+html.p3d #tela-admin .p3-cab.p3-online h2::after{content:"online agora";display:inline-block;margin-left:10px;padding:3px 9px;border-radius:999px;vertical-align:5px;
+  font:800 11px/1.4 'Karla',sans-serif;letter-spacing:.05em;color:#062A15;background:linear-gradient(180deg,#7FE3A8,#2BC26D);box-shadow:0 0 12px rgba(43,194,109,.6)}
