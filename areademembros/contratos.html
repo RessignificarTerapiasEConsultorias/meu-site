@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="img/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/estilo.css?v=202611121300">
+<link rel="stylesheet" href="css/estilo.css?v=202611130100">
 </head>
 <body>
 <div class="carregando" id="carregando">Carregando...</div>
@@ -76,14 +76,24 @@
   </main>
 </div>
 
-<dialog class="janela" id="janelaAssinar">
+<dialog class="janela janela-assinar" id="janelaAssinar">
   <h2>Assinar contrato</h2>
   <p class="ajuda" id="assinarContexto"></p>
-  <div class="f">
-    <label for="nomeAssinatura">Digite seu nome completo para confirmar</label>
-    <input id="nomeAssinatura" maxlength="120" placeholder="Seu nome completo">
-    <label style="margin-top:10px;display:flex;align-items:center;gap:8px;font-weight:500"><input type="checkbox" id="confirmoLeitura"> Li o documento e concordo com o que está nele.</label>
+  <button class="btn peq contorno" type="button" id="btVerDocAssinar">Ler o documento (PDF)</button>
+  <div class="f" style="margin-top:14px">
+    <label for="nomeAssinatura">Seu nome completo</label>
+    <input id="nomeAssinatura" maxlength="120" placeholder="Seu nome completo" autocomplete="name">
   </div>
+  <div class="ass-bloco">
+    <div class="ass-topo"><b>Sua assinatura</b><button type="button" class="ass-limpar" id="btLimparAssinatura">Limpar</button></div>
+    <div class="ass-area" id="assArea">
+      <canvas id="assTela" aria-label="Área para desenhar a assinatura"></canvas>
+      <span class="ass-dica" id="assDica">Assine aqui com o dedo<span class="ass-pc"> ou com o mouse</span></span>
+      <span class="ass-x" aria-hidden="true">✕</span><span class="ass-linha" aria-hidden="true"></span>
+    </div>
+    <span class="ass-nome" id="assNome"></span>
+  </div>
+  <label class="ass-ok"><input type="checkbox" id="confirmoLeitura"> Li o documento e concordo com o que está nele. Esta assinatura eletrônica tem o mesmo valor da minha assinatura no papel.</label>
   <div class="acoes"><button class="btn auto" type="button" id="btConfirmarAssinatura">Assinar agora</button><button class="btn auto contorno" type="button" id="btCancelarAssinatura">Cancelar</button></div>
 </dialog>
 
@@ -92,6 +102,6 @@
 <script src="js/auth.js?v=202611120412"></script>
 <script src="js/app.js?v=202611120412"></script>
 <script src="js/i18n.js?v=202611110736"></script>
-<script src="js/contratos.js?v=202611120412"></script>
+<script src="js/contratos.js?v=202611130100"></script>
 </body>
 </html>
