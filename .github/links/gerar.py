@@ -107,10 +107,14 @@ def main():
             pasta = os.path.join(raiz, slug, T["pasta"])
             os.makedirs(pasta, exist_ok=True)
             url = f"{SITE}/{slug}/{T['pasta']}/"
-            titulo = f"{T['nome']} · {nome}"
-            desc = T["sub"] + " Pelo celular, com " + nome.split()[0] + "."
+            ov = pg.get("og") if isinstance(pg.get("og"), dict) else {}          # ajustes da terapeuta (travas_paginas.dados.og)
+            tx = (ov.get("textos") or {}).get(t) or {}
+            titulo = f"{tx.get('titulo') or T['nome']} · {nome}"
+            desc = tx.get("desc") or (T["sub"] + " Pelo celular, com " + nome.split()[0] + ".")
             open(os.path.join(pasta, "index.html"), "w", encoding="utf-8").write(pagina(titulo, desc, url + "og.jpg", url).replace("<!doctype html>", "<!doctype html>\n" + MARCA, 1))
-            item = dict(saida=os.path.join(slug, T["pasta"], "og.jpg"), foto=pg.get("foto") or "", selo=T["selo"], h1=T["h1"], sub=T["sub"], chips=T["chips"], marca=marca.upper())
+            item = dict(saida=os.path.join(slug, T["pasta"], "og.jpg"), foto=(ov.get("fotos") or {}).get(t) or ov.get("foto") or pg.get("foto") or "",
+                        selo=tx.get("selo") or T["selo"], h1=tx.get("h1") or T["h1"], sub=tx.get("sub") or T["sub"], chips=tx.get("chips") or T["chips"], marca=marca.upper(),
+                        **({"tema": "claro"} if ((ov.get("temas") or {}).get(t) or ov.get("tema")) == "claro" else {}))
             h = hashlib.sha1(json.dumps(item, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
             novo_man[slug + "/" + T["pasta"]] = h
             if manifesto.get(slug + "/" + T["pasta"]) != h or not os.path.exists(os.path.join(pasta, "og.jpg")):

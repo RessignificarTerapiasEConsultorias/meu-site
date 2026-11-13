@@ -4,6 +4,11 @@ const { chromium } = require("playwright");
 const fs = require("fs");
 const plano = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 const esc = s => String(s || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+/* tema claro (rosado), por terapeuta ou por teste: travas_paginas.dados.og.temas */
+const CLARO = `<style>body{color:#4A3530;background:radial-gradient(80% 90% at 90% 0%,rgba(248,214,190,.95),transparent 60%),radial-gradient(70% 70% at 0% 100%,rgba(246,214,206,.95),transparent 60%),linear-gradient(135deg,#F7E1E3 0%,#F8EEE6 50%,#F8DCC8 100%)}
+.f{box-shadow:0 0 0 6px #D9BE96,0 0 0 18px rgba(217,190,150,.28),0 24px 50px -24px rgba(110,70,50,.45)!important}
+.s{background:#D48877;border:0;color:#fff}h1{color:#4A3530}h1 em{color:#B5654F}p{color:#5B4740}
+li{background:#E6D2AE;color:#4A3530}li:nth-child(2){background:#C9796A;color:#fff}li:nth-child(3){background:#F5B49A;color:#4A3530}.b{color:#7A6157}</style>`;
 const html = it => `<!doctype html><html><head><meta charset=utf-8>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Karla:wght@500;700;800&display=swap" rel=stylesheet>
 <style>*{box-sizing:border-box;margin:0}body{width:1200px;height:630px;overflow:hidden;font-family:Karla,sans-serif;color:#F4ECDD;
@@ -15,7 +20,7 @@ h1{font-family:Fraunces,serif;font-weight:500;font-size:72px;line-height:1.02;ma
 p{font-size:27px;line-height:1.35;color:#D8DCE4;max-width:660px}ul{list-style:none;padding:0;display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
 li{padding:8px 16px;border-radius:999px;background:rgba(201,162,74,.14);color:#F6E3AE;font-weight:700;font-size:20px}
 .b{position:absolute;left:70px;bottom:26px;font-size:19px;font-weight:700;color:#C9A24A;letter-spacing:.06em}</style></head>
-<body><div class=f></div><div><span class=s>${esc(it.selo)}</span><h1>${it.h1}</h1><p>${esc(it.sub)}</p><ul>${it.chips.map(c => "<li>" + esc(c) + "</li>").join("")}</ul></div><div class=b>${esc(it.marca)}</div></body></html>`;
+${it.tema === "claro" ? CLARO : ""}<body><div class=f></div><div><span class=s>${esc(it.selo)}</span><h1>${it.h1}</h1><p>${esc(it.sub)}</p><ul>${it.chips.map(c => "<li>" + esc(c) + "</li>").join("")}</ul></div><div class=b>${esc(it.marca)}</div></body></html>`;
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
   let n = 0;

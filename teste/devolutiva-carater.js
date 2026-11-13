@@ -890,11 +890,14 @@ function dvCapaVendas(modo){
         objetivo:'Mostrar, em um gráfico radar, 8 dimensões do seu comportamento: iniciativa, comunicação, relacionamento, decisão, adaptação, organização, autoconfiança e equilíbrio emocional.',
         como:['A maioria termina em cerca de 7 minutos', 'Você responde de 1 a 5', 'No final, gráfico radar e relatório em PDF'],
         resultado:q => 'O seu mapa em 8 dimensões, com pontos fortes e oportunidades de desenvolvimento, para conversar com ' + q + '.' } }, EX);
+    /* textos próprios da terapeuta para cada teste (travas_paginas.dados.cv_textos): título, pergunta, para que serve, tópicos e aviso */
+    const OVT = (dd && dd.cv_textos && typeof dd.cv_textos === 'object') ? dd.cv_textos : {};
+    Object.keys(OVT).forEach(k => { if(DET[k] && OVT[k] && typeof OVT[k] === 'object'){ DET[k] = Object.assign({}, DET[k], OVT[k]); if(OVT[k].titulo && !OVT[k].tituloHtml) delete DET[k].tituloHtml; } });
     const detalhe = (k, i) => { const e = DET[k];
       return `<section class="cv-faixa${i % 2 ? '' : ' cv-areia'} cv-det" id="cv-t-${k}"><div class="cv-in">
       <div class="cv-det-topo"><span class="cv-det-n">${i + 1}</span><div><span class="cv-tag">${escV(e.tag)}</span><h2>${e.tituloHtml || escV(e.titulo)}</h2><p class="cv-pergunta">${escV(e.pergunta)}</p></div></div>
       <div class="cv-det-grade">
-        <div class="cv-det-bloco"><h3>Para que serve</h3><p>${escV(e.objetivo || e.texto)}</p></div>
+        <div class="cv-det-bloco"><h3>Para que serve</h3>${e.aviso && e.aviso_topo ? '<p class="cv-aviso"><b>Aviso importante:</b> ' + escV(e.aviso) + '</p>' : ''}${String(e.objetivo || e.texto || '').split(/\n+/).map(x => '<p>' + escV(x) + '</p>').join('')}${Array.isArray(e.topicos) && e.topicos.length ? '<ul class="cv-topicos">' + e.topicos.map(t => '<li>' + escV(t) + '</li>').join('') + '</ul>' : ''}${e.fecho ? '<p>' + escV(e.fecho) + '</p>' : ''}${e.aviso && !e.aviso_topo ? '<p class="cv-aviso"><b>Aviso importante:</b> ' + escV(e.aviso) + '</p>' : ''}</div>
         <div class="cv-det-bloco"><h3>Como funciona</h3><ul>${(e.como || [e.meta]).map(c => '<li>' + escV(c) + '</li>').join('')}</ul></div>
         <div class="cv-det-bloco"><h3>O que você recebe</h3><p>${escV(e.resultado ? e.resultado(comQuem) : e.recebe(comQuem))}</p></div>
       </div>
