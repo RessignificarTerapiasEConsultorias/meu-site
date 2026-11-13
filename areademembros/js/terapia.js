@@ -600,7 +600,7 @@
   }
   /* ================= TESTES AGENDADOS ================= */
   const SLUG_TESTE = "mauricio";
-  const NOME_T = { travas: "Teste de Travas Mentais", tracos: "Teste de Traços de Caráter", mpcc: "MPCC · Perfil Comportamental" };
+  const NOME_T = { travas: "Teste de Travas Mentais", tracos: "Teste de Traços de Caráter", mpcc: "MPCC · Perfil Comportamental", disc: "Análise Comportamental DISC", ansiedade: "Teste de Ansiedade", familia: "Travas em Família" };
   const PASTA_T = { travas: "teste-de-travas", tracos: "tracos-de-carater", mpcc: "mpcc", disc: "disc", ansiedade: "teste-de-ansiedade", familia: "travas-em-familia" };
   const linkTeste = function (c, teste) { return "https://ressignificarterapiaseconsultorias.com/" + SLUG_TESTE + "/" + (PASTA_T[teste] || PASTA_T.travas) + "/?c=" + encodeURIComponent(c); };   // o nome do teste vai no endereço
   const somarDias = function (iso, n) { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
