@@ -1,7 +1,7 @@
 /* ============================================================================
    OLHINHO DA SENHA — em todo campo de senha do site (Área de Membros, área do teste, compras, contas).
    - O campo sempre abre escondido (bolinhas). Tocar no olhinho mostra o que a pessoa está digitando; tocar de novo esconde.
-   - Segurança: a senha que o navegador preenche sozinho (senha salva) nunca é mostrada: só se vê o que a pessoa digita na hora.
+   - O olhinho mostra a senha do campo, inclusive a que o navegador preencheu sozinho (senha salva). Fecha sozinho a cada uso (abaixo).
    - O olho volta a ficar fechado: ao entrar (enviar), ao apertar Enter, ao sair da aba, ao esvaziar o campo
      e quando a tela do campo some (por exemplo, ao sair da conta). Para ver de novo, é preciso tocar no olhinho outra vez.
    - Nada é guardado: nem no aparelho, nem no servidor.
@@ -44,8 +44,7 @@
     bt.addEventListener('click', function (e) {
       e.preventDefault(); e.stopPropagation();
       if (inp.type === 'text') { esconder(); inp.focus(); return; }
-      /* data-olho-senha: senha gerada pelo sistema (painel do master), que pode ser vista */
-      if (!inp.hasAttribute('data-olho-senha') && inp.value && (!digitou || inp.value !== ultimo)) { dizer('Por segurança, a senha salva pelo navegador não é exibida. Para ver o que digita, escreva a senha aqui.'); inp.focus(); return; }
+      /* o olhinho mostra a senha do campo: a digitada na hora e também a salva pelo navegador (decisão do Mauricio) */
       mostrar(); inp.focus();
     });
     /* só conta como "digitado" o que a pessoa escreve ou cola; o preenchimento automático do navegador não conta */
