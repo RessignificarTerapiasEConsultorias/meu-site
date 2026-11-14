@@ -305,7 +305,7 @@ function pontuarSerena(r){
    (o resto do arquivo é o código do site antigo; esta parte só o encaixa no modelo da página)
    ============================================================================ */
 const MI_TESTES = ['serena', 'esquemas', 'tdah'];
-const MI_ROT = { serena:'Diagnóstico Mente Serena', esquemas:'Esquemas Emocionais', tdah:'Escala de TDAH (ETDAH-AD)' };
+const MI_ROT = { serena:'Diagnóstico Mente Serena', esquemas:'Esquemas Emocionais', tdah:'Mapeamento de Perfil Cognitivo/Comportamental' };
 const MI_SUB = { serena:'7 pilares · mapa em teia', esquemas:'5 partes · modelo de Young', tdah:'triagem' };
 /* testes deste arquivo que a página da terapeuta tem ligados */
 function miLista(){ const d = window.__T && __T.dados; return d && Array.isArray(d.testes) ? MI_TESTES.filter(k => d.testes.indexOf(k) > -1) : []; }
@@ -761,7 +761,7 @@ const LETRAS_COD = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const sorteio4 = () => { let s=''; for(let i=0;i<4;i++) s += LETRAS_COD.charAt(Math.floor(Math.random()*LETRAS_COD.length)); return s; };
 
 TESTES.esquemas = { chave:'esquemas', nome:'Questionário de Esquemas Emocionais', curto:'Esquemas Emocionais', passos:[] };
-TESTES.tdah     = { chave:'tdah',     nome:'Escala de TDAH em adultos (ETDAH-AD)',               curto:'TDAH',     passos:[] };
+TESTES.tdah     = { chave:'tdah',     nome:'Mapeamento de Perfil Cognitivo/Comportamental',               curto:'Perfil Cognitivo/Comportamental',     passos:[] };
 BANNERS.esquemas = BANNERS.travas; BANNERS.tdah = BANNERS.travas;
 
 MENSAGENS.envioCodigo.esquemas = `{saudacao} 🤍
@@ -936,10 +936,10 @@ function construirTdah(def){
   const rot = def.rotulos, total = def.itens.length, bl = blocosDe(total, 12), passos = [];
   passos.push({
     titulo:'Boas-vindas',
-    intro:`<h1>Escala de TDAH em adultos (ETDAH-AD)</h1>
-      <p class="lead">Este questionário me ajuda a entender como funcionam a sua atenção, a sua impulsividade e a sua energia no dia a dia.</p>
+    intro:`<h1>Mapeamento de Perfil Cognitivo/Comportamental</h1>
+      <p class="lead">Este mapeamento me ajuda a identificar traços importantes do seu funcionamento: atenção, organização, impulsividade e regulação emocional.</p>
       <p>Leva cerca de <b>15 a 20 minutos</b>. Leia cada uma e marque com que frequência ela descreve você. Não existe resposta certa ou errada.</p>
-      <p>Ele é uma <b>triagem</b> que apoia a avaliação: <b>não é um diagnóstico</b>. A leitura do resultado é feita por mim, junto com você.</p>`,
+      <p>Ele <b>não substitui um laudo clínico</b>: apoia a avaliação. A leitura do resultado é feita por mim, junto com você.</p>`,
     campos:[
       { id:'nome', label:'Seu nome completo', tipo:'text', auto:'name' },
       { id:'idade', label:'Sua idade', tipo:'text' },
@@ -954,9 +954,9 @@ function construirTdah(def){
     });
   });
   return {
-    chave:'tdah', nome:TESTES.tdah.nome, curto:'TDAH', passos, botaoFim:'Enviar as minhas respostas',
+    chave:'tdah', nome:TESTES.tdah.nome, curto:'Perfil Cognitivo/Comportamental', passos, botaoFim:'Enviar as minhas respostas',
     fim:`<h1>Obrigada por responder.</h1>
-      <p class="lead">As suas respostas chegaram até mim. Vou analisá-las com cuidado e vamos conversar sobre o resultado juntas. Lembre-se: este questionário é uma triagem para apoiar a nossa conversa, não um diagnóstico.</p>`,
+      <p class="lead">As suas respostas chegaram até mim. Vou analisá-las com cuidado e vamos conversar sobre o resultado juntas. Lembre-se: este mapeamento não substitui um laudo clínico: ele apoia a nossa conversa.</p>`,
     msgZap: n => preencher(MENSAGENS.avisarFim.tdah, { nome:n })
   };
 }
@@ -1412,11 +1412,11 @@ const CV_EXTRA = {
     faq:q => ['Posso parar no meio do Questionário de Esquemas Emocionais?', 'Pode. O seu progresso fica salvo no aparelho: ao abrir o link de novo, você continua de onde parou. Algumas frases falam de lembranças e de relações difíceis; vá no seu ritmo e, se algo mexer muito com você, fale com ' + q + '.']
   },
   tdah:{
-    rot:'Escala de TDAH em adultos (ETDAH-AD)', curto:'TDAH em adultos (ETDAH-AD)', tag:'Individual · Triagem', titulo:'Escala de TDAH em adultos (ETDAH-AD)',
-    objetivo:'Uma triagem que ajuda a entender como funcionam a sua atenção, a sua impulsividade, as suas emoções e a sua energia no dia a dia. Ela apoia a avaliação, mas não é um diagnóstico.',
+    rot:'Mapeamento de Perfil Cognitivo/Comportamental', curto:'Perfil Cognitivo/Comportamental', tag:'Individual · Mapeamento', titulo:'Mapeamento de Perfil Cognitivo/Comportamental',
+    objetivo:'Identifica traços importantes do seu funcionamento (atenção, organização, impulsividade e regulação emocional) que precisam de atenção, para direcionarmos os próximos passos. Não substitui um laudo clínico.',
     como:['De 15 a 20 minutos', 'Você marca com que frequência cada frase descreve você', 'O resultado leva em conta a sua escolaridade, como na escala original'],
     resultado:q => 'A pontuação em cada um dos 5 fatores, comparada com a de adultos da mesma escolaridade, com a leitura feita junto com ' + q + ' na devolutiva.',
-    mapaTitulo:'Os 5 fatores da escala',
+    mapaTitulo:'Os 5 fatores que o mapeamento observa',
     itens:[
       { nome:'Desatenção', desc:'Foco, esquecimentos e distrações no dia a dia.' },
       { nome:'Impulsividade', desc:'Agir ou falar antes de pensar, impaciência e dificuldade de esperar.' },
@@ -1424,15 +1424,15 @@ const CV_EXTRA = {
       { nome:'Autorregulação da atenção, da motivação e da ação', desc:'Organizar-se, manter a motivação e levar as tarefas até o fim.' },
       { nome:'Hiperatividade', desc:'Inquietação e excesso de energia no corpo e na mente.' }
     ],
-    tituloHtml:'Escala de TDAH em adultos <span style="white-space:nowrap">(ETDAH-AD)</span>',
-    pergunta:'Como funcionam a sua atenção, a sua impulsividade e a sua energia?',
-    texto:'Uma triagem que ajuda a entender como funcionam a sua atenção, a sua impulsividade e a sua energia no dia a dia. Apoia a avaliação, mas não é um diagnóstico: a leitura do resultado é feita junto com você.',
-    meta:'Triagem · 15 a 20 minutos',
+    tituloHtml:'Mapeamento de Perfil <span style="white-space:nowrap">Cognitivo/Comportamental</span>',
+    pergunta:'Como funcionam a sua atenção, a sua organização, a sua impulsividade e a sua regulação emocional?',
+    texto:'Identifica traços importantes do seu funcionamento (atenção, organização, impulsividade e regulação emocional) que precisam de atenção, para direcionarmos os próximos passos. Não substitui um laudo clínico: a leitura do resultado é feita junto com você.',
+    meta:'Mapeamento · 15 a 20 minutos',
     zap:'quero fazer o Mapeamento de Perfil Cognitivo/Comportamental. Como recebo o meu código?',
-    descobre:'<b>como funcionam a sua atenção, a sua impulsividade e a sua energia</b>',
-    recebe:q => 'Na Escala de TDAH, uma triagem que apoia a avaliação, com a leitura feita junto com ' + q,
-    tempo:'a Escala de TDAH, de 15 a 20 minutos',
-    faq:q => ['A Escala de TDAH é um diagnóstico?', 'Não. É uma triagem que apoia a avaliação. A leitura do resultado é feita junto com ' + q + '.']
+    descobre:'<b>como funcionam a sua atenção, a sua organização, a sua impulsividade e a sua regulação emocional</b>',
+    recebe:q => 'No Mapeamento de Perfil Cognitivo/Comportamental, a leitura dos traços do seu funcionamento, feita junto com ' + q,
+    tempo:'o Mapeamento de Perfil Cognitivo/Comportamental, de 15 a 20 minutos',
+    faq:q => ['O Mapeamento de Perfil é um diagnóstico?', 'Não. Ele não substitui um laudo clínico: apoia a avaliação. A leitura do resultado é feita junto com ' + q + '.']
   }
 };
 /* só os testes que a página tem entram na capa (a lista vem do modelo) */

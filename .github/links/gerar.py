@@ -25,8 +25,8 @@ TESTES = {
                    sub="Um retrato do seu equilíbrio emocional em 7 pilares, num mapa em teia.", chips=["7 pilares", "Pelo celular", "Mapa em teia"]),
     "esquemas": dict(pasta="esquemas", param="c", nome="Esquemas Emocionais", selo="Esquemas Emocionais", h1="Os seus <em>esquemas</em> emocionais",
                      sub="Entenda os padrões emocionais que se repetem na sua vida, a partir do modelo de Young.", chips=["5 partes", "Pelo celular", "Resultado detalhado"]),
-    "tdah": dict(pasta="tdah", param="c", nome="Escala de TDAH (ETDAH-AD)", selo="Escala ETDAH-AD · Triagem", h1="Atenção, foco e <em>organização</em>",
-                 sub="Uma triagem para adultos sobre atenção, organização e impulsividade. Não é diagnóstico.", chips=["Triagem", "Pelo celular", "Resultado na hora"]),
+    "tdah": dict(pasta="tdah", param="c", nome="Mapeamento de Perfil Cognitivo/Comportamental", selo="Perfil Cognitivo/Comportamental", h1="Mapeamento de <em>Perfil</em>",
+                 sub="Traços importantes do seu funcionamento no dia a dia: atenção, organização, impulsividade e regulação emocional.", chips=["15 a 20 minutos", "Pelo celular", "Não substitui laudo"]),
 }
 MAPA_JS = json.dumps({t["pasta"]: {"p": t["param"], **({"f": 1} if t.get("extra") else {})} for t in TESTES.values()}, separators=(",", ":"))
 REDIRECIONA = ("var M=" + MAPA_JS + ";var p=location.pathname.split('/').filter(Boolean);var q=new URLSearchParams(location.search);"
