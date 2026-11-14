@@ -825,7 +825,7 @@ function dvCapaVendas(modo){
   }
   dvBotaoEditar();
   /* páginas com testes extras (ex.: Miralene): logo no topo, um menu com todos os testes, cada um levando ao seu detalhe */
-  const CV_NOME_CURTO = k => k === 'travas' ? 'Travas Mentais' : k === 'tracos' ? 'Traços de Caráter' : k === 'mpcc' ? 'MPCC' : (EX[k].curto || EX[k].rot);
+  const CV_NOME_CURTO = k => k === 'travas' ? (dvNomeTeste() || 'Travas Mentais') : k === 'tracos' ? 'Traços de Caráter' : k === 'mpcc' ? 'MPCC' : (EX[k].curto || EX[k].rot);
   const CV_PERGUNTA = k => k === 'travas' ? 'O que está travando você hoje?' : k === 'tracos' ? 'Como a sua história moldou o seu jeito de ser?' : k === 'mpcc' ? 'Onde você já é forte e onde pode crescer?' : EX[k].pergunta;
   if(comExtras){
     const chipsEl = lt.querySelector('.cv-chips');
@@ -1544,15 +1544,23 @@ function dvTrocarNomeTexto(t){
   const novo = dvNomeTeste(); if(!novo || !t || !/travas mentais/i.test(t)) return t;
   const resto = novo.replace(/^teste\s+(de\s+)?/i, '');            // "Padrões Mentais"
   const caso = (m, s) => m === m.toUpperCase() ? s.toUpperCase() : m.charAt(0) === m.charAt(0).toLowerCase() ? s.toLowerCase() : s;
-  return t.replace(/teste de identifica[çc][ãa]o de travas mentais/gi, m => caso(m, novo))
-          .replace(/teste de travas mentais/gi, m => caso(m, novo))
-          .replace(/travas mentais/gi, m => caso(m, resto));
+  let r = t;
+  /* nome feminino (ex.: "Identificação das Travas Mentais"): "o teste de travas mentais" vira "a identificação das travas mentais" */
+  if(/^(identifica|an[áa]lise|avalia|leitura)/i.test(novo.trim())){
+    const FEM = { 'o':'a', 'do':'da', 'ao':'à', 'no':'na', 'pelo':'pela', 'um':'uma' };
+    r = r.replace(/(^|[^\p{L}\p{N}])(o|do|ao|no|pelo|um)(\s+)(teste de travas mentais)/giu, (m, ini, art, esp, nm) => {
+      const f = FEM[art.toLowerCase()]; return ini + (art.charAt(0) === art.charAt(0).toUpperCase() ? f.charAt(0).toUpperCase() + f.slice(1) : f) + esp + caso(nm, novo); });
+  }
+  r = r.replace(/teste de identifica[çc][ãa]o de travas mentais/gi, m => caso(m, novo))
+       .replace(/teste de travas mentais/gi, m => caso(m, novo));
+  if(!/travas mentais/i.test(novo)) r = r.replace(/travas mentais/gi, m => caso(m, resto));   // nome que já contém "travas mentais": o resto do texto não muda
+  return r;
 }
 function dvNomeTesteAplicar(raiz){
   if(!dvNomeTeste()) return;
   const andar = document.createTreeWalker(raiz || document.body, NodeFilter.SHOW_TEXT, null); let no; const lista = [];
   while((no = andar.nextNode())){ if(/travas mentais/i.test(no.nodeValue) && !(no.parentNode && no.parentNode.closest('script,style'))) lista.push(no); }
-  lista.forEach(n => { n.nodeValue = dvTrocarNomeTexto(n.nodeValue); });
+  lista.forEach(n => { const v = dvTrocarNomeTexto(n.nodeValue); if(v !== n.nodeValue) n.nodeValue = v; });
   (raiz || document).querySelectorAll && (raiz || document).querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(el => ['placeholder','title','aria-label','alt'].forEach(a => { const v = el.getAttribute(a); if(v && /travas mentais/i.test(v)) el.setAttribute(a, dvTrocarNomeTexto(v)); }));
   if(/travas mentais/i.test(document.title)) document.title = dvTrocarNomeTexto(document.title);
 }
@@ -1567,7 +1575,7 @@ function dvNomeTesteAplicar(raiz){
       try{ const h = decodeURIComponent(a.getAttribute('href')); if(/travas mentais/i.test(h)){ const u = a.getAttribute('href'); a.setAttribute('href', u.replace(/(text=|body=|subject=)([^&]*)/g, (m, k, v) => k + encodeURIComponent(dvTrocarNomeTexto(decodeURIComponent(v))))); } }catch(err){} }, true);
     /* textos montados pelo programa (ficha, e-mail, mensagens) e a apresentação */
     const embrulhar = () => {
-      ['textoFicha', 'mensagemCliente'].forEach(f => { if(typeof window[f] === 'function' && !window[f].__dvNome){ const o = window[f]; window[f] = function(){ return dvTrocarNomeTexto(o.apply(this, arguments)); }; window[f].__dvNome = true; } });
+      ['textoFicha', 'mensagemCliente', 'mensagemConvite'].forEach(f => { if(typeof window[f] === 'function' && !window[f].__dvNome){ const o = window[f]; window[f] = function(){ return dvTrocarNomeTexto(o.apply(this, arguments)); }; window[f].__dvNome = true; } });
       if(typeof window.apresAbrir === 'function' && !window.apresAbrir.__dvNome){ const o = window.apresAbrir; window.apresAbrir = function(lead, extra){ if(!extra) extra = { voc: { teste: dvNomeTeste() } }; return o.call(this, lead, extra); }; window.apresAbrir.__dvNome = true; }
       if(typeof window.api === 'function' && !window.api.__dvNomeE){ const o = window.api; window.api = function(acao, dados){ try{ if(dados && typeof dados === 'object'){ ['assunto', 'corpo'].forEach(k => { if(typeof dados[k] === 'string') dados[k] = dvTrocarNomeTexto(dados[k]); }); } }catch(err){} return o.apply(this, arguments); }; Object.assign(window.api, o); window.api.__dvNomeE = true; }
     };

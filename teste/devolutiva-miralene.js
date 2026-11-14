@@ -1,6 +1,6 @@
 /* ============================================================================
    TESTES DA MIRALENE SOUTO NA PÁGINA DO DOMÍNIO
-   Diagnóstico Mente Serena · Questionário de Esquemas Emocionais (Young) · Escala de TDAH em adultos (ETDAH-AD)
+   Termômetro Emocional Feminino · Mapeamento de Esquemas Emocionais (Young) · Escala de TDAH em adultos (ETDAH-AD)
 
    ARQUIVO GERADO por ferramentas/montar_testes_miralene.py a partir do site antigo da Miralene
    (repositório teste-de-travas-miralene): as perguntas, as instruções, as telas, as contas e os resultados
@@ -63,7 +63,7 @@ Quando terminar, me manda uma mensagem por aqui. Estou te esperando! 🌷
 *Miralene Souto*`,
     serena: `{saudacao} 🌿
 
-Que bom ter você comigo. Aqui está o seu acesso ao *Diagnóstico Mente Serena*, a sua primeira pausa consciente dentro da nossa mentoria.
+Que bom ter você comigo. Aqui está o seu acesso ao *Termômetro Emocional Feminino*, a sua primeira pausa consciente dentro da nossa mentoria.
 
 👉 Acesse: {link}
 🔑 Seu código: *{codigo}*
@@ -86,7 +86,7 @@ Acabei de finalizar o *Teste de Identificação de Travas Mentais* e já vi o me
 Fiquei com vontade de entender o que isso diz sobre a minha história e como posso me destravar. Quando podemos conversar sobre a minha devolutiva? 🤍`,
     serena: `Oi, Miralene! Aqui é {nome}. 🌿
 
-Acabei de finalizar o *Diagnóstico Mente Serena* e já vi o meu Termômetro.
+Acabei de finalizar o *Termômetro Emocional Feminino* e já vi o meu Termômetro.
 
 ✨ Onde estou mais fortalecida: {fortes}
 🌱 O que mais pede cuidado: {cuidado}
@@ -103,7 +103,7 @@ function preencher(modelo, dados){
 /* ---------- imagens do topo (as duas faixas do site antigo) ---------- */
 const BANNERS = { travas: MI_BASE + 'img/miralene-banner.jpg', serena: MI_BASE + 'img/miralene-banner-serena.jpg' };
 
-/* ---------- Diagnóstico Mente Serena: dados e telas (copiado do site antigo) ---------- */
+/* ---------- Termômetro Emocional Feminino: dados e telas (copiado do site antigo) ---------- */
 const ANC_INF = { rotMin:'Nunca me senti assim na infância', rotMax:'Eu me sentia totalmente assim na infância' };
 const ANC_HOJE = { rotMin:'Preciso resgatar', rotMax:'É uma força muito presente em mim' };
 const FOLHAS = '<svg class="fc-folha" viewBox="0 0 80 80" aria-hidden="true"><path d="M4 78 C 28 62, 50 40, 72 8" stroke="#8A5A3A" stroke-width="2" fill="none"/><path d="M26 62c-11-2-19-10-21-23 13 1 22 10 21 23z" fill="#B98A55"/><path d="M45 41c-2-12 3-23 15-28 3 13-3 23-15 28z" fill="#C79A63"/><path d="M38 52c10-7 22-7 32 1-10 7-22 7-32-1z" fill="#A9784A"/></svg>';
@@ -209,8 +209,8 @@ const TERMOMETRO_INICIAL = [
 
 const TESTE_SERENA = {
   chave:'serena',
-  nome:'Diagnóstico Mente Serena',
-  curto:'Mente Serena',
+  nome:'Termômetro Emocional Feminino',
+  curto:'Termômetro Emocional Feminino',
   passos:[
     { titulo:'Boas-vindas', intro:`
       <h1>Seja muito bem-vinda!</h1>
@@ -222,11 +222,11 @@ const TESTE_SERENA = {
       <p>Este mapa vai olhar para a sua história, seus comportamentos e suas emoções para identificar onde estão as suas maiores forças e quais áreas precisam de mais cuidado, atenção e de ser resgatadas.</p>
       <div class="destaque"><p>Reserve cerca de <b>10 a 15 minutos</b> para responder com total verdade e honestidade, sem julgamentos. Ao responder com sinceridade, você terá uma visão mais clara dos seus padrões emocionais, mentais e comportamentais, permitindo compreender onde estão seus maiores desafios e quais aspectos precisam ser fortalecidos.</p></div>`,
       campos:[] },
-    { titulo:'Termômetro Mente Serena', intro:()=>`
-      <h2>Termômetro Mente Serena</h2>
+    { titulo:'Termômetro Emocional Feminino', intro:()=>`
+      <h2>Termômetro Emocional Feminino</h2>
       <figure class="exemplo-teia">${graficoTeia(PILARES_SERENA.map((p,i)=>({nome:p.nome, valor:[9,9,7,4,4,6,9][i]})), true)}<figcaption>Exemplo de Gráfico de Teia</figcaption></figure>
       <h3>Entendendo a análise e o Gráfico de Teia</h3>
-      <p>Após você enviar as suas respostas, eu irei analisar detalhadamente cada pilar do seu teste para estruturar o seu diagnóstico. Na nossa mentoria, você receberá uma devolutiva exclusiva com o seu relatório completo e o seu Gráfico de Teia, o seu Termômetro Mente Serena.</p>
+      <p>Após você enviar as suas respostas, eu irei analisar detalhadamente cada pilar do seu teste para estruturar o seu diagnóstico. Na nossa mentoria, você receberá uma devolutiva exclusiva com o seu relatório completo e o seu Gráfico de Teia, o seu Termômetro Emocional Feminino.</p>
       <p>A análise funciona através de notas que indicam o seu estado atual em cada área:</p>
       <div class="destaque">
         <p><span class="sinal verde">Perto da nota 10</span> Sinal verde: aquele pilar está fortalecido, equilibrado, e você está muito bem nessa área. No gráfico do seu relatório, a teia estará totalmente expandida até as bordas.</p>
@@ -272,7 +272,7 @@ const TESTE_SERENA = {
       campos:[ { id:'duas_palavras', label:'Duas palavras que definem o seu emocional e o seu posicionamento hoje.', tipo:'text' } ] }
   ],
   fim:`<h1>Obrigada por se dar essa pausa.</h1>
-    <p class="lead">Suas respostas chegaram até mim. Abaixo está o seu Termômetro Mente Serena: um primeiro retrato de cada pilar, que vamos aprofundar juntas na sua devolutiva.</p>`,
+    <p class="lead">Suas respostas chegaram até mim. Abaixo está o seu Termômetro Emocional Feminino: um primeiro retrato de cada pilar, que vamos aprofundar juntas na sua devolutiva.</p>`,
   msgZap: n => preencher(MENSAGENS.avisarFim.serena, { nome:n })
 };
 
@@ -305,7 +305,7 @@ function pontuarSerena(r){
    (o resto do arquivo é o código do site antigo; esta parte só o encaixa no modelo da página)
    ============================================================================ */
 const MI_TESTES = ['serena', 'esquemas', 'tdah'];
-const MI_ROT = { serena:'Diagnóstico Mente Serena', esquemas:'Esquemas Emocionais', tdah:'Mapeamento de Perfil Cognitivo/Comportamental' };
+const MI_ROT = { serena:'Termômetro Emocional Feminino', esquemas:'Mapeamento de Esquemas Emocionais', tdah:'Mapeamento de Perfil Cognitivo/Comportamental' };
 const MI_SUB = { serena:'7 pilares · mapa em teia', esquemas:'5 partes · modelo de Young', tdah:'triagem' };
 /* testes deste arquivo que a página da terapeuta tem ligados */
 function miLista(){ const d = window.__T && __T.dados; return d && Array.isArray(d.testes) ? MI_TESTES.filter(k => d.testes.indexOf(k) > -1) : []; }
@@ -679,7 +679,7 @@ function resultadoCliente(chave, r){
     </article>`; }).join('');
   return {
     html:`<section class="resultado">
-      <h2>O seu Termômetro Mente Serena</h2>
+      <h2>O seu Termômetro Emocional Feminino</h2>
       <p class="lead">Você está mais fortalecida em <b>${fortes.map(f=>esc(f.nome)).join(' e ')}</b>. Os pilares que mais pedem cuidado agora são <b>${fracos.map(f=>esc(f.nome)).join(' e ')}</b>.</p>
       <p class="nota-res">Perto de 10, o pilar está fortalecido e a teia se expande até as bordas. Perto de 1, a mente está em “modo alerta” naquele ponto.</p>
       ${graficoTeia(p)}
@@ -760,13 +760,13 @@ const PREFIXO_NOVO = { esquemas:'ES', tdah:'TD', serena:'SE' };   // o Mente Ser
 const LETRAS_COD = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const sorteio4 = () => { let s=''; for(let i=0;i<4;i++) s += LETRAS_COD.charAt(Math.floor(Math.random()*LETRAS_COD.length)); return s; };
 
-TESTES.esquemas = { chave:'esquemas', nome:'Questionário de Esquemas Emocionais', curto:'Esquemas Emocionais', passos:[] };
-TESTES.tdah     = { chave:'tdah',     nome:'Mapeamento de Perfil Cognitivo/Comportamental',               curto:'Perfil Cognitivo/Comportamental',     passos:[] };
+TESTES.esquemas = { chave:'esquemas', nome:'Mapeamento de Esquemas Emocionais', curto:'Mapeamento de Esquemas Emocionais', passos:[] };
+TESTES.tdah     = { chave:'tdah',     nome:'Mapeamento de Perfil Cognitivo/Comportamental',               curto:'Mapeamento de Perfil Cognitivo/Comportamental',     passos:[] };
 BANNERS.esquemas = BANNERS.travas; BANNERS.tdah = BANNERS.travas;
 
 MENSAGENS.envioCodigo.esquemas = `{saudacao} 🤍
 
-Preparei o seu acesso ao *Questionário de Esquemas Emocionais*: um mapa mais profundo da sua história, para entendermos de onde vêm alguns padrões que se repetem na sua vida.
+Preparei o seu acesso ao *Mapeamento de Esquemas Emocionais*: um mapa mais profundo da sua história, para entendermos de onde vêm alguns padrões que se repetem na sua vida.
 
 👉 Acesse: {link}
 🔑 Seu código: *{codigo}*
@@ -788,7 +788,7 @@ Quando terminar, me avise por aqui. 🌷
 *Miralene Souto*`;
 MENSAGENS.avisarFim.esquemas = `Oi, Miralene! Aqui é {nome}. 🌷
 
-Acabei de responder o *Questionário de Esquemas Emocionais* e as minhas respostas já chegaram até você. Quando podemos conversar sobre o que apareceu? 🤍`;
+Acabei de responder o *Mapeamento de Esquemas Emocionais* e as minhas respostas já chegaram até você. Quando podemos conversar sobre o que apareceu? 🤍`;
 MENSAGENS.avisarFim.tdah = `Oi, Miralene! Aqui é {nome}. 🌷
 
 Acabei de responder o *Mapeamento de Perfil Cognitivo/Comportamental* e as minhas respostas já chegaram até você. Quando podemos conversar sobre o resultado? 🤍`;
@@ -893,7 +893,7 @@ function construirEsquemas(def){
   const passos = [];
   passos.push({
     titulo:'Boas-vindas',
-    intro:`<h1>Questionário de Esquemas Emocionais</h1>
+    intro:`<h1>Mapeamento de Esquemas Emocionais</h1>
       <p class="lead">Este é um mapa mais profundo da sua história: ele ajuda a entender de onde vêm alguns padrões que se repetem na sua vida e quais necessidades emocionais ficaram sem resposta na infância.</p>
       <p>São <b>5 partes</b> e leva cerca de <b>1 hora</b>. Você pode parar quando quiser e continuar depois: o seu progresso fica salvo neste aparelho.</p>
       <p>Algumas frases falam de lembranças e de relações difíceis. Vá no seu ritmo e responda com sinceridade, sem se julgar. Se alguma coisa mexer muito com você, pare e fale com a Miralene.</p>
@@ -925,7 +925,7 @@ function construirEsquemas(def){
   parte(4, 'Formas de enfrentamento: compensação (YCI)', yci, 'c', 12, '', false, yci.instrucao);
   parte(5, 'Formas de enfrentamento: evitação (YRAI)', yrai, 'v', 10, '', false, yrai.instrucao);
   return {
-    chave:'esquemas', nome:TESTES.esquemas.nome, curto:'Esquemas Emocionais', passos, botaoFim:'Enviar as minhas respostas',
+    chave:'esquemas', nome:TESTES.esquemas.nome, curto:'Mapeamento de Esquemas Emocionais', passos, botaoFim:'Enviar as minhas respostas',
     fim:`<h1>Obrigada por responder com tanta verdade.</h1>
       <p class="lead">As suas respostas chegaram até mim. Vou analisá-las com cuidado e, juntas, vamos conversar sobre o que apareceu e como cuidar disso. Nada aqui é um julgamento: é um mapa para a nossa conversa.</p>`,
     msgZap: n => preencher(MENSAGENS.avisarFim.esquemas, { nome:n })
@@ -954,7 +954,7 @@ function construirTdah(def){
     });
   });
   return {
-    chave:'tdah', nome:TESTES.tdah.nome, curto:'Perfil Cognitivo/Comportamental', passos, botaoFim:'Enviar as minhas respostas',
+    chave:'tdah', nome:TESTES.tdah.nome, curto:'Mapeamento de Perfil Cognitivo/Comportamental', passos, botaoFim:'Enviar as minhas respostas',
     fim:`<h1>Obrigada por responder.</h1>
       <p class="lead">As suas respostas chegaram até mim. Vou analisá-las com cuidado e vamos conversar sobre o resultado juntas. Lembre-se: este mapeamento não substitui um laudo clínico: ele apoia a nossa conversa.</p>`,
     msgZap: n => preencher(MENSAGENS.avisarFim.tdah, { nome:n })
@@ -1105,7 +1105,7 @@ function graficoTeia(pont, semValores){
   const W=800, H=700, cx=400, cy=350, R=185, n=pont.length;
   const ang = i => -Math.PI/2 + i*2*Math.PI/n;
   const pt = (i,v) => [cx + Math.cos(ang(i))*R*v/10, cy + Math.sin(ang(i))*R*v/10];
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de teia do Termômetro Mente Serena">`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de teia do Termômetro Emocional Feminino">`;
   for(let k=1;k<=10;k++){
     const poli = pont.map((_,i)=>pt(i,k).map(x=>x.toFixed(1)).join(',')).join(' ');
     s += `<polygon points="${poli}" fill="none" stroke="#C8641E" stroke-opacity="${k===10?0.9:0.35}" stroke-width="${k===10?1.6:1}"/>`;
@@ -1138,7 +1138,7 @@ async function abrirDetalhe(id){
     const p = pontuarSerena(r);
     const fracos = p.slice().sort((a,b)=>a.valor-b.valor).slice(0,2);
     resumo = `<p class="lead">Pilares que mais pedem cuidado: <b>${fracos.map(f=>esc(f.nome)).join(' e ')}</b>.</p>`;
-    grafico = `<h2>Termômetro Mente Serena</h2><p style="color:var(--suave);font-size:.9rem">Nota de cada pilar: média das 7 afirmações (1 a 5) multiplicada por 2. Perto de 10, pilar fortalecido; perto de 1, sinal de alerta.</p>
+    grafico = `<h2>Termômetro Emocional Feminino</h2><p style="color:var(--suave);font-size:.9rem">Nota de cada pilar: média das 7 afirmações (1 a 5) multiplicada por 2. Perto de 10, pilar fortalecido; perto de 1, sinal de alerta.</p>
       ${graficoTeia(p)}
       <table class="notas">${p.map(x=>`<tr><td>${esc(x.nome)}</td><td>${String(x.valor).replace('.',',')}</td><td>${sinal(x.valor)}</td></tr>`).join('')}</table>
       <h3 style="margin-top:22px">Autoavaliação inicial (1 a 10)</h3>
@@ -1372,23 +1372,23 @@ function miAjustarTestes(lista, ativos){
 /* textos dos três testes na capa de vendas (devolutiva-carater.js: dvCapaVendas lê window.CV_EXTRA) */
 const CV_EXTRA = {
   serena:{
-    rot:'Diagnóstico Mente Serena', curto:'Mente Serena', tag:'Individual · Mapa em teia', titulo:'Diagnóstico Mente Serena',
+    rot:'Termômetro Emocional Feminino', curto:'Termômetro Emocional Feminino', tag:'Individual · Mapa em teia', titulo:'Termômetro Emocional Feminino',
     objetivo:'Mostrar como estão os 7 pilares da mulher serena: onde você já tem força e o que pede cuidado agora, para saber por onde começar a cuidar de si com mais calma, segurança e equilíbrio.',
     como:['De 10 a 15 minutos, no seu tempo', 'Feito para mulheres que querem mais calma, segurança e equilíbrio', 'Se precisar parar, o progresso fica salvo no aparelho'],
-    resultado:q => 'O seu Termômetro Mente Serena, logo ao terminar: uma nota de 1 a 10 para cada pilar, em um gráfico de teia. Depois, a leitura aprofundada com ' + q + '.',
+    resultado:q => 'O seu Termômetro Emocional Feminino, logo ao terminar: uma nota de 1 a 10 para cada pilar, em um gráfico de teia. Depois, a leitura aprofundada com ' + q + '.',
     mapaTitulo:'Os 7 pilares que o diagnóstico mapeia',
     itens:Object.keys(EXPLICA_PILARES).map(n => ({ nome:n, desc:EXPLICA_PILARES[n] })),
     pergunta:'Onde estão as suas forças e o que pede cuidado?',
     texto:'Mapeia os 7 pilares da mulher serena (essência, segurança, amor-próprio, organização da mente, espiritualidade, regulação emocional e posicionamento) e mostra, em um gráfico de teia, onde estão as suas forças e o que precisa de cuidado.',
     meta:'7 pilares · 10 a 15 minutos',
-    zap:'quero fazer o Diagnóstico Mente Serena. Como recebo o meu código?',
+    zap:'quero fazer o Termômetro Emocional Feminino. Como recebo o meu código?',
     descobre:'<b>onde estão as suas forças e o que pede cuidado nos 7 pilares da mente serena</b>',
-    recebe:() => 'No Diagnóstico Mente Serena, o seu Termômetro: um gráfico de teia com a nota de cada um dos 7 pilares',
-    tempo:'o Diagnóstico Mente Serena, de 10 a 15 minutos',
-    faq:q => ['O que é o Termômetro Mente Serena?', 'É o resultado do diagnóstico: uma nota de 1 a 10 para cada um dos 7 pilares, em um gráfico de teia. Perto de 10, o pilar está fortalecido; perto de 1, é um sinal de alerta. É um primeiro retrato, que você aprofunda com ' + q + ' na devolutiva.']
+    recebe:() => 'No Termômetro Emocional Feminino, o seu Termômetro: um gráfico de teia com a nota de cada um dos 7 pilares',
+    tempo:'o Termômetro Emocional Feminino, de 10 a 15 minutos',
+    faq:q => ['O que é o Termômetro Emocional Feminino?', 'É o resultado do diagnóstico: uma nota de 1 a 10 para cada um dos 7 pilares, em um gráfico de teia. Perto de 10, o pilar está fortalecido; perto de 1, é um sinal de alerta. É um primeiro retrato, que você aprofunda com ' + q + ' na devolutiva.']
   },
   esquemas:{
-    rot:'Esquemas Emocionais', curto:'Esquemas Emocionais', tag:'Individual · Mais profundo', titulo:'Questionário de Esquemas Emocionais',
+    rot:'Esquemas Emocionais', curto:'Mapeamento de Esquemas Emocionais', tag:'Individual · Mais profundo', titulo:'Mapeamento de Esquemas Emocionais',
     objetivo:'Entender de onde vêm os padrões que se repetem na sua vida: quais esquemas emocionais se formaram na sua história, como você aprendeu a lidar com eles e quais necessidades emocionais ficaram sem resposta na infância.',
     como:['5 partes, cerca de 1 hora', 'Dá para parar e continuar depois: o progresso fica salvo no aparelho', 'Algumas frases falam da infância e da relação com a mãe e o pai: vá no seu ritmo'],
     resultado:q => 'O mapa dos seus esquemas, das suas formas de enfrentamento e dos estilos parentais que você percebeu, com a leitura feita junto com ' + q + ' na devolutiva.',
@@ -1405,14 +1405,14 @@ const CV_EXTRA = {
     pergunta:'De onde vêm os padrões que se repetem na sua vida?',
     texto:'Um mapa mais profundo da sua história, baseado no modelo de esquemas de Young: ajuda a entender de onde vêm alguns padrões que se repetem na sua vida e quais necessidades emocionais ficaram sem resposta na infância.',
     meta:'5 partes · cerca de 1 hora, com o progresso salvo',
-    zap:'quero fazer o Questionário de Esquemas Emocionais. Como recebo o meu código?',
+    zap:'quero fazer o Mapeamento de Esquemas Emocionais. Como recebo o meu código?',
     descobre:'<b>de onde vêm os padrões que se repetem na sua história</b>',
-    recebe:q => 'No Questionário de Esquemas Emocionais, a leitura dos seus padrões e necessidades é feita junto com ' + q,
-    tempo:'o Questionário de Esquemas Emocionais, cerca de 1 hora (dá para parar e continuar depois)',
-    faq:q => ['Posso parar no meio do Questionário de Esquemas Emocionais?', 'Pode. O seu progresso fica salvo no aparelho: ao abrir o link de novo, você continua de onde parou. Algumas frases falam de lembranças e de relações difíceis; vá no seu ritmo e, se algo mexer muito com você, fale com ' + q + '.']
+    recebe:q => 'No Mapeamento de Esquemas Emocionais, a leitura dos seus padrões e necessidades é feita junto com ' + q,
+    tempo:'o Mapeamento de Esquemas Emocionais, cerca de 1 hora (dá para parar e continuar depois)',
+    faq:q => ['Posso parar no meio do Mapeamento de Esquemas Emocionais?', 'Pode. O seu progresso fica salvo no aparelho: ao abrir o link de novo, você continua de onde parou. Algumas frases falam de lembranças e de relações difíceis; vá no seu ritmo e, se algo mexer muito com você, fale com ' + q + '.']
   },
   tdah:{
-    rot:'Mapeamento de Perfil Cognitivo/Comportamental', curto:'Perfil Cognitivo/Comportamental', tag:'Individual · Mapeamento', titulo:'Mapeamento de Perfil Cognitivo/Comportamental',
+    rot:'Mapeamento de Perfil Cognitivo/Comportamental', curto:'Mapeamento de Perfil Cognitivo/Comportamental', tag:'Individual · Mapeamento', titulo:'Mapeamento de Perfil Cognitivo/Comportamental',
     objetivo:'Identifica traços importantes do seu funcionamento (atenção, organização, impulsividade e regulação emocional) que precisam de atenção, para direcionarmos os próximos passos. Não substitui um laudo clínico.',
     como:['De 15 a 20 minutos', 'Você marca com que frequência cada frase descreve você', 'O resultado leva em conta a sua escolaridade, como na escala original'],
     resultado:q => 'A pontuação em cada um dos 5 fatores, comparada com a de adultos da mesma escolaridade, com a leitura feita junto com ' + q + ' na devolutiva.',

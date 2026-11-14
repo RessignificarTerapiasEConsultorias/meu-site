@@ -21,18 +21,32 @@ TESTES = {
                       sub="Um retrato em 6 áreas, com escala validada, e o acompanhamento da sua evolução.", chips=["Cerca de 7 minutos", "Pelo celular", "Evolução a cada 15 dias"]),
     "familia": dict(pasta="travas-em-familia", param="c", extra="f=1", nome="Travas em Família", selo="Para pais, mães e responsáveis", h1="Travas em <em>Família</em>",
                     sub="Descubra o que você carrega da sua história e como isso aparece na vida do seu filho.", chips=["Cerca de 8 minutos", "Pelo celular", "Resultado na hora"]),
-    "serena": dict(pasta="mente-serena", param="c", nome="Diagnóstico Mente Serena", selo="Diagnóstico Mente Serena", h1="Mente <em>Serena</em>",
+    "serena": dict(pasta="termometro-emocional-feminino", param="c", nome="Termômetro Emocional Feminino", selo="Termômetro Emocional Feminino", h1="Termômetro <em>Emocional Feminino</em>",
                    sub="Um retrato do seu equilíbrio emocional em 7 pilares, num mapa em teia.", chips=["7 pilares", "Pelo celular", "Mapa em teia"]),
-    "esquemas": dict(pasta="esquemas", param="c", nome="Esquemas Emocionais", selo="Esquemas Emocionais", h1="Os seus <em>esquemas</em> emocionais",
+    "esquemas": dict(pasta="esquemas-emocionais", param="c", nome="Mapeamento de Esquemas Emocionais", selo="Esquemas Emocionais", h1="Mapeamento de <em>Esquemas Emocionais</em>",
                      sub="Entenda os padrões emocionais que se repetem na sua vida, a partir do modelo de Young.", chips=["5 partes", "Pelo celular", "Resultado detalhado"]),
-    "tdah": dict(pasta="tdah", param="c", nome="Mapeamento de Perfil Cognitivo/Comportamental", selo="Perfil Cognitivo/Comportamental", h1="Mapeamento de <em>Perfil</em>",
+    "tdah": dict(pasta="perfil-cognitivo", param="c", nome="Mapeamento de Perfil Cognitivo/Comportamental", selo="Perfil Cognitivo/Comportamental", h1="Mapeamento de <em>Perfil Cognitivo</em>",
                  sub="Traços importantes do seu funcionamento no dia a dia: atenção, organização, impulsividade e regulação emocional.", chips=["15 a 20 minutos", "Pelo celular", "Não substitui laudo"]),
 }
-MAPA_JS = json.dumps({t["pasta"]: {"p": t["param"], **({"f": 1} if t.get("extra") else {})} for t in TESTES.values()}, separators=(",", ":"))
-REDIRECIONA = ("var M=" + MAPA_JS + ";var p=location.pathname.split('/').filter(Boolean);var q=new URLSearchParams(location.search);"
-               "var c=q.get('c')||q.get('codigo')||'';var d=new URLSearchParams();d.set('t',(p[0]||'').toLowerCase());var m=M[(p[1]||'').toLowerCase()];"
-               "if(c&&m){d.set(m.p,c);if(m.f)d.set('f','1');}q.forEach(function(v,k){if(k!=='c'&&k!=='codigo'&&k!=='t')d.set(k,v);});"
-               "location.replace('/teste/?'+d.toString()+location.hash);")
+ALIAS = {"serena": ["mente-serena"], "esquemas": ["esquemas"], "tdah": ["tdah"]}          # nomes antigos das pastas: os links já enviados continuam funcionando
+def pastas_do_teste(t, pg_og=None):
+    """pasta principal (a terapeuta pode ter a sua em travas_paginas.dados.og.pastas) e as antigas, que viram atalhos"""
+    padrao = TESTES[t]["pasta"]
+    prin = ((pg_og or {}).get("pastas") or {}).get(t) or padrao
+    outras = [x for x in [padrao] + ALIAS.get(t, []) if x != prin]
+    return prin, outras
+def montar_mapas(todas):
+    """todas: {pasta: chave do teste}. Gera o redirecionador das páginas fixas e o mapa do 404 com TODAS as pastas (atuais e antigas)"""
+    global REDIRECIONA, CHAVES_JS
+    mapa = {pasta: {"p": TESTES[k]["param"], **({"f": 1} if TESTES[k].get("extra") else {})} for pasta, k in todas.items()}
+    REDIRECIONA = ("var M=" + json.dumps(mapa, separators=(",", ":")) + ";var p=location.pathname.split('/').filter(Boolean);var q=new URLSearchParams(location.search);"
+                   "var c=q.get('c')||q.get('codigo')||'';var d=new URLSearchParams();d.set('t',(p[0]||'').toLowerCase());var m=M[(p[1]||'').toLowerCase()];"
+                   "if(c&&m){d.set(m.p,c);if(m.f)d.set('f','1');}q.forEach(function(v,k){if(k!=='c'&&k!=='codigo'&&k!=='t')d.set(k,v);});"
+                   "location.replace('/teste/?'+d.toString()+location.hash);")
+    CHAVES_JS = json.dumps(todas, separators=(",", ":"))
+
+
+montar_mapas({T["pasta"]: k for k, T in TESTES.items()})
 e = html.escape
 
 
@@ -79,7 +93,6 @@ fetch('https://gobjhepmnijoceirwgow.supabase.co/rest/v1/rpc/travas_pagina_public
 
 MARCA = "<!-- gerado por .github/links/gerar.py -->"
 RESERVADAS = {"areademembros", "cobranca", "grupo", "img", "midia", "produtos", "teste", "teste-de-travas", "familia", "politica-de-privacidade"}
-CHAVES_JS = json.dumps({T["pasta"]: k for k, T in TESTES.items()}, separators=(",", ":"))
 
 
 def main():
@@ -93,7 +106,18 @@ def main():
     man_arq = os.path.join(aqui, "manifesto.json")
     manifesto = json.load(open(man_arq, encoding="utf-8")) if os.path.exists(man_arq) else {}
     novo_man, plano = {}, []
-    pastas_teste = {T["pasta"] for T in TESTES.values()}
+    todas = {T["pasta"]: k for k, T in TESTES.items()}
+    for k in ALIAS:
+        for a in ALIAS[k]:
+            todas[a] = k
+    for pg in paginas:
+        for k, pst in (((pg.get("og") or {}) if isinstance(pg.get("og"), dict) else {}).get("pastas") or {}).items():
+            if k in TESTES and re.match(r"^[a-z0-9-]{2,40}$", str(pst)):
+                todas[pst] = k
+        for k in ("travas",):
+            todas.setdefault("teste-de-travas", "travas")
+    montar_mapas(todas)
+    pastas_teste = set(todas)
     for pg in paginas:
         slug, nome = pg["slug"], (pg.get("nome") or "").strip()
         testes = [t for t in pg.get("testes") or [] if t in TESTES]
@@ -102,31 +126,40 @@ def main():
         if slug in RESERVADAS:
             continue                                   # pasta do próprio site com o mesmo nome (não mexe)
         marca = pg.get("marca") or nome
+        ov = pg.get("og") if isinstance(pg.get("og"), dict) else {}              # ajustes da terapeuta (travas_paginas.dados.og)
+        manter, pastas_prin = set(), {}
         for t in testes:
             T = TESTES[t]
-            pasta = os.path.join(raiz, slug, T["pasta"])
+            prin, outras = pastas_do_teste(t, ov)
+            pastas_prin[t] = prin
+            manter.update([prin] + outras)
+            pasta = os.path.join(raiz, slug, prin)
             os.makedirs(pasta, exist_ok=True)
-            url = f"{SITE}/{slug}/{T['pasta']}/"
-            ov = pg.get("og") if isinstance(pg.get("og"), dict) else {}          # ajustes da terapeuta (travas_paginas.dados.og)
+            url = f"{SITE}/{slug}/{prin}/"
             tx = (ov.get("textos") or {}).get(t) or {}
             titulo = f"{tx.get('titulo') or T['nome']} · {nome}"
             desc = tx.get("desc") or (T["sub"] + " Pelo celular, com " + nome.split()[0] + ".")
-            open(os.path.join(pasta, "index.html"), "w", encoding="utf-8").write(pagina(titulo, desc, url + "og.jpg", url).replace("<!doctype html>", "<!doctype html>\n" + MARCA, 1))
-            item = dict(saida=os.path.join(slug, T["pasta"], "og.jpg"), foto=(ov.get("fotos") or {}).get(t) or ov.get("foto") or pg.get("foto") or "",
+            conteudo = pagina(titulo, desc, url + "og.jpg", url).replace("<!doctype html>", "<!doctype html>\n" + MARCA, 1)
+            open(os.path.join(pasta, "index.html"), "w", encoding="utf-8").write(conteudo)
+            for antiga in outras:                                                # nomes antigos: mesma prévia, para os links já enviados continuarem abrindo
+                pa = os.path.join(raiz, slug, antiga); os.makedirs(pa, exist_ok=True)
+                open(os.path.join(pa, "index.html"), "w", encoding="utf-8").write(conteudo)
+                if os.path.exists(os.path.join(pa, "og.jpg")): os.remove(os.path.join(pa, "og.jpg"))
+            item = dict(saida=os.path.join(slug, prin, "og.jpg"), foto=(ov.get("fotos") or {}).get(t) or ov.get("foto") or pg.get("foto") or "",
                         selo=tx.get("selo") or T["selo"], h1=tx.get("h1") or T["h1"], sub=tx.get("sub") or T["sub"], chips=tx.get("chips") or T["chips"], marca=marca.upper(),
                         **({"tema": "claro"} if ((ov.get("temas") or {}).get(t) or ov.get("tema")) == "claro" else {}))
             h = hashlib.sha1(json.dumps(item, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
-            novo_man[slug + "/" + T["pasta"]] = h
-            if manifesto.get(slug + "/" + T["pasta"]) != h or not os.path.exists(os.path.join(pasta, "og.jpg")):
+            novo_man[slug + "/" + prin] = h
+            if manifesto.get(slug + "/" + prin) != h or not os.path.exists(os.path.join(pasta, "og.jpg")):
                 plano.append(item)
         # testes que saíram da página: a pasta some
         for d in os.listdir(os.path.join(raiz, slug)):
-            if d in pastas_teste and d not in {TESTES[t]["pasta"] for t in testes}:
+            if d in pastas_teste and d not in manter:
                 shutil.rmtree(os.path.join(raiz, slug, d))
         T0 = TESTES["travas" if "travas" in testes else testes[0]]
         url = f"{SITE}/{slug}/"
-        desc = "Testes de autoconhecimento pelo celular, com " + nome.split()[0] + ": " + ", ".join(TESTES[t]["nome"] for t in testes) + "."
-        open(os.path.join(raiz, slug, "index.html"), "w", encoding="utf-8").write(pagina(f"Testes com {nome}", desc, f"{SITE}/{slug}/{T0['pasta']}/og.jpg", url).replace("<!doctype html>", "<!doctype html>\n" + MARCA, 1))
+        desc = "Testes de autoconhecimento pelo celular, com " + nome.split()[0] + ": " + ", ".join((((ov.get("textos") or {}).get(t) or {}).get("titulo") or TESTES[t]["nome"]) for t in testes) + "."
+        open(os.path.join(raiz, slug, "index.html"), "w", encoding="utf-8").write(pagina(f"Testes com {nome}", desc, f"{SITE}/{slug}/{pastas_prin['travas' if 'travas' in testes else testes[0]]}/og.jpg", url).replace("<!doctype html>", "<!doctype html>\n" + MARCA, 1))
         novo_man[slug] = "pagina"
     open(os.path.join(raiz, "404.html"), "w", encoding="utf-8").write(PAGINA_404.replace("__CHAVE__", chave).replace("__CHAVES__", CHAVES_JS).replace("__REDIRECIONA__", REDIRECIONA))
     json.dump(novo_man, open(man_arq, "w", encoding="utf-8"), ensure_ascii=False, indent=0, sort_keys=True)
