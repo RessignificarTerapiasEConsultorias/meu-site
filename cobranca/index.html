@@ -57,6 +57,11 @@
         <div id="blocoAberto">
           <a class="btn" id="btnPagar" href="#" target="_blank" rel="noopener" style="width:100%;margin-bottom:8px" hidden>Pagar agora</a>
           <div id="blocoPix" hidden style="margin-bottom:8px">
+            <div id="pixQr" hidden style="text-align:center;margin:0 0 14px">
+              <span style="display:inline-block;background:#fff;padding:10px;border-radius:14px;border:1px solid #D9D2C3;line-height:0"><img id="pixQrImg" alt="QR Code do Pix" width="220" height="220" style="width:220px;height:220px;image-rendering:pixelated"></span>
+              <p class="dica" style="margin:8px 0 0">Aponte a câmera do app do seu banco: Pix › Ler QR Code.</p>
+              <p class="dica" style="margin:12px 0 0">Ou, se preferir, copie o código abaixo:</p>
+            </div>
             <label for="pixCodigo" id="pixRotulo" style="display:block;font-weight:700;margin-bottom:6px">Pix copia e cola</label>
             <textarea id="pixCodigo" readonly rows="3" style="width:100%;font:13px/1.4 monospace;padding:10px;border-radius:10px;border:1px solid #D9D2C3;background:#fff;resize:none;word-break:break-all"></textarea>
             <button type="button" class="btn" id="btnPix" style="width:100%;margin-top:8px">Copiar o código Pix</button>
@@ -138,13 +143,29 @@
     else {
       /* forma de pagar: link do cartão (https://...), Pix copia e cola (000201...) e/ou chave Pix ("pix:chave");
          pode ter mais de uma, separadas por linha ou espaço, e a pessoa escolhe */
-      var formas = String(j.link_pagamento || "").split(/\s+/).filter(Boolean);
+      /* QR Code do Pix copia e cola (biblioteca carregada só quando precisa; se não carregar, o código para copiar continua ali) */
+      function qrPix(txt) {
+        var mostra = function () { try { var q = qrcode(0, "M"); q.addData(txt); q.make(); $("#pixQrImg").src = q.createDataURL(6, 2); $("#pixQr").hidden = false; } catch (e) {} };
+        if (window.qrcode) return mostra();
+        var sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"; sc.onload = mostra; document.head.appendChild(sc);
+      }
+      /* o código Pix copia e cola pode ter espaços dentro (ex.: "Terapia Presencial"): acha do 000201 até o 6304 + dígito verificador válido */
+      function crc16(t) { var c = 0xFFFF; for (var i = 0; i < t.length; i++) { c ^= t.charCodeAt(i) << 8; for (var b = 0; b < 8; b++) c = (c & 0x8000) ? ((c << 1) ^ 0x1021) & 0xFFFF : (c << 1) & 0xFFFF; } return ("0000" + c.toString(16).toUpperCase()).slice(-4); }
+      function acharPix(t) {
+        var ini = t.indexOf("000201"); if (ini < 0) return "";
+        var base = t.slice(ini), re = /6304([0-9A-Fa-f]{4})/g, m;
+        while ((m = re.exec(base))) { var cand = base.slice(0, m.index + 8); if (crc16(cand.slice(0, -4)) === m[1].toUpperCase()) return cand; }
+        return "";
+      }
+      var bruto = String(j.link_pagamento || ""), pixInteiro = acharPix(bruto);
+      var formas = (pixInteiro ? bruto.replace(pixInteiro, " ") : bruto).split(/\s+/).filter(Boolean);
       var lnk = formas.filter(function (x) { return /^https:\/\//.test(x); })[0];
-      var pix = formas.filter(function (x) { return /^000201/.test(x); })[0];
+      var pix = pixInteiro || formas.filter(function (x) { return /^000201/.test(x); })[0];
       var chave = formas.filter(function (x) { return /^pix:/i.test(x); })[0];
       if (lnk) { $("#btnPagar").href = lnk; $("#btnPagar").hidden = false; $("#dicaPagar").hidden = false; if (pix || chave) $("#btnPagar").textContent = "Pagar no cartão de crédito"; }
       if (pix || chave) {
         $("#pixCodigo").value = pix || chave.slice(4); $("#blocoPix").hidden = false; $("#dicaPagar").hidden = false;
+        if (pix) qrPix(pix);
         if (!pix) {
           $("#pixRotulo").textContent = "Chave Pix (CNPJ)"; $("#pixCodigo").rows = 1; $("#btnPix").textContent = "Copiar a chave Pix";
           $("#pixDica").textContent = "No app do seu banco, escolha Pix › Pagar com chave, cole a chave e digite o valor de " + brl(j.valor) + ".";
