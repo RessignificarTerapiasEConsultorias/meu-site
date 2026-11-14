@@ -51,7 +51,7 @@
               <div><label for="novoEc">Estado civil</label><select id="novoEc"><option value="">Não informar</option><option value="solteiro">Solteiro(a)</option><option value="casado">Casado(a)</option><option value="uniao_estavel">União estável</option><option value="separado">Separado(a)</option><option value="divorciado">Divorciado(a)</option><option value="viuvo">Viúvo(a)</option></select></div>
             </div>
           </div></details></div>
-            <div><label for="novoSenha">Senha provisória</label><input id="novoSenha" name="senha" required minlength="8" autocomplete="new-password"><small><button type="button" class="btn peq contorno" id="gerarSenha">Gerar senha</button> Mínimo de 8 caracteres.</small></div>
+            <div><label for="novoSenha">Senha provisória</label><input id="novoSenha" name="senha" type="password" data-olho-senha required minlength="8" autocomplete="new-password"><small><button type="button" class="btn peq contorno" id="gerarSenha">Gerar senha</button> Mínimo de 8 caracteres.</small></div>
             <div><label for="novoPapel">Tipo de acesso</label>
               <select id="novoPapel" name="papel">
                 <option value="cliente">Cliente (mentorado, terapia, consultoria)</option>
@@ -176,7 +176,7 @@
     <div class="so-master" style="margin-top:14px">
       <div class="checks"><label><input type="checkbox" id="edAtivo"> Acesso ativo</label></div>
       <div style="margin-top:16px"><label for="edSenha">Trocar a senha desta pessoa</label>
-        <input id="edSenha" placeholder="Nova senha (mínimo 8 caracteres)" autocomplete="new-password">
+        <input id="edSenha" type="password" data-olho-senha placeholder="Nova senha (mínimo 8 caracteres)" autocomplete="new-password">
         <div class="acoes" style="margin-top:8px"><button class="btn peq contorno" type="button" id="edGerar">Gerar senha</button><button class="btn peq" type="button" id="edTrocarSenha">Trocar senha agora</button></div>
       </div>
     </div>
@@ -202,5 +202,6 @@
 <script src="js/i18n.js?v=202611110736"></script>
 <script src="js/chat-badge.js?v=202611120412"></script>
 <script src="js/gestao.js?v=202611120412"></script>
+<script src="/senha-olho.js" defer></script>
 </body>
 </html>
