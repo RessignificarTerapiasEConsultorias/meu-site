@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WhatsApp | Ressignificar</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilo.css">
+<style>
+.wa-conv{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px;align-items:start}
+.wa-lista{max-height:68vh;overflow-y:auto}
+.wa-item{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;position:relative}
+.wa-item.ativa{border-color:var(--navy);box-shadow:0 0 0 2px rgba(11,31,58,.12)}
+.wa-item b{display:block;font-size:15px;padding-right:42px}
+.wa-item small{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.wa-item .selo{position:absolute;right:10px;top:10px}
+.wa-msg{max-width:min(84%,540px);align-self:flex-start;background:#fff;border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:8px 12px}
+.wa-msg.saida{align-self:flex-end;background:#F6E8BF;border-color:#E4CD8A;border-radius:14px 14px 4px 14px}
+.wa-msg.robo{background:#E3E8F2;border-color:#C4CEE2}
+.wa-msg .meta{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--muted);margin-top:3px}
+.wa-msg .texto{font-size:15.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.wa-msg .erro{color:var(--erro);font-size:12.5px;margin-top:3px}
+.wa-vis{color:#1B6FC6;font-weight:700}
+.wa-prev{background:#E7F4E4;border:1px solid #BFE0BA;border-radius:12px;padding:12px;white-space:pre-wrap;font-size:15px;max-width:420px}
+.wa-passos{counter-reset:p;list-style:none;display:grid;gap:10px}
+.wa-passos li{counter-increment:p;position:relative;padding-left:38px}
+.wa-passos li::before{content:counter(p);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;background:var(--gold);color:var(--deep);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
+.wa-copia{display:flex;gap:8px;align-items:center}
+.wa-copia input{flex:1;font-family:ui-monospace,Menlo,monospace;font-size:14px}
+.wa-check{display:flex;gap:8px;align-items:center;margin:4px 0}
+.wa-barra{height:10px;background:#EFE7D6;border-radius:999px;overflow:hidden;min-width:140px}
+.wa-barra i{display:block;height:100%;background:var(--gold)}
+.wa-linha-var{display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;margin-bottom:8px}
+@media (max-width:760px){.wa-conv{grid-template-columns:minmax(0,1fr)}.wa-lista{max-height:36vh}.wa-msg{max-width:92%}}
+</style>
+</head>
+<body>
+<div class="carregando" id="carregando">Carregando...</div>
+<div id="painel" hidden>
+  <header class="topo-painel">
+    <div class="marca"><img src="img/logo.png" alt=""><b>Ressignificar</b></div>
+    <div class="usuario">
+      <span data-nome-usuario></span>
+      <a class="lnk" href="conta.html">Minha conta</a>
+      <button class="sair" data-sair>Sair</button>
+    </div>
+  </header>
+  <main class="conteudo-painel largo">
+    <a class="voltar" href="painel-master.html">← Voltar ao painel</a>
+    <div class="empresa-titulo"><h1>WhatsApp</h1><span class="selo" id="selStatus">Verificando...</span></div>
+    <p class="sub">Conversas, disparos de templates e robô de respostas, pela API oficial do WhatsApp (Meta). Só o master vê esta página.</p>
+
+    <div class="abas" id="abas" role="tablist">
+      <button class="aba" type="button" data-aba="conversas" aria-selected="true">Conversas <span class="selo ouro" id="bdNaoLidas" hidden></span></button>
+      <button class="aba" type="button" data-aba="contatos" aria-selected="false">Contatos</button>
+      <button class="aba" type="button" data-aba="disparos" aria-selected="false">Disparos</button>
+      <button class="aba" type="button" data-aba="templates" aria-selected="false">Templates</button>
+      <button class="aba" type="button" data-aba="robo" aria-selected="false">Robô</button>
+      <button class="aba" type="button" data-aba="config" aria-selected="false">Configuração</button>
+    </div>
+
+    <!-- ===== CONVERSAS ===== -->
+    <section data-painel="conversas">
+      <div class="wa-conv">
+        <aside class="cartao">
+          <div class="f"><input id="cvBusca" type="search" placeholder="Buscar nome ou número" aria-label="Buscar conversa"></div>
+          <div class="checks" style="margin:10px 0"><label><input type="checkbox" id="cvSoHumano"> Só quem pediu atendimento</label></div>
+          <div class="wa-lista" id="cvLista"><p class="vazio">Carregando...</p></div>
+        </aside>
+        <div id="cvThread"><div class="cartao"><p class="vazio">Escolha uma conversa ao lado.</p></div></div>
+      </div>
+    </section>
+
+    <!-- ===== CONTATOS ===== -->
+    <section data-painel="contatos" hidden>
+      <div class="cartao">
+        <h2>Adicionar contatos</h2>
+        <p class="ajuda">Só mande mensagem para quem autorizou receber. Quem não marcar o aceite fica salvo, mas não entra nos disparos.</p>
+        <div class="grade g2 f">
+          <div><label for="ctNome">Nome</label><input id="ctNome" maxlength="80"></div>
+          <div><label for="ctTel">WhatsApp com DDD</label><input id="ctTel" inputmode="tel" placeholder="(81) 99999-9999"></div>
+          <div><label for="ctEt">Etiquetas <span class="vazio">(separe por vírgula)</span></label><input id="ctEt" placeholder="aluno, turma-nov"></div>
+          <div class="checks" style="align-self:end"><label><input type="checkbox" id="ctAceite"> Esta pessoa autorizou receber mensagens</label></div>
+        </div>
+        <div class="acoes"><button class="btn auto" type="button" id="ctAdd">Adicionar</button>
+          <button class="btn auto contorno" type="button" id="ctImpAbrir">Colar uma lista</button>
+          <button class="btn auto contorno" type="button" id="ctImpAlunos">Importar alunos do painel</button></div>
+      </div>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>Contatos</h2><span class="selo" id="ctConta"></span></div>
+        <div class="grade g3 f" style="max-width:760px;margin:10px 0 14px">
+          <input id="ctBusca" type="search" placeholder="Buscar nome ou número" aria-label="Buscar contato">
+          <select id="ctFiltroEt" aria-label="Filtrar por etiqueta"><option value="">Todas as etiquetas</option></select>
+          <select id="ctFiltroSt" aria-label="Filtrar por situação"><option value="">Todas as situações</option><option value="optin">Autorizaram (podem receber)</option><option value="sem">Sem autorização</option><option value="optout">Saíram da lista</option></select>
+        </div>
+        <div class="tabela-wrap" style="max-height:560px"><table class="t"><thead><tr><th>Nome</th><th>WhatsApp</th><th>Etiquetas</th><th>Situação</th><th>Última mensagem</th><th></th></tr></thead><tbody id="ctLista"><tr><td colspan="6" class="vazio">Carregando...</td></tr></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ===== DISPAROS ===== -->
+    <section data-painel="disparos" hidden>
+      <div class="cartao">
+        <h2>Novo disparo</h2>
+        <p class="ajuda" id="dpUso">Carregando limite do dia...</p>
+        <div class="f">
+          <div class="grade g2">
+            <div><label for="dpNome">Nome do disparo <span class="vazio">(só para você)</span></label><input id="dpNome" maxlength="80" placeholder="Aviso da aula de quinta"></div>
+            <div><label for="dpTemplate">Template aprovado</label><select id="dpTemplate"></select></div>
+            <div><label for="dpEtiqueta">Para quem</label><select id="dpEtiqueta"><option value="">Todos que autorizaram</option></select></div>
+            <div><label for="dpQuando">Quando enviar <span class="vazio">(vazio = agora)</span></label><input id="dpQuando" type="datetime-local"></div>
+          </div>
+          <div id="dpVars" style="margin-top:14px"></div>
+          <div id="dpMidiaBox" style="margin-top:10px" hidden><label for="dpMidia">Link do arquivo do cabeçalho (https://...)</label><input id="dpMidia" type="url" placeholder="https://..."></div>
+          <div style="margin-top:14px"><label>Como vai chegar (exemplo)</label><div class="wa-prev" id="dpPrev">Escolha um template.</div></div>
+          <p class="ajuda" id="dpResumo" style="margin-top:12px"></p>
+          <div class="acoes"><button class="btn auto" type="button" id="dpCriar">Criar e iniciar</button><button class="btn auto contorno" type="button" id="dpRascunho">Salvar como rascunho</button></div>
+        </div>
+      </div>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>Disparos</h2><button class="btn peq contorno" type="button" id="dpAtualizar">Atualizar</button><button class="btn peq" type="button" id="dpProcessar">Enviar agora o que está na fila</button></div>
+        <div class="tabela-wrap" style="margin-top:12px"><table class="t"><thead><tr><th>Disparo</th><th>Template</th><th>Situação</th><th>Andamento</th><th>Entregues</th><th>Lidos</th><th>Falhas</th><th></th></tr></thead><tbody id="dpLista"><tr><td colspan="8" class="vazio">Carregando...</td></tr></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ===== TEMPLATES ===== -->
+    <section data-painel="templates" hidden>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>Seus templates</h2><button class="btn peq" type="button" id="tpSync">Sincronizar com o Meta</button></div>
+        <p class="ajuda">Template é a mensagem pré-aprovada que você pode mandar a qualquer momento. Utilidade custa menos que marketing. Depois de criar, o Meta analisa em minutos ou horas.</p>
+        <div class="tabela-wrap"><table class="t"><thead><tr><th>Nome</th><th>Categoria</th><th>Situação</th><th>Variáveis</th><th class="quebra">Texto</th><th></th></tr></thead><tbody id="tpLista"><tr><td colspan="6" class="vazio">Carregando...</td></tr></tbody></table></div>
+      </div>
+      <div class="cartao">
+        <h2>Criar template</h2>
+        <div class="acoes" style="margin:0 0 12px"><span class="vazio">Modelos prontos:</span>
+          <button class="btn peq contorno" type="button" data-modelo="aula">Aviso de aula</button>
+          <button class="btn peq contorno" type="button" data-modelo="lembrete">Lembrete de pagamento</button>
+          <button class="btn peq contorno" type="button" data-modelo="boasvindas">Boas-vindas</button>
+          <button class="btn peq contorno" type="button" data-modelo="lancamento">Convite (marketing)</button>
+        </div>
+        <div class="f">
+          <div class="grade g2">
+            <div><label for="tcNome">Nome <span class="vazio">(minúsculas, números e _)</span></label><input id="tcNome" maxlength="60" placeholder="aviso_aula_quinta"></div>
+            <div><label for="tcCat">Categoria</label><select id="tcCat"><option value="UTILITY">Utilidade (aviso sobre algo que a pessoa já contratou)</option><option value="MARKETING">Marketing (convite, oferta, divulgação)</option></select></div>
+          </div>
+          <div style="margin-top:12px"><label for="tcTitulo">Título <span class="vazio">(opcional, até 60 caracteres)</span></label><input id="tcTitulo" maxlength="60"></div>
+          <div style="margin-top:12px"><label for="tcCorpo">Texto <span class="vazio">(use {{1}}, {{2}} para as partes que mudam)</span></label><textarea id="tcCorpo" rows="6" maxlength="1024" placeholder="Oi, {{1}}! Sua aula é na {{2}}. Te espero lá!"></textarea>
+            <small id="tcAviso" class="vazio"></small></div>
+          <div id="tcExemplos" style="margin-top:12px"></div>
+          <div class="grade g2" style="margin-top:12px">
+            <div><label for="tcRodape">Rodapé <span class="vazio">(opcional)</span></label><input id="tcRodape" maxlength="60" placeholder="Ressignificar Terapias e Consultorias"></div>
+            <div class="checks" style="align-self:end"><label><input type="checkbox" id="tcBotaoSair" checked> Botão "Sair da lista" (recomendado em marketing)</label></div>
+          </div>
+          <div class="grade g2" style="margin-top:12px">
+            <div><label for="tcBotao2">Botão de resposta rápida <span class="vazio">(opcional)</span></label><input id="tcBotao2" maxlength="25" placeholder="Quero participar"></div>
+            <div><label for="tcBotaoLink">Botão com link <span class="vazio">(texto | https://...)</span></label><input id="tcBotaoLink" placeholder="Ver detalhes | https://ressignificarterapiaseconsultorias.com"></div>
+          </div>
+          <div class="acoes"><button class="btn auto" type="button" id="tcEnviar">Enviar para aprovação do Meta</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ROBÔ ===== -->
+    <section data-painel="robo" hidden>
+      <div class="cartao">
+        <h2>Robô de respostas</h2>
+        <p class="ajuda">Responde sozinho dentro das 24 h em que a pessoa escreveu. "Sair" e "Entrar" funcionam sempre, mesmo com o robô desligado. Quando você responde uma conversa, o robô fica 2 h quieto com aquela pessoa.</p>
+        <div class="f">
+          <div class="checks"><label><input type="checkbox" id="rbAtivo"> <b>Robô ligado</b></label></div>
+          <div style="margin-top:12px"><label for="rbPadrao">Resposta quando nenhuma regra serve <span class="vazio">(vazio = não responde)</span></label><textarea id="rbPadrao" rows="3" maxlength="600" placeholder="Oi, {primeiro_nome}! Recebi sua mensagem e o Mauricio responde por aqui assim que puder."></textarea>
+            <small>Use {primeiro_nome} para o nome da pessoa. Essa resposta é enviada no máximo 1 vez a cada 12 h por pessoa.</small></div>
+          <div class="acoes"><button class="btn auto" type="button" id="rbSalvar">Salvar</button></div>
+        </div>
+      </div>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>Regras</h2><button class="btn peq" type="button" id="rgNova">Nova regra</button></div>
+        <div class="tabela-wrap" style="margin-top:12px"><table class="t"><thead><tr><th>Ordem</th><th>Regra</th><th>Quando a pessoa escreve</th><th>O que faz</th><th>Ativa</th><th></th></tr></thead><tbody id="rgLista"></tbody></table></div>
+      </div>
+      <div class="cartao">
+        <h2>Testar uma mensagem</h2>
+        <div class="f"><div class="wa-copia"><input id="rbTesteTxt" placeholder="Escreva como a pessoa escreveria. Ex.: quando vai sair o link?"><button class="btn auto" type="button" id="rbTestar">Testar</button></div></div>
+        <p class="ajuda" id="rbTesteRes" style="margin-top:10px"></p>
+      </div>
+    </section>
+
+    <!-- ===== CONFIGURAÇÃO ===== -->
+    <section data-painel="config" hidden>
+      <div class="cartao">
+        <h2>Situação da conexão</h2>
+        <div id="cfStatus"></div>
+      </div>
+      <div class="cartao">
+        <h2>Dados do Meta</h2>
+        <p class="ajuda">O token e a chave secreta ficam guardados só no servidor. Depois de salvos, nem você consegue ver de novo na tela.</p>
+        <div class="f">
+          <div class="grade g2">
+            <div><label for="cfNumId">ID do número de telefone</label><input id="cfNumId" inputmode="numeric" placeholder="só números"></div>
+            <div><label for="cfWaba">ID da conta do WhatsApp Business (WABA)</label><input id="cfWaba" inputmode="numeric" placeholder="só números"></div>
+            <div><label for="cfToken">Token permanente</label><input id="cfToken" type="password" autocomplete="off" placeholder="cole aqui o token (começa com EA...)"></div>
+            <div><label for="cfSegredo">Chave secreta do app</label><input id="cfSegredo" type="password" autocomplete="off" placeholder="32 letras e números"></div>
+            <div><label for="cfVersao">Versão da API</label><input id="cfVersao" placeholder="v23.0"></div>
+          </div>
+          <div class="acoes"><button class="btn auto" type="button" id="cfSalvar">Salvar</button><button class="btn auto contorno" type="button" id="cfTestar">Testar conexão</button></div>
+          <p class="ajuda" id="cfTesteRes" style="margin-top:10px"></p>
+        </div>
+      </div>
+      <div class="cartao">
+        <h2>Webhook (o Meta avisa o CRM por aqui)</h2>
+        <p class="ajuda">Cole estes dois dados em developers.facebook.com, no seu app: WhatsApp, Configuração, Webhook, Editar. Depois clique em Gerenciar e assine o campo <b>messages</b> e o campo <b>message_template_status_update</b>.</p>
+        <div class="f">
+          <label>URL de retorno de chamada</label>
+          <div class="wa-copia"><input id="cfUrl" readonly><button class="btn peq contorno" type="button" data-copiar="cfUrl">Copiar</button></div>
+          <label style="margin-top:12px">Token de verificação</label>
+          <div class="wa-copia"><input id="cfVerify" readonly><button class="btn peq contorno" type="button" data-copiar="cfVerify">Copiar</button></div>
+        </div>
+      </div>
+      <div class="cartao">
+        <h2>Registrar o número novo</h2>
+        <p class="ajuda">Só use se o número aparecer como "Pendente" ou "Não registrado" no Gerenciador do WhatsApp, depois de aprovado. Crie um PIN de 6 números e anote em lugar seguro.</p>
+        <div class="f"><div class="wa-copia"><input id="cfPin" inputmode="numeric" maxlength="6" placeholder="PIN de 6 números"><button class="btn auto contorno" type="button" id="cfRegistrar">Registrar número</button></div></div>
+      </div>
+      <div class="cartao">
+        <h2>Limites e custos</h2>
+        <div class="f"><div class="grade g3">
+          <div><label for="cfLimite">Pessoas por dia (limite do Meta)</label><input id="cfLimite" type="number" min="1" max="100000"><small>250 sem a verificação da empresa. Depois sobe para 1.000 e mais.</small></div>
+          <div><label for="cfHi">Enviar a partir das (hora)</label><input id="cfHi" type="number" min="0" max="23"></div>
+          <div><label for="cfHf">Enviar até as (hora)</label><input id="cfHf" type="number" min="1" max="24"></div>
+          <div><label for="cfPm">Preço marketing (R$ por mensagem)</label><input id="cfPm" type="number" step="0.001" min="0"></div>
+          <div><label for="cfPu">Preço utilidade (R$ por mensagem)</label><input id="cfPu" type="number" step="0.001" min="0"></div>
+        </div>
+        <div class="acoes"><button class="btn auto" type="button" id="cfSalvarLim">Salvar limites</button></div></div>
+      </div>
+      <div class="cartao">
+        <h2>Como conectar, na ordem</h2>
+        <ol class="wa-passos">
+          <li>No Gerenciador do WhatsApp, confirme que o número está <b>Conectado</b> e o nome de exibição <b>Aprovado</b>.</li>
+          <li>Anote o <b>ID do número</b> e o <b>ID da conta</b> e cole nos campos acima.</li>
+          <li>No Meta, em Usuários do sistema, gere o token permanente (validade Nunca, com os dois acessos do WhatsApp) e cole acima junto da chave secreta do app. Clique em <b>Salvar</b>.</li>
+          <li>Clique em <b>Testar conexão</b>. Deve aparecer o seu número e o nome. Isso também liga o webhook à sua conta.</li>
+          <li>No app do Meta, cole a URL e o token do Webhook e assine <b>messages</b> e <b>message_template_status_update</b>.</li>
+          <li>Na aba Templates, clique em <b>Sincronizar com o Meta</b> e crie os seus templates.</li>
+          <li>Mande uma mensagem do seu celular para o número novo. Ela deve aparecer em <b>Conversas</b>.</li>
+        </ol>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- janelas -->
+<dialog class="janela" id="jContato">
+  <h2 id="jcTitulo">Contato</h2>
+  <div class="f">
+    <div class="grade g2">
+      <div><label for="jcNome">Nome</label><input id="jcNome" maxlength="80"></div>
+      <div><label for="jcTel">WhatsApp</label><input id="jcTel" readonly></div>
+    </div>
+    <div style="margin-top:12px"><label for="jcEt">Etiquetas (vírgula)</label><input id="jcEt"></div>
+    <div style="margin-top:12px"><label for="jcNotas">Anotações</label><textarea id="jcNotas" rows="3"></textarea></div>
+    <div class="checks" style="margin-top:12px"><label><input type="checkbox" id="jcOptin"> Autorizou receber mensagens</label><label><input type="checkbox" id="jcOptout"> Saiu da lista</label></div>
+  </div>
+  <div class="acoes"><button class="btn auto" type="button" id="jcSalvar">Salvar</button><button class="btn auto perigo" type="button" id="jcApagar">Apagar contato</button><button class="btn auto contorno" type="button" data-fechar="jContato">Fechar</button></div>
+</dialog>
+
+<dialog class="janela" id="jImportar">
+  <h2>Colar uma lista</h2>
+  <p class="ajuda">Uma pessoa por linha: <b>nome; telefone</b>. Exemplo: Maria Silva; 81 99999-8888</p>
+  <div class="f">
+    <textarea id="imTexto" rows="9" placeholder="Maria Silva; 81 99999-8888&#10;João Souza; (11) 98888-7777"></textarea>
+    <div style="margin-top:12px"><label for="imEt">Etiquetas para todos (vírgula)</label><input id="imEt" placeholder="aluno, turma-nov"></div>
+    <div class="checks" style="margin-top:12px"><label><input type="checkbox" id="imAceite"> Todas estas pessoas autorizaram receber mensagens</label></div>
+  </div>
+  <p class="ajuda" id="imRes" style="margin-top:10px"></p>
+  <div class="acoes"><button class="btn auto" type="button" id="imSalvar">Importar</button><button class="btn auto contorno" type="button" data-fechar="jImportar">Fechar</button></div>
+</dialog>
+
+<dialog class="janela" id="jRegra">
+  <h2 id="jrTitulo">Regra</h2>
+  <div class="f">
+    <div class="grade g2">
+      <div><label for="jrNome">Nome da regra</label><input id="jrNome" maxlength="60"></div>
+      <div><label for="jrOrdem">Ordem <span class="vazio">(menor vem primeiro)</span></label><input id="jrOrdem" type="number" min="1" max="999"></div>
+      <div><label for="jrModo">Como comparar</label><select id="jrModo"><option value="exata">Mensagem igual (a pessoa escreve só isso)</option><option value="palavra">Tem a palavra ou frase</option><option value="contem">Contém o trecho (mesmo no meio de outra palavra)</option></select></div>
+      <div><label for="jrAcao">O que fazer</label><select id="jrAcao"><option value="responder">Só responder</option><option value="sair_lista">Tirar da lista de disparos</option><option value="entrar_lista">Voltar para a lista</option><option value="chamar_humano">Chamar o Mauricio (robô pausa por 12 h)</option></select></div>
+    </div>
+    <div style="margin-top:12px"><label for="jrGatilhos">Palavras ou frases <span class="vazio">(separe por vírgula; sem acento é igual com acento)</span></label><input id="jrGatilhos" placeholder="link, aula, horário"></div>
+    <div style="margin-top:12px"><label for="jrResposta">Resposta <span class="vazio">({primeiro_nome} vira o nome da pessoa)</span></label><textarea id="jrResposta" rows="4" maxlength="1000"></textarea></div>
+    <div style="margin-top:12px"><label for="jrEtiqueta">Etiqueta para colocar na pessoa <span class="vazio">(opcional)</span></label><input id="jrEtiqueta" maxlength="40"></div>
+  </div>
+  <div class="acoes"><button class="btn auto" type="button" id="jrSalvar">Salvar</button><button class="btn auto perigo" type="button" id="jrApagar">Apagar</button><button class="btn auto contorno" type="button" data-fechar="jRegra">Fechar</button></div>
+</dialog>
+
+<dialog class="janela" id="jTemplate">
+  <h2>Enviar um template</h2>
+  <p class="ajuda" id="jtPara"></p>
+  <div class="f">
+    <label for="jtSel">Template aprovado</label><select id="jtSel"></select>
+    <div id="jtVars" style="margin-top:12px"></div>
+    <div style="margin-top:12px"><label>Como vai chegar</label><div class="wa-prev" id="jtPrev"></div></div>
+  </div>
+  <p class="ajuda" id="jtRes" style="margin-top:10px"></p>
+  <div class="acoes"><button class="btn auto" type="button" id="jtEnviar">Enviar</button><button class="btn auto contorno" type="button" data-fechar="jTemplate">Fechar</button></div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+<script src="js/whatsapp.js"></script>
+</body>
+</html>
