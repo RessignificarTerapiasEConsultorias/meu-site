@@ -23,7 +23,7 @@ TESTES = {
                     sub="Descubra o que você carrega da sua história e como isso aparece na vida do seu filho.", chips=["Cerca de 8 minutos", "Pelo celular", "Resultado na hora"]),
     "serena": dict(pasta="mente-serena", param="c", nome="Diagnóstico Mente Serena", selo="Diagnóstico Mente Serena", h1="Mente <em>Serena</em>",
                    sub="Um retrato do seu equilíbrio emocional em 7 pilares, num mapa em teia.", chips=["7 pilares", "Pelo celular", "Mapa em teia"]),
-    "esquemas": dict(pasta="esquemas", param="c", nome="Esquemas e Necessidades Emocionais", selo="Esquemas e Necessidades Emocionais", h1="Os seus <em>esquemas</em> emocionais",
+    "esquemas": dict(pasta="esquemas", param="c", nome="Esquemas Emocionais", selo="Esquemas Emocionais", h1="Os seus <em>esquemas</em> emocionais",
                      sub="Entenda os padrões emocionais que se repetem na sua vida, a partir do modelo de Young.", chips=["5 partes", "Pelo celular", "Resultado detalhado"]),
     "tdah": dict(pasta="tdah", param="c", nome="Escala de TDAH (ETDAH-AD)", selo="Escala ETDAH-AD · Triagem", h1="Atenção, foco e <em>organização</em>",
                  sub="Uma triagem para adultos sobre atenção, organização e impulsividade. Não é diagnóstico.", chips=["Triagem", "Pelo celular", "Resultado na hora"]),

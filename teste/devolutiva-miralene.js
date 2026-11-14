@@ -1,6 +1,6 @@
 /* ============================================================================
    TESTES DA MIRALENE SOUTO NA PÁGINA DO DOMÍNIO
-   Diagnóstico Mente Serena · Questionário de Esquemas e Necessidades Emocionais (Young) · Escala de TDAH em adultos (ETDAH-AD)
+   Diagnóstico Mente Serena · Questionário de Esquemas Emocionais (Young) · Escala de TDAH em adultos (ETDAH-AD)
 
    ARQUIVO GERADO por ferramentas/montar_testes_miralene.py a partir do site antigo da Miralene
    (repositório teste-de-travas-miralene): as perguntas, as instruções, as telas, as contas e os resultados
@@ -305,7 +305,7 @@ function pontuarSerena(r){
    (o resto do arquivo é o código do site antigo; esta parte só o encaixa no modelo da página)
    ============================================================================ */
 const MI_TESTES = ['serena', 'esquemas', 'tdah'];
-const MI_ROT = { serena:'Diagnóstico Mente Serena', esquemas:'Esquemas e Necessidades Emocionais', tdah:'Escala de TDAH (ETDAH-AD)' };
+const MI_ROT = { serena:'Diagnóstico Mente Serena', esquemas:'Esquemas Emocionais', tdah:'Escala de TDAH (ETDAH-AD)' };
 const MI_SUB = { serena:'7 pilares · mapa em teia', esquemas:'5 partes · modelo de Young', tdah:'triagem' };
 /* testes deste arquivo que a página da terapeuta tem ligados */
 function miLista(){ const d = window.__T && __T.dados; return d && Array.isArray(d.testes) ? MI_TESTES.filter(k => d.testes.indexOf(k) > -1) : []; }
@@ -760,13 +760,13 @@ const PREFIXO_NOVO = { esquemas:'ES', tdah:'TD', serena:'SE' };   // o Mente Ser
 const LETRAS_COD = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const sorteio4 = () => { let s=''; for(let i=0;i<4;i++) s += LETRAS_COD.charAt(Math.floor(Math.random()*LETRAS_COD.length)); return s; };
 
-TESTES.esquemas = { chave:'esquemas', nome:'Questionário de Esquemas e Necessidades Emocionais', curto:'Esquemas', passos:[] };
+TESTES.esquemas = { chave:'esquemas', nome:'Questionário de Esquemas Emocionais', curto:'Esquemas Emocionais', passos:[] };
 TESTES.tdah     = { chave:'tdah',     nome:'Escala de TDAH em adultos (ETDAH-AD)',               curto:'TDAH',     passos:[] };
 BANNERS.esquemas = BANNERS.travas; BANNERS.tdah = BANNERS.travas;
 
 MENSAGENS.envioCodigo.esquemas = `{saudacao} 🤍
 
-Preparei o seu acesso ao *Questionário de Esquemas e Necessidades Emocionais*: um mapa mais profundo da sua história, para entendermos de onde vêm alguns padrões que se repetem na sua vida.
+Preparei o seu acesso ao *Questionário de Esquemas Emocionais*: um mapa mais profundo da sua história, para entendermos de onde vêm alguns padrões que se repetem na sua vida.
 
 👉 Acesse: {link}
 🔑 Seu código: *{codigo}*
@@ -777,7 +777,7 @@ Quando terminar, me avise por aqui. 🌷
 *Miralene Souto*`;
 MENSAGENS.envioCodigo.tdah = `{saudacao} 🤍
 
-Preparei o seu acesso à *Escala de TDAH em adultos (ETDAH-AD)*, que me ajuda a entender como funcionam a sua atenção, a sua impulsividade e a sua energia no dia a dia.
+Preparei o seu acesso ao *Mapeamento de Perfil Cognitivo/Comportamental*, que me ajuda a entender como funcionam a sua atenção, a sua impulsividade e a sua energia no dia a dia.
 
 👉 Acesse: {link}
 🔑 Seu código: *{codigo}*
@@ -788,10 +788,10 @@ Quando terminar, me avise por aqui. 🌷
 *Miralene Souto*`;
 MENSAGENS.avisarFim.esquemas = `Oi, Miralene! Aqui é {nome}. 🌷
 
-Acabei de responder o *Questionário de Esquemas e Necessidades Emocionais* e as minhas respostas já chegaram até você. Quando podemos conversar sobre o que apareceu? 🤍`;
+Acabei de responder o *Questionário de Esquemas Emocionais* e as minhas respostas já chegaram até você. Quando podemos conversar sobre o que apareceu? 🤍`;
 MENSAGENS.avisarFim.tdah = `Oi, Miralene! Aqui é {nome}. 🌷
 
-Acabei de responder a *Escala de TDAH em adultos (ETDAH-AD)* e as minhas respostas já chegaram até você. Quando podemos conversar sobre o resultado? 🤍`;
+Acabei de responder o *Mapeamento de Perfil Cognitivo/Comportamental* e as minhas respostas já chegaram até você. Quando podemos conversar sobre o resultado? 🤍`;
 
 /* ---------- conversa com o Supabase ---------- */
 async function rpc(nome, args){
@@ -893,7 +893,7 @@ function construirEsquemas(def){
   const passos = [];
   passos.push({
     titulo:'Boas-vindas',
-    intro:`<h1>Questionário de Esquemas e Necessidades Emocionais</h1>
+    intro:`<h1>Questionário de Esquemas Emocionais</h1>
       <p class="lead">Este é um mapa mais profundo da sua história: ele ajuda a entender de onde vêm alguns padrões que se repetem na sua vida e quais necessidades emocionais ficaram sem resposta na infância.</p>
       <p>São <b>5 partes</b> e leva cerca de <b>1 hora</b>. Você pode parar quando quiser e continuar depois: o seu progresso fica salvo neste aparelho.</p>
       <p>Algumas frases falam de lembranças e de relações difíceis. Vá no seu ritmo e responda com sinceridade, sem se julgar. Se alguma coisa mexer muito com você, pare e fale com a Miralene.</p>
@@ -917,7 +917,7 @@ function construirEsquemas(def){
       });
     });
   };
-  parte(1, 'Esquemas (YSQ)', ysq, 'y', 15, '', false, ysq.instrucao);
+  parte(1, 'Esquemas Emocionais (YSQ)', ysq, 'y', 15, '', false, ysq.instrucao);
   parte(2, 'Estilos parentais: a sua MÃE', par, 'm', 12,
         '<p class="nota-bloco">Pense na sua <b>mãe</b> (ou em quem cumpriu esse papel) quando você era criança. Se você não teve essa figura, pode deixar em branco e tocar em Continuar.</p>', true, par.instrucao);
   parte(3, 'Estilos parentais: o seu PAI', par, 'p', 12,
@@ -925,7 +925,7 @@ function construirEsquemas(def){
   parte(4, 'Formas de enfrentamento: compensação (YCI)', yci, 'c', 12, '', false, yci.instrucao);
   parte(5, 'Formas de enfrentamento: evitação (YRAI)', yrai, 'v', 10, '', false, yrai.instrucao);
   return {
-    chave:'esquemas', nome:TESTES.esquemas.nome, curto:'Esquemas', passos, botaoFim:'Enviar as minhas respostas',
+    chave:'esquemas', nome:TESTES.esquemas.nome, curto:'Esquemas Emocionais', passos, botaoFim:'Enviar as minhas respostas',
     fim:`<h1>Obrigada por responder com tanta verdade.</h1>
       <p class="lead">As suas respostas chegaram até mim. Vou analisá-las com cuidado e, juntas, vamos conversar sobre o que apareceu e como cuidar disso. Nada aqui é um julgamento: é um mapa para a nossa conversa.</p>`,
     msgZap: n => preencher(MENSAGENS.avisarFim.esquemas, { nome:n })
@@ -1032,7 +1032,7 @@ function detalheEsquemas(reg, def, registro){
   const resumo = `${ident(r,[['idade','Idade'],['estado_civil','Estado civil'],['escolaridade','Escolaridade'],['profissao','Profissão']])}
     <p class="lead">${ativ.length ? `Esquemas ativados (média 4 ou mais): <b>${ativ.map(e=>esc(e.nome)).join(', ')}</b>.` : 'Nenhum esquema chegou à média 4 (limiar de ativação) neste questionário.'}</p>`;
   const ysq = Object.keys(def.dominios).map(d=>`<h3 class="dom-t">${esc(d)}</h3><div class="barras">${def.dominios[d].map(n=>{ const e = P.esquemas.find(x=>x.nome===n); return e ? barraGraf(n, e.media, 6, corYsq(e.media), fmtN(e.media), 4, e.ativado) : ''; }).join('')}</div>`).join('');
-  const grafico = `<h2>Esquemas (YSQ)</h2><p class="meta-bloco">Média das 5 afirmações de cada esquema (de 1 a 6). A linha marca 4: a partir dela o esquema é considerado ativado.</p>${ysq}
+  const grafico = `<h2>Esquemas Emocionais (YSQ)</h2><p class="meta-bloco">Média das 5 afirmações de cada esquema (de 1 a 6). A linha marca 4: a partir dela o esquema é considerado ativado.</p>${ysq}
     <div class="legenda"><span><i style="background:#8C2F35"></i>4 a 6: ativado</span><span><i style="background:#C9806C"></i>3 a 3,99</span><span><i style="background:#E6C2B2"></i>abaixo de 3</span></div>
     <h2>Estilos parentais</h2><p class="meta-bloco">Média por estilo (de 1 a 6), separado por mãe e pai.${semMae?' <b>Mãe: esta parte foi deixada em branco.</b>':''}${semPai?' <b>Pai: esta parte foi deixada em branco.</b>':''}</p>
     <div class="duplas">${P.parentais.map(p=>barraDupla(p.nome, p.mae, p.pai, semMae, semPai)).join('')}</div>
@@ -1388,7 +1388,7 @@ const CV_EXTRA = {
     faq:q => ['O que é o Termômetro Mente Serena?', 'É o resultado do diagnóstico: uma nota de 1 a 10 para cada um dos 7 pilares, em um gráfico de teia. Perto de 10, o pilar está fortalecido; perto de 1, é um sinal de alerta. É um primeiro retrato, que você aprofunda com ' + q + ' na devolutiva.']
   },
   esquemas:{
-    rot:'Esquemas e Necessidades Emocionais', curto:'Esquemas e Necessidades Emocionais', tag:'Individual · Mais profundo', titulo:'Questionário de Esquemas e Necessidades Emocionais',
+    rot:'Esquemas Emocionais', curto:'Esquemas Emocionais', tag:'Individual · Mais profundo', titulo:'Questionário de Esquemas Emocionais',
     objetivo:'Entender de onde vêm os padrões que se repetem na sua vida: quais esquemas emocionais se formaram na sua história, como você aprendeu a lidar com eles e quais necessidades emocionais ficaram sem resposta na infância.',
     como:['5 partes, cerca de 1 hora', 'Dá para parar e continuar depois: o progresso fica salvo no aparelho', 'Algumas frases falam da infância e da relação com a mãe e o pai: vá no seu ritmo'],
     resultado:q => 'O mapa dos seus esquemas, das suas formas de enfrentamento e dos estilos parentais que você percebeu, com a leitura feita junto com ' + q + ' na devolutiva.',
@@ -1405,11 +1405,11 @@ const CV_EXTRA = {
     pergunta:'De onde vêm os padrões que se repetem na sua vida?',
     texto:'Um mapa mais profundo da sua história, baseado no modelo de esquemas de Young: ajuda a entender de onde vêm alguns padrões que se repetem na sua vida e quais necessidades emocionais ficaram sem resposta na infância.',
     meta:'5 partes · cerca de 1 hora, com o progresso salvo',
-    zap:'quero fazer o Questionário de Esquemas e Necessidades Emocionais. Como recebo o meu código?',
+    zap:'quero fazer o Questionário de Esquemas Emocionais. Como recebo o meu código?',
     descobre:'<b>de onde vêm os padrões que se repetem na sua história</b>',
-    recebe:q => 'No Questionário de Esquemas, a leitura dos seus padrões e necessidades é feita junto com ' + q,
-    tempo:'o Questionário de Esquemas, cerca de 1 hora (dá para parar e continuar depois)',
-    faq:q => ['Posso parar no meio do Questionário de Esquemas?', 'Pode. O seu progresso fica salvo no aparelho: ao abrir o link de novo, você continua de onde parou. Algumas frases falam de lembranças e de relações difíceis; vá no seu ritmo e, se algo mexer muito com você, fale com ' + q + '.']
+    recebe:q => 'No Questionário de Esquemas Emocionais, a leitura dos seus padrões e necessidades é feita junto com ' + q,
+    tempo:'o Questionário de Esquemas Emocionais, cerca de 1 hora (dá para parar e continuar depois)',
+    faq:q => ['Posso parar no meio do Questionário de Esquemas Emocionais?', 'Pode. O seu progresso fica salvo no aparelho: ao abrir o link de novo, você continua de onde parou. Algumas frases falam de lembranças e de relações difíceis; vá no seu ritmo e, se algo mexer muito com você, fale com ' + q + '.']
   },
   tdah:{
     rot:'Escala de TDAH em adultos (ETDAH-AD)', curto:'TDAH em adultos (ETDAH-AD)', tag:'Individual · Triagem', titulo:'Escala de TDAH em adultos (ETDAH-AD)',
@@ -1428,7 +1428,7 @@ const CV_EXTRA = {
     pergunta:'Como funcionam a sua atenção, a sua impulsividade e a sua energia?',
     texto:'Uma triagem que ajuda a entender como funcionam a sua atenção, a sua impulsividade e a sua energia no dia a dia. Apoia a avaliação, mas não é um diagnóstico: a leitura do resultado é feita junto com você.',
     meta:'Triagem · 15 a 20 minutos',
-    zap:'quero fazer a Escala de TDAH em adultos (ETDAH-AD). Como recebo o meu código?',
+    zap:'quero fazer o Mapeamento de Perfil Cognitivo/Comportamental. Como recebo o meu código?',
     descobre:'<b>como funcionam a sua atenção, a sua impulsividade e a sua energia</b>',
     recebe:q => 'Na Escala de TDAH, uma triagem que apoia a avaliação, com a leitura feita junto com ' + q,
     tempo:'a Escala de TDAH, de 15 a 20 minutos',

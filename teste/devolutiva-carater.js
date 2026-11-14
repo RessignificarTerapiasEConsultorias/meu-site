@@ -797,6 +797,10 @@ function dvCapaVendas(modo){
   const ROT = { travas:'Teste de Travas Mentais', tracos:'Teste de Traços de Caráter', mpcc:'MPCC' };
   extras.forEach(k => { ROT[k] = EX[k].rot; });
   if(selo) selo.textContent = soMpcc ? 'MPCC · Mapa de Perfil Comportamental e Competências' : lista.length > 3 ? maius(NUM[lista.length] || lista.length) + ' testes de autoconhecimento' : lista.map(k => ROT[k]).join(' · ');
+  /* boas-vindas da terapeuta logo abaixo da foto (travas_paginas.dados.boas_vindas = { titulo, paragrafos: [...] }) */
+  const bv = dd && dd.boas_vindas;
+  if(bv && selo && Array.isArray(bv.paragrafos) && bv.paragrafos.length && !lt.querySelector('.cv-boasvindas'))
+    selo.insertAdjacentHTML('beforebegin', '<section class="cv-boasvindas" aria-label="Boas-vindas">' + (bv.titulo ? '<h2>' + escV(bv.titulo) + '</h2>' : '') + bv.paragrafos.map(t => '<p>' + escV(t) + '</p>').join('') + '</section>');
   lt.querySelectorAll('.texto-capa, .lista-leve').forEach(x => x.remove());
   const lead = soTravas
     ? 'Quase sempre é uma trava mental: um padrão antigo que age sem pedir licença no trabalho, nas relações e nas decisões do dia a dia. Em poucos minutos, você descobre <b>quais travas estão mais ativas em você hoje</b>, em números.'

@@ -356,3 +356,10 @@ body.cv-on{overflow-x:clip}
 .cv-det-bloco p + p{margin-top:8px}
 .cv-topicos{margin:8px 0;padding-left:20px}.cv-topicos li{margin:3px 0}
 .cv-aviso{margin-top:10px!important;padding:10px 12px;border-radius:12px;background:rgba(201,162,74,.12);border:1px solid rgba(201,162,74,.35);font-size:14.5px}
+
+/* boas-vindas da terapeuta (abaixo da foto) */
+.cv-boasvindas{max-width:560px;margin:18px auto 6px;padding:18px 18px 12px;border-radius:16px;text-align:left;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:inherit}
+.cv-boasvindas h2{margin:0 0 10px;font-family:inherit;font-size:14px;font-weight:700;line-height:1.4;letter-spacing:.06em;text-transform:uppercase;color:var(--ouro,#E3C477)}
+.cv-boasvindas p{margin:0 0 10px;font-size:15px;line-height:1.62;opacity:.94}
+.cv-boasvindas p:last-child{font-weight:600;opacity:1}
+@media(min-width:900px){.capa-vendas .cv-boasvindas{margin-left:0}}
