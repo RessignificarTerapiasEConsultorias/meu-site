@@ -74,3 +74,16 @@
   body.dc-imprimindo .dc-caixa,body.dc-imprimindo .dc-graf-img img{break-inside:avoid}
 }
 @media(max-width:480px){.dc-op{padding:8px 8px 8px 12px;gap:8px}.dc-op .dc-pal{font-size:16px}.dc-bt{width:48px;height:44px}.dc-graf-img{grid-template-columns:1fr}}
+
+/* PDF direto (gerado fora da tela, em tamanho A4) */
+#dc-pdf-box{position:fixed;left:-12000px;top:0;width:794px;background:#fff;color:#1D2433}
+#dc-pdf-box .dc-rel{max-width:none;font-size:14px;line-height:1.45}
+#dc-pdf-box .dc-pag{border:0;border-radius:0;margin:0;padding:34px 38px;box-sizing:border-box;min-height:1123px;background:#fff}
+#dc-pdf-box .dc-capa{background:#1D2433!important;color:#fff;min-height:1123px}
+#dc-pdf-box h1,#dc-pdf-box h2,#dc-pdf-box h3,#dc-pdf-box h4,#dc-pdf-box p,#dc-pdf-box li,#dc-pdf-box td,#dc-pdf-box th,#dc-pdf-box b{color:#1D2433}
+#dc-pdf-box .dc-capa h1,#dc-pdf-box .dc-capa p{color:#fff}
+#dc-pdf-box .dc-capa .dc-capa-sigla{color:#E3C477}
+#dc-pdf-box .dc-pag h2{border-bottom:2px solid #1D2433}
+#dc-pdf-box .dc-graf-img{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px}
+#dc-pdf-box .dc-graf-img img{width:100%;height:auto}
+#dc-pdf-box .dc-capa b{color:#fff}

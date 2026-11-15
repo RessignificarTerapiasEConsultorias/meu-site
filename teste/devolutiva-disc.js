@@ -49,22 +49,57 @@ function dcResumoTexto(nome, calc){
     ...DISC.ORDEM.map(f => dcF(f).nome + ' (' + f + '): ' + calc.adaptado[f] + '% / ' + calc.natural[f] + '% / ' + calc.resultante[f] + '% · ' + (calc.resultante[f] >= 50 ? 'alto' : 'baixo')), '',
     'Áreas recomendadas: ' + L['Áreas Recomendadas'].join('; '), 'Estilo de liderança: ' + L['Estilo de Liderança']].join('\n');
 }
-async function dcImprimir(r){
-  let img = {};
-  try{ img = await DISC.imagens(r.calc); }catch(e){}
-  const s = dcSecoes(r.calc), graf = img.adaptado ? `<div class="dc-graf-img"><img src="${img.adaptado}" alt="Perfil Adaptado"><img src="${img.natural}" alt="Perfil Natural"><img src="${img.resultante}" alt="Perfil Resultante"><img src="${img.radar}" alt="Radar dos 4 fatores"></div>` : '';
-  const html = `<div class="dc-rel">
+function dcHtmlRelatorio(r, img){
+  const s = dcSecoes(r.calc), graf = img && img.adaptado ? `<div class="dc-graf-img"><img src="${img.adaptado}" alt="Perfil Adaptado"><img src="${img.natural}" alt="Perfil Natural"><img src="${img.resultante}" alt="Perfil Resultante"><img src="${img.radar}" alt="Radar dos 4 fatores"></div>` : '';
+  return `<div class="dc-rel">
     <section class="dc-pag dc-capa"><div><span class="dc-capa-sigla">DISC</span><h1>Análise Comportamental</h1>
       <p style="font-size:20px;margin-top:18px"><b>${escV(r.nome)}</b></p><p>${escV(r.dataTxt || '')}</p>
       <p style="margin-top:26px">${escV((window.T_NOME || '') + (window.T_NOME ? ' · ' : '') + 'Ressignificar')}</p></div></section>
     <section class="dc-pag">${s.topo}${s.tabela}</section>
     <section class="dc-pag"><h2>Gráficos</h2>${graf}</section>
     <section class="dc-pag">${s.laudo}<p class="dc-nota-peq">${escV(DC.AVISO)}</p></section></div>`;
-  const caixa = document.createElement('div'); caixa.id = 'dc-impressao'; caixa.innerHTML = html;
+}
+async function dcImprimir(r){
+  let img = {};
+  try{ img = await DISC.imagens(r.calc); }catch(e){}
+  const caixa = document.createElement('div'); caixa.id = 'dc-impressao'; caixa.innerHTML = dcHtmlRelatorio(r, img);
   document.body.appendChild(caixa); document.body.classList.add('dc-imprimindo');
   const fim = () => { document.body.classList.remove('dc-imprimindo'); caixa.remove(); window.removeEventListener('afterprint', fim); };
   window.addEventListener('afterprint', fim);
   setTimeout(() => { window.print(); setTimeout(() => { if(document.getElementById('dc-impressao')) fim(); }, 1500); }, 250);
+}
+/* baixa o relatório direto como arquivo PDF (sem abrir a janela de impressão); se não der, abre a impressão */
+function dcCarregarLib(src){ return new Promise((ok, falha) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => falha(new Error('lib')); document.head.appendChild(s); }); }
+async function dcBaixarPDF(r, botao){
+  const rotulo = botao ? botao.innerHTML : '';
+  if(botao){ botao.disabled = true; botao.innerHTML = '<span class="duas">Gerando o PDF...<small>só um instante</small></span>'; }
+  let caixa = null;
+  try{
+    if(!window.html2canvas) await dcCarregarLib('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    if(!(window.jspdf && window.jspdf.jsPDF)) await dcCarregarLib('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    let img = {}; try{ img = await DISC.imagens(r.calc); }catch(e){}
+    caixa = document.createElement('div'); caixa.id = 'dc-pdf-box'; caixa.innerHTML = dcHtmlRelatorio(r, img); document.body.appendChild(caixa);
+    await Promise.all([...caixa.querySelectorAll('img')].map(i => i.complete ? 1 : new Promise(ok => { i.onload = i.onerror = ok; })));
+    const pdf = new window.jspdf.jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+    const L = 210, A = 297; let primeira = true;
+    for(const pag of caixa.querySelectorAll('.dc-pag')){
+      const cv = await window.html2canvas(pag, { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false });
+      const altura = cv.height * L / cv.width;
+      for(let y = 0; y < altura - 0.5; y += A){
+        const fatia = document.createElement('canvas'); fatia.width = cv.width; fatia.height = Math.min(cv.height - Math.round(y * cv.width / L), Math.round(A * cv.width / L));
+        fatia.getContext('2d').drawImage(cv, 0, Math.round(y * cv.width / L), cv.width, fatia.height, 0, 0, cv.width, fatia.height);
+        if(!primeira) pdf.addPage(); primeira = false;
+        pdf.addImage(fatia.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, L, fatia.height * L / cv.width);
+      }
+    }
+    const nome = String(r.nome || 'perfil').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'perfil';
+    pdf.save('DISC-' + nome + '.pdf');
+  }catch(e){
+    console.log('dcBaixarPDF', e); dcImprimir(r);
+  }finally{
+    if(caixa) caixa.remove();
+    if(botao){ botao.disabled = false; botao.innerHTML = rotulo; }
+  }
 }
 
 /* ---- 2. TELAS DA PESSOA ---- */
@@ -273,7 +308,7 @@ function dcResultadoPessoa(r){
     <p class="dc-nota-peq">${escV(DC.AVISO)}</p></div>`;
   mostrarTela('#tela-dc-resultado'); window.scrollTo({ top:0, behavior:'auto' });
   DISC.graficos(document.getElementById('dc-grafs-pessoa'), r.calc).catch(() => {});
-  document.querySelectorAll('#dc-resultado [data-dc-pdf]').forEach(b => b.addEventListener('click', () => dcImprimir(r)));
+  document.querySelectorAll('#dc-resultado [data-dc-pdf]').forEach(b => b.addEventListener('click', () => dcBaixarPDF(r, b)));
 }
 
 /* ---- 3. ÁREA DO DONO DO TESTE ---- */
@@ -454,7 +489,7 @@ function dcAbrirDetalhe(x){
       <button type="button" class="btn btn-argila" data-dc-apres><span class="duas">Gerar apresentação<small>proposta de desenvolvimento para ${escV(prim)}</small></span></button>
       <button type="button" class="btn btn-argila" data-dc-email="eu"><span class="duas">Enviar para o meu e-mail<small>${escV(CONFIG.emailTerapeuta || '')}</small></span></button>
       ${d.email ? `<button type="button" class="btn btn-contorno" data-dc-email="pessoa"><span class="duas">Enviar para ${escV(prim)}<small>${escV(d.email)}</small></span></button>` : ''}
-      <button type="button" class="btn btn-contorno" data-dc-pdf><span class="duas">Salvar em PDF ou imprimir<small>capa, perfis, gráficos e laudo</small></span></button>
+      <button type="button" class="btn btn-argila" data-dc-pdf><span class="duas">Baixar relatório em PDF<small>capa, perfis, gráficos e laudo</small></span></button>
       <button type="button" class="btn btn-contorno" data-dc-copiar>Copiar a ficha completa</button>
     </div>
     <div class="dc-rel-tela"><div class="dc-secao">${s.topo}</div><div class="dc-secao"><h2>Os 3 perfis</h2><div id="dc-grafs-det"></div>${s.tabela}</div><div class="dc-secao">${s.laudo}</div></div>
@@ -463,7 +498,7 @@ function dcAbrirDetalhe(x){
   window.scrollTo({ top:0, behavior:'auto' });
   DISC.graficos(document.getElementById('dc-grafs-det'), calc).catch(() => {});
   const raiz = document.getElementById('dc-detalhe-conteudo');
-  raiz.querySelector('[data-dc-pdf]').addEventListener('click', () => dcImprimir(r));
+  raiz.querySelector('[data-dc-pdf]').addEventListener('click', e => dcBaixarPDF(r, e.currentTarget));
   raiz.querySelector('[data-dc-apres]').addEventListener('click', () => dcApresentar(x));
   raiz.querySelector('[data-dc-copiar]').addEventListener('click', async e => { const b = e.currentTarget; try{ await navigator.clipboard.writeText(resumo); b.textContent = 'Ficha copiada!'; }catch(err){ b.textContent = 'Não consegui copiar'; } setTimeout(() => { b.textContent = 'Copiar a ficha completa'; }, 2200); });
   raiz.querySelectorAll('[data-dc-email]').forEach(b => b.addEventListener('click', () => {
