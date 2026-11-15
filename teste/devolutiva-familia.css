@@ -183,3 +183,11 @@ body:has(#tela-fm.ativa) .cv-barra,body:has(#tela-fm-teste.ativa) .cv-barra,body
 #fm-impressao h1,#fm-impressao h2,#fm-impressao h3,#fm-impressao .fm-barra-topo span{color:#17191D!important}
 #fm-impressao .fm-secao h2{font-size:19px;margin-bottom:8px}
 #fm-impressao .fm-elo,#fm-impressao .fm-barra{break-inside:avoid}
+
+/* cronômetro do link (opção da terapeuta) */
+.fm-cron{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;gap:8px;justify-content:center;align-items:center;padding:8px 12px;font-size:14px;line-height:1.2;background:#1D2A44;color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.22)}
+.fm-cron b{font-variant-numeric:tabular-nums;font-size:17px;letter-spacing:.02em}
+.fm-cron.fm-cron-fim{background:#B23A2F}
+html.fm-com-cron body{padding-top:40px}
+html.fm-com-cron .fm-topo{top:40px}
+.fm-txt-curto{margin-top:14px;font-size:13.5px}

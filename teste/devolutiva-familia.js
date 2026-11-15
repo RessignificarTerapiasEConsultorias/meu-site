@@ -128,7 +128,12 @@ function fmPassos(){
   return p;
 }
 function fmGuardar(){ fmLS.set(fmChave(fm.codigo, 'prog'), { cad:fm.cad, r:fm.r, parte2:fm.parte2, texto:fm.texto, i:fm.i, outro:fm.outro }); }
+const FM_PIX = { chegou:['track', 'ViewContent'], comecar:['trackCustom', 'ComecouTeste'], contato:['track', 'Lead'], concluiu:['track', 'CompleteRegistration'], whatsapp:['track', 'Contact'] };
+function fmPix(e){
+  try{ const m = FM_PIX[e]; if(m && fm.link && fm.link.campanha && window.PIX && PIX.track) PIX.track(m[0], m[1], { content_name:'Travas em Família (campanha)' }); }catch(err){}
+}
 function fmEvento(e, p, dados){
+  fmPix(e);
   if(!fm.link || !fm.link.compartilhado || !fm.sessao) return;
   try{ clienteMembros().rpc('campanha_evento', { p_codigo:fm.codigo, p_sessao:fm.sessao, p_evento:e, p_pergunta:p || null, p_dados:dados || {} }).then(() => {}, () => {}); }catch(err){}
 }
@@ -165,9 +170,33 @@ async function fmEntrar(codigo, r){
   try{ const q = new URLSearchParams(location.search); fm.origem = (q.get('origem') || '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 80); }catch(e){}
   if(info.compartilhado){ const k = fmChave(fm.codigo, 'sessao'); fm.sessao = fmLS.get(k, null); if(!fm.sessao){ fm.sessao = fmUuid(); fmLS.set(k, fm.sessao); } fmEvento('chegou', null, { origem:(info.origem || fm.origem || 'link').slice(0, 40), aparelho:matchMedia('(max-width: 820px)').matches ? 'celular' : 'computador' }); }
   const feitos = fmLS.get(fmChave(fm.codigo, 'feitos'), []), prog = fmLS.get(fmChave(fm.codigo, 'prog'), null);
+  if(fmCronMin() && !feitos.length && fmLS.get(fmChave(fm.codigo, 'cron'), null)){ if(fmCronRestante() <= 0) return fmTempoEsgotado(); fmCronLigar(); }
   if(prog && prog.cad) return fmTelaRetomar(prog);
   if(feitos.length) return fmVoltarResultado(feitos[feitos.length - 1]);
   fmTelaAbertura();
+}
+/* ---------- cronômetro (opção do link: travas_codigos.urgencia + duracao_min) ---------- */
+function fmCronMin(){ return (fm.link && fm.link.urgencia) ? Math.max(5, +fm.link.duracao_min || 30) : 0; }
+function fmCronRestante(){ const m = fmCronMin(), ini = fmLS.get(fmChave(fm.codigo, 'cron'), null); return !m || !ini ? Infinity : Math.max(0, ini + m * 60000 - Date.now()); }
+function fmCronTxt(ms){ const t = Math.ceil(ms / 1000), mm = Math.floor(t / 60), ss = t % 60; return mm + ':' + String(ss).padStart(2, '0'); }
+function fmCronParar(){ clearInterval(fm.cronT); fm.cronT = null; const b = document.getElementById('fm-cron'); if(b) b.remove(); document.documentElement.classList.remove('fm-com-cron'); }
+function fmCronLigar(){
+  if(!fmCronMin() || fm.cronT) return;
+  const k = fmChave(fm.codigo, 'cron'); if(!fmLS.get(k, null)) fmLS.set(k, Date.now());
+  if(!document.getElementById('fm-cron')){ document.body.insertAdjacentHTML('beforeend', '<div class="fm-cron" id="fm-cron" role="timer" aria-live="off"><span aria-hidden="true">⏱</span> <span>Tempo restante</span> <b id="fm-cron-t"></b></div>'); }
+  document.documentElement.classList.add('fm-com-cron');
+  const tick = () => { const r = fmCronRestante(), t = document.getElementById('fm-cron-t'), b = document.getElementById('fm-cron');
+    if(t) t.textContent = fmCronTxt(r); if(b) b.classList.toggle('fm-cron-fim', r <= 120000);
+    if(r <= 0) fmTempoEsgotado(); };
+  tick(); fm.cronT = setInterval(tick, 1000);
+}
+function fmTempoEsgotado(){
+  fmCronParar(); if(fm.esgotado) return; fm.esgotado = true;
+  fmEvento('expirou'); fmLS.del(fmChave(fm.codigo, 'prog'));
+  fmMostrar(`<div class="fm-abertura"><span class="selo fm-selo">Tempo esgotado</span>
+    <h1 class="fm-h1 fm-h1-p">O tempo para responder acabou.</h1>
+    <p class="fm-sub">Este link tinha ${fmCronMin()} minutos para ser respondido. Peça um novo link a ${fmEsc(window.T_A || 'a terapeuta')}, e você faz com calma.</p>
+    <a class="btn btn-zap fm-btn" href="${fmZap('Olá, o meu tempo no ' + fmNome() + ' acabou antes de eu terminar. Pode me enviar um novo link?')}" target="_blank" rel="noopener" data-fm-zap><span class="duas">Pedir um novo link<small>pelo WhatsApp</small></span></a></div>`);
 }
 function fmTelaAbertura(){
   const foto = fmFoto(), I = fm.link || {};
@@ -175,12 +204,12 @@ function fmTelaAbertura(){
     ${foto ? `<img class="fm-foto" src="${fmEsc(foto)}" alt="">` : ''}
     <span class="selo fm-selo">${fmEsc(fmEspaco())}</span>
     <h1 class="fm-h1">${fmEsc(I.nome_teste || fmNome())}</h1>
-    <p class="fm-sub">Descubra o que você carrega da sua história e como isso aparece na vida do seu filho.</p>
-    <ul class="fm-chips"><li>Leva cerca de 8 minutos</li><li>Uma pergunta por vez</li><li>${I.mostrar === false ? (fmEsc(window.T_PRIM || '') + ' te devolve o resultado') : 'Resultado na hora'}</li><li>Não é diagnóstico</li></ul>
+    <p class="fm-sub">${I.campanha ? 'Em poucos minutos, veja o que você carrega da sua história e como isso aparece na vida do seu filho.' : 'Descubra o que você carrega da sua história e como isso aparece na vida do seu filho.'}</p>
+    <ul class="fm-chips"><li>${I.urgencia ? 'Você tem ' + fmCronMin() + ' minutos' : 'Leva cerca de 8 minutos'}</li><li>Uma pergunta por vez</li><li>${I.mostrar === false ? (fmEsc(window.T_PRIM || '') + ' te devolve o resultado') : 'Resultado na hora'}</li>${I.campanha ? '' : '<li>Não é diagnóstico</li>'}</ul>
     <button class="btn btn-primario fm-btn" id="fm-comecar" type="button">Começar</button>
-    <p class="fm-txt" style="margin-top:18px">Para pais, mães e responsáveis por crianças de 6 a 12 anos (do 1º ao 6º ano). Não existe resposta certa ou errada: responda pensando nas últimas semanas.</p>
+    ${I.campanha ? '<p class="fm-txt fm-txt-curto">Não é diagnóstico. Responda pensando nas últimas semanas.</p>' : '<p class="fm-txt" style="margin-top:18px">Para pais, mães e responsáveis por crianças de 6 a 12 anos (do 1º ao 6º ano). Não existe resposta certa ou errada: responda pensando nas últimas semanas.</p>'}
   </div>`);
-  document.getElementById('fm-comecar').addEventListener('click', () => { fmEvento('comecar'); fmTelaCadastro(); });
+  document.getElementById('fm-comecar').addEventListener('click', () => { fmCronLigar(); fmEvento('comecar'); fmTelaCadastro(); });
 }
 function fmTelaRetomar(prog){
   fmMostrar(`<div class="fm-abertura"><h1 class="fm-h1">Bem-vindo(a) de volta</h1>
@@ -286,7 +315,9 @@ function fmVoltar(){
   else fmTelaCadastro();
 }
 async function fmEnviar(){
-  if(fm.enviando) return; fm.enviando = true;
+  if(fm.enviando) return;
+  if(fmCronMin() && fmCronRestante() <= 0) return fmTempoEsgotado();
+  fm.enviando = true;
   document.getElementById('fm-barra').style.width = '100%';
   fmMostrar('<div class="fm-abertura"><div class="t-girar" aria-hidden="true"></div><h1 class="fm-h1 fm-h1-p">Montando o seu resultado...</h1></div>');
   fmEvento('fim_perguntas', fm.passos.length);
@@ -304,7 +335,7 @@ async function fmEnviar(){
   const feito = { token:r.token, filho:fm.cad.filho, quem:fm.cad.quem, nome:fm.cad.nome, em:new Date().toISOString(),
     base:{ cad:Object.assign({}, fm.cad, { filho:'', ano:'', escola:'' }), r:Object.fromEntries(Object.entries(fm.r).filter(([k]) => /^(a\d+|h\d)$/.test(k))), parte2:fm.parte2, texto:fm.texto } };
   const feitos = fmLS.get(fmChave(fm.codigo, 'feitos'), []); feitos.push(feito); fmLS.set(fmChave(fm.codigo, 'feitos'), feitos.slice(-6));
-  fmLS.del(fmChave(fm.codigo, 'prog'));
+  fmLS.del(fmChave(fm.codigo, 'prog')); fmCronParar(); fmLS.del(fmChave(fm.codigo, 'cron'));
   fmEvento('concluiu', fm.passos.length);
   if(r.mostrar && r.calc) return fmMostrarResultado(r.calc, { nome:fm.cad.nome, quem:fm.cad.quem, filho:fm.cad.filho }, feito);
   fmTelaEspera(feito);
@@ -436,6 +467,18 @@ function fmAdminMontar(){
               <button type="button" class="ativa" data-v="1" role="radio" aria-checked="true">Na hora<small>assim que termina</small></button>
               <button type="button" data-v="0" role="radio" aria-checked="false">Depois<small>só quando você liberar</small></button>
             </div></div>
+          <div class="campo"><label id="fm-rot-cron">Cronômetro</label>
+            <div class="alternar" id="fm-alt-cron" role="radiogroup" aria-labelledby="fm-rot-cron">
+              <button type="button" class="ativa" data-v="0" role="radio" aria-checked="true">Sem cronômetro<small>sem limite de tempo</small></button>
+              <button type="button" data-v="1" role="radio" aria-checked="false">Com cronômetro<small>tempo para terminar</small></button>
+            </div>
+            <div id="fm-cron-min" style="display:none;margin-top:10px"><label for="fm-l-min">Quantos minutos a pessoa tem para terminar?</label><input id="fm-l-min" type="number" inputmode="numeric" min="5" max="120" value="30"><div class="dica">O relógio aparece no topo da tela. Quando acaba, o teste fecha e a pessoa pede um novo link a você.</div></div></div>
+          <div class="campo"><label id="fm-rot-camp">Estratégia de tráfego</label>
+            <div class="alternar" id="fm-alt-camp" role="radiogroup" aria-labelledby="fm-rot-camp">
+              <button type="button" class="ativa" data-v="0" role="radio" aria-checked="true">Link comum<small>palestra, QR code, indicação</small></button>
+              <button type="button" data-v="1" role="radio" aria-checked="false">Link de anúncio<small>chegada curta e histórico de quem parou</small></button>
+            </div>
+            <div class="dica">No link de anúncio, a página de chegada é mais curta e cada passo da pessoa (chegou, começou, deixou contato, parou na pergunta tal, terminou) aparece em "Histórico de campanha", com o botão para chamá-la no WhatsApp. Se a sua página tiver o Pixel do Meta, os passos também vão para ele, sem nome nem respostas.</div></div>
           <button class="btn btn-argila" id="fm-gerar">Criar link com QR code</button>
         </div>
         <div id="fm-caixa-link"></div>
@@ -449,7 +492,9 @@ function fmAdminMontar(){
   ['fm-busca', 'fm-f-origem', 'fm-f-escola', 'fm-f-prio', 'fm-f-status', 'fm-f-de', 'fm-f-ate'].forEach(id => document.getElementById(id).addEventListener(id === 'fm-busca' ? 'input' : 'change', fmDesenharLista));
   document.getElementById('fm-exportar').addEventListener('click', fmExportar);
   document.getElementById('fm-voltar-lista').addEventListener('click', () => fmAdminAba('respostas'));
-  document.querySelectorAll('#fm-alt-mostrar button').forEach(b => b.addEventListener('click', () => document.querySelectorAll('#fm-alt-mostrar button').forEach(x => { const on = x === b; x.classList.toggle('ativa', on); x.setAttribute('aria-checked', on); })));
+  ['#fm-alt-mostrar', '#fm-alt-cron', '#fm-alt-camp'].forEach(g => document.querySelectorAll(g + ' button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll(g + ' button').forEach(x => { const on = x === b; x.classList.toggle('ativa', on); x.setAttribute('aria-checked', on); });
+    if(g === '#fm-alt-cron') document.getElementById('fm-cron-min').style.display = b.dataset.v === '1' ? 'block' : 'none'; })));
   document.getElementById('fm-gerar').addEventListener('click', fmGerarLink);
 }
 function fmAdminAba(q){
@@ -641,10 +686,11 @@ function fmQR(texto, cb){
   const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload = fazer; s.onerror = () => cb(null); document.head.appendChild(s);
 }
 function fmBaixarQR(url, nome){ const a = document.createElement('a'); a.href = url; a.download = 'qr-' + (nome || 'travas-em-familia') + '.png'; document.body.appendChild(a); a.click(); a.remove(); }
-function fmCaixaLink(codigo, origem, nome, mostrar){
+function fmOpcoesTxt(o){ o = o || {}; return (o.urgencia ? ' · cronômetro de ' + (o.duracao_min || 30) + ' min' : ' · sem cronômetro') + (o.campanha ? ' · link de anúncio' : ''); }
+function fmCaixaLink(codigo, origem, nome, mostrar, opc){
   const link = fmLink(codigo, origem), caixa = document.getElementById('fm-caixa-link');
   caixa.innerHTML = `<div class="codigo-gerado fm-link-gerado"><div class="fm-qr" id="fm-qr"><div class="carregando">Gerando o QR code...</div></div>
-    <div><div class="para">${fmEsc(nome || 'Link do ' + fmNome())} · origem <b>${fmEsc(origem || 'sem origem')}</b> · ${mostrar ? 'resultado na hora' : 'resultado depois da sua liberação'}</div>
+    <div><div class="para">${fmEsc(nome || 'Link do ' + fmNome())} · origem <b>${fmEsc(origem || 'sem origem')}</b> · ${mostrar ? 'resultado na hora' : 'resultado depois da sua liberação'}${fmEsc(fmOpcoesTxt(opc))}</div>
     <p class="fm-url">${fmEsc(link)}</p>
     <div class="fm-acoes"><button class="btn btn-argila" id="fm-copiar" type="button">Copiar o link</button><button class="btn btn-contorno" id="fm-baixar-qr" type="button" disabled>Baixar o QR code</button></div></div></div>`;
   document.getElementById('fm-copiar').addEventListener('click', async e => { try{ await navigator.clipboard.writeText(link); e.target.textContent = 'Link copiado!'; }catch(err){ e.target.textContent = 'Não consegui copiar'; } setTimeout(() => { e.target.textContent = 'Copiar o link'; }, 2000); });
@@ -658,29 +704,32 @@ async function fmGerarLink(){
   const b = document.getElementById('fm-gerar'), nome = document.getElementById('fm-l-nome').value.trim();
   const origem = document.getElementById('fm-l-origem').value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[\s\/.]+/g, '-').replace(/[^a-z0-9_-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
   const mostrar = (document.querySelector('#fm-alt-mostrar button.ativa') || {}).dataset ? document.querySelector('#fm-alt-mostrar button.ativa').dataset.v === '1' : true;
+  const valor = g => { const a = document.querySelector(g + ' button.ativa'); return a ? a.dataset.v === '1' : false; };
+  const cron = valor('#fm-alt-cron'), camp = valor('#fm-alt-camp');
+  const min = Math.min(120, Math.max(5, parseInt((document.getElementById('fm-l-min') || {}).value, 10) || 30));
   const s = await fmSessao(); if(!s){ alert('A sua sessão expirou. Saia da área e entre de novo.'); return; }
   b.disabled = true; b.textContent = 'Criando...';
   let codigo = novoCodigo(), erro = null;
   for(let t = 0; t < 6; t++){
-    const { error } = await s.c.from('travas_codigos').insert({ terapeuta_id:s.uid, codigo, cliente:nome || null, teste:'familia', tipo:'individual', compartilhado:true, mostrar_resultado:mostrar, urgencia:false, origem:origem || null });
+    const { error } = await s.c.from('travas_codigos').insert({ terapeuta_id:s.uid, codigo, cliente:nome || null, teste:'familia', tipo:'individual', compartilhado:true, mostrar_resultado:mostrar, urgencia:cron, duracao_min:min, campanha:camp, origem:origem || null });
     erro = error; if(!error) break; if(error.code === '23505'){ codigo = novoCodigo(); continue; } break;
   }
   b.disabled = false; b.textContent = 'Criar link com QR code';
   if(erro){ alert('Não consegui criar o link agora. Saia da área, entre de novo e tente outra vez.'); return; }
-  fmCaixaLink(codigo, origem, nome, mostrar); fmCarregarLinks();
+  fmCaixaLink(codigo, origem, nome, mostrar, { urgencia:cron, duracao_min:min, campanha:camp }); fmCarregarLinks();
 }
 async function fmCarregarLinks(){
   const caixa = document.getElementById('fm-lista-links'); caixa.innerHTML = '<div class="carregando">Carregando...</div>';
   const s = await fmSessao(); if(!s) return;
-  const { data, error } = await s.c.from('travas_codigos').select('codigo,cliente,origem,criado_em,usos,mostrar_resultado,compartilhado,momento,usado').eq('terapeuta_id', s.uid).eq('teste', 'familia').order('criado_em', { ascending:false }).limit(300);
+  const { data, error } = await s.c.from('travas_codigos').select('codigo,cliente,origem,criado_em,usos,mostrar_resultado,compartilhado,momento,usado,urgencia,duracao_min,campanha').eq('terapeuta_id', s.uid).eq('teste', 'familia').order('criado_em', { ascending:false }).limit(300);
   if(error){ caixa.innerHTML = '<div class="aviso ver">Não consegui carregar os links agora.</div>'; return; }
   fmLinks = data || [];
   if(!fmLinks.length){ caixa.innerHTML = '<div class="vazio">Nenhum link ainda. Crie o primeiro acima.</div>'; return; }
-  caixa.innerHTML = fmLinks.map(l => `<div class="linha-item" style="flex-wrap:wrap;cursor:default"><span class="esq"><span class="nome" style="white-space:normal">${fmEsc(l.cliente || 'Link')}<span class="tag-vis">${fmEsc(l.origem || 'sem origem')}</span><span class="tag-vis">${l.mostrar_resultado ? 'resultado na hora' : 'resultado depois'}</span>${l.momento ? '<span class="tag-vis">momento ' + FM.MOMENTO[l.momento] + '</span>' : ''}</span>
+  caixa.innerHTML = fmLinks.map(l => `<div class="linha-item" style="flex-wrap:wrap;cursor:default"><span class="esq"><span class="nome" style="white-space:normal">${fmEsc(l.cliente || 'Link')}<span class="tag-vis">${fmEsc(l.origem || 'sem origem')}</span><span class="tag-vis">${l.mostrar_resultado ? 'resultado na hora' : 'resultado depois'}</span>${l.urgencia ? '<span class="tag-vis">cronômetro ' + (l.duracao_min || 30) + ' min</span>' : ''}${l.campanha ? '<span class="tag-vis">anúncio</span>' : ''}${l.momento ? '<span class="tag-vis">momento ' + FM.MOMENTO[l.momento] + '</span>' : ''}</span>
       <span class="sub">${l.codigo} · criado em ${fmQuando(l.criado_em)} · ${l.compartilhado ? (l.usos || 0) + ' ' + ((l.usos || 0) === 1 ? 'resposta' : 'respostas') : (l.usado ? 'já respondido' : 'aguardando resposta')}</span></span>
       <span class="etiqueta ${l.compartilhado ? 'livre' : 'usado'}">${l.compartilhado ? 'aberto' : 'individual'}</span>
       <span style="display:flex;gap:8px;width:100%;margin-top:8px;flex-wrap:wrap"><button type="button" class="mini-btn" data-fm-ver="${l.codigo}">QR code e link</button></span></div>`).join('');
-  caixa.querySelectorAll('[data-fm-ver]').forEach(b => b.addEventListener('click', () => { const l = fmLinks.find(z => z.codigo === b.dataset.fmVer); fmCaixaLink(l.codigo, l.origem, l.cliente, l.mostrar_resultado); }));
+  caixa.querySelectorAll('[data-fm-ver]').forEach(b => b.addEventListener('click', () => { const l = fmLinks.find(z => z.codigo === b.dataset.fmVer); fmCaixaLink(l.codigo, l.origem, l.cliente, l.mostrar_resultado, l); }));
 }
 function fmDesenharAjustes(){
   const cfg = fmCfg(), s = cfg.servicos || {}, pub = (cfg.adulto_publico || []).join(', ');

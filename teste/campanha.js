@@ -223,7 +223,7 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
   const hora = iso => iso ? new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
   const ROT = { chegou:'Chegou na página', comecar:'Tocou em “Começar”', contato:'Deixou nome e WhatsApp', perguntas:'Começou as perguntas', pergunta:'Respondeu até a pergunta',
-    fim_perguntas:'Respondeu as 50 perguntas', concluiu:'Enviou o teste', whatsapp:'Clicou no WhatsApp', saiu:'Saiu da página', voltou:'Voltou para a página', expirou:'O tempo de 30 min acabou', erro:'Erro ao abrir o teste' };
+    fim_perguntas:'Respondeu todas as perguntas', concluiu:'Enviou o teste', whatsapp:'Clicou no WhatsApp', saiu:'Saiu da página', voltou:'Voltou para a página', expirou:'O tempo de 30 min acabou', erro:'Erro ao abrir o teste' };
   let montado = false, dados = [], codigos = [], periodo = 'tudo', codSel = '';
   function vigiar(){
     const adm = document.getElementById('painel-admin');
@@ -235,7 +235,7 @@
     if(typeof clienteMembros !== 'function') return;
     montado = true;
     const c = clienteMembros(), { data:sess } = await c.auth.getSession(); if(!sess || !sess.session){ montado = false; return; }
-    const rc = await c.from('travas_codigos').select('codigo,cliente,criado_em').eq('terapeuta_id', sess.session.user.id).eq('campanha', true).order('criado_em', { ascending:false });
+    const rc = await c.from('travas_codigos').select('codigo,cliente,criado_em,teste').eq('terapeuta_id', sess.session.user.id).eq('campanha', true).order('criado_em', { ascending:false });
     codigos = rc.data || []; if(!codigos.length) return;
     const ancora = (document.getElementById('alt-teste') || {}).closest ? document.getElementById('alt-teste').closest('.campo') : null;
     const box = document.createElement('details'); box.className = 'camp-hist'; box.id = 'camp-hist';
@@ -252,9 +252,11 @@
     const agora = Date.now(), lim = periodo === 'hoje' ? new Date(new Date().toDateString()).getTime() : periodo === '7' ? agora - 7 * 864e5 : 0;
     return dados.filter(s => (!codSel || s.codigo === codSel) && new Date(s.chegou_em).getTime() >= lim);
   }
+  const testeDe = cod => ((codigos.find(x => x.codigo === cod) || {}).teste) || 'travas';
+  const ehFam = cod => testeDe(cod) === 'familia';
   function status(s){
     if(s.concluiu_em) return ['Terminou o teste', 'ok'];
-    if(s.maior_pergunta > 0) return ['Parou depois de ' + s.maior_pergunta + ' de 50 perguntas', 'meio'];
+    if(s.maior_pergunta > 0) return ['Parou depois de ' + s.maior_pergunta + (ehFam(s.codigo) ? ' perguntas' : ' de 50 perguntas'), 'meio'];
     if(s.perguntas_em) return ['Abriu as perguntas e não respondeu', 'meio'];
     if(s.contato_em) return ['Deixou contato e não começou', 'meio'];
     if(s.comecou_em) return ['Tocou em começar e saiu', 'fora'];
@@ -263,10 +265,11 @@
   function desenhar(){
     const el = document.getElementById('camp-hist-in'), L = filtrados(), n = L.length || 1;
     const cnt = f => L.filter(f).length;
+    const fam = codSel ? ehFam(codSel) : (codigos.length > 0 && codigos.every(x => x.teste === 'familia'));
     const etapas = [['Chegaram pelo link', L.length], ['Tocaram em “Começar”', cnt(s => s.comecou_em)], ['Deixaram nome e WhatsApp', cnt(s => s.contato_em)],
-      ['Responderam 10 ou mais', cnt(s => s.maior_pergunta >= 10)], ['Responderam 25 ou mais', cnt(s => s.maior_pergunta >= 25)], ['Responderam 40 ou mais', cnt(s => s.maior_pergunta >= 40)],
+      ['Responderam 10 ou mais', cnt(s => s.maior_pergunta >= 10)], ['Responderam ' + (fam ? 20 : 25) + ' ou mais', cnt(s => s.maior_pergunta >= (fam ? 20 : 25))], ['Responderam ' + (fam ? 30 : 40) + ' ou mais', cnt(s => s.maior_pergunta >= (fam ? 30 : 40))],
       ['Terminaram o teste', cnt(s => s.concluiu_em)], ['Clicaram no WhatsApp no final', cnt(s => s.whatsapp_em)]];
-    const link = cod => linkTeste('travas', cod);
+    const link = cod => linkTeste(testeDe(cod), cod);
     const prim = typeof PRIM_TER !== 'undefined' ? PRIM_TER : '';
     el.innerHTML = `<div class="camp-filtros">
         ${codigos.length > 1 ? `<select id="camp-cod"><option value="">Todos os links</option>${codigos.map(x => `<option value="${esc(x.codigo)}"${x.codigo === codSel ? ' selected' : ''}>${esc(x.codigo)}${x.cliente ? ' · ' + esc(x.cliente) : ''}</option>`).join('')}</select>` : `<span style="font-size:14px;align-self:center">Link ${esc(codigos[0].codigo)}${codigos[0].cliente ? ' · ' + esc(codigos[0].cliente) : ''}</span>`}
@@ -278,7 +281,7 @@
         const resumo = []; let ultimaP = 0;
         ev.forEach(x => { if(x.e === 'pergunta'){ ultimaP = x.p; return; } if(ultimaP){ resumo.push({ e:'pergunta', p:ultimaP, em:x.em }); ultimaP = 0; } resumo.push(x); });
         if(ultimaP) resumo.push({ e:'pergunta', p:ultimaP });
-        const msg = 'Oi, ' + String(s.nome || '').split(' ')[0] + '! Aqui é ' + (prim ? 'a ' + prim : '') + '. Vi que você começou o Teste de Travas Mentais e não chegou a terminar. Quer terminar agora? Leva cerca de 7 minutos e eu analiso o seu resultado pessoalmente: ' + link(s.codigo);
+        const msg = 'Oi, ' + String(s.nome || '').split(' ')[0] + '! Aqui é ' + (prim ? 'a ' + prim : '') + '. Vi que você começou ' + (ehFam(s.codigo) ? 'o ' + ((window.__T && __T.dados && __T.dados.familia && __T.dados.familia.nome) || 'Travas em Família') : 'o Teste de Travas Mentais') + ' e não chegou a terminar. Quer terminar agora? Leva cerca de ' + (ehFam(s.codigo) ? '8' : '7') + ' minutos e eu analiso o seu resultado pessoalmente: ' + link(s.codigo);
         const zap = String(s.whatsapp || '').replace(/\D/g, ''), zapN = zap.length === 10 || zap.length === 11 ? '55' + zap : zap;
         return `<div class="camp-p"><div class="top"><span class="nm">${s.nome ? esc(s.nome) : 'Visitante sem contato'}</span><span class="st ${st[1]}">${esc(st[0])}</span></div>
           <div class="sub">${hora(s.chegou_em)} · ${esc(s.origem || 'origem desconhecida')}${s.aparelho ? ' · ' + esc(s.aparelho) : ''}${s.whatsapp ? ' · ' + esc(s.whatsapp) : ''}${s.exibicao ? ' · ' + esc(s.exibicao) : ''}</div>
