@@ -58,6 +58,7 @@
       <button class="aba" type="button" data-aba="disparos" aria-selected="false">Disparos</button>
       <button class="aba" type="button" data-aba="templates" aria-selected="false">Templates</button>
       <button class="aba" type="button" data-aba="robo" aria-selected="false">Robô</button>
+      <button class="aba" type="button" data-aba="fluxos" aria-selected="false">Fluxos</button>
       <button class="aba" type="button" data-aba="config" aria-selected="false">Configuração</button>
     </div>
 
@@ -154,7 +155,11 @@
           </div>
           <div class="grade g2" style="margin-top:12px">
             <div><label for="tcBotao2">Botão de resposta rápida <span class="vazio">(opcional)</span></label><input id="tcBotao2" maxlength="25" placeholder="Quero participar"></div>
-            <div><label for="tcBotaoLink">Botão com link <span class="vazio">(texto | https://...)</span></label><input id="tcBotaoLink" placeholder="Ver detalhes | https://ressignificarterapiaseconsultorias.com"></div>
+            <div><label for="tcTipoLink">Botão com link</label><select id="tcTipoLink"><option value="">Sem botão de link</option><option value="robo">Link entregue pelo robô (recomendado: serve para grupo do WhatsApp)</option><option value="url">Link direto no botão (o Meta bloqueia wa.me e grupos)</option></select></div>
+          </div>
+          <div class="grade g2" id="tcLinkBox" style="margin-top:12px" hidden>
+            <div><label for="tcBotaoLink">Texto do botão | link <span class="vazio">(só no link direto: texto | https://...)</span></label><input id="tcBotaoLink" placeholder="Ver detalhes | https://..."></div>
+            <div id="tcRoboBox"><label for="tcRoboLink">Link que o robô entrega ao clicar no botão de resposta rápida acima</label><input id="tcRoboLink" placeholder="https://chat.whatsapp.com/..."><div class="checks" style="margin-top:6px"><label><input type="checkbox" id="tcRoboPerg" checked> Depois perguntar "Conseguiu entrar?" e fazer follow-up</label></div></div>
           </div>
           <div class="acoes"><button class="btn auto" type="button" id="tcEnviar">Enviar para aprovação do Meta</button></div>
         </div>
@@ -181,6 +186,15 @@
         <h2>Testar uma mensagem</h2>
         <div class="f"><div class="wa-copia"><input id="rbTesteTxt" placeholder="Escreva como a pessoa escreveria. Ex.: quando vai sair o link?"><button class="btn auto" type="button" id="rbTestar">Testar</button></div></div>
         <p class="ajuda" id="rbTesteRes" style="margin-top:10px"></p>
+      </div>
+    </section>
+
+    <!-- ===== FLUXOS ===== -->
+    <section data-painel="fluxos" hidden>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>Fluxos do robô</h2><button class="btn peq" type="button" id="flNovo">Novo fluxo</button></div>
+        <p class="ajuda">Quando a pessoa toca no botão de um template, o robô responde (com o link, se você quiser), pergunta se conseguiu e faz os follow-ups que você definir. Tudo roda sozinho no servidor. Para mensagens depois de 24 h sem a pessoa responder, o WhatsApp exige template aprovado (cobrado). Não existe como o WhatsApp confirmar se a pessoa realmente entrou no grupo: vale a resposta dela.</p>
+        <div class="tabela-wrap" style="margin-top:12px"><table class="t"><thead><tr><th>Fluxo</th><th>Template / botão</th><th>Follow-ups</th><th>Pessoas</th><th>Ativo</th><th></th></tr></thead><tbody id="flLista"></tbody></table></div>
       </div>
     </section>
 
@@ -288,6 +302,33 @@
     <div style="margin-top:12px"><label for="jrEtiqueta">Etiqueta para colocar na pessoa <span class="vazio">(opcional)</span></label><input id="jrEtiqueta" maxlength="40"></div>
   </div>
   <div class="acoes"><button class="btn auto" type="button" id="jrSalvar">Salvar</button><button class="btn auto perigo" type="button" id="jrApagar">Apagar</button><button class="btn auto contorno" type="button" data-fechar="jRegra">Fechar</button></div>
+</dialog>
+
+<dialog class="janela" id="jFluxo">
+  <h2 id="jfTitulo">Fluxo</h2>
+  <div class="f">
+    <div class="grade g2">
+      <div><label for="jfNome">Nome do fluxo</label><input id="jfNome" maxlength="60"></div>
+      <div><label for="jfTpl">Template ligado <span class="vazio">(opcional)</span></label><select id="jfTpl"></select><small id="jfTplSit"></small></div>
+      <div><label for="jfBotao">Texto do botão que a pessoa toca</label><input id="jfBotao" maxlength="25" placeholder="Entrar no grupo"></div>
+      <div><label for="jfLink">Link entregue pelo robô</label><input id="jfLink" placeholder="https://chat.whatsapp.com/..."></div>
+    </div>
+    <div style="margin-top:12px"><label for="jfResp">Resposta do robô ao tocar no botão <span class="vazio">({primeiro_nome} = nome)</span></label><textarea id="jfResp" rows="3" maxlength="900"></textarea>
+      <div class="checks"><label><input type="checkbox" id="jfInclLink" checked> Incluir o link nessa resposta</label></div></div>
+    <div class="checks" style="margin-top:12px"><label><input type="checkbox" id="jfPerg" checked> Perguntar se a pessoa conseguiu entrar (botões "Já entrei" / "Ainda não")</label></div>
+    <div class="grade g2" style="margin-top:8px">
+      <div><label for="jfPergTxt">Pergunta</label><input id="jfPergTxt" maxlength="300"></div>
+      <div><label for="jfEtiEntrou">Etiqueta de quem entrou</label><input id="jfEtiEntrou" maxlength="40"></div>
+      <div><label for="jfTxtEntrou">Resposta se entrou</label><input id="jfTxtEntrou" maxlength="500"></div>
+      <div><label for="jfTxtNao">Resposta se ainda não</label><input id="jfTxtNao" maxlength="500"></div>
+      <div><label for="jfEtiIni">Etiqueta de quem tocou no botão</label><input id="jfEtiIni" maxlength="40"></div>
+    </div>
+    <h3 style="margin-top:16px">Follow-ups <span class="vazio">(até 10; só vão para quem ainda não entrou)</span></h3>
+    <div id="jfPassos"></div>
+    <div class="acoes"><button class="btn peq contorno" type="button" id="jfAddPasso">Adicionar follow-up</button></div>
+    <div class="checks" style="margin-top:12px"><label><input type="checkbox" id="jfAtivo" checked> Fluxo ativo</label></div>
+  </div>
+  <div class="acoes"><button class="btn auto" type="button" id="jfSalvar">Salvar</button><button class="btn auto perigo" type="button" id="jfApagar">Apagar</button><button class="btn auto contorno" type="button" id="jfFechar">Fechar</button></div>
 </dialog>
 
 <dialog class="janela" id="jTemplate">

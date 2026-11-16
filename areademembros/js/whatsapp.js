@@ -228,6 +228,10 @@
       mostrarAvisoCorpo();
     });
   });
+  $("tcTipoLink").addEventListener("change", function () {
+    const t = this.value; $("tcLinkBox").hidden = !t;
+    $("tcRoboBox").hidden = t !== "robo"; $("tcBotaoLink").parentNode.hidden = t !== "url";
+  });
   $("tcEnviar").addEventListener("click", async function () {
     const nome = $("tcNome").value.trim();
     if (!/^[a-z0-9_]{1,60}$/.test(nome)) return aviso("Nome só com letras minúsculas, números e _ (sem espaço nem acento).", true);
@@ -236,9 +240,17 @@
     const botoes = [];
     if ($("tcBotaoSair").checked) botoes.push({ tipo: "QUICK_REPLY", texto: "Sair da lista" });
     if ($("tcBotao2").value.trim()) botoes.push({ tipo: "QUICK_REPLY", texto: $("tcBotao2").value.trim() });
-    const link = $("tcBotaoLink").value.split("|");
-    if (link.length === 2 && link[0].trim() && link[1].trim()) botoes.push({ tipo: "URL", texto: link[0].trim(), url: link[1].trim() });
-    else if ($("tcBotaoLink").value.trim()) return aviso('O botão com link precisa ficar assim: texto | https://endereço', true);
+    const tipoLink = $("tcTipoLink").value;
+    if (tipoLink === "url") {
+      const link = $("tcBotaoLink").value.split("|");
+      if (link.length === 2 && link[0].trim() && link[1].trim()) botoes.push({ tipo: "URL", texto: link[0].trim(), url: link[1].trim() });
+      else return aviso('O botão com link precisa ficar assim: texto | https://endereço', true);
+    }
+    const linkRobo = $("tcRoboLink").value.trim();
+    if (tipoLink === "robo") {
+      if (!$("tcBotao2").value.trim()) return aviso("Escreva o texto do botão de resposta rápida (ex.: Entrar no grupo): é ele que ativa o robô.", true);
+      if (!/^https:\/\//.test(linkRobo)) return aviso("Informe o link (https://) que o robô vai entregar.", true);
+    }
     if (!confirm('Enviar "' + nome + '" para o Meta analisar? Depois de aprovado, o texto não pode ser editado (só criar outro).')) return;
     const b = this; b.disabled = true;
     const r = await wa({
@@ -247,7 +259,18 @@
     });
     b.disabled = false;
     if (!r.ok) return aviso(r.erro || "O Meta não aceitou.", true);
-    aviso("Enviado. Situação: " + (r.status || "em análise") + (r.categoria ? " · categoria " + r.categoria : ""));
+    let extra = "";
+    if (tipoLink === "robo") {
+      try {
+        const bt = $("tcBotao2").value.trim();
+        const ex = await ler(supa().from("wa_fluxos").select("id").eq("botao_texto", bt).limit(1));
+        const dados = { nome: "Fluxo " + nome, template_nome: nome, botao_texto: bt, link: linkRobo, incluir_link: true, perguntar_entrou: $("tcRoboPerg").checked };
+        if (ex.length) await ler(supa().from("wa_fluxos").update(dados).eq("id", ex[0].id).select("id"));
+        else await ler(supa().from("wa_fluxos").insert(Object.assign({ ativo: true, resposta_texto: "Oi, {primeiro_nome}! Aqui está o link:" }, dados)).select("id"));
+        extra = " O robô já está ligado ao botão \"" + bt + "\" (veja na aba Fluxos).";
+      } catch (e) { extra = " Mas não consegui criar o fluxo do robô: " + (e.message || e); }
+    }
+    aviso("Enviado. Situação: " + (r.status || "em análise") + (r.categoria ? " · categoria " + r.categoria : "") + extra);
     telaTemplates();
   });
 
@@ -689,10 +712,88 @@
   });
   $("rbTesteTxt").addEventListener("keydown", function (e) { if (e.key === "Enter") $("rbTestar").click(); });
 
+  /* ---------- fluxos ---------- */
+  let fluxoAtual = null;
+  const SIT_TPL = { APPROVED: "aprovado", PENDING: "em análise", REJECTED: "recusado", PAUSED: "pausado", DISABLED: "desativado" };
+  function sitTpl(nome) {
+    if (!nome) return "";
+    const t = (templates || []).find(function (x) { return x.nome === nome; });
+    if (!t) return "template não encontrado (sincronize na aba Templates)";
+    return "template " + (SIT_TPL[String(t.status || "").toUpperCase()] || t.status || "?");
+  }
+  async function telaFluxos() {
+    templates = await ler(supa().from("wa_templates").select("*").order("nome"));
+    const fl = await ler(supa().from("wa_fluxos").select("*").order("criado_em"));
+    const ps = await ler(supa().from("wa_fluxo_passos").select("fluxo_id"));
+    const ex = await ler(supa().from("wa_fluxo_execucoes").select("fluxo_id,status"));
+    $("flLista").innerHTML = fl.length ? fl.map(function (f) {
+      const np = ps.filter(function (p) { return p.fluxo_id === f.id; }).length;
+      const e = ex.filter(function (x) { return x.fluxo_id === f.id; });
+      const ok = e.filter(function (x) { return x.status === "concluido" || x.status === "entrou"; }).length;
+      return "<tr><td><b>" + esc(f.nome) + '</b></td><td class="quebra">' + esc(f.template_nome || "—") + '<br><span class="vazio">botão "' + esc(f.botao_texto || "") + '" · ' + esc(sitTpl(f.template_nome)) + "</span></td><td>" + np + "</td><td>" + e.length + (ok ? " (" + ok + " concluídos)" : "") + "</td><td>" + (f.ativo ? "Sim" : "Não") + '</td><td><button class="btn peq" data-fl="' + f.id + '">Editar</button></td></tr>';
+    }).join("") : '<tr><td colspan="6" class="vazio">Nenhum fluxo ainda.</td></tr>';
+    window.__fluxos = fl;
+  }
+  function desenharPasso(p) {
+    const d = document.createElement("div"); d.className = "cartao"; d.style.margin = "8px 0"; d.dataset.passo = "1";
+    d.innerHTML = '<div class="grade g2"><div><label>Esperar quantas horas depois do anterior</label><input type="number" min="0" max="720" step="0.5" class="fpHoras"></div><div><label>Template (opcional, usado se passou de 24 h)</label><select class="fpTpl"></select></div></div><label style="margin-top:8px">Texto</label><textarea rows="2" maxlength="900" class="fpTexto"></textarea><div class="checks"><label><input type="checkbox" class="fpLink"> Incluir o link</label></div><button class="btn peq perigo fpDel" type="button">Remover</button>';
+    d.querySelector(".fpHoras").value = p ? (p.atraso_min / 60) : 24;
+    d.querySelector(".fpTexto").value = p ? p.texto || "" : "";
+    d.querySelector(".fpLink").checked = !!(p && p.incluir_link);
+    const sel = d.querySelector(".fpTpl");
+    sel.innerHTML = '<option value="">Nenhum (só texto)</option>' + (templates || []).filter(function (t) { return String(t.status).toUpperCase() === "APPROVED"; }).map(function (t) { return '<option value="' + esc(t.nome) + '">' + esc(t.nome) + "</option>"; }).join("");
+    sel.value = p && p.template_nome ? p.template_nome : "";
+    d.querySelector(".fpDel").addEventListener("click", function () { d.remove(); });
+    $("jfPassos").appendChild(d);
+  }
+  async function abrirFluxo(f) {
+    fluxoAtual = f;
+    $("jfTitulo").textContent = f ? "Editar fluxo" : "Novo fluxo";
+    const x = f || { nome: "", template_nome: "", botao_texto: "", link: "", resposta_texto: "Oi, {primeiro_nome}! Aqui está o link:", incluir_link: true, perguntar_entrou: true, pergunta_texto: "Conseguiu entrar?", texto_entrou: "Que bom! Seja bem-vindo(a).", texto_nao_consegui: "Sem problema! Vou te lembrar por aqui.", etiqueta_entrou: "", etiqueta_inicio: "", ativo: true };
+    $("jfNome").value = x.nome || ""; $("jfBotao").value = x.botao_texto || ""; $("jfLink").value = x.link || ""; $("jfResp").value = x.resposta_texto || "";
+    $("jfInclLink").checked = !!x.incluir_link; $("jfPerg").checked = !!x.perguntar_entrou; $("jfPergTxt").value = x.pergunta_texto || "";
+    $("jfTxtEntrou").value = x.texto_entrou || ""; $("jfTxtNao").value = x.texto_nao_consegui || ""; $("jfEtiEntrou").value = x.etiqueta_entrou || ""; $("jfEtiIni").value = x.etiqueta_inicio || ""; $("jfAtivo").checked = x.ativo !== false;
+    $("jfTpl").innerHTML = '<option value="">Nenhum</option>' + (templates || []).map(function (t) { return '<option value="' + esc(t.nome) + '">' + esc(t.nome) + "</option>"; }).join("");
+    $("jfTpl").value = x.template_nome || ""; $("jfTplSit").textContent = sitTpl(x.template_nome);
+    $("jfPassos").innerHTML = "";
+    if (f) (await ler(supa().from("wa_fluxo_passos").select("*").eq("fluxo_id", f.id).order("ordem"))).forEach(desenharPasso);
+    $("jfApagar").hidden = !f; $("jFluxo").showModal();
+  }
+  $("jfTpl").addEventListener("change", function () { $("jfTplSit").textContent = sitTpl(this.value); });
+  $("jfAddPasso").addEventListener("click", function () { if ($("jfPassos").children.length >= 10) return aviso("Máximo de 10 follow-ups.", true); desenharPasso(null); });
+  $("jfFechar").addEventListener("click", function () { $("jFluxo").close(); });
+  $("flNovo").addEventListener("click", function () { abrirFluxo(null).catch(falha); });
+  $("flLista").addEventListener("click", function (ev) {
+    const b = ev.target.closest("[data-fl]"); if (!b) return;
+    abrirFluxo((window.__fluxos || []).find(function (f) { return f.id === b.dataset.fl; })).catch(falha);
+  });
+  $("jfSalvar").addEventListener("click", async function () {
+    const nome = $("jfNome").value.trim(), botao = $("jfBotao").value.trim(), link = $("jfLink").value.trim();
+    if (!nome || !botao) return aviso("Preencha o nome e o texto do botão.", true);
+    if (link && !/^https:\/\//.test(link)) return aviso("O link precisa começar com https://", true);
+    const dados = { nome: nome, template_nome: $("jfTpl").value || null, botao_texto: botao, link: link || null, resposta_texto: $("jfResp").value.trim() || null, incluir_link: $("jfInclLink").checked, perguntar_entrou: $("jfPerg").checked, pergunta_texto: $("jfPergTxt").value.trim() || null, texto_entrou: $("jfTxtEntrou").value.trim() || null, texto_nao_consegui: $("jfTxtNao").value.trim() || null, etiqueta_entrou: $("jfEtiEntrou").value.trim() || null, etiqueta_inicio: $("jfEtiIni").value.trim() || null, ativo: $("jfAtivo").checked };
+    const passos = Array.prototype.slice.call($("jfPassos").children).map(function (d, i) {
+      return { ordem: i + 1, atraso_min: Math.round(Number(d.querySelector(".fpHoras").value || 0) * 60), texto: d.querySelector(".fpTexto").value.trim(), incluir_link: d.querySelector(".fpLink").checked, template_nome: d.querySelector(".fpTpl").value || null };
+    });
+    if (passos.some(function (p) { return !p.texto; })) return aviso("Todo follow-up precisa de texto.", true);
+    try {
+      let id = fluxoAtual && fluxoAtual.id;
+      if (id) await ler(supa().from("wa_fluxos").update(dados).eq("id", id).select("id"));
+      else id = (await ler(supa().from("wa_fluxos").insert(dados).select("id").single())).id;
+      await ler(supa().from("wa_fluxo_passos").delete().eq("fluxo_id", id).select("id"));
+      if (passos.length) await ler(supa().from("wa_fluxo_passos").insert(passos.map(function (p) { p.fluxo_id = id; return p; })).select("id"));
+      $("jFluxo").close(); aviso("Fluxo salvo."); telaFluxos();
+    } catch (e) { falha(e); }
+  });
+  $("jfApagar").addEventListener("click", async function () {
+    if (!fluxoAtual || !confirm("Apagar este fluxo e o andamento das pessoas nele?")) return;
+    try { await ler(supa().from("wa_fluxos").delete().eq("id", fluxoAtual.id).select("id")); $("jFluxo").close(); aviso("Fluxo apagado."); telaFluxos(); } catch (e) { falha(e); }
+  });
+
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
     abaAtual = nome;
-    const f = { conversas: telaConversas, contatos: telaContatos, disparos: telaDisparos, templates: telaTemplates, robo: telaRobo, config: telaConfig }[nome];
+    const f = { conversas: telaConversas, contatos: telaContatos, disparos: telaDisparos, templates: telaTemplates, robo: telaRobo, fluxos: telaFluxos, config: telaConfig }[nome];
     f().catch(function (e) { falha(e); });
   });
   setInterval(function () {
