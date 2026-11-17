@@ -56,6 +56,62 @@
     const f = ev.target.closest("[data-fechar]"); if (f) $(f.dataset.fechar).close();
   });
 
+  /* ---------- mídia: vídeo, áudio, imagem e PDF (pasta protegida wa-midia) ---------- */
+  const LIMITE_MB = 16;
+  const ROT_TIPO = { image: "imagem", video: "vídeo", audio: "áudio", document: "PDF" };
+  const ACEITA = { image: "image/jpeg,image/png", video: "video/mp4,video/3gpp", document: "application/pdf",
+    todos: "video/mp4,video/3gpp,audio/mpeg,audio/mp4,audio/ogg,audio/aac,audio/amr,.m4a,.mp3,.ogg,.opus,image/jpeg,image/png,application/pdf" };
+  function mimeDoArquivo(f) {
+    let t = String(f.type || "").toLowerCase();
+    const ext = (f.name.split(".").pop() || "").toLowerCase();
+    const porExt = { mp4: "video/mp4", "3gp": "video/3gpp", m4a: "audio/mp4", mp3: "audio/mpeg", ogg: "audio/ogg", opus: "audio/ogg", aac: "audio/aac", amr: "audio/amr", pdf: "application/pdf", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png" };
+    if (t === "audio/x-m4a" || t === "audio/m4a") t = "audio/mp4";
+    if (t === "audio/mp3") t = "audio/mpeg";
+    if (!t || t === "application/octet-stream") t = porExt[ext] || t;
+    return t;
+  }
+  function tipoDoArquivo(mime) {
+    if (/^image\/(jpeg|png)$/.test(mime)) return "image";
+    if (/^video\/(mp4|3gpp)$/.test(mime)) return "video";
+    if (/^audio\/(ogg|mpeg|mp4|aac|amr)$/.test(mime)) return "audio";
+    if (mime === "application/pdf") return "document";
+    return null;
+  }
+  async function subirMidia(file, esperado) {
+    const mime = mimeDoArquivo(file), tipo = tipoDoArquivo(mime);
+    if (!tipo) throw new Error("Formato não aceito pelo WhatsApp. Use MP4 (vídeo), JPG ou PNG (imagem), MP3, M4A ou OGG (áudio) ou PDF.");
+    if (esperado && tipo !== esperado) throw new Error("Este arquivo é " + ROT_TIPO[tipo] + ", mas o campo pede " + ROT_TIPO[esperado] + ".");
+    if (tipo === "image" && file.size > 5 * 1024 * 1024) throw new Error("A imagem passa de 5 MB (limite do WhatsApp).");
+    if (file.size > LIMITE_MB * 1024 * 1024) throw new Error("O arquivo passa de " + LIMITE_MB + " MB (limite do WhatsApp).");
+    const ext = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5) || "bin";
+    const sorteio = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
+    const caminho = new Date().toISOString().slice(0, 10) + "/" + sorteio + "." + ext;
+    const { error } = await supa().storage.from("wa-midia").upload(caminho, file, { contentType: mime, upsert: false });
+    if (error) throw error;
+    return { url: supa().storage.from("wa-midia").getPublicUrl(caminho).data.publicUrl, tipo: tipo, mime: mime, nome: file.name };
+  }
+  function prevMidia(url, tipo) {
+    const u = esc(url);
+    if (tipo === "video") return '<video controls preload="metadata" style="max-width:260px;border-radius:10px" src="' + u + '"></video>';
+    if (tipo === "audio") return '<audio controls preload="none" style="max-width:260px" src="' + u + '"></audio>';
+    if (tipo === "image") return '<img alt="" style="max-width:200px;border-radius:10px" src="' + u + '">';
+    return '<a href="' + u + '" target="_blank" rel="noopener">Abrir o PDF</a>';
+  }
+  document.addEventListener("click", function (ev) {
+    const b = ev.target.closest("[data-escolher-midia]"); if (!b) return;
+    b.closest("[data-caixa-midia]").querySelector("input[data-midia-arquivo]").click();
+  });
+  document.addEventListener("change", async function (ev) {
+    const inp = ev.target.closest ? ev.target.closest("input[data-midia-arquivo]") : null; if (!inp || !inp.files[0]) return;
+    const cx = inp.closest("[data-caixa-midia]"), st = cx.querySelector("[data-midia-st]"), arq = inp.files[0];
+    inp.value = ""; st.textContent = "Enviando o arquivo...";
+    try {
+      const r = await subirMidia(arq, cx.dataset.tipo);
+      const campo = cx.querySelector("input[data-midia]"); campo.value = r.url; campo.dispatchEvent(new Event("input", { bubbles: true }));
+      st.textContent = "Pronto: " + r.nome; cx.querySelector("[data-midia-prev]").innerHTML = prevMidia(r.url, r.tipo);
+    } catch (e) { st.textContent = ""; aviso(e.message || String(e), true); }
+  });
+
   /* monta os campos {{1}}, {{2}}... de um template; devolve função que lê os valores */
   function montarVars(caixa, t, valores) {
     const n = t ? Number(t.qtd_variaveis) || 0 : 0;
@@ -64,7 +120,12 @@
       html += '<div class="wa-linha-var"><b>{{' + i + '}}</b><input data-var="' + i + '" maxlength="120" value="' + esc((valores && valores[i - 1]) || (i === 1 ? "{primeiro_nome}" : "")) + '" placeholder="' + (i === 1 ? "{primeiro_nome} vira o nome da pessoa" : "texto igual para todos") + '"></div>';
     }
     const mid = t && ["IMAGE", "VIDEO", "DOCUMENT"].indexOf(String(t.cabecalho_tipo || "").toUpperCase()) > -1;
-    if (mid) html += '<div style="margin-top:6px"><label>Link do ' + esc(String(t.cabecalho_tipo).toLowerCase()) + ' do cabeçalho (https://...)</label><input data-midia type="url" placeholder="https://..."></div>';
+    if (mid) {
+      const tp = String(t.cabecalho_tipo).toLowerCase();
+      html += '<div style="margin-top:8px" data-caixa-midia data-tipo="' + tp + '"><label>Arquivo do cabeçalho: ' + ROT_TIPO[tp] + ' <span class="vazio">(escolha o arquivo ou cole um link https://)</span></label>' +
+        '<div class="wa-copia"><input data-midia type="url" placeholder="https://..."><button type="button" class="btn peq contorno" data-escolher-midia>Escolher arquivo</button></div>' +
+        '<input type="file" hidden data-midia-arquivo accept="' + ACEITA[tp] + '"><small class="vazio" data-midia-st></small><div data-midia-prev style="margin-top:6px"></div></div>';
+    }
     caixa.innerHTML = html || '<p class="vazio">Este template não tem variáveis.</p>';
     return function () {
       return {
@@ -88,6 +149,7 @@
     $("cfNumId").value = cfg.phone_number_id || "";
     $("cfWaba").value = cfg.waba_id || "";
     $("cfVersao").value = cfg.api_versao || "v23.0";
+    $("cfAppId").value = cfg.app_id || "";
     $("cfToken").placeholder = cfg.token_configurado ? "já salvo (cole outro só para trocar)" : "cole aqui o token (começa com EA...)";
     $("cfSegredo").placeholder = cfg.segredo_app_configurado ? "já salva (cole outra só para trocar)" : "32 letras e números";
     $("cfUrl").value = SUPABASE_URL + "/functions/v1/whatsapp";
@@ -115,7 +177,7 @@
   $("cfSalvar").addEventListener("click", async function () {
     const b = this; b.disabled = true;
     const r = await wa({
-      acao: "salvar_conexao", phone_number_id: $("cfNumId").value, waba_id: $("cfWaba").value, api_versao: $("cfVersao").value,
+      acao: "salvar_conexao", phone_number_id: $("cfNumId").value, waba_id: $("cfWaba").value, api_versao: $("cfVersao").value, app_id: $("cfAppId").value,
       access_token: $("cfToken").value, app_secret: $("cfSegredo").value
     });
     b.disabled = false;
@@ -153,6 +215,10 @@
   }
   const ROT_ST = { APPROVED: ["Aprovado", "ok"], PENDING: ["Em análise", "pendente"], REJECTED: ["Reprovado", "off"], PAUSED: ["Pausado pelo Meta", "off"], DISABLED: ["Desativado", "off"], IN_APPEAL: ["Em recurso", "pendente"] };
   const ROT_CAT = { UTILITY: "Utilidade", MARKETING: "Marketing", AUTHENTICATION: "Autenticação" };
+  function rotuloCab(t) {
+    const c = String(t.cabecalho_tipo || "").toUpperCase();
+    return c && c !== "TEXT" && ROT_TIPO[c.toLowerCase()] ? '<span class="selo ouro">' + esc(ROT_TIPO[c.toLowerCase()]) + "</span> " : "";
+  }
   async function telaTemplates() {
     await carregarConfig(); await carregarTemplates();
     const tb = $("tpLista");
@@ -160,7 +226,7 @@
     tb.innerHTML = templates.map(function (t) {
       const st = ROT_ST[t.status] || [t.status || "?", "pendente"];
       return "<tr><td><b>" + esc(t.nome) + '</b><br><span class="vazio">' + esc(t.idioma) + "</span></td><td>" + esc(ROT_CAT[t.categoria] || t.categoria || "") + '</td><td><span class="selo ' + st[1] + '">' + esc(st[0]) + "</span>" +
-        (t.motivo_recusa ? '<br><span class="vazio">' + esc(t.motivo_recusa) + "</span>" : "") + "</td><td>" + t.qtd_variaveis + '</td><td class="quebra">' + esc(corpoDe(t).slice(0, 160)) + '</td><td><button class="btn peq perigo" data-tp-apagar="' + esc(t.nome) + '">Apagar</button></td></tr>';
+        (t.motivo_recusa ? '<br><span class="vazio">' + esc(t.motivo_recusa) + "</span>" : "") + "</td><td>" + t.qtd_variaveis + '</td><td class="quebra">' + rotuloCab(t) + esc(corpoDe(t).slice(0, 160)) + '</td><td><button class="btn peq perigo" data-tp-apagar="' + esc(t.nome) + '">Apagar</button></td></tr>';
     }).join("");
   }
   $("tpLista").addEventListener("click", async function (ev) {
@@ -221,54 +287,124 @@
   document.querySelectorAll("[data-modelo]").forEach(function (b) {
     b.addEventListener("click", function () {
       const m = MODELOS[b.dataset.modelo];
-      $("tcNome").value = m.nome; $("tcCat").value = m.cat; $("tcCorpo").value = m.corpo; $("tcBotao2").value = m.botao || "";
-      $("tcBotaoSair").checked = m.cat === "MARKETING";
+      $("tcNome").value = m.nome; $("tcCat").value = m.cat; $("tcCorpo").value = m.corpo;
+      botoesTc = [];
+      if (m.botao) botoesTc.push({ tipo: "QUICK_REPLY", texto: m.botao });
+      if (m.cat === "MARKETING") botoesTc.push({ tipo: "QUICK_REPLY", texto: "Sair da lista" });
+      desenharBotoes();
       atualizarExemplos();
       Array.prototype.slice.call($("tcExemplos").querySelectorAll("input")).forEach(function (i, k) { i.value = m.ex[k] || ""; });
       mostrarAvisoCorpo();
     });
   });
-  $("tcTipoLink").addEventListener("change", function () {
-    const t = this.value; $("tcLinkBox").hidden = !t;
-    $("tcRoboBox").hidden = t !== "robo"; $("tcBotaoLink").parentNode.hidden = t !== "url";
+  /* ---------- botões do template: até 3 (resposta rápida, link, ligar ou link entregue pelo robô) ---------- */
+  const MAX_BOTOES = 3;
+  let botoesTc = [];
+  const ROT_BOTAO = { QUICK_REPLY: "Resposta rápida", ROBO: "Resposta rápida + link entregue pelo robô", URL: "Link direto", PHONE_NUMBER: "Ligar" };
+  function desenharBotoes() {
+    $("tcBotoes").innerHTML = botoesTc.map(function (b, i) {
+      const opts = Object.keys(ROT_BOTAO).map(function (k) { return '<option value="' + k + '"' + (b.tipo === k ? " selected" : "") + ">" + ROT_BOTAO[k] + "</option>"; }).join("");
+      let extra = "";
+      if (b.tipo === "URL") extra = '<div style="margin-top:8px"><label>Endereço do link <span class="vazio">(https://... O Meta bloqueia wa.me e links de grupo)</span></label><input data-bt-campo="valor" value="' + esc(b.valor || "") + '" placeholder="https://..."></div>';
+      if (b.tipo === "PHONE_NUMBER") extra = '<div style="margin-top:8px"><label>Telefone com + e DDI</label><input data-bt-campo="valor" value="' + esc(b.valor || "") + '" inputmode="tel" placeholder="+5581999999999"></div>';
+      if (b.tipo === "ROBO") extra = '<div style="margin-top:8px"><label>Link que o robô entrega ao tocar no botão <span class="vazio">(serve para grupo do WhatsApp)</span></label><input data-bt-campo="valor" value="' + esc(b.valor || "") + '" placeholder="https://chat.whatsapp.com/..."><div class="checks" style="margin-top:6px"><label><input type="checkbox" data-bt-campo="perguntar"' + (b.perguntar !== false ? " checked" : "") + '> Depois perguntar "Conseguiu entrar?" e fazer follow-up</label></div></div>';
+      return '<div class="cartao" style="padding:12px;margin:0 0 8px" data-bt="' + i + '"><div class="grade g2"><div><label>Botão ' + (i + 1) + '</label><select data-bt-campo="tipo">' + opts + '</select></div>' +
+        '<div><label>Texto do botão <span class="vazio">(até 25)</span></label><input data-bt-campo="texto" maxlength="25" value="' + esc(b.texto || "") + '" placeholder="Ex.: Quero ver o vídeo"></div></div>' + extra +
+        '<div class="acoes" style="margin-top:8px"><button class="btn peq perigo" type="button" data-bt-remover="' + i + '">Remover</button></div></div>';
+    }).join("");
+    $("tcBotaoAdd").disabled = botoesTc.length >= MAX_BOTOES;
+    const tem = botoesTc.some(function (b) { return b.tipo === "QUICK_REPLY" && String(b.texto).trim().toLowerCase() === "sair da lista"; });
+    $("tcBotaoSair").disabled = tem || botoesTc.length >= MAX_BOTOES;
+    $("tcBotoesAviso").textContent = botoesTc.length >= MAX_BOTOES ? "Limite de 3 botões." : "";
+  }
+  function lerCampoBotao(el, trocou) {
+    const cx = el.closest ? el.closest("[data-bt]") : null, campo = el.getAttribute && el.getAttribute("data-bt-campo"); if (!cx || !campo) return;
+    const b = botoesTc[Number(cx.dataset.bt)]; if (!b) return;
+    if (campo === "perguntar") b.perguntar = el.checked;
+    else b[campo] = el.value;
+    if (campo === "tipo" && trocou) { b.valor = ""; desenharBotoes(); }
+  }
+  $("tcBotoes").addEventListener("input", function (ev) { lerCampoBotao(ev.target, false); });
+  $("tcBotoes").addEventListener("change", function (ev) { lerCampoBotao(ev.target, true); });
+  $("tcBotoes").addEventListener("click", function (ev) {
+    const r = ev.target.closest("[data-bt-remover]"); if (!r) return;
+    botoesTc.splice(Number(r.dataset.btRemover), 1); desenharBotoes();
   });
+  $("tcBotaoAdd").addEventListener("click", function () { if (botoesTc.length < MAX_BOTOES) { botoesTc.push({ tipo: "QUICK_REPLY", texto: "" }); desenharBotoes(); } });
+  $("tcBotaoSair").addEventListener("click", function () { if (botoesTc.length < MAX_BOTOES) { botoesTc.push({ tipo: "QUICK_REPLY", texto: "Sair da lista" }); desenharBotoes(); } });
+  desenharBotoes();
+
+  /* ---------- cabeçalho do template: texto, vídeo, imagem ou PDF ---------- */
+  const CAB_TIPO = { IMAGE: "image", VIDEO: "video", DOCUMENT: "document" };
+  let cabArq = null;
+  $("tcCabTipo").addEventListener("change", function () {
+    const t = this.value;
+    $("tcCabTexto").hidden = t !== "TEXT"; $("tcCabArq").hidden = !CAB_TIPO[t];
+    cabArq = null; $("tcCabNome").textContent = "nenhum arquivo"; $("tcCabPrev").innerHTML = "";
+    if (CAB_TIPO[t]) $("tcCabArquivo").accept = ACEITA[CAB_TIPO[t]];
+  });
+  $("tcCabEscolher").addEventListener("click", function () { $("tcCabArquivo").click(); });
+  $("tcCabArquivo").addEventListener("change", async function () {
+    const f = this.files[0]; this.value = ""; if (!f) return;
+    const tipo = $("tcCabTipo").value, st = $("tcCabNome");
+    cabArq = null; st.textContent = "Enviando o arquivo..."; $("tcCabPrev").innerHTML = "";
+    try {
+      const up = await subirMidia(f, CAB_TIPO[tipo]);
+      st.textContent = "Mandando o exemplo ao Meta...";
+      const r = await wa({ acao: "enviar_exemplo_midia", url: up.url, tipo: tipo });
+      if (!r.ok) throw new Error(r.erro || "O Meta não aceitou o arquivo de exemplo.");
+      cabArq = { url: up.url, handle: r.handle, tipo: tipo, nome: up.nome };
+      st.textContent = "Pronto: " + up.nome + " (exemplo aceito pelo Meta)"; $("tcCabPrev").innerHTML = prevMidia(up.url, up.tipo);
+    } catch (e) { st.textContent = "nenhum arquivo"; aviso(e.message || String(e), true); }
+  });
+
   $("tcEnviar").addEventListener("click", async function () {
     const nome = $("tcNome").value.trim();
     if (!/^[a-z0-9_]{1,60}$/.test(nome)) return aviso("Nome só com letras minúsculas, números e _ (sem espaço nem acento).", true);
     const erro = validarCorpo($("tcCorpo").value, $("tcCat").value, exemplosAtuais());
     if (erro) return aviso(erro, true);
-    const botoes = [];
-    if ($("tcBotaoSair").checked) botoes.push({ tipo: "QUICK_REPLY", texto: "Sair da lista" });
-    if ($("tcBotao2").value.trim()) botoes.push({ tipo: "QUICK_REPLY", texto: $("tcBotao2").value.trim() });
-    const tipoLink = $("tcTipoLink").value;
-    if (tipoLink === "url") {
-      const link = $("tcBotaoLink").value.split("|");
-      if (link.length === 2 && link[0].trim() && link[1].trim()) botoes.push({ tipo: "URL", texto: link[0].trim(), url: link[1].trim() });
-      else return aviso('O botão com link precisa ficar assim: texto | https://endereço', true);
+    const botoes = [], robos = [], usados = {};
+    for (let i = 0; i < botoesTc.length; i++) {
+      const b = botoesTc[i], tx = String(b.texto || "").trim(), vl = String(b.valor || "").trim();
+      if (!tx) return aviso("Escreva o texto do botão " + (i + 1) + " ou remova o botão.", true);
+      if (usados[tx.toLowerCase()]) return aviso("Dois botões têm o mesmo texto: \"" + tx + "\".", true);
+      usados[tx.toLowerCase()] = true;
+      if (b.tipo === "URL") {
+        if (!/^https:\/\//.test(vl)) return aviso("O botão " + (i + 1) + " precisa de um endereço começando com https://", true);
+        botoes.push({ tipo: "URL", texto: tx, url: vl });
+      } else if (b.tipo === "PHONE_NUMBER") {
+        if (!/^\+\d{10,15}$/.test(vl)) return aviso("O botão " + (i + 1) + " precisa do telefone com + e DDI, ex.: +5581999999999", true);
+        botoes.push({ tipo: "PHONE_NUMBER", texto: tx, telefone: vl });
+      } else {
+        if (b.tipo === "ROBO") {
+          if (!/^https:\/\//.test(vl)) return aviso("Informe o link (https://) que o robô vai entregar no botão " + (i + 1) + ".", true);
+          robos.push({ texto: tx, link: vl, perguntar: b.perguntar !== false });
+        }
+        botoes.push({ tipo: "QUICK_REPLY", texto: tx });
+      }
     }
-    const linkRobo = $("tcRoboLink").value.trim();
-    if (tipoLink === "robo") {
-      if (!$("tcBotao2").value.trim()) return aviso("Escreva o texto do botão de resposta rápida (ex.: Entrar no grupo): é ele que ativa o robô.", true);
-      if (!/^https:\/\//.test(linkRobo)) return aviso("Informe o link (https://) que o robô vai entregar.", true);
-    }
+    if (botoes.filter(function (x) { return x.tipo === "PHONE_NUMBER"; }).length > 1) return aviso("Só pode ter 1 botão de ligar.", true);
+    const cabT = $("tcCabTipo").value;
+    if (CAB_TIPO[cabT] && !(cabArq && cabArq.handle)) return aviso('Escolha o arquivo do cabeçalho e espere o aviso "exemplo aceito pelo Meta".', true);
+    if (cabT === "TEXT" && !$("tcTitulo").value.trim()) return aviso('Escreva o título ou escolha "Sem cabeçalho".', true);
     if (!confirm('Enviar "' + nome + '" para o Meta analisar? Depois de aprovado, o texto não pode ser editado (só criar outro).')) return;
-    const b = this; b.disabled = true;
+    const bt = this; bt.disabled = true;
     const r = await wa({
       acao: "criar_template", nome: nome, categoria: $("tcCat").value, idioma: "pt_BR", corpo: $("tcCorpo").value.trim(), exemplos: exemplosAtuais(),
-      cabecalho_tipo: $("tcTitulo").value.trim() ? "TEXT" : "", cabecalho_texto: $("tcTitulo").value.trim(), rodape: $("tcRodape").value.trim(), botoes: botoes
+      cabecalho_tipo: (cabT === "TEXT" || CAB_TIPO[cabT]) ? cabT : "", cabecalho_texto: cabT === "TEXT" ? $("tcTitulo").value.trim() : "",
+      cabecalho_handle: CAB_TIPO[cabT] && cabArq ? cabArq.handle : "", rodape: $("tcRodape").value.trim(), botoes: botoes
     });
-    b.disabled = false;
+    bt.disabled = false;
     if (!r.ok) return aviso(r.erro || "O Meta não aceitou.", true);
     let extra = "";
-    if (tipoLink === "robo") {
+    for (const rb of robos) {
       try {
-        const bt = $("tcBotao2").value.trim();
-        const ex = await ler(supa().from("wa_fluxos").select("id").eq("botao_texto", bt).limit(1));
-        const dados = { nome: "Fluxo " + nome, template_nome: nome, botao_texto: bt, link: linkRobo, incluir_link: true, perguntar_entrou: $("tcRoboPerg").checked };
+        const ex = await ler(supa().from("wa_fluxos").select("id").eq("botao_texto", rb.texto).limit(1));
+        const dados = { nome: "Fluxo " + nome, template_nome: nome, botao_texto: rb.texto, link: rb.link, incluir_link: true, perguntar_entrou: rb.perguntar };
         if (ex.length) await ler(supa().from("wa_fluxos").update(dados).eq("id", ex[0].id).select("id"));
         else await ler(supa().from("wa_fluxos").insert(Object.assign({ ativo: true, resposta_texto: "Oi, {primeiro_nome}! Aqui está o link:" }, dados)).select("id"));
-        extra = " O robô já está ligado ao botão \"" + bt + "\" (veja na aba Fluxos).";
-      } catch (e) { extra = " Mas não consegui criar o fluxo do robô: " + (e.message || e); }
+        extra += " O robô já está ligado ao botão \"" + rb.texto + "\" (veja na aba Fluxos).";
+      } catch (e) { extra += " Mas não consegui criar o fluxo do botão \"" + rb.texto + "\": " + (e.message || e); }
     }
     aviso("Enviado. Situação: " + (r.status || "em análise") + (r.categoria ? " · categoria " + r.categoria : "") + extra);
     telaTemplates();
@@ -449,7 +585,8 @@
     caixa.innerHTML = msgs.length ? msgs.map(function (m) {
       const cls = m.direcao === "saida" ? "saida" + (m.origem === "robo" ? " robo" : "") : "";
       const quem = m.direcao === "saida" ? ({ robo: "Robô", disparo: "Disparo", painel: "Você" }[m.origem] || "") : "";
-      return '<div class="wa-msg ' + cls + '"><div class="texto">' + esc(m.texto || "") + "</div>" +
+      const soRotulo = m.midia_url && /^\[(imagem|vídeo|áudio)\]$/.test(String(m.texto || ""));
+      return '<div class="wa-msg ' + cls + '">' + (m.midia_url ? '<div style="margin-bottom:4px">' + prevMidia(m.midia_url, m.midia_tipo) + "</div>" : "") + (soRotulo ? "" : '<div class="texto">' + esc(m.texto || "") + "</div>") +
         (m.template_nome ? '<div class="meta">template ' + esc(m.template_nome) + "</div>" : "") +
         '<div class="meta"><span>' + esc(quando(m.criado_em)) + "</span>" + (quem ? "<span>" + quem + "</span>" : "") + "<span>" + iconeStatus(m) + "</span></div>" +
         (m.status === "falhou" && m.erro ? '<div class="erro">' + esc(m.erro) + "</div>" : "") + "</div>";
@@ -457,7 +594,7 @@
     if (noFim) caixa.scrollTop = caixa.scrollHeight;
   }
   async function msgsDaConversa() {
-    const d = await ler(supa().from("wa_mensagens").select("id,direcao,texto,status,erro,origem,template_nome,criado_em").eq("contato_id", conversaId).order("criado_em", { ascending: false }).limit(150));
+    const d = await ler(supa().from("wa_mensagens").select("id,direcao,texto,status,erro,origem,template_nome,criado_em,midia_url,midia_tipo").eq("contato_id", conversaId).order("criado_em", { ascending: false }).limit(150));
     return d.reverse();
   }
   async function abrirConversa() {
@@ -468,7 +605,7 @@
       $("cvThread").innerHTML = '<div class="chat-caixa"><div class="thread-topo" style="padding:12px 14px;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center"><b>' + esc(conversaCont.nome || foneBR(conversaCont.telefone)) + "</b><span class=\"vazio\">" + esc(foneBR(conversaCont.telefone)) + "</span>" + situacao(conversaCont) +
         (conversaCont.precisa_humano ? '<span class="selo off">pediu atendimento</span>' : "") + '</div><div class="chat-lista" id="cvMsgs" style="height:min(52vh,500px)"></div>' +
         (aberta
-          ? '<div class="chat-form"><textarea id="cvTexto" rows="2" maxlength="4000" placeholder="Escreva sua resposta..."></textarea><button class="btn auto" type="button" id="cvEnviar">Enviar</button></div>'
+          ? '<div class="chat-form"><textarea id="cvTexto" rows="2" maxlength="4000" placeholder="Escreva sua resposta..."></textarea><button class="btn peq contorno" type="button" id="cvAnexo" style="min-width:48px;padding:0 12px" title="Anexar vídeo, áudio, foto ou PDF" aria-label="Anexar arquivo">📎</button><input type="file" id="cvArquivo" hidden accept="' + ACEITA.todos + '"><button class="btn auto" type="button" id="cvEnviar">Enviar</button></div>'
           : '<div class="chat-form" style="flex-wrap:wrap"><p class="vazio" style="flex:1;min-width:220px">Passaram mais de 24 h desde a última mensagem desta pessoa. Pelo WhatsApp oficial, só dá para enviar um template aprovado.</p><button class="btn auto" type="button" id="cvTemplate">Enviar template</button></div>') + "</div>";
       desenharMensagens(msgs);
       const caixa = $("cvMsgs"); caixa.scrollTop = caixa.scrollHeight;
@@ -476,6 +613,8 @@
       if (conversaCont.nao_lidas) { await supa().from("wa_contatos").update({ nao_lidas: 0 }).eq("id", conversaCont.id); }
       if ($("cvEnviar")) {
         $("cvEnviar").addEventListener("click", enviarTexto);
+        $("cvAnexo").addEventListener("click", function () { $("cvArquivo").click(); });
+        $("cvArquivo").addEventListener("change", enviarArquivoConversa);
         $("cvTexto").addEventListener("keydown", function (e) { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) enviarTexto(); });
       }
       if ($("cvTemplate")) $("cvTemplate").addEventListener("click", function () { abrirEnvioTemplate(conversaCont); });
@@ -489,6 +628,19 @@
     b.disabled = false;
     if (!r.ok) { aviso(r.erro || "Não enviou.", true); if (r.precisa_template) abrirConversa(); return; }
     $("cvTexto").value = ""; abrirConversa();
+  }
+  async function enviarArquivoConversa() {
+    const f = this.files[0]; this.value = ""; if (!f) return;
+    const b = $("cvAnexo"); b.disabled = true; b.textContent = "…";
+    try {
+      const up = await subirMidia(f, null);
+      const legenda = $("cvTexto").value.trim();
+      const r = await wa({ acao: "enviar_midia", contato_id: conversaId, url: up.url, tipo: up.tipo, nome: up.nome, legenda: legenda });
+      if (!r.ok) { aviso(r.erro || "Não enviou.", true); if (r.precisa_template) abrirConversa(); return; }
+      if (up.tipo !== "audio") $("cvTexto").value = "";
+      abrirConversa();
+    } catch (e) { aviso(e.message || String(e), true); }
+    finally { const x = $("cvAnexo"); if (x) { x.disabled = false; x.textContent = "📎"; } }
   }
   async function atualizarConversa() {
     if (!conversaId || !$("cvMsgs")) return;
