@@ -102,12 +102,13 @@
     if (error) throw error;
     return { url: supa().storage.from("wa-midia").getPublicUrl(caminho).data.publicUrl, tipo: tipo, mime: mime, nome: file.name };
   }
-  function prevMidia(url, tipo) {
+  function prevMidia(url, tipo, nome) {
     const u = esc(url);
     if (tipo === "video") return '<video controls preload="metadata" style="max-width:260px;border-radius:10px" src="' + u + '"></video>';
     if (tipo === "audio") return '<audio controls preload="none" style="max-width:260px" src="' + u + '"></audio>';
-    if (tipo === "image") return '<img alt="" style="max-width:200px;border-radius:10px" src="' + u + '">';
-    return '<a href="' + u + '" target="_blank" rel="noopener">Abrir o PDF</a>';
+    if (tipo === "image") return '<a href="' + u + '" target="_blank" rel="noopener" title="Abrir a foto"><img alt="Foto" style="max-width:200px;border-radius:10px" src="' + u + '"></a>';
+    if (tipo === "sticker") return '<img alt="Figurinha" style="max-width:120px" src="' + u + '">';
+    return '<a href="' + u + '" target="_blank" rel="noopener">' + (nome ? "Abrir " + esc(nome) : "Abrir o PDF") + "</a>";
   }
   document.addEventListener("click", function (ev) {
     const b = ev.target.closest("[data-escolher-midia]"); if (!b) return;
@@ -425,7 +426,7 @@
   /* ---------- contatos ---------- */
   async function carregarContatos() {
     contatos = await buscarTudo(function () {
-      return supa().from("wa_contatos").select("id,nome,telefone,etiquetas,optin,optout,ultima_msg_em,notas,perfil_id").order("criado_em").order("id");
+      return supa().from("wa_contatos").select("id,nome,telefone,username,etiquetas,optin,optout,ultima_msg_em,notas,perfil_id").order("criado_em").order("id");
     });
     const ets = Array.from(new Set(contatos.reduce(function (a, c) { return a.concat(c.etiquetas || []); }, []))).sort();
     const listas = ets.filter(function (e) { return e.indexOf(LISTA) === 0; }), outras = ets.filter(function (e) { return e.indexOf(LISTA) !== 0; });
@@ -445,7 +446,7 @@
     const b = $("ctBusca").value.trim().toLowerCase(), et = $("ctFiltroEt").value, st = $("ctFiltroSt").value;
     const bd = b.replace(/\D/g, "");
     const lista = contatos.filter(function (c) {
-      if (b && !((c.nome || "").toLowerCase().indexOf(b) > -1 || (bd && c.telefone.indexOf(bd) > -1))) return false;
+      if (b && !((c.nome || "").toLowerCase().indexOf(b) > -1 || (bd && (c.telefone || "").indexOf(bd) > -1) || (c.username || "").toLowerCase().indexOf(b.replace(/^@/, "")) > -1)) return false;
       if (et && (c.etiquetas || []).indexOf(et) === -1) return false;
       if (st === "optin" && !(c.optin && !c.optout)) return false;
       if (st === "sem" && (c.optin || c.optout)) return false;
@@ -457,7 +458,7 @@
     const tb = $("ctLista");
     if (!lista.length) { tb.innerHTML = '<tr><td colspan="6" class="vazio">Nenhum contato neste filtro.</td></tr>'; return; }
     tb.innerHTML = lista.slice(0, 500).map(function (c) {
-      return "<tr><td>" + esc(c.nome || "(sem nome)") + "</td><td>" + esc(foneBR(c.telefone)) + "</td><td>" + (c.etiquetas || []).map(seloEt).join("") + "</td><td>" + situacao(c) + "</td><td>" + esc(quando(c.ultima_msg_em)) +
+      return "<tr><td>" + esc(c.nome || "(sem nome)") + "</td><td>" + esc(foneDe(c)) + "</td><td>" + (c.etiquetas || []).map(seloEt).join("") + "</td><td>" + situacao(c) + "</td><td>" + esc(quando(c.ultima_msg_em)) +
         '</td><td><button class="btn peq contorno" data-ct-conversar="' + c.id + '">Conversar</button> <button class="btn peq contorno" data-ct-editar="' + c.id + '">Editar</button></td></tr>';
     }).join("") + (lista.length > 500 ? '<tr><td colspan="6" class="vazio">Mostrando 500 de ' + lista.length + ". Use a busca ou os filtros.</td></tr>" : "");
   }
@@ -467,22 +468,19 @@
   /* grava uma lista de pessoas sem nunca tirar autorização nem reativar quem saiu */
   async function salvarContatos(pessoas, aceite, etiquetas) {
     const mapa = {};
-    pessoas.forEach(function (p) { mapa[p.telefone] = p; });
+    pessoas.forEach(function (p) { mapa[chaveFone(p.telefone)] = p; });   // a chave ignora o 9º dígito
     const fones = Object.keys(mapa);
     const res = { novos: 0, atualizados: 0, saiu: 0 };
     const existentes = {};
-    /* o mesmo celular pode estar guardado com ou sem o 9: procura as duas formas e liga pela chave */
-    const comNove = function (f) { return /^55[1-9][1-9]\d{8}$/.test(f) && "6789".indexOf(f[4]) > -1 ? f.slice(0, 4) + "9" + f.slice(4) : f; };
-    const procurar = Array.from(new Set(fones.reduce(function (a, f) { return a.concat([f, WaLista.chaveFone(f), comNove(WaLista.chaveFone(f))]); }, [])));
-    for (let i = 0; i < procurar.length; i += 150) {
-      const dados = await ler(supa().from("wa_contatos").select("id,telefone,nome,etiquetas,optin,optout").in("telefone", procurar.slice(i, i + 150)));
-      dados.forEach(function (c) { existentes[WaLista.chaveFone(c.telefone)] = c; });
+    for (let i = 0; i < fones.length; i += 150) {
+      const dados = await ler(supa().from("wa_contatos").select("id,telefone,telefone_chave,nome,etiquetas,optin,optout").in("telefone_chave", fones.slice(i, i + 150)));
+      dados.forEach(function (c) { existentes[c.telefone_chave] = c; });
     }
     const agora = new Date().toISOString();
     const inserir = [];
     for (const f of fones) {
-      const p = mapa[f], c = existentes[WaLista.chaveFone(f)];
-      if (!c) { inserir.push({ telefone: f, nome: p.nome || null, perfil_id: p.perfil_id || null, etiquetas: etiquetas, origem: "painel", optin: !!aceite, optin_em: aceite ? agora : null }); continue; }
+      const p = mapa[f], c = existentes[f];
+      if (!c) { inserir.push({ telefone: p.telefone, nome: p.nome || null, perfil_id: p.perfil_id || null, etiquetas: etiquetas, origem: "painel", optin: !!aceite, optin_em: aceite ? agora : null }); continue; }
       const campos = {};
       const et = Array.from(new Set((c.etiquetas || []).concat(etiquetas)));
       if (et.length !== (c.etiquetas || []).length) campos.etiquetas = et;
@@ -660,13 +658,22 @@
     const cv = ev.target.closest("[data-ct-conversar]");
     if (cv) { conversaId = cv.dataset.ctConversar; abrirAba("conversas"); return; }
     const ed = ev.target.closest("[data-ct-editar]"); if (!ed) return;
-    editando = contatos.find(function (c) { return c.id === ed.dataset.ctEditar; }); if (!editando) return;
-    $("jcTitulo").textContent = editando.nome || "Contato";
-    $("jcNome").value = editando.nome || ""; $("jcTel").value = foneBR(editando.telefone);
-    $("jcEt").value = (editando.etiquetas || []).join(", "); $("jcNotas").value = editando.notas || "";
-    $("jcOptin").checked = !!editando.optin; $("jcOptout").checked = !!editando.optout;
-    $("jContato").showModal();
+    abrirContato(contatos.find(function (c) { return c.id === ed.dataset.ctEditar; }));
   });
+  function abrirContato(c) {
+    if (!c) return;
+    editando = c;
+    $("jcTitulo").textContent = nomeDe(c);
+    $("jcNome").value = c.nome || ""; $("jcTel").value = foneDe(c);
+    $("jcEt").value = (c.etiquetas || []).join(", "); $("jcNotas").value = c.notas || "";
+    $("jcOptin").checked = !!c.optin; $("jcOptout").checked = !!c.optout;
+    $("jContato").showModal();
+  }
+  /* o contato pode ser editado pela aba Contatos ou pela ficha da conversa */
+  function aposContato(apagou) {
+    if (abaAtual === "contatos") return telaContatos();
+    if (apagou) { fecharConversa(); carregarLista().catch(function () {}); } else abrirConversa();
+  }
   $("jcSalvar").addEventListener("click", async function () {
     if (!editando) return;
     const optin = $("jcOptin").checked, optout = $("jcOptout").checked, agora = new Date().toISOString();
@@ -676,115 +683,668 @@
     try {
       await ler(supa().from("wa_contatos").update(campos).eq("id", editando.id).select("id"));
       if (optout) await supa().from("wa_disparo_itens").update({ status: "pulado", erro: "Saiu da lista" }).eq("contato_id", editando.id).eq("status", "pendente");
-      $("jContato").close(); aviso("Salvo."); telaContatos();
+      $("jContato").close(); aviso("Salvo."); aposContato(false);
     } catch (e) { falha(e); }
   });
   $("jcApagar").addEventListener("click", async function () {
     if (!editando || !confirm("Apagar este contato e todas as mensagens dele? Não dá para desfazer.")) return;
-    try { await ler(supa().from("wa_contatos").delete().eq("id", editando.id).select("id")); $("jContato").close(); aviso("Contato apagado."); telaContatos(); } catch (e) { falha(e); }
+    try { await ler(supa().from("wa_contatos").delete().eq("id", editando.id).select("id")); $("jContato").close(); aviso("Contato apagado."); aposContato(true); } catch (e) { falha(e); }
   });
 
   /* ---------- conversas ---------- */
+  const ETAPAS = [["novo", "Novo"], ["em_conversa", "Em conversa"], ["interessado", "Interessado"], ["proposta", "Proposta"], ["cliente", "Cliente"], ["perdido", "Perdido"]];
+  const PRIORIDADES = [["baixa", "Baixa"], ["normal", "Normal"], ["alta", "Alta"], ["urgente", "Urgente"]];
+  const ROT_ORIGEM = { whatsapp: "WhatsApp (a pessoa escreveu primeiro)", painel: "Adicionado por você no painel", site: "Inscrição pelo site", anuncio: "Anúncio com botão de WhatsApp" };
+  const PAUSAS = [[30, "30 min"], [60, "1 h"], [120, "2 h"], [240, "4 h"], [480, "8 h"], [720, "12 h"], [1440, "24 h"], [0, "Para sempre"]];
+  const SEM_PRAZO = "9999-12-31T00:00:00Z";
+  const CAMPOS_LISTA = "id,nome,telefone,username,ultima_msg_em,ultima_msg_texto,nao_lidas,precisa_humano,optout,ultima_entrada_em,prioridade,robo_pausado_ate";
+  const CAMPOS_MSG = "id,direcao,tipo,texto,status,erro,origem,template_nome,criado_em,midia_url,midia_tipo,midia_caminho,midia_mime,midia_nome,midia_id,reacao";
+  let filtroCv = "todas";
+  let listaCv = [];
+  const busca = { termo: "", seq: 0, timer: null, contatos: [], mensagens: [], pronta: false };
+  let fichaAberta = window.matchMedia("(min-width:1181px)").matches;
+  let fichaDados = null;
+  let respostas = null;
+  let anexo = null;
+  let ancora = null;
+  let limiteMsgs = 150;
+  let enviando = false;
+  const assinadas = {};
+  const rap = { aberta: false, itens: [], sel: 0, ini: -1 };
+
+  function semAcento(t) { return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+  /* mesma regra do banco: celular do Brasil com e sem o 9º dígito tem a mesma chave */
+  function chaveFone(d) { d = String(d || ""); return /^55[1-9][1-9]9\d{8}$/.test(d) ? d.slice(0, 4) + d.slice(5) : d; }
+  function foneDe(c) {
+    if (!c.telefone) return c.username ? "@" + c.username : "sem número visível";
+    const f = foneBR(c.telefone);
+    return /^\d+$/.test(f) ? "+" + f : f;
+  }
+  function nomeDe(c) { return c.nome || (c.username ? "@" + c.username : "") || (c.telefone ? foneDe(c) : "Sem número visível"); }
+  function horaCurta(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (d.toDateString() === new Date().toDateString()) return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  }
+  function pausado(c) { return !!c.robo_pausado_ate && new Date(c.robo_pausado_ate).getTime() > Date.now(); }
+  function semPrazo(c) { return pausado(c) && new Date(c.robo_pausado_ate).getTime() > Date.now() + 50 * 365 * 86400000; }
+  function janelaMs(c) { return c && c.ultima_entrada_em ? new Date(c.ultima_entrada_em).getTime() + 86400000 - Date.now() : 0; }
+  function duracao(ms) { const m = Math.max(1, Math.round(ms / 60000)); return m >= 60 ? Math.floor(m / 60) + " h" + (m % 60 ? " " + (m % 60) + " min" : "") : m + " min"; }
   function iconeStatus(m) {
     if (m.direcao !== "saida") return "";
     return { enviando: "…", enviada: "✓", entregue: "✓✓", lida: '<span class="wa-vis">✓✓</span>', falhou: "⚠" }[m.status] || "";
   }
-  async function carregarLista() {
-    const dados = await ler(supa().from("wa_contatos").select("id,nome,telefone,ultima_msg_em,ultima_msg_texto,nao_lidas,precisa_humano,optout,ultima_entrada_em").not("ultima_msg_em", "is", null).order("ultima_msg_em", { ascending: false }).limit(200));
-    const total = dados.reduce(function (s, c) { return s + (c.nao_lidas || 0); }, 0);
-    const bd = $("bdNaoLidas"); bd.hidden = !total; bd.textContent = total;
-    const b = $("cvBusca").value.trim().toLowerCase(), bdg = b.replace(/\D/g, "");
-    const lista = dados.filter(function (c) {
-      if ($("cvSoHumano").checked && !c.precisa_humano) return false;
-      if (b && !((c.nome || "").toLowerCase().indexOf(b) > -1 || (bdg && c.telefone.indexOf(bdg) > -1))) return false;
-      return true;
-    });
-    $("cvLista").innerHTML = lista.length ? lista.map(function (c) {
-      return '<button type="button" class="wa-item' + (c.id === conversaId ? " ativa" : "") + '" data-cv="' + c.id + '"><b>' + esc(c.nome || foneBR(c.telefone)) + "</b><small>" + esc(c.ultima_msg_texto || "") + "</small>" +
-        (c.nao_lidas ? '<span class="selo ouro">' + c.nao_lidas + "</span>" : c.precisa_humano ? '<span class="selo off">!</span>' : "") + "</button>";
-    }).join("") : '<p class="vazio">Nenhuma conversa ainda. Quando alguém escrever para o número do CRM, aparece aqui.</p>';
-  }
-  $("cvLista").addEventListener("click", function (ev) { const b = ev.target.closest("[data-cv]"); if (b) { conversaId = b.dataset.cv; abrirConversa(); } });
-  $("cvBusca").addEventListener("input", function () { carregarLista().catch(function () {}); });
-  $("cvSoHumano").addEventListener("change", function () { carregarLista().catch(function () {}); });
 
+  /* ----- lista, filtros e busca ----- */
+  async function contagemCv() {
+    try { const r = await supa().rpc("wa_conversas_contagem"); if (!r.error && r.data) return r.data; } catch (e) {}
+    return null;
+  }
+  async function carregarLista() {
+    let q = supa().from("wa_contatos").select(CAMPOS_LISTA).not("ultima_msg_em", "is", null).order("ultima_msg_em", { ascending: false }).limit(200);
+    if (filtroCv === "nao_lidas") q = q.gt("nao_lidas", 0);
+    else if (filtroCv === "lidas") q = q.eq("nao_lidas", 0);
+    else if (filtroCv === "pediu") q = q.eq("precisa_humano", true);
+    const r = await Promise.all([ler(q), contagemCv()]);
+    listaCv = r[0];
+    const n = r[1] || {
+      nao_lidas: listaCv.filter(function (c) { return c.nao_lidas > 0; }).length,
+      msgs_nao_lidas: listaCv.reduce(function (s, c) { return s + (c.nao_lidas || 0); }, 0),
+      pediu: listaCv.filter(function (c) { return c.precisa_humano; }).length
+    };
+    const bd = $("bdNaoLidas"); bd.hidden = !n.msgs_nao_lidas; bd.textContent = n.msgs_nao_lidas;
+    $("cvNNaoLidas").textContent = n.nao_lidas ? n.nao_lidas : "";
+    $("cvNPediu").textContent = n.pediu ? n.pediu : "";
+    document.title = (n.msgs_nao_lidas ? "(" + n.msgs_nao_lidas + ") " : "") + "WhatsApp | Ressignificar";
+    desenharLista();
+  }
+  function passaFiltro(c) {
+    if (filtroCv === "nao_lidas") return c.nao_lidas > 0;
+    if (filtroCv === "lidas") return !c.nao_lidas;
+    if (filtroCv === "pediu") return !!c.precisa_humano;
+    return true;
+  }
+  function itemCv(c) {
+    const selos = (c.nao_lidas ? '<span class="selo ouro" title="Mensagens não lidas">' + c.nao_lidas + "</span>" : "") +
+      (c.precisa_humano ? '<span class="selo off" title="Pediu atendimento">!</span>' : "") +
+      (pausado(c) ? '<span class="selo wa-tag" title="Robô pausado nesta conversa">robô pausado</span>' : "");
+    const pri = c.prioridade === "urgente" || c.prioridade === "alta" ? '<i class="wa-pri ' + c.prioridade + '" title="Prioridade ' + c.prioridade + '"></i>' : "";
+    return '<button type="button" class="wa-item' + (c.id === conversaId ? " ativa" : "") + '" data-cv="' + c.id + '"><span class="l1"><b>' + pri + esc(nomeDe(c)) + "</b><time>" + esc(horaCurta(c.ultima_msg_em)) +
+      '</time></span><span class="l2"><small>' + esc(c.ultima_msg_texto || "") + "</small>" + selos + "</span></button>";
+  }
+  /* pedaço da mensagem em volta do termo buscado, com o termo marcado */
+  function trecho(texto, termo) {
+    const t = String(texto || ""), alvo = semAcento(termo);
+    let norm = "";
+    for (let i = 0; i < t.length; i++) { const ch = semAcento(t.charAt(i)); norm += ch.length === 1 ? ch : (ch.charAt(0) || " "); }
+    const p = norm.indexOf(alvo);
+    if (p < 0) return esc(t.slice(0, 90));
+    const ini = Math.max(0, p - 30), fim = Math.min(t.length, p + alvo.length + 50);
+    return (ini ? "…" : "") + esc(t.slice(ini, p)) + "<mark>" + esc(t.slice(p, p + alvo.length)) + "</mark>" + esc(t.slice(p + alvo.length, fim)) + (fim < t.length ? "…" : "");
+  }
+  function desenharLista() {
+    const caixa = $("cvLista");
+    if (busca.termo.length >= 2) {
+      if (!busca.pronta) { caixa.innerHTML = '<p class="vazio">Buscando...</p>'; return; }
+      const cs = busca.contatos.filter(passaFiltro);
+      let h = "";
+      if (cs.length) h += '<p class="wa-sec">Pessoas</p>' + cs.map(itemCv).join("");
+      if (busca.mensagens.length) {
+        h += '<p class="wa-sec">Mensagens com "' + esc(busca.termo) + '"</p>' + busca.mensagens.map(function (m) {
+          return '<button type="button" class="wa-item" data-cv="' + m.contato_id + '" data-msg="' + m.id + '"><span class="l1"><b>' + esc(nomeDe(m)) + "</b><time>" + esc(horaCurta(m.criado_em)) +
+            '</time></span><span class="l2"><small>' + (m.direcao === "saida" ? "Você: " : "") + trecho(m.texto, busca.termo) + "</small></span></button>";
+        }).join("");
+      }
+      caixa.innerHTML = h || '<p class="vazio">Nada encontrado para "' + esc(busca.termo) + '".</p>';
+      return;
+    }
+    const vazio = { todas: "Nenhuma conversa ainda. Quando alguém escrever para o número do CRM, aparece aqui.", nao_lidas: "Nenhuma conversa com mensagem não lida.", lidas: "Nenhuma conversa lida.", pediu: "Ninguém está esperando atendimento." }[filtroCv];
+    caixa.innerHTML = listaCv.length ? listaCv.map(itemCv).join("") : '<p class="vazio">' + vazio + "</p>";
+  }
+  function buscar() {
+    const termo = $("cvBusca").value.trim();
+    busca.termo = termo; busca.pronta = false; clearTimeout(busca.timer);
+    const seq = ++busca.seq;
+    desenharLista();
+    if (termo.length < 2) return;
+    busca.timer = setTimeout(async function () {
+      try {
+        const r = await ler(supa().rpc("wa_buscar_conversas", { p_termo: termo, p_limite: 40 }));
+        if (seq !== busca.seq) return;
+        busca.contatos = (r && r.contatos) || []; busca.mensagens = (r && r.mensagens) || [];
+      } catch (e) { if (seq !== busca.seq) return; busca.contatos = []; busca.mensagens = []; console.error(e); }
+      busca.pronta = true; desenharLista();
+    }, 300);
+  }
+  $("cvLista").addEventListener("click", function (ev) {
+    const b = ev.target.closest("[data-cv]"); if (!b) return;
+    conversaId = b.dataset.cv; ancora = b.dataset.msg || null;
+    abrirConversa();
+  });
+  $("cvBusca").addEventListener("input", buscar);
+  $("cvFiltros").addEventListener("click", function (ev) {
+    const b = ev.target.closest("[data-filtro]"); if (!b) return;
+    filtroCv = b.dataset.filtro;
+    Array.prototype.forEach.call($("cvFiltros").querySelectorAll("[data-filtro]"), function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+    carregarLista().catch(falha);
+  });
+
+  /* ----- mensagens ----- */
+  /* o que a pessoa manda fica numa pasta protegida: cada arquivo abre com um link que vale 1 hora */
+  async function assinar(msgs) {
+    const faltam = [];
+    msgs.forEach(function (m) { if (m.midia_caminho && !(assinadas[m.midia_caminho] && assinadas[m.midia_caminho].exp > Date.now()) && faltam.indexOf(m.midia_caminho) === -1) faltam.push(m.midia_caminho); });
+    if (!faltam.length) return;
+    try {
+      const r = await supa().storage.from("wa-recebidas").createSignedUrls(faltam, 3600);
+      (r.data || []).forEach(function (x) { if (x && x.signedUrl && x.path) assinadas[x.path] = { url: x.signedUrl, exp: Date.now() + 50 * 60000 }; });
+    } catch (e) { console.error(e); }
+  }
+  async function msgsDaConversa() {
+    const d = await ler(supa().from("wa_mensagens").select(CAMPOS_MSG).eq("contato_id", conversaId).order("criado_em", { ascending: false }).limit(limiteMsgs));
+    d.reverse();
+    await assinar(d);
+    return d;
+  }
+  function assinaturaDe(msgs) { return msgs.map(function (m) { return m.id + m.status + (m.reacao || "") + (m.midia_caminho ? 1 : 0) + (m.erro ? 1 : 0); }).join("|"); }
+  function textoHtml(t) {
+    return esc(t).replace(/https?:\/\/[^\s<]+/g, function (u) {
+      const fim = (u.match(/[.,:!?)]+$/) || [""])[0], url = fim ? u.slice(0, -fim.length) : u;
+      return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + "</a>" + fim;
+    });
+  }
+  function midiaHtml(m) {
+    if (m.midia_url) return prevMidia(m.midia_url, m.midia_tipo);
+    if (m.midia_caminho) {
+      const a = assinadas[m.midia_caminho];
+      return a ? prevMidia(a.url, m.midia_tipo, m.midia_nome) : '<span class="vazio">Abrindo o arquivo...</span>';
+    }
+    if (m.midia_id) {
+      if (!m.erro && Date.now() - new Date(m.criado_em).getTime() < 90000) return '<span class="vazio">Baixando o arquivo...</span>';
+      return '<span class="vazio">' + esc(m.erro || "O arquivo ainda não foi baixado.") + '</span> <button type="button" class="btn peq contorno" data-baixar="' + m.id + '">Baixar de novo</button>';
+    }
+    return "";
+  }
+  function diaRotulo(d) {
+    const hoje = new Date();
+    if (d.toDateString() === hoje.toDateString()) return "Hoje";
+    if (d.toDateString() === new Date(Date.now() - 86400000).toDateString()) return "Ontem";
+    return d.toLocaleDateString("pt-BR", d.getFullYear() === hoje.getFullYear() ? { day: "2-digit", month: "long" } : { day: "2-digit", month: "long", year: "numeric" });
+  }
   function desenharMensagens(msgs) {
     const caixa = $("cvMsgs"); if (!caixa) return;
     const noFim = caixa.scrollHeight - caixa.scrollTop - caixa.clientHeight < 80;
-    caixa.innerHTML = msgs.length ? msgs.map(function (m) {
+    let dia = "", h = "";
+    msgs.forEach(function (m) {
+      const d = new Date(m.criado_em), chave = d.toDateString();
+      if (chave !== dia) { dia = chave; h += '<div class="wa-dia"><span>' + esc(diaRotulo(d)) + "</span></div>"; }
+      if (m.tipo === "system") { h += '<div class="wa-aviso" data-msg-id="' + m.id + '">' + esc(m.texto || "") + "</div>"; return; }
       const cls = m.direcao === "saida" ? "saida" + (m.origem === "robo" ? " robo" : "") : "";
       const quem = m.direcao === "saida" ? ({ robo: "Robô", disparo: "Disparo", painel: "Você" }[m.origem] || "") : "";
-      const soRotulo = m.midia_url && /^\[(imagem|vídeo|áudio)\]$/.test(String(m.texto || ""));
-      return '<div class="wa-msg ' + cls + '">' + (m.midia_url ? '<div style="margin-bottom:4px">' + prevMidia(m.midia_url, m.midia_tipo) + "</div>" : "") + (soRotulo ? "" : '<div class="texto">' + esc(m.texto || "") + "</div>") +
+      const midia = midiaHtml(m);
+      let texto = String(m.texto || "");
+      if (midia) {
+        texto = texto.replace(/^\[(imagem|vídeo|áudio|figurinha)\]\s*/, "");
+        if (m.midia_tipo === "document" && m.midia_nome && /^\[documento\]/.test(texto)) texto = "";
+      }
+      h += '<div class="wa-msg ' + cls + (ancora && ancora === m.id ? " wa-achou" : "") + '" data-msg-id="' + m.id + '">' +
+        (midia ? '<div class="wa-midia">' + midia + "</div>" : "") +
+        (texto ? '<div class="texto">' + textoHtml(texto) + "</div>" : "") +
         (m.template_nome ? '<div class="meta">template ' + esc(m.template_nome) + "</div>" : "") +
-        '<div class="meta"><span>' + esc(quando(m.criado_em)) + "</span>" + (quem ? "<span>" + quem + "</span>" : "") + "<span>" + iconeStatus(m) + "</span></div>" +
-        (m.status === "falhou" && m.erro ? '<div class="erro">' + esc(m.erro) + "</div>" : "") + "</div>";
-    }).join("") : '<p class="vazio" style="margin:auto">Sem mensagens.</p>';
+        '<div class="meta"><span>' + esc(d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })) + "</span>" + (quem ? "<span>" + quem + "</span>" : "") + "<span>" + iconeStatus(m) + "</span></div>" +
+        (m.direcao === "saida" && m.status === "falhou" && m.erro ? '<div class="erro">' + esc(m.erro) + "</div>" : "") +
+        (m.reacao ? '<span class="wa-reacao" title="Reação da pessoa">' + esc(m.reacao) + "</span>" : "") + "</div>";
+    });
+    caixa.innerHTML = h || '<p class="vazio" style="margin:auto">Sem mensagens.</p>';
     if (noFim) caixa.scrollTop = caixa.scrollHeight;
   }
-  async function msgsDaConversa() {
-    const d = await ler(supa().from("wa_mensagens").select("id,direcao,texto,status,erro,origem,template_nome,criado_em,midia_url,midia_tipo").eq("contato_id", conversaId).order("criado_em", { ascending: false }).limit(150));
-    return d.reverse();
+
+  /* ----- topo da conversa: janela de 24 h, robô e pedido de atendimento ----- */
+  function topoHtml(c) {
+    const jm = janelaMs(c);
+    const robo = semPrazo(c) ? '<span class="selo pendente">Robô pausado sem prazo</span>'
+      : pausado(c) ? '<span class="selo pendente">Robô pausado até ' + esc(quando(c.robo_pausado_ate)) + "</span>"
+      : cfg.robo_ativo ? '<span class="selo ok">Robô respondendo</span>' : '<span class="selo" title="Ligue na aba Robô">Robô desligado</span>';
+    return '<div class="wa-topo-l"><b>' + esc(nomeDe(c)) + '</b><span class="vazio">' + (c.nome || c.username ? esc(foneDe(c)) : "") + (c.username && c.telefone ? " · @" + esc(c.username) : "") + "</span>" + situacao(c) +
+      '<span class="selo ' + (jm > 0 ? "ok" : "pendente") + '" title="Pelo WhatsApp oficial, você responde livremente até 24 h depois da última mensagem da pessoa">' + (jm > 0 ? "Janela aberta: " + duracao(jm) : "Janela de 24 h fechada") + "</span>" +
+      '<button type="button" class="btn peq contorno wa-direita" id="cvFichaBtn" aria-expanded="' + (fichaAberta ? "true" : "false") + '">Ficha</button></div>' +
+      '<div class="wa-topo-l">' + robo +
+      '<details class="wa-menu" id="cvPausaMenu"><summary class="btn peq contorno">Pausar robô</summary><div class="wa-menu-lista">' +
+      PAUSAS.map(function (p) { return '<button type="button" data-pausa="' + p[0] + '">' + p[1] + "</button>"; }).join("") + "</div></details>" +
+      (pausado(c) ? '<button type="button" class="btn peq" id="cvRoboVoltar">Voltar a responder</button>' : "") +
+      (c.precisa_humano ? '<span class="selo off">Pediu atendimento</span><button type="button" class="btn peq contorno" id="cvAtendido">Marcar como atendido</button>' : "") + "</div>";
+  }
+  function atualizarTopo() { const t = $("cvTopo"); if (t && conversaCont) t.innerHTML = topoHtml(conversaCont); }
+  async function salvarContato(campos, msg) {
+    if (!conversaId) return;
+    try {
+      conversaCont = await ler(supa().from("wa_contatos").update(campos).eq("id", conversaId).select("*").single());
+      if (msg) aviso(msg);
+      atualizarTopo();
+      const q = document.querySelector("#cvFicha .wa-fc-quem b"); if (q) q.textContent = nomeDe(conversaCont);
+      carregarLista().catch(function () {}); carregarFicha().catch(function () {});
+    } catch (e) { falha(e); }
+  }
+  function pausar(min) {
+    const m = $("cvPausaMenu"); if (m) m.open = false;
+    const rot = (PAUSAS.filter(function (p) { return p[0] === min; })[0] || [0, ""])[1];
+    salvarContato({ robo_pausado_ate: min ? new Date(Date.now() + min * 60000).toISOString() : SEM_PRAZO },
+      min ? "Robô pausado por " + rot + " nesta conversa." : 'Robô pausado sem prazo nesta conversa. Para religar, use "Voltar a responder".');
+  }
+
+  /* ----- abrir a conversa ----- */
+  function fechadaHtml(c) {
+    return '<div class="chat-form" style="flex-wrap:wrap"><p class="vazio" style="flex:1;min-width:220px">' +
+      (c.ultima_entrada_em ? "Passaram mais de 24 h desde a última mensagem desta pessoa. Pelo WhatsApp oficial, só dá para enviar um template aprovado."
+        : "Esta pessoa ainda não escreveu para este número. Pelo WhatsApp oficial, a primeira mensagem precisa ser um template aprovado.") +
+      '</p><button class="btn auto" type="button" id="cvTemplate">Enviar template</button></div>';
+  }
+  function comporHtml() {
+    return '<div class="wa-compor" id="cvCompor">' +
+      '<div class="wa-pop" id="cvRapidas" hidden role="listbox" aria-label="Respostas prontas"></div>' +
+      '<div class="wa-pop wa-emojis" id="cvEmojis" hidden></div>' +
+      '<div class="wa-anexo" id="cvAnexoPrev" hidden></div>' +
+      '<div class="wa-ferr">' +
+      '<button type="button" id="cvEmojiBtn" title="Emoji" aria-label="Abrir emojis">😊</button>' +
+      '<button type="button" id="cvFotoBtn" title="Enviar foto" aria-label="Enviar foto">📷</button>' +
+      '<button type="button" id="cvAnexo" title="Anexar vídeo, áudio ou PDF" aria-label="Anexar arquivo">📎</button>' +
+      '<button type="button" id="cvRapBtn" title="Respostas prontas" aria-label="Respostas prontas">/</button>' +
+      '<span class="vazio wa-dica">Digite / para respostas prontas · Ctrl + Enter envia · cole ou arraste uma foto</span>' +
+      '<input type="file" id="cvFoto" hidden accept="image/*"><input type="file" id="cvArquivo" hidden accept="' + ACEITA.todos + '"></div>' +
+      '<div class="chat-form"><textarea id="cvTexto" rows="2" maxlength="4000" placeholder="Escreva sua resposta..." aria-label="Mensagem"></textarea><button class="btn auto" type="button" id="cvEnviar">Enviar</button></div></div>';
   }
   async function abrirConversa() {
     try {
-      conversaCont = await ler(supa().from("wa_contatos").select("*").eq("id", conversaId).single());
-      const msgs = await msgsDaConversa();
-      const aberta = conversaCont.ultima_entrada_em && Date.now() - new Date(conversaCont.ultima_entrada_em).getTime() < 86400000;
-      $("cvThread").innerHTML = '<div class="chat-caixa"><div class="thread-topo" style="padding:12px 14px;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center"><b>' + esc(conversaCont.nome || foneBR(conversaCont.telefone)) + "</b><span class=\"vazio\">" + esc(foneBR(conversaCont.telefone)) + "</span>" + situacao(conversaCont) +
-        (conversaCont.precisa_humano ? '<span class="selo off">pediu atendimento</span>' : "") + '</div><div class="chat-lista" id="cvMsgs" style="height:min(52vh,500px)"></div>' +
-        (aberta
-          ? '<div class="chat-form"><textarea id="cvTexto" rows="2" maxlength="4000" placeholder="Escreva sua resposta..."></textarea><button class="btn peq contorno" type="button" id="cvAnexo" style="min-width:48px;padding:0 12px" title="Anexar vídeo, áudio, foto ou PDF" aria-label="Anexar arquivo">📎</button><input type="file" id="cvArquivo" hidden accept="' + ACEITA.todos + '"><button class="btn auto" type="button" id="cvEnviar">Enviar</button></div>'
-          : '<div class="chat-form" style="flex-wrap:wrap"><p class="vazio" style="flex:1;min-width:220px">Passaram mais de 24 h desde a última mensagem desta pessoa. Pelo WhatsApp oficial, só dá para enviar um template aprovado.</p><button class="btn auto" type="button" id="cvTemplate">Enviar template</button></div>') + "</div>";
+      const id = conversaId;
+      limiteMsgs = 150;
+      const c = await ler(supa().from("wa_contatos").select("*").eq("id", id).single());
+      let msgs = await msgsDaConversa();
+      if (ancora && !msgs.some(function (m) { return m.id === ancora; })) { limiteMsgs = 1000; msgs = await msgsDaConversa(); }
+      if (id !== conversaId) return;   // trocou de conversa enquanto carregava
+      conversaCont = c;
+      descartarAnexo();
+      const aberta = janelaMs(c) > 0;
+      $("cvThread").innerHTML = '<div class="chat-caixa" id="cvCaixa"><div class="wa-topo" id="cvTopo">' + topoHtml(c) + '</div><div class="chat-lista" id="cvMsgs" style="height:min(52vh,500px)"></div>' + (aberta ? comporHtml() : fechadaHtml(c)) + "</div>";
       desenharMensagens(msgs);
-      const caixa = $("cvMsgs"); caixa.scrollTop = caixa.scrollHeight;
-      ultimaAssinatura = msgs.length + ":" + (msgs.length ? msgs[msgs.length - 1].id + msgs[msgs.length - 1].status : "");
-      if (conversaCont.nao_lidas) { await supa().from("wa_contatos").update({ nao_lidas: 0 }).eq("id", conversaCont.id); }
-      if ($("cvEnviar")) {
-        $("cvEnviar").addEventListener("click", enviarTexto);
-        $("cvAnexo").addEventListener("click", function () { $("cvArquivo").click(); });
-        $("cvArquivo").addEventListener("change", enviarArquivoConversa);
-        $("cvTexto").addEventListener("keydown", function (e) { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) enviarTexto(); });
-      }
-      if ($("cvTemplate")) $("cvTemplate").addEventListener("click", function () { abrirEnvioTemplate(conversaCont); });
+      const caixa = $("cvMsgs"), alvo = ancora ? caixa.querySelector('[data-msg-id="' + ancora + '"]') : null;
+      caixa.scrollTop = alvo ? Math.max(0, alvo.offsetTop - caixa.offsetTop - caixa.clientHeight / 2 + alvo.clientHeight / 2) : caixa.scrollHeight;
+      ancora = null;
+      ultimaAssinatura = assinaturaDe(msgs);
+      if (c.nao_lidas) { await supa().from("wa_contatos").update({ nao_lidas: 0 }).eq("id", id); c.nao_lidas = 0; }
+      if (aberta) ligarCompor();
+      mostrarFicha();
       carregarLista().catch(function () {});
     } catch (e) { falha(e); }
   }
-  async function enviarTexto() {
-    const t = $("cvTexto").value.trim(); if (!t) return;
-    const b = $("cvEnviar"); b.disabled = true;
-    const r = await wa({ acao: "enviar_texto", contato_id: conversaId, texto: t });
-    b.disabled = false;
-    if (!r.ok) { aviso(r.erro || "Não enviou.", true); if (r.precisa_template) abrirConversa(); return; }
-    $("cvTexto").value = ""; abrirConversa();
+  function fecharConversa() {
+    conversaId = null; conversaCont = null; fichaDados = null; descartarAnexo();
+    $("cvThread").innerHTML = '<div class="cartao"><p class="vazio">Escolha uma conversa ao lado.</p></div>';
+    mostrarFicha();
   }
-  async function enviarArquivoConversa() {
-    const f = this.files[0]; this.value = ""; if (!f) return;
-    const b = $("cvAnexo"); b.disabled = true; b.textContent = "…";
-    try {
-      const up = await subirMidia(f, null);
-      const legenda = $("cvTexto").value.trim();
-      const r = await wa({ acao: "enviar_midia", contato_id: conversaId, url: up.url, tipo: up.tipo, nome: up.nome, legenda: legenda });
-      if (!r.ok) { aviso(r.erro || "Não enviou.", true); if (r.precisa_template) abrirConversa(); return; }
-      if (up.tipo !== "audio") $("cvTexto").value = "";
-      abrirConversa();
-    } catch (e) { aviso(e.message || String(e), true); }
-    finally { const x = $("cvAnexo"); if (x) { x.disabled = false; x.textContent = "📎"; } }
-  }
-  async function atualizarConversa() {
-    if (!conversaId || !$("cvMsgs")) return;
-    const msgs = await msgsDaConversa();
-    const ass = msgs.length + ":" + (msgs.length ? msgs[msgs.length - 1].id + msgs[msgs.length - 1].status : "");
+  async function atualizarConversa(irAoFim) {
+    if (!conversaId || !$("cvMsgs") || !conversaCont) return;
+    const id = conversaId;
+    const r = await Promise.all([msgsDaConversa(), ler(supa().from("wa_contatos").select("*").eq("id", id).single())]);
+    if (id !== conversaId || !$("cvMsgs")) return;
+    const msgs = r[0], ass = assinaturaDe(msgs), eraAberta = janelaMs(conversaCont) > 0;
+    conversaCont = r[1];
     if (ass !== ultimaAssinatura) {
       ultimaAssinatura = ass; desenharMensagens(msgs);
-      const novas = await ler(supa().from("wa_contatos").select("nao_lidas").eq("id", conversaId).single());
-      if (novas.nao_lidas) await supa().from("wa_contatos").update({ nao_lidas: 0 }).eq("id", conversaId);
+      if (irAoFim) { const cx = $("cvMsgs"); cx.scrollTop = cx.scrollHeight; }
+      if (conversaCont.nao_lidas) { await supa().from("wa_contatos").update({ nao_lidas: 0 }).eq("id", id); conversaCont.nao_lidas = 0; }
+      carregarFicha().catch(function () {});
     }
+    const tx = $("cvTexto");
+    if ((janelaMs(conversaCont) > 0) !== eraAberta && !(tx && (tx.value.trim() || anexo))) { abrirConversa(); return; }
+    const menu = $("cvPausaMenu");
+    if (!(menu && menu.open)) atualizarTopo();
+    sincronizarFicha();
   }
   async function telaConversas() {
     await carregarLista();
     if (conversaId) abrirConversa();
   }
+
+  /* ----- caixa de mensagem: foto, anexo, emoji e respostas prontas ----- */
+  function ligarCompor() {
+    const tx = $("cvTexto"), cx = $("cvCaixa");
+    $("cvEnviar").addEventListener("click", enviar);
+    $("cvEmojiBtn").addEventListener("click", alternarEmojis);
+    $("cvFotoBtn").addEventListener("click", function () { $("cvFoto").click(); });
+    $("cvAnexo").addEventListener("click", function () { $("cvArquivo").click(); });
+    $("cvRapBtn").addEventListener("click", function () { if (rap.aberta) return fecharPops(); rap.ini = -1; abrirRapidas(""); tx.focus(); });
+    $("cvFoto").addEventListener("change", function () { const f = this.files[0]; this.value = ""; if (f) anexar(f); });
+    $("cvArquivo").addEventListener("change", function () { const f = this.files[0]; this.value = ""; if (f) anexar(f); });
+    tx.addEventListener("input", conferirBarra);
+    tx.addEventListener("keydown", teclaCompor);
+    tx.addEventListener("paste", function (e) {
+      const fs = e.clipboardData && e.clipboardData.files;
+      if (fs && fs.length && /^image\//.test(fs[0].type)) { e.preventDefault(); anexar(fs[0]); }
+    });
+    cx.addEventListener("dragover", function (e) { if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") > -1) { e.preventDefault(); cx.classList.add("wa-solta"); } });
+    cx.addEventListener("dragleave", function () { cx.classList.remove("wa-solta"); });
+    cx.addEventListener("drop", function (e) { cx.classList.remove("wa-solta"); const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) { e.preventDefault(); anexar(f); } });
+  }
+  function carregarImagem(file) {
+    return new Promise(function (ok, erro) {
+      const u = URL.createObjectURL(file), im = new Image();
+      im.onload = function () { URL.revokeObjectURL(u); ok(im); };
+      im.onerror = function () { URL.revokeObjectURL(u); erro(new Error("imagem")); };
+      im.src = u;
+    });
+  }
+  /* o WhatsApp só aceita foto JPG ou PNG de até 5 MB: foto maior ou de outro formato é convertida e reduzida aqui */
+  async function prepararImagem(file) {
+    if (/^image\/(jpeg|png)$/.test(mimeDoArquivo(file)) && file.size <= 5 * 1024 * 1024) return file;
+    let im;
+    try { im = await carregarImagem(file); } catch (e) { throw new Error("Não consegui abrir esta imagem. Use uma foto JPG ou PNG."); }
+    let escala = Math.min(1, 2560 / Math.max(im.width, im.height, 1)), q = 0.86;
+    for (let i = 0; i < 7; i++) {
+      const cv = document.createElement("canvas");
+      cv.width = Math.max(1, Math.round(im.width * escala)); cv.height = Math.max(1, Math.round(im.height * escala));
+      const ctx = cv.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height); ctx.drawImage(im, 0, 0, cv.width, cv.height);
+      const blob = await new Promise(function (ok) { cv.toBlob(ok, "image/jpeg", q); });
+      if (blob && blob.size <= 5 * 1024 * 1024) return new File([blob], String(file.name || "foto").replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+      escala *= 0.8; q = Math.max(0.6, q - 0.05);
+    }
+    throw new Error("Não consegui reduzir a imagem para 5 MB.");
+  }
+  function descartarAnexo() {
+    if (anexo && anexo.url) URL.revokeObjectURL(anexo.url);
+    anexo = null;
+    const p = $("cvAnexoPrev"); if (p) { p.hidden = true; p.innerHTML = ""; }
+    const t = $("cvTexto"); if (t) t.placeholder = "Escreva sua resposta...";
+  }
+  async function anexar(file) {
+    try {
+      let f = file;
+      if (/^image\//.test(file.type) || /\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i.test(file.name || "")) f = await prepararImagem(file);
+      const tipo = tipoDoArquivo(mimeDoArquivo(f));
+      if (!tipo) throw new Error("Formato não aceito pelo WhatsApp. Use foto (JPG ou PNG), vídeo MP4, áudio MP3, M4A ou OGG, ou PDF.");
+      if (f.size > LIMITE_MB * 1024 * 1024) throw new Error("O arquivo passa de " + LIMITE_MB + " MB (limite do WhatsApp).");
+      const p = $("cvAnexoPrev"); if (!p) return;
+      descartarAnexo();
+      anexo = { file: f, tipo: tipo, nome: f.name || "arquivo", url: URL.createObjectURL(f) };
+      const kb = f.size / 1024, tam = kb >= 1024 ? (kb / 1024).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(kb)) + " KB";
+      p.innerHTML = (tipo === "image" ? '<img alt="" src="' + anexo.url + '">' : '<span class="wa-arq">' + { video: "🎬", audio: "🎤", document: "📄" }[tipo] + "</span>") +
+        '<span class="wa-anexo-txt"><b>' + esc(anexo.nome) + "</b><small>" + ROT_TIPO[tipo] + " · " + tam + (f !== file ? " · ajustada para o WhatsApp" : "") + (tipo === "audio" ? " · áudio vai sem legenda" : "") +
+        '</small></span><button type="button" class="wa-x" id="cvAnexoTirar" aria-label="Tirar o anexo">×</button>';
+      p.hidden = false;
+      $("cvAnexoTirar").addEventListener("click", descartarAnexo);
+      $("cvTexto").placeholder = tipo === "audio" ? "Escreva sua resposta..." : "Legenda (opcional)...";
+      $("cvTexto").focus();
+    } catch (e) { aviso(e.message || String(e), true); }
+  }
+  async function enviar() {
+    const tx = $("cvTexto"), b = $("cvEnviar");
+    if (enviando || !tx || !b) return;
+    const t = tx.value.trim();
+    if (!anexo && !t) return;
+    enviando = true; b.disabled = true; fecharPops();
+    try {
+      let r;
+      if (anexo) {
+        b.textContent = "Enviando...";
+        const up = await subirMidia(anexo.file, null), audio = up.tipo === "audio";
+        r = await wa({ acao: "enviar_midia", contato_id: conversaId, url: up.url, tipo: up.tipo, nome: up.nome, legenda: audio ? "" : t });
+        if (r.ok) { descartarAnexo(); if (!audio) tx.value = ""; }
+      } else {
+        r = await wa({ acao: "enviar_texto", contato_id: conversaId, texto: t });
+        if (r.ok) tx.value = "";
+      }
+      if (!r.ok) { aviso(r.erro || "Não enviou.", true); if (r.precisa_template) abrirConversa(); return; }
+      ultimaAssinatura = ""; await atualizarConversa(true);
+      carregarLista().catch(function () {});
+      if ($("cvTexto")) $("cvTexto").focus();
+    } catch (e) { aviso(e.message || String(e), true); }
+    finally { enviando = false; const x = $("cvEnviar"); if (x) { x.disabled = false; x.textContent = "Enviar"; } }
+  }
+  function inserirNoCursor(el, txt) {
+    if (!el) return;
+    const i = el.selectionStart == null ? el.value.length : el.selectionStart, f = el.selectionEnd == null ? i : el.selectionEnd;
+    el.value = (el.value.slice(0, i) + txt + el.value.slice(f)).slice(0, 4000);
+    const p = Math.min(el.value.length, i + txt.length);
+    el.focus(); el.setSelectionRange(p, p);
+  }
+  function fecharPops() { ["cvEmojis", "cvRapidas"].forEach(function (id) { const e = $(id); if (e) e.hidden = true; }); rap.aberta = false; }
+
+  /* emojis */
+  const EMOJIS = [
+    ["Rostos", "😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😇 🥰 😍 🤩 😘 😋 😜 🤗 🤔 😌 😔 😴 😎 🥳 😢 😭 😤 😡 😱 😳 🥺 🙄 😬 🤯 😷 🤒"],
+    ["Gestos", "👍 👎 👏 🙌 🙏 🤝 💪 👌 ✌️ 🤞 👋 🤙 ☝️ 👇 👉 👈 👆 ✍️ 🤲 👀 🙋 🤷 🤦"],
+    ["Corações e festa", "❤️ 🧡 💛 💚 💙 💜 🤍 🖤 💖 💗 💓 💕 💞 💔 💌 ✨ ⭐ 🌟 💫 🔥 🎉 🎊 🎁 🏆 🥇 🌹 🌻 🍀 🌈 ☀️ 🌙"],
+    ["Trabalho", "✅ ☑️ ✔️ ❌ ⚠️ ❗ ❓ 📌 📍 📅 🗓️ ⏰ ⌛ 📞 📱 💬 📧 📝 📎 🔗 🔒 🔑 💰 💳 💵 📈 📉 📊 🎯 🚀 💡 🧾 📄 📚 🎓 🎥 🎧 🖥️ ➡️ ⬅️ 🔝 🆗 🆕"]
+  ];
+  function emojisRecentes() {
+    try { return JSON.parse(localStorage.getItem("wa_emojis") || "[]").filter(function (x) { return typeof x === "string" && x.length <= 12 && !/[<>"'&\s]/.test(x); }).slice(0, 16); } catch (e) { return []; }
+  }
+  function guardarEmoji(e) {
+    try { const l = emojisRecentes().filter(function (x) { return x !== e; }); l.unshift(e); localStorage.setItem("wa_emojis", JSON.stringify(l.slice(0, 16))); } catch (x) {}
+  }
+  function alternarEmojis() {
+    const p = $("cvEmojis"); if (!p) return;
+    const abrir = p.hidden; fecharPops();
+    if (!abrir) return;
+    const bloco = function (titulo, lista) { return '<p class="wa-sec">' + titulo + '</p><div class="wa-emo-grade">' + lista.map(function (e) { return '<button type="button" data-emoji="' + e + '">' + e + "</button>"; }).join("") + "</div>"; };
+    const rec = emojisRecentes();
+    p.innerHTML = (rec.length ? bloco("Usados por último", rec) : "") + EMOJIS.map(function (g) { return bloco(g[0], g[1].split(" ")); }).join("");
+    p.hidden = false;
+  }
+
+  /* respostas prontas: digitar / na caixa de mensagem */
+  async function carregarRespostas(forcar) {
+    if (respostas && !forcar) return respostas;
+    try { respostas = await ler(supa().from("wa_respostas_prontas").select("*").order("atalho")); } catch (e) { respostas = respostas || []; console.error(e); }
+    return respostas;
+  }
+  function preencherResposta(t) {
+    const nome = String((conversaCont && conversaCont.nome) || "").trim(), p = nome.split(/\s+/)[0] || "";
+    const prim = p ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : "";
+    return String(t || "").replace(/\{primeiro_nome\}/gi, prim || "tudo bem").replace(/\{nome\}/gi, nome || prim || "tudo bem");
+  }
+  function conferirBarra() {
+    const tx = $("cvTexto"); if (!tx) return;
+    const antes = tx.value.slice(0, tx.selectionStart == null ? tx.value.length : tx.selectionStart);
+    const m = antes.match(/(^|\s)\/([^\s\/]{0,30})$/);
+    if (!m) { if (rap.aberta) { rap.aberta = false; $("cvRapidas").hidden = true; } return; }
+    rap.ini = antes.length - m[2].length - 1;
+    abrirRapidas(m[2]);
+  }
+  async function abrirRapidas(q) {
+    const lista = await carregarRespostas(), cx = $("cvRapidas"); if (!cx) return;
+    const alvo = semAcento(q);
+    rap.itens = lista.filter(function (r) { return !alvo || r.atalho.indexOf(alvo) === 0; })
+      .concat(lista.filter(function (r) { return alvo && r.atalho.indexOf(alvo) !== 0 && (r.atalho.indexOf(alvo) > 0 || semAcento(r.texto).indexOf(alvo) > -1); })).slice(0, 8);
+    rap.sel = 0; rap.aberta = true;
+    $("cvEmojis").hidden = true;
+    desenharRapidas(); cx.hidden = false;
+  }
+  function desenharRapidas() {
+    $("cvRapidas").innerHTML = (rap.itens.length ? rap.itens.map(function (r, i) {
+      return '<button type="button" role="option" class="wa-rap' + (i === rap.sel ? " sel" : "") + '" aria-selected="' + (i === rap.sel) + '" data-rap="' + i + '"><b>/' + esc(r.atalho) + "</b><span>" + esc(preencherResposta(r.texto)) + "</span></button>";
+    }).join("") : '<p class="vazio" style="padding:8px 10px">Nenhuma resposta pronta com esse atalho.</p>') +
+      '<button type="button" class="wa-rap wa-rap-ger" id="cvRapGer">Criar ou editar respostas prontas</button>';
+  }
+  function usarRapida(i) {
+    const r = rap.itens[i], tx = $("cvTexto"); if (!r || !tx) return;
+    const texto = preencherResposta(r.texto);
+    if (rap.ini >= 0 && tx.value.charAt(rap.ini) === "/") {
+      const fim = tx.selectionStart == null ? tx.value.length : Math.max(tx.selectionStart, rap.ini + 1);
+      tx.value = (tx.value.slice(0, rap.ini) + texto + tx.value.slice(fim)).slice(0, 4000);
+      const p = Math.min(tx.value.length, rap.ini + texto.length); tx.focus(); tx.setSelectionRange(p, p);
+    } else inserirNoCursor(tx, texto);
+    rap.aberta = false; rap.ini = -1; $("cvRapidas").hidden = true;
+  }
+  function teclaCompor(e) {
+    if (rap.aberta && !$("cvRapidas").hidden) {
+      if ((e.key === "ArrowDown" || e.key === "ArrowUp") && rap.itens.length) { e.preventDefault(); rap.sel = (rap.sel + (e.key === "ArrowDown" ? 1 : rap.itens.length - 1)) % rap.itens.length; desenharRapidas(); return; }
+      if ((e.key === "Enter" || e.key === "Tab") && rap.itens.length && !e.ctrlKey && !e.metaKey) { e.preventDefault(); usarRapida(rap.sel); return; }
+    }
+    if (e.key === "Escape") { fecharPops(); return; }
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); enviar(); }
+  }
+  let respEditando = null;
+  function limparResposta() { respEditando = null; $("rpAtalho").value = ""; $("rpTexto").value = ""; }
+  function desenharRespostas() {
+    $("rpLista").innerHTML = (respostas || []).length ? '<div class="tabela-wrap" style="max-height:230px"><table class="t"><tbody>' + respostas.map(function (r) {
+      return "<tr><td><b>/" + esc(r.atalho) + '</b></td><td class="quebra">' + esc(r.texto.slice(0, 110)) + (r.texto.length > 110 ? "…" : "") + '</td><td><button type="button" class="btn peq contorno" data-rp-editar="' + r.id + '">Editar</button> <button type="button" class="btn peq perigo" data-rp-apagar="' + r.id + '">Apagar</button></td></tr>';
+    }).join("") + "</tbody></table></div>" : '<p class="vazio">Nenhuma resposta pronta ainda. Crie a primeira abaixo.</p>';
+    $("rpTitulo").textContent = respEditando ? "Editar /" + respEditando.atalho : "Nova resposta";
+  }
+  async function abrirRespostas() { await carregarRespostas(true); limparResposta(); desenharRespostas(); $("jRespostas").showModal(); }
+  $("rpLista").addEventListener("click", async function (ev) {
+    const ed = ev.target.closest("[data-rp-editar]"), ap = ev.target.closest("[data-rp-apagar]");
+    if (ed) {
+      respEditando = respostas.filter(function (r) { return r.id === ed.dataset.rpEditar; })[0] || null;
+      if (respEditando) { $("rpAtalho").value = respEditando.atalho; $("rpTexto").value = respEditando.texto; desenharRespostas(); $("rpTexto").focus(); }
+    } else if (ap) {
+      if (!confirm("Apagar esta resposta pronta?")) return;
+      try {
+        await ler(supa().from("wa_respostas_prontas").delete().eq("id", ap.dataset.rpApagar).select("id"));
+        if (respEditando && respEditando.id === ap.dataset.rpApagar) limparResposta();
+        await carregarRespostas(true); desenharRespostas();
+      } catch (e) { falha(e); }
+    }
+  });
+  $("rpNova").addEventListener("click", function () { limparResposta(); desenharRespostas(); $("rpAtalho").focus(); });
+  $("rpAtalho").addEventListener("input", function () {
+    const v = semAcento(this.value).replace(/^\/+/, "").replace(/\s+/g, "-").replace(/[^a-z0-9_-]/g, "").slice(0, 30);
+    if (v !== this.value) this.value = v;
+  });
+  $("rpSalvar").addEventListener("click", async function () {
+    const atalho = $("rpAtalho").value.trim(), texto = $("rpTexto").value.trim();
+    if (!/^[a-z0-9_-]{1,30}$/.test(atalho)) return aviso("Dê um atalho curto, sem espaço. Ex.: pix", true);
+    if (!texto) return aviso("Escreva o texto da resposta.", true);
+    try {
+      const dados = { atalho: atalho, texto: texto, atualizado_em: new Date().toISOString() };
+      if (respEditando) await ler(supa().from("wa_respostas_prontas").update(dados).eq("id", respEditando.id).select("id"));
+      else await ler(supa().from("wa_respostas_prontas").insert(dados).select("id"));
+      limparResposta(); await carregarRespostas(true); desenharRespostas(); aviso("Resposta pronta salva.");
+    } catch (e) {
+      if ((e && e.code === "23505") || String(e && e.message).indexOf("duplicate") > -1) aviso("Já existe uma resposta com o atalho /" + atalho + ".", true); else falha(e);
+    }
+  });
+
+  /* ----- ficha do contato (à direita) ----- */
+  function mostrarFicha() {
+    const f = $("cvFicha"), ver = fichaAberta && !!conversaId && !!conversaCont;
+    f.hidden = !ver; $("cvGrade").classList.toggle("com-ficha", ver);
+    const b = $("cvFichaBtn"); if (b) b.setAttribute("aria-expanded", ver ? "true" : "false");
+    if (ver) { desenharFicha(); carregarFicha().catch(function (e) { console.error(e); }); }
+  }
+  async function carregarFicha() {
+    if (!fichaAberta || !conversaId) return;
+    const id = conversaId;
+    const d = await ler(supa().rpc("wa_contato_ficha", { p_id: id }));
+    if (id !== conversaId || !d) return;
+    fichaDados = d; desenharFichaDados();
+  }
+  function desenharFicha() {
+    const c = conversaCont, f = $("cvFicha");
+    const ini = nomeDe(c).replace(/[^A-Za-zÀ-ÿ ]/g, "").trim().split(/\s+/).slice(0, 2).map(function (p) { return p.charAt(0).toUpperCase(); }).join("") || "?";
+    const opc = function (lista, v) { return lista.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === v ? " selected" : "") + ">" + o[1] + "</option>"; }).join(""); };
+    f.innerHTML = '<div class="wa-fc-topo"><span class="wa-avatar">' + esc(ini) + '</span><div class="wa-fc-quem"><b>' + esc(nomeDe(c)) + "</b><span>" + esc(foneDe(c)) + "</span>" + (c.username && c.telefone ? "<span>@" + esc(c.username) + "</span>" : "") +
+      '</div><button type="button" class="wa-x" id="fcFechar" aria-label="Fechar a ficha">×</button></div>' +
+      '<div class="f wa-fc-form">' +
+      '<div><label for="fcNome">Nome</label><input id="fcNome" maxlength="80" value="' + esc(c.nome || "") + '"></div>' +
+      '<div class="wa-fc-2"><div><label for="fcEtapa">Etapa</label><select id="fcEtapa">' + opc(ETAPAS, c.etapa) + '</select></div><div><label for="fcPrio">Prioridade</label><select id="fcPrio">' + opc(PRIORIDADES, c.prioridade) + "</select></div></div>" +
+      '<div><label for="fcEt">Etiquetas <span class="vazio">(separe por vírgula)</span></label><input id="fcEt" value="' + esc((c.etiquetas || []).join(", ")) + '"></div>' +
+      '<div><label for="fcNotas">Anotações</label><textarea id="fcNotas" rows="3" maxlength="2000">' + esc(c.notas || "") + "</textarea></div></div>" +
+      '<div id="fcDados"><p class="vazio">Carregando a ficha...</p></div>' +
+      '<div class="acoes wa-fc-acoes"><button type="button" class="btn peq contorno" id="fcNaoLida">Marcar como não lida</button><button type="button" class="btn peq contorno" id="fcTemplate">Enviar template</button><button type="button" class="btn peq contorno" id="fcEditar">Editar contato</button></div>';
+    if (fichaDados && fichaDados.id === c.id) desenharFichaDados();
+  }
+  function desenharFichaDados() {
+    const cx = $("fcDados"), c = conversaCont, d = fichaDados; if (!cx || !c || !d || d.id !== c.id) return;
+    const campo = $("fcNota"), nota = campo ? campo.value : "", focado = !!campo && document.activeElement === campo;
+    const pq = cx.querySelector(".wa-porque"), pqAberto = !!(pq && pq.open), tudo = cx.dataset.tudo === c.id;
+    const info = c.origem_info || {};
+    let origem = ROT_ORIGEM[c.origem] || (c.origem ? "Outra: " + c.origem : "Não informada");
+    if (c.origem === "anuncio" && info.titulo) origem += ': "' + info.titulo + '"';
+    const pt = d.pontos || { total: c.pontuacao || 0, itens: [] }, rs = d.resumo || {}, hist = d.historico || [];
+    cx.innerHTML =
+      '<div class="wa-fc-bloco"><span class="rotulo">Origem</span><p>' + esc(origem) + '</p><p class="vazio">No CRM desde ' + esc(dataBR(c.criado_em)) + (d.aluno ? " · tem cadastro na Área de Membros" : "") + "</p></div>" +
+      '<div class="wa-fc-bloco"><span class="rotulo">Pontuação</span><div class="wa-pont"><b>' + pt.total + '</b><div class="wa-barra"><i style="width:' + pt.total + '%"></i></div>' +
+      '<button type="button" class="btn peq contorno" data-ajuste="-5" aria-label="Tirar 5 pontos">−5</button><button type="button" class="btn peq contorno" data-ajuste="5" aria-label="Dar 5 pontos">+5</button></div>' +
+      '<details class="wa-porque"><summary>Como chegou a ' + pt.total + " pontos</summary><ul>" + ((pt.itens || []).length ? pt.itens.map(function (i) { return "<li><span>" + esc(i.rotulo) + "</span><b>" + (i.pontos > 0 ? "+" : "") + i.pontos + "</b></li>"; }).join("") : "<li><span>Ainda sem pontos: a pessoa não interagiu.</span></li>") + "</ul></details></div>" +
+      '<div class="wa-fc-bloco"><span class="rotulo">Mensagens</span><p>' + (rs.recebidas || 0) + (rs.recebidas === 1 ? " recebida · " : " recebidas · ") + (rs.enviadas || 0) + (rs.enviadas === 1 ? " enviada" : " enviadas") + (rs.primeira ? "<br>Primeira em " + esc(quando(rs.primeira)) + " · última em " + esc(quando(rs.ultima)) : "") + "</p></div>" +
+      '<div class="wa-fc-bloco"><span class="rotulo">Histórico</span><div class="wa-copia"><input id="fcNota" maxlength="500" placeholder="Anotar: liguei, pediu retorno sexta..." aria-label="Anotar no histórico"><button type="button" class="btn peq" id="fcNotaAdd">Anotar</button></div>' +
+      (hist.length ? '<ul class="linha-tempo wa-hist">' + (tudo ? hist : hist.slice(0, 8)).map(function (h) { return "<li>" + esc(h.descricao) + "<small>" + esc(quando(h.quando)) + (h.autor ? " · " + esc(h.autor) : "") + "</small></li>"; }).join("") + "</ul>" +
+        (hist.length > 8 && !tudo ? '<button type="button" class="btn peq contorno" id="fcHistTudo">Ver os ' + hist.length + " registros</button>" : "") : '<p class="vazio">Nada registrado ainda.</p>') + "</div>";
+    if (nota) $("fcNota").value = nota;
+    if (focado) $("fcNota").focus();
+    if (pqAberto) cx.querySelector(".wa-porque").open = true;
+  }
+  /* se o robô ou outra aba mudou a etapa, o nome ou as etiquetas, a ficha acompanha (sem mexer no campo que você está editando) */
+  function sincronizarFicha() {
+    const c = conversaCont; if (!c || $("cvFicha").hidden) return;
+    const v = { fcNome: c.nome || "", fcEtapa: c.etapa, fcPrio: c.prioridade, fcEt: (c.etiquetas || []).join(", "), fcNotas: c.notas || "" };
+    Object.keys(v).forEach(function (id) { const el = $(id); if (el && document.activeElement !== el && el.value !== v[id]) el.value = v[id]; });
+  }
+  async function anotar() {
+    const i = $("fcNota"), t = i ? i.value.trim() : ""; if (!t || !conversaId) return;
+    try {
+      await ler(supa().from("wa_contato_eventos").insert({ contato_id: conversaId, tipo: "nota", descricao: t.slice(0, 500), autor: perfil.id }).select("id"));
+      i.value = ""; aviso("Anotado no histórico."); await carregarFicha();
+    } catch (e) { falha(e); }
+  }
+  async function marcarNaoLida() {
+    try {
+      await ler(supa().from("wa_contatos").update({ nao_lidas: Math.max(1, conversaCont.nao_lidas || 0) }).eq("id", conversaId).select("id"));
+      fecharConversa(); aviso("Marcada como não lida."); carregarLista().catch(function () {});
+    } catch (e) { falha(e); }
+  }
+  $("cvFicha").addEventListener("change", function (ev) {
+    const id = ev.target.id, v = ev.target.value;
+    if (id === "fcNome") salvarContato({ nome: v.trim() || null }, "Nome salvo.");
+    else if (id === "fcEtapa") salvarContato({ etapa: v }, "Etapa salva.");
+    else if (id === "fcPrio") salvarContato({ prioridade: v }, "Prioridade salva.");
+    else if (id === "fcEt") salvarContato({ etiquetas: listaEt(v) }, "Etiquetas salvas.");
+    else if (id === "fcNotas") salvarContato({ notas: v.trim() || null }, "Anotações salvas.");
+  });
+  $("cvFicha").addEventListener("keydown", function (ev) {
+    if (ev.key !== "Enter") return;
+    if (ev.target.id === "fcNota") { ev.preventDefault(); anotar(); }
+    else if (ev.target.id === "fcNome" || ev.target.id === "fcEt") ev.target.blur();
+  });
+  $("cvFicha").addEventListener("click", function (ev) {
+    const t = ev.target, aj = t.closest("[data-ajuste]");
+    if (t.closest("#fcFechar")) { fichaAberta = false; mostrarFicha(); return; }
+    if (aj) {
+      const atual = conversaCont.pontuacao_ajuste || 0, v = Math.max(-50, Math.min(50, atual + Number(aj.dataset.ajuste)));
+      if (v === atual) return aviso("O ajuste manual vai de -50 a +50.", true);
+      return salvarContato({ pontuacao_ajuste: v });
+    }
+    if (t.closest("#fcHistTudo")) { $("fcDados").dataset.tudo = conversaCont.id; desenharFichaDados(); return; }
+    if (t.closest("#fcNotaAdd")) return anotar();
+    if (t.closest("#fcNaoLida")) return marcarNaoLida();
+    if (t.closest("#fcTemplate")) return abrirEnvioTemplate(conversaCont);
+    if (t.closest("#fcEditar")) return abrirContato(conversaCont);
+  });
+
+  /* cliques dentro da conversa (o topo é redesenhado a cada atualização, por isso ficam aqui) */
+  $("cvThread").addEventListener("click", async function (ev) {
+    const t = ev.target, p = t.closest("[data-pausa]"), em = t.closest("[data-emoji]"), rp = t.closest("[data-rap]"), bx = t.closest("[data-baixar]");
+    if (p) return pausar(Number(p.dataset.pausa));
+    if (t.closest("#cvRoboVoltar")) return salvarContato({ robo_pausado_ate: null, precisa_humano: false }, "O robô voltou a responder nesta conversa.");
+    if (t.closest("#cvAtendido")) return salvarContato({ precisa_humano: false }, "Marcado como atendido.");
+    if (t.closest("#cvFichaBtn")) { fichaAberta = !fichaAberta; mostrarFicha(); return; }
+    if (t.closest("#cvTemplate")) return abrirEnvioTemplate(conversaCont);
+    if (em) { inserirNoCursor($("cvTexto"), em.dataset.emoji); guardarEmoji(em.dataset.emoji); return; }
+    if (rp) return usarRapida(Number(rp.dataset.rap));
+    if (t.closest("#cvRapGer")) { fecharPops(); return abrirRespostas(); }
+    if (bx) {
+      bx.disabled = true; bx.textContent = "Baixando...";
+      const r = await wa({ acao: "baixar_midia", mensagem_id: bx.dataset.baixar });
+      if (!r.ok) aviso(r.erro || "Não baixou.", true);
+      ultimaAssinatura = ""; atualizarConversa().catch(function () {});
+    }
+  });
+  document.addEventListener("click", function (ev) {
+    if (!ev.target.closest("#cvCompor")) fecharPops();
+    const m = $("cvPausaMenu"); if (m && m.open && !ev.target.closest("#cvPausaMenu")) m.open = false;
+  });
 
   /* ---------- enviar template (conversa individual) ---------- */
   let lerVarsJt = function () { return { vars: [], midia: "" }; };
@@ -792,7 +1352,7 @@
     await carregarTemplates();
     const ok = templates.filter(function (t) { return t.status === "APPROVED"; });
     if (!ok.length) return aviso("Ainda não há template aprovado. Crie um na aba Templates e espere a aprovação do Meta.", true);
-    $("jtPara").textContent = "Para: " + (c.nome || "") + " " + foneBR(c.telefone);
+    $("jtPara").textContent = "Para: " + nomeDe(c) + (c.telefone && (c.nome || c.username) ? " · " + foneDe(c) : "");
     $("jtSel").innerHTML = ok.map(function (t) { return '<option value="' + esc(t.nome) + '|' + esc(t.idioma) + '">' + esc(t.nome) + " (" + esc(ROT_CAT[t.categoria] || "") + ")</option>"; }).join("");
     $("jtRes").textContent = "";
     function trocar() {

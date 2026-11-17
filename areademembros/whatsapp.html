@@ -10,13 +10,35 @@
 <link rel="stylesheet" href="css/estilo.css">
 <style>
 .wa-conv{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px;align-items:start}
+.wa-conv.com-ficha{grid-template-columns:290px minmax(0,1fr) 310px}
 .wa-lista{max-height:68vh;overflow-y:auto}
-.wa-item{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;position:relative}
+.wa-item{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;color:var(--ink)}
 .wa-item.ativa{border-color:var(--navy);box-shadow:0 0 0 2px rgba(11,31,58,.12)}
-.wa-item b{display:block;font-size:15px;padding-right:42px}
-.wa-item small{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
-.wa-item .selo{position:absolute;right:10px;top:10px}
-.wa-msg{max-width:min(84%,540px);align-self:flex-start;background:#fff;border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:8px 12px}
+.wa-item .l1{display:flex;gap:8px;align-items:baseline;justify-content:space-between}
+.wa-item .l1 b{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wa-item .l1 time{flex:none;font-size:12px;color:var(--muted)}
+.wa-item .l2{display:flex;gap:6px;align-items:center;margin-top:2px;min-height:22px}
+.wa-item .l2 small{flex:1;min-width:0;color:var(--muted);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wa-item .l2 .selo{flex:none;margin:0}
+.wa-item mark{background:#F6E8BF;color:inherit;border-radius:3px;padding:0 1px}
+.wa-tag{font-size:10.5px;padding:2px 7px;background:#E3E8F2;color:#1E3A66}
+#cvBusca{font-size:15px}
+.wa-pri{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--alerta)}
+.wa-pri.urgente{background:var(--erro)}
+.wa-sec{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--goldtxt);margin:10px 2px 6px}
+.wa-filtros{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.wa-chip{font:600 13px var(--sans);padding:6px 11px;border-radius:999px;border:1px solid #CFC6B3;background:#fff;color:var(--navy);cursor:pointer}
+.wa-chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.wa-chip b:not(:empty){margin-left:4px;background:var(--gold);color:var(--deep);border-radius:999px;padding:0 6px;font-size:12px}
+.wa-topo{padding:10px 14px;border-bottom:1px solid var(--line);display:grid;gap:8px}
+.wa-topo-l{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.wa-topo .selo{margin:0}
+.wa-direita{margin-left:auto}
+.wa-menu{position:relative}
+.wa-menu-lista{position:absolute;z-index:20;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(6,20,42,.18);padding:6px;display:grid;min-width:150px}
+.wa-menu-lista button{background:none;border:0;text-align:left;padding:9px 10px;border-radius:8px;font:600 14px var(--sans);color:var(--navy);cursor:pointer}
+.wa-menu-lista button:hover{background:#F4EFE5}
+.wa-msg{position:relative;max-width:min(84%,540px);align-self:flex-start;background:#fff;border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:8px 12px}
 .wa-msg.saida{align-self:flex-end;background:#F6E8BF;border-color:#E4CD8A;border-radius:14px 14px 4px 14px}
 .wa-msg.robo{background:#E3E8F2;border-color:#C4CEE2}
 .wa-msg .meta{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--muted);margin-top:3px}
@@ -28,6 +50,66 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 .ls-resumo .selo{font-size:13px}
 #lsPrev .tabela-wrap{max-height:300px;margin-top:8px}
 #lsPrev details{margin-top:10px}#lsPrev summary{cursor:pointer;font-weight:700}
+.wa-msg .texto a{color:inherit;text-decoration:underline}
+.wa-midia{margin-bottom:4px}
+.wa-reacao{position:absolute;bottom:-11px;right:10px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:0 6px;font-size:14px;line-height:22px}
+.wa-msg.wa-achou{box-shadow:0 0 0 3px var(--gold)}
+.wa-dia{align-self:center;margin:6px 0}
+.wa-dia span{font-size:12px;font-weight:700;color:var(--muted);background:#EFE7D6;border-radius:999px;padding:3px 10px}
+.wa-aviso{align-self:center;max-width:90%;text-align:center;font-size:13px;color:#1E3A66;background:#EEF3FB;border:1px solid #CBD8EE;border-radius:10px;padding:6px 10px}
+.wa-compor{position:relative;border-top:1px solid var(--line);background:var(--paper)}
+.wa-compor .chat-form{border-top:0;padding-top:4px}
+.wa-ferr{display:flex;gap:4px;align-items:center;padding:8px 10px 0}
+.wa-ferr>button{flex:none;width:38px;height:38px;border-radius:10px;border:1px solid transparent;background:none;font-size:19px;line-height:1;cursor:pointer;color:var(--navy);font-weight:700}
+.wa-ferr>button:hover{background:#F4EFE5;border-color:var(--line)}
+.wa-dica{margin-left:8px;font-size:12.5px;padding:0}
+.wa-pop{position:absolute;left:8px;right:8px;bottom:100%;z-index:15;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 -10px 30px rgba(6,20,42,.16);max-height:270px;overflow-y:auto;padding:6px}
+.wa-rap{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;width:100%;text-align:left;background:none;border:0;border-radius:9px;padding:8px 10px;cursor:pointer;font:inherit;color:var(--ink)}
+.wa-rap b{color:var(--goldtxt);white-space:nowrap}
+.wa-rap span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:14px}
+.wa-rap.sel,.wa-rap:hover{background:#F4EFE5}
+.wa-rap-ger{display:block;border-top:1px solid var(--line);border-radius:0 0 9px 9px;margin-top:4px;font-weight:600;font-size:13.5px;color:var(--navy)}
+.wa-emojis{padding:4px 10px 10px}
+.wa-emo-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:2px}
+.wa-emo-grade button{height:36px;border:0;background:none;border-radius:8px;font-size:21px;line-height:1;cursor:pointer;padding:0}
+.wa-emo-grade button:hover{background:#F4EFE5}
+.wa-anexo{display:flex;gap:10px;align-items:center;margin:8px 10px 0;padding:8px;border:1px dashed #CDBF9E;border-radius:12px;background:#FBF7EE}
+.wa-anexo img{width:56px;height:56px;object-fit:cover;border-radius:8px}
+.wa-arq{font-size:30px;width:56px;text-align:center}
+.wa-anexo-txt{flex:1;min-width:0}
+.wa-anexo-txt b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14.5px}
+.wa-anexo-txt small{color:var(--muted);font-size:12.5px}
+.wa-x{flex:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:20px;line-height:1;cursor:pointer;color:var(--muted);padding:0}
+.wa-solta{outline:3px dashed var(--gold);outline-offset:-3px}
+.wa-ficha{padding:16px;margin:0;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start;max-height:calc(100vh - 96px);overflow-y:auto;position:sticky;top:78px}
+.wa-fc-topo{display:flex;gap:10px;align-items:center}
+.wa-avatar{flex:none;width:46px;height:46px;border-radius:50%;background:var(--navy);color:var(--gold2);display:flex;align-items:center;justify-content:center;font:600 17px var(--serif)}
+.wa-fc-quem{flex:1;min-width:0}
+.wa-fc-quem b{display:block;font:600 18px/1.2 var(--serif);color:var(--navy);overflow-wrap:anywhere}
+.wa-fc-quem span{display:block;font-size:13.5px;color:var(--muted)}
+.wa-ficha #fcFechar{display:none}
+.wa-fc-form{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.wa-fc-form label{margin-bottom:4px}
+.wa-fc-form input,.wa-fc-form select,.wa-fc-form textarea{padding:9px 10px;font-size:15px}
+.wa-fc-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+#fcDados{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.wa-fc-bloco{border-top:1px solid var(--line);padding-top:12px}
+.wa-fc-bloco .rotulo{margin-top:0}
+.wa-fc-bloco p{font-size:14.5px;margin-top:2px;padding:0}
+.wa-pont{display:flex;gap:8px;align-items:center;margin-top:4px}
+.wa-pont>b{font:600 26px/1 var(--serif);color:var(--navy);min-width:36px}
+.wa-pont .wa-barra{flex:1;min-width:30px}
+.wa-pont .btn{flex:none}
+.wa-porque{margin-top:8px}
+.wa-porque>summary{font-size:13.5px;font-weight:600;color:var(--goldtxt)}
+.wa-porque ul{list-style:none;margin-top:6px;display:grid;gap:4px}
+.wa-porque li{display:flex;justify-content:space-between;gap:8px;font-size:13.5px}
+.wa-fc-bloco .wa-copia{margin-top:6px}
+.wa-fc-bloco .wa-copia input{flex:1;min-width:0;padding:9px 10px;border-radius:10px;border:1.5px solid #CFC6B3;background:#fff;font:400 14.5px var(--sans);color:var(--ink)}
+.wa-hist{margin-top:12px}
+.wa-hist li{font-size:13.5px}
+.wa-fc-bloco #fcHistTudo{margin-top:10px}
+.wa-fc-acoes{margin-top:0;border-top:1px solid var(--line);padding-top:12px}
 .wa-prev{background:#E7F4E4;border:1px solid #BFE0BA;border-radius:12px;padding:12px;white-space:pre-wrap;font-size:15px;max-width:420px}
 .wa-passos{counter-reset:p;list-style:none;display:grid;gap:10px}
 .wa-passos li{counter-increment:p;position:relative;padding-left:38px}
@@ -38,7 +120,12 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 .wa-barra{height:10px;background:#EFE7D6;border-radius:999px;overflow:hidden;min-width:140px}
 .wa-barra i{display:block;height:100%;background:var(--gold)}
 .wa-linha-var{display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;margin-bottom:8px}
-@media (max-width:760px){.wa-conv{grid-template-columns:minmax(0,1fr)}.wa-lista{max-height:36vh}.wa-msg{max-width:92%}}
+@media (max-width:1180px){
+.wa-conv.com-ficha{grid-template-columns:300px minmax(0,1fr)}
+.wa-ficha{position:fixed;top:0;right:0;bottom:0;width:min(360px,100%);max-height:none;z-index:40;border-radius:0;border:0;box-shadow:-12px 0 40px rgba(6,20,42,.35)}
+.wa-ficha #fcFechar{display:block}
+}
+@media (max-width:760px){.wa-conv,.wa-conv.com-ficha{grid-template-columns:minmax(0,1fr)}.wa-lista{max-height:36vh}.wa-msg{max-width:92%}.wa-dica{display:none}}
 </style>
 </head>
 <body>
@@ -69,13 +156,19 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 
     <!-- ===== CONVERSAS ===== -->
     <section data-painel="conversas">
-      <div class="wa-conv">
+      <div class="wa-conv" id="cvGrade">
         <aside class="cartao">
-          <div class="f"><input id="cvBusca" type="search" placeholder="Buscar nome ou número" aria-label="Buscar conversa"></div>
-          <div class="checks" style="margin:10px 0"><label><input type="checkbox" id="cvSoHumano"> Só quem pediu atendimento</label></div>
+          <div class="f"><input id="cvBusca" type="search" placeholder="Buscar pessoa ou mensagem" aria-label="Buscar conversa ou mensagem"></div>
+          <div class="wa-filtros" id="cvFiltros" role="group" aria-label="Filtrar conversas">
+            <button type="button" class="wa-chip" data-filtro="todas" aria-pressed="true">Todas</button>
+            <button type="button" class="wa-chip" data-filtro="nao_lidas" aria-pressed="false">Não lidas<b id="cvNNaoLidas"></b></button>
+            <button type="button" class="wa-chip" data-filtro="lidas" aria-pressed="false">Lidas</button>
+            <button type="button" class="wa-chip" data-filtro="pediu" aria-pressed="false">Pediu atendimento<b id="cvNPediu"></b></button>
+          </div>
           <div class="wa-lista" id="cvLista"><p class="vazio">Carregando...</p></div>
         </aside>
         <div id="cvThread"><div class="cartao"><p class="vazio">Escolha uma conversa ao lado.</p></div></div>
+        <aside class="cartao wa-ficha" id="cvFicha" aria-label="Ficha do contato" hidden></aside>
       </div>
     </section>
 
@@ -186,7 +279,7 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
     <section data-painel="robo" hidden>
       <div class="cartao">
         <h2>Robô de respostas</h2>
-        <p class="ajuda">Responde sozinho dentro das 24 h em que a pessoa escreveu. "Sair" e "Entrar" funcionam sempre, mesmo com o robô desligado. Quando você responde uma conversa, o robô fica 2 h quieto com aquela pessoa.</p>
+        <p class="ajuda">Responde sozinho dentro das 24 h em que a pessoa escreveu. "Sair" e "Entrar" funcionam sempre, mesmo com o robô desligado. Quando você responde uma conversa, o robô fica 2 h quieto com aquela pessoa. Dentro da conversa, o botão "Pausar robô" deixa ele quieto por mais tempo ou sem prazo.</p>
         <div class="f">
           <div class="checks"><label><input type="checkbox" id="rbAtivo"> <b>Robô ligado</b></label></div>
           <div style="margin-top:12px"><label for="rbPadrao">Resposta quando nenhuma regra serve <span class="vazio">(vazio = não responde)</span></label><textarea id="rbPadrao" rows="6" maxlength="1604" placeholder="Oi, {primeiro_nome}! Recebi sua mensagem e o Mauricio responde por aqui assim que puder."></textarea>
@@ -363,6 +456,18 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
     <div class="checks" style="margin-top:12px"><label><input type="checkbox" id="jfAtivo" checked> Fluxo ativo</label></div>
   </div>
   <div class="acoes"><button class="btn auto" type="button" id="jfSalvar">Salvar</button><button class="btn auto perigo" type="button" id="jfApagar">Apagar</button><button class="btn auto contorno" type="button" id="jfFechar">Fechar</button></div>
+</dialog>
+
+<dialog class="janela janela-larga" id="jRespostas">
+  <h2>Respostas prontas</h2>
+  <p class="ajuda">Na conversa, digite <b>/</b> e o atalho para colar a resposta. Escreva {primeiro_nome} onde deve entrar o nome da pessoa.</p>
+  <div id="rpLista"></div>
+  <h3 id="rpTitulo" style="margin-top:16px">Nova resposta</h3>
+  <div class="f" style="margin-top:8px">
+    <div><label for="rpAtalho">Atalho <span class="vazio">(curto, sem espaço. Ex.: pix)</span></label><input id="rpAtalho" maxlength="30" placeholder="pix" autocomplete="off"></div>
+    <div style="margin-top:12px"><label for="rpTexto">Texto da resposta</label><textarea id="rpTexto" rows="4" maxlength="4000" placeholder="Oi, {primeiro_nome}! ..."></textarea></div>
+  </div>
+  <div class="acoes"><button class="btn auto" type="button" id="rpSalvar">Salvar</button><button class="btn auto contorno" type="button" id="rpNova">Limpar</button><button class="btn auto contorno" type="button" data-fechar="jRespostas">Fechar</button></div>
 </dialog>
 
 <dialog class="janela" id="jTemplate">
