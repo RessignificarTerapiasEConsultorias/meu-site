@@ -1019,7 +1019,7 @@
   }
   function desenharPasso(p) {
     const d = document.createElement("div"); d.className = "cartao"; d.style.margin = "8px 0"; d.dataset.passo = "1";
-    d.innerHTML = '<div class="grade g2"><div><label>Esperar quantas horas depois do anterior</label><input type="number" min="0" max="720" step="0.5" class="fpHoras"></div><div><label>Template (opcional, usado se passou de 24 h)</label><select class="fpTpl"></select></div></div><label style="margin-top:8px">Texto</label><textarea rows="2" maxlength="900" class="fpTexto"></textarea><div class="checks"><label><input type="checkbox" class="fpLink"> Incluir o link</label></div><button class="btn peq perigo fpDel" type="button">Remover</button>';
+    d.innerHTML = '<div class="grade g2"><div><label>Esperar quantas horas depois do anterior</label><input type="number" min="0" max="720" step="0.5" class="fpHoras"></div><div><label>Template (opcional, usado se passou de 24 h)</label><select class="fpTpl"></select></div></div><label style="margin-top:8px">Texto</label><textarea rows="4" maxlength="1604" class="fpTexto"></textarea><div class="checks"><label><input type="checkbox" class="fpLink"> Incluir o link</label></div><button class="btn peq perigo fpDel" type="button">Remover</button>';
     d.querySelector(".fpHoras").value = p ? (p.atraso_min / 60) : 24;
     d.querySelector(".fpTexto").value = p ? p.texto || "" : "";
     d.querySelector(".fpLink").checked = !!(p && p.incluir_link);

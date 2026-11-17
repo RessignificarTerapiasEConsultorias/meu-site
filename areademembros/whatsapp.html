@@ -189,7 +189,7 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
         <p class="ajuda">Responde sozinho dentro das 24 h em que a pessoa escreveu. "Sair" e "Entrar" funcionam sempre, mesmo com o robô desligado. Quando você responde uma conversa, o robô fica 2 h quieto com aquela pessoa.</p>
         <div class="f">
           <div class="checks"><label><input type="checkbox" id="rbAtivo"> <b>Robô ligado</b></label></div>
-          <div style="margin-top:12px"><label for="rbPadrao">Resposta quando nenhuma regra serve <span class="vazio">(vazio = não responde)</span></label><textarea id="rbPadrao" rows="3" maxlength="600" placeholder="Oi, {primeiro_nome}! Recebi sua mensagem e o Mauricio responde por aqui assim que puder."></textarea>
+          <div style="margin-top:12px"><label for="rbPadrao">Resposta quando nenhuma regra serve <span class="vazio">(vazio = não responde)</span></label><textarea id="rbPadrao" rows="6" maxlength="1604" placeholder="Oi, {primeiro_nome}! Recebi sua mensagem e o Mauricio responde por aqui assim que puder."></textarea>
             <small>Use {primeiro_nome} para o nome da pessoa. Essa resposta é enviada no máximo 1 vez a cada 12 h por pessoa.</small></div>
           <div class="acoes"><button class="btn auto" type="button" id="rbSalvar">Salvar</button></div>
         </div>
@@ -332,7 +332,7 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
       <div><label for="jrAcao">O que fazer</label><select id="jrAcao"><option value="responder">Só responder</option><option value="sair_lista">Tirar da lista de disparos</option><option value="entrar_lista">Voltar para a lista</option><option value="chamar_humano">Chamar o Mauricio (robô pausa por 12 h)</option></select></div>
     </div>
     <div style="margin-top:12px"><label for="jrGatilhos">Palavras ou frases <span class="vazio">(separe por vírgula; sem acento é igual com acento)</span></label><input id="jrGatilhos" placeholder="link, aula, horário"></div>
-    <div style="margin-top:12px"><label for="jrResposta">Resposta <span class="vazio">({primeiro_nome} vira o nome da pessoa)</span></label><textarea id="jrResposta" rows="4" maxlength="1000"></textarea></div>
+    <div style="margin-top:12px"><label for="jrResposta">Resposta <span class="vazio">({primeiro_nome} vira o nome da pessoa)</span></label><textarea id="jrResposta" rows="6" maxlength="1604"></textarea></div>
     <div style="margin-top:12px"><label for="jrEtiqueta">Etiqueta para colocar na pessoa <span class="vazio">(opcional)</span></label><input id="jrEtiqueta" maxlength="40"></div>
   </div>
   <div class="acoes"><button class="btn auto" type="button" id="jrSalvar">Salvar</button><button class="btn auto perigo" type="button" id="jrApagar">Apagar</button><button class="btn auto contorno" type="button" data-fechar="jRegra">Fechar</button></div>
@@ -347,14 +347,14 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
       <div><label for="jfBotao">Texto do botão que a pessoa toca</label><input id="jfBotao" maxlength="25" placeholder="Entrar no grupo"></div>
       <div><label for="jfLink">Link entregue pelo robô</label><input id="jfLink" placeholder="https://chat.whatsapp.com/..."></div>
     </div>
-    <div style="margin-top:12px"><label for="jfResp">Resposta do robô ao tocar no botão <span class="vazio">({primeiro_nome} = nome)</span></label><textarea id="jfResp" rows="3" maxlength="900"></textarea>
+    <div style="margin-top:12px"><label for="jfResp">Resposta do robô ao tocar no botão <span class="vazio">({primeiro_nome} = nome)</span></label><textarea id="jfResp" rows="6" maxlength="1604"></textarea>
       <div class="checks"><label><input type="checkbox" id="jfInclLink" checked> Incluir o link nessa resposta</label></div></div>
     <div class="checks" style="margin-top:12px"><label><input type="checkbox" id="jfPerg" checked> Perguntar se a pessoa conseguiu entrar (botões "Já entrei" / "Ainda não")</label></div>
     <div class="grade g2" style="margin-top:8px">
       <div><label for="jfPergTxt">Pergunta</label><input id="jfPergTxt" maxlength="300"></div>
       <div><label for="jfEtiEntrou">Etiqueta de quem entrou</label><input id="jfEtiEntrou" maxlength="40"></div>
-      <div><label for="jfTxtEntrou">Resposta se entrou</label><input id="jfTxtEntrou" maxlength="500"></div>
-      <div><label for="jfTxtNao">Resposta se ainda não</label><input id="jfTxtNao" maxlength="500"></div>
+      <div><label for="jfTxtEntrou">Resposta se entrou</label><textarea id="jfTxtEntrou" rows="4" maxlength="1604"></textarea></div>
+      <div><label for="jfTxtNao">Resposta se ainda não</label><textarea id="jfTxtNao" rows="4" maxlength="1604"></textarea></div>
       <div><label for="jfEtiIni">Etiqueta de quem tocou no botão</label><input id="jfEtiIni" maxlength="40"></div>
     </div>
     <h3 style="margin-top:16px">Follow-ups <span class="vazio">(até 10; só vão para quem ainda não entrou)</span></h3>
