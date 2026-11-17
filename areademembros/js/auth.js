@@ -77,7 +77,7 @@ async function fazerLogin(email, senha) {
 
 async function sair() {
   await supa().auth.signOut();
-  location.href = "index.html";
+  location.href = "/";   // Sair leva para a página inicial do site
 }
 
 /* Chame isto no topo de cada painel-*.html, passando o papel
