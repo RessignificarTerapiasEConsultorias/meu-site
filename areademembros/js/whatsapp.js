@@ -232,17 +232,54 @@
     const c = String(t.cabecalho_tipo || "").toUpperCase();
     return c && c !== "TEXT" && ROT_TIPO[c.toLowerCase()] ? '<span class="selo ouro">' + esc(ROT_TIPO[c.toLowerCase()]) + "</span> " : "";
   }
+  function horasTemplate(t) {
+    const env = t.enviado_em ? new Date(t.enviado_em) : null, res = t.resultado_em ? new Date(t.resultado_em) : null;
+    const emAnalise = t.status === "PENDING" || t.status === "IN_APPEAL";
+    const ROTR = { APPROVED: "Aprovado", REJECTED: "Reprovado" };
+    if (!env) return '<span class="vazio">Hora de envio não registrada</span>' + (res ? "<br>" + (ROTR[t.status] || "Resultado") + " em " + esc(quando(t.resultado_em)) : "");
+    let h = "Enviado em " + esc(quando(t.enviado_em));
+    if (emAnalise) {
+      const ms = Date.now() - env.getTime(), passou = ms >= 24 * 3600000;
+      h += "<br>Esperando há <b>" + esc(duracao(ms)) + '</b> <span class="selo ' + (passou ? "off" : "ok") + '">' + (passou ? "Passou de 24 h" : "Dentro das 24 h") + "</span>";
+    } else if (res) {
+      h += "<br>" + (ROTR[t.status] || "Decidido") + " em " + esc(quando(t.resultado_em)) + "<br>Levou <b>" + esc(duracao(res.getTime() - env.getTime())) + "</b>";
+    } else if (ROTR[t.status]) {
+      h += '<br><span class="vazio">' + ROTR[t.status] + " (hora exata não registrada)</span>";
+    }
+    return h;
+  }
   async function telaTemplates() {
     await carregarConfig(); await carregarTemplates();
     const tb = $("tpLista");
-    if (!templates.length) { tb.innerHTML = '<tr><td colspan="6" class="vazio">Nenhum template ainda. Clique em "Sincronizar com o Meta" ou crie um abaixo.</td></tr>'; return; }
+    if (!templates.length) { tb.innerHTML = '<tr><td colspan="7" class="vazio">Nenhum template ainda. Clique em "Sincronizar com o Meta" ou crie um abaixo.</td></tr>'; return; }
     tb.innerHTML = templates.map(function (t) {
       const st = ROT_ST[t.status] || [t.status || "?", "pendente"];
       return "<tr><td><b>" + esc(t.nome) + '</b><br><span class="vazio">' + esc(t.idioma) + "</span></td><td>" + esc(ROT_CAT[t.categoria] || t.categoria || "") + '</td><td><span class="selo ' + st[1] + '">' + esc(st[0]) + "</span>" +
-        (t.motivo_recusa ? '<br><span class="vazio">' + esc(t.motivo_recusa) + "</span>" : "") + "</td><td>" + t.qtd_variaveis + '</td><td class="quebra tpl-texto">' + rotuloCab(t) + esc(corpoDe(t)) + '</td><td><button class="btn peq perigo" data-tp-apagar="' + esc(t.nome) + '">Apagar</button></td></tr>';
+        (t.motivo_recusa ? '<br><span class="vazio">' + esc(t.motivo_recusa) + "</span>" : "") + '</td><td class="tpl-horas">' + horasTemplate(t) + '<br><button class="btn peq contorno" data-tp-horas="' + esc(t.id) + '">Ajustar horas</button></td><td>' + t.qtd_variaveis + '</td><td class="quebra tpl-texto">' + rotuloCab(t) + esc(corpoDe(t)) + '</td><td><button class="btn peq perigo" data-tp-apagar="' + esc(t.nome) + '">Apagar</button></td></tr>';
     }).join("");
   }
+  function lerDataBR(txt) {
+    const m = String(txt || "").trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})$/); if (!m) return undefined;
+    const d = new Date(Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4] + 3, +m[5])); // horário de Brasília (UTC-3)
+    return isNaN(d) ? undefined : d.toISOString();
+  }
+  function dataBRtxt(iso) {
+    if (!iso) return ""; const d = new Date(new Date(iso).getTime() - 3 * 3600000), z = function (n) { return String(n).padStart(2, "0"); };
+    return z(d.getUTCDate()) + "/" + z(d.getUTCMonth() + 1) + "/" + d.getUTCFullYear() + " " + z(d.getUTCHours()) + ":" + z(d.getUTCMinutes());
+  }
+  async function ajustarHoras(id) {
+    const t = templates.find(function (x) { return x.id === id; }); if (!t) return;
+    const a = prompt('Quando "' + t.nome + '" foi enviado ao Meta?\nFormato: dd/mm/aaaa hh:mm (horário de Brasília). Deixe em branco se não sabe.', dataBRtxt(t.enviado_em)); if (a === null) return;
+    const env = a.trim() ? lerDataBR(a) : null; if (env === undefined) return aviso("Data inválida. Use dd/mm/aaaa hh:mm.", true);
+    let res = null;
+    if (t.status === "APPROVED" || t.status === "REJECTED") {
+      const b = prompt("Quando foi " + (t.status === "APPROVED" ? "aprovado" : "reprovado") + "? (dd/mm/aaaa hh:mm). Em branco se não sabe.", dataBRtxt(t.resultado_em)); if (b === null) return;
+      res = b.trim() ? lerDataBR(b) : null; if (res === undefined) return aviso("Data inválida. Use dd/mm/aaaa hh:mm.", true);
+    }
+    try { await ler(supa().rpc("wa_template_horas", { p_id: id, p_enviado: env, p_resultado: res })); aviso("Horas salvas."); telaTemplates(); } catch (e) { falha(e); }
+  }
   $("tpLista").addEventListener("click", async function (ev) {
+    const h = ev.target.closest("[data-tp-horas]"); if (h) return ajustarHoras(h.dataset.tpHoras);
     const b = ev.target.closest("[data-tp-apagar]"); if (!b) return;
     if (!confirm('Apagar o template "' + b.dataset.tpApagar + '" no Meta? Não dá para desfazer.')) return;
     const r = await wa({ acao: "apagar_template", nome: b.dataset.tpApagar });
