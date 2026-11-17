@@ -83,6 +83,13 @@
     return null;
   }
   async function subirMidia(file, esperado) {
+    if (/^video\//i.test(file.type || "") || /\.(mp4|mov|m4v|3gp|webm|mkv)$/i.test(file.name)) {
+      const ehMp4 = /^video\/(mp4|3gpp)$/.test(mimeDoArquivo(file));
+      if ((file.size > LIMITE_MB * 1024 * 1024 || !ehMp4) && window.waVideo) {
+        if (esperado && esperado !== "video") throw new Error("Este arquivo é vídeo, mas o campo pede " + ROT_TIPO[esperado] + ".");
+        file = await window.waVideo.preparar(file);
+      }
+    }
     const mime = mimeDoArquivo(file), tipo = tipoDoArquivo(mime);
     if (!tipo) throw new Error("Formato não aceito pelo WhatsApp. Use MP4 (vídeo), JPG ou PNG (imagem), MP3, M4A ou OGG (áudio) ou PDF.");
     if (esperado && tipo !== esperado) throw new Error("Este arquivo é " + ROT_TIPO[tipo] + ", mas o campo pede " + ROT_TIPO[esperado] + ".");
