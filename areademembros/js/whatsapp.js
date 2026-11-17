@@ -226,7 +226,7 @@
     tb.innerHTML = templates.map(function (t) {
       const st = ROT_ST[t.status] || [t.status || "?", "pendente"];
       return "<tr><td><b>" + esc(t.nome) + '</b><br><span class="vazio">' + esc(t.idioma) + "</span></td><td>" + esc(ROT_CAT[t.categoria] || t.categoria || "") + '</td><td><span class="selo ' + st[1] + '">' + esc(st[0]) + "</span>" +
-        (t.motivo_recusa ? '<br><span class="vazio">' + esc(t.motivo_recusa) + "</span>" : "") + "</td><td>" + t.qtd_variaveis + '</td><td class="quebra">' + rotuloCab(t) + esc(corpoDe(t).slice(0, 160)) + '</td><td><button class="btn peq perigo" data-tp-apagar="' + esc(t.nome) + '">Apagar</button></td></tr>';
+        (t.motivo_recusa ? '<br><span class="vazio">' + esc(t.motivo_recusa) + "</span>" : "") + "</td><td>" + t.qtd_variaveis + '</td><td class="quebra tpl-texto">' + rotuloCab(t) + esc(corpoDe(t)) + '</td><td><button class="btn peq perigo" data-tp-apagar="' + esc(t.nome) + '">Apagar</button></td></tr>';
     }).join("");
   }
   $("tpLista").addEventListener("click", async function (ev) {
