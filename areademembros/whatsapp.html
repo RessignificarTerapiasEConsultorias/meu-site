@@ -24,6 +24,10 @@
 .wa-msg .erro{color:var(--erro);font-size:12.5px;margin-top:3px}
 .wa-vis{color:#1B6FC6;font-weight:700}
 table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-width:320px;max-width:560px;line-height:1.45;vertical-align:top}
+.ls-resumo{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.ls-resumo .selo{font-size:13px}
+#lsPrev .tabela-wrap{max-height:300px;margin-top:8px}
+#lsPrev details{margin-top:10px}#lsPrev summary{cursor:pointer;font-weight:700}
 .wa-prev{background:#E7F4E4;border:1px solid #BFE0BA;border-radius:12px;padding:12px;white-space:pre-wrap;font-size:15px;max-width:420px}
 .wa-passos{counter-reset:p;list-style:none;display:grid;gap:10px}
 .wa-passos li{counter-increment:p;position:relative;padding-left:38px}
@@ -87,14 +91,20 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
           <div class="checks" style="align-self:end"><label><input type="checkbox" id="ctAceite"> Esta pessoa autorizou receber mensagens</label></div>
         </div>
         <div class="acoes"><button class="btn auto" type="button" id="ctAdd">Adicionar</button>
+          <button class="btn auto contorno" type="button" id="ctImpArq">Importar lista de arquivo (Excel ou PDF)</button>
           <button class="btn auto contorno" type="button" id="ctImpAbrir">Colar uma lista</button>
           <button class="btn auto contorno" type="button" id="ctImpAlunos">Importar alunos do painel</button></div>
+      </div>
+      <div class="cartao" id="lsCartao">
+        <div class="empresa-titulo"><h2>Listas</h2><span class="selo" id="lsConta"></span></div>
+        <p class="ajuda">Cada arquivo importado vira uma lista. No <b>Disparos</b> você escolhe mandar para todos ou só para uma lista.</p>
+        <div class="tabela-wrap"><table class="t"><thead><tr><th>Lista</th><th>Pessoas</th><th>Podem receber</th><th></th></tr></thead><tbody id="lsLista"><tr><td colspan="4" class="vazio">Nenhuma lista ainda. Use “Importar lista de arquivo”.</td></tr></tbody></table></div>
       </div>
       <div class="cartao">
         <div class="empresa-titulo"><h2>Contatos</h2><span class="selo" id="ctConta"></span></div>
         <div class="grade g3 f" style="max-width:760px;margin:10px 0 14px">
           <input id="ctBusca" type="search" placeholder="Buscar nome ou número" aria-label="Buscar contato">
-          <select id="ctFiltroEt" aria-label="Filtrar por etiqueta"><option value="">Todas as etiquetas</option></select>
+          <select id="ctFiltroEt" aria-label="Filtrar por etiqueta"><option value="">Todas as listas e etiquetas</option></select>
           <select id="ctFiltroSt" aria-label="Filtrar por situação"><option value="">Todas as situações</option><option value="optin">Autorizaram (podem receber)</option><option value="sem">Sem autorização</option><option value="optout">Saíram da lista</option></select>
         </div>
         <div class="tabela-wrap" style="max-height:560px"><table class="t"><thead><tr><th>Nome</th><th>WhatsApp</th><th>Etiquetas</th><th>Situação</th><th>Última mensagem</th><th></th></tr></thead><tbody id="ctLista"><tr><td colspan="6" class="vazio">Carregando...</td></tr></tbody></table></div>
@@ -295,6 +305,23 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
   <div class="acoes"><button class="btn auto" type="button" id="imSalvar">Importar</button><button class="btn auto contorno" type="button" data-fechar="jImportar">Fechar</button></div>
 </dialog>
 
+<dialog class="janela janela-larga" id="jLista">
+  <h2>Importar lista de arquivo</h2>
+  <p class="ajuda">Envie uma planilha (Excel .xlsx ou .xls, ou .csv) ou um PDF com nome e telefone. O sistema acha as colunas sozinho, confere os dígitos, corrige o 9 que falta e ignora quem não tem telefone.</p>
+  <div class="f">
+    <div><label for="lsArquivo">Arquivo(s)</label><input type="file" id="lsArquivo" accept=".xlsx,.xls,.xlsm,.xlsb,.ods,.csv,.pdf,.txt" multiple></div>
+    <div class="grade g2" style="margin-top:12px">
+      <div><label for="lsNome">Nome da lista</label><input id="lsNome" maxlength="40" placeholder="Lista 1"></div>
+      <div><label for="lsDdd">DDD padrão <span class="vazio">(para número sem DDD)</span></label><input id="lsDdd" inputmode="numeric" maxlength="2" value="81"></div>
+    </div>
+    <div class="checks" style="margin-top:12px"><label><input type="checkbox" id="lsAceite"> Todas estas pessoas autorizaram receber mensagens</label></div>
+    <p class="ajuda" id="lsAviso" style="margin-top:6px"></p>
+  </div>
+  <p class="ajuda" id="lsRes" style="margin-top:10px"></p>
+  <div id="lsPrev"></div>
+  <div class="acoes"><button class="btn auto" type="button" id="lsSalvar" disabled>Criar lista</button><button class="btn auto contorno" type="button" data-fechar="jLista">Fechar</button></div>
+</dialog>
+
 <dialog class="janela" id="jRegra">
   <h2 id="jrTitulo">Regra</h2>
   <div class="f">
@@ -354,6 +381,7 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
+<script src="js/whatsapp-lista.js"></script>
 <script src="js/whatsapp.js"></script>
 </body>
 </html>

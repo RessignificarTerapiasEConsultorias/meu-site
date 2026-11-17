@@ -35,8 +35,13 @@
   function normFone(t) { let d = String(t || "").replace(/\D/g, ""); if (d.length === 10 || d.length === 11) d = "55" + d; return d; }
   function foneValido(d) { return /^\d{12,15}$/.test(d); }
   function listaEt(t) {
-    return Array.from(new Set(String(t || "").split(",").map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean)));
+    return Array.from(new Set(String(t || "").split(",").map(function (x) { return x.trim(); }).filter(Boolean).map(function (x) {
+      return /^lista:/i.test(x) ? LISTA + x.slice(LISTA.length).trim() : x.toLowerCase();    // o nome da lista mantém as maiúsculas
+    })));
   }
+  const LISTA = "lista:";                                  // lista = etiqueta "lista:Nome"; o disparo já filtra por etiqueta
+  function seloEt(e) { return e.indexOf(LISTA) === 0 ? '<span class="selo ouro">' + esc(e.slice(LISTA.length)) + "</span>" : '<span class="selo">' + esc(e) + "</span>"; }
+  function nomeEt(e) { return e.indexOf(LISTA) === 0 ? "Lista: " + e.slice(LISTA.length) : e; }
   function corpoDe(t) {
     const b = ((t && t.componentes) || []).find(function (c) { return String(c.type).toUpperCase() === "BODY"; });
     return b ? String(b.text || "") : "";
@@ -416,9 +421,11 @@
       return supa().from("wa_contatos").select("id,nome,telefone,etiquetas,optin,optout,ultima_msg_em,notas,perfil_id").order("criado_em").order("id");
     });
     const ets = Array.from(new Set(contatos.reduce(function (a, c) { return a.concat(c.etiquetas || []); }, []))).sort();
+    const listas = ets.filter(function (e) { return e.indexOf(LISTA) === 0; }), outras = ets.filter(function (e) { return e.indexOf(LISTA) !== 0; });
+    const grupo = function (rot, arr, nome) { return arr.length ? '<optgroup label="' + rot + '">' + arr.map(function (e) { return '<option value="' + esc(e) + '">' + esc(nome(e)) + "</option>"; }).join("") + "</optgroup>" : ""; };
     ["ctFiltroEt", "dpEtiqueta"].forEach(function (id) {
       const sel = $(id), v = sel.value, primeiro = sel.options[0].outerHTML;
-      sel.innerHTML = primeiro + ets.map(function (e) { return '<option value="' + esc(e) + '">' + esc(e) + "</option>"; }).join("");
+      sel.innerHTML = primeiro + grupo("Listas", listas, function (e) { return e.slice(LISTA.length); }) + grupo("Etiquetas", outras, function (e) { return e; });
       sel.value = v;
     });
   }
@@ -443,11 +450,11 @@
     const tb = $("ctLista");
     if (!lista.length) { tb.innerHTML = '<tr><td colspan="6" class="vazio">Nenhum contato neste filtro.</td></tr>'; return; }
     tb.innerHTML = lista.slice(0, 500).map(function (c) {
-      return "<tr><td>" + esc(c.nome || "(sem nome)") + "</td><td>" + esc(foneBR(c.telefone)) + "</td><td>" + (c.etiquetas || []).map(function (e) { return '<span class="selo">' + esc(e) + "</span>"; }).join("") + "</td><td>" + situacao(c) + "</td><td>" + esc(quando(c.ultima_msg_em)) +
+      return "<tr><td>" + esc(c.nome || "(sem nome)") + "</td><td>" + esc(foneBR(c.telefone)) + "</td><td>" + (c.etiquetas || []).map(seloEt).join("") + "</td><td>" + situacao(c) + "</td><td>" + esc(quando(c.ultima_msg_em)) +
         '</td><td><button class="btn peq contorno" data-ct-conversar="' + c.id + '">Conversar</button> <button class="btn peq contorno" data-ct-editar="' + c.id + '">Editar</button></td></tr>';
     }).join("") + (lista.length > 500 ? '<tr><td colspan="6" class="vazio">Mostrando 500 de ' + lista.length + ". Use a busca ou os filtros.</td></tr>" : "");
   }
-  async function telaContatos() { await carregarContatos(); desenharContatos(); }
+  async function telaContatos() { await carregarContatos(); desenharListas(); desenharContatos(); }
   ["ctBusca", "ctFiltroEt", "ctFiltroSt"].forEach(function (id) { $(id).addEventListener("input", desenharContatos); });
 
   /* grava uma lista de pessoas sem nunca tirar autorização nem reativar quem saiu */
@@ -457,14 +464,17 @@
     const fones = Object.keys(mapa);
     const res = { novos: 0, atualizados: 0, saiu: 0 };
     const existentes = {};
-    for (let i = 0; i < fones.length; i += 150) {
-      const dados = await ler(supa().from("wa_contatos").select("id,telefone,nome,etiquetas,optin,optout").in("telefone", fones.slice(i, i + 150)));
-      dados.forEach(function (c) { existentes[c.telefone] = c; });
+    /* o mesmo celular pode estar guardado com ou sem o 9: procura as duas formas e liga pela chave */
+    const comNove = function (f) { return /^55[1-9][1-9]\d{8}$/.test(f) && "6789".indexOf(f[4]) > -1 ? f.slice(0, 4) + "9" + f.slice(4) : f; };
+    const procurar = Array.from(new Set(fones.reduce(function (a, f) { return a.concat([f, WaLista.chaveFone(f), comNove(WaLista.chaveFone(f))]); }, [])));
+    for (let i = 0; i < procurar.length; i += 150) {
+      const dados = await ler(supa().from("wa_contatos").select("id,telefone,nome,etiquetas,optin,optout").in("telefone", procurar.slice(i, i + 150)));
+      dados.forEach(function (c) { existentes[WaLista.chaveFone(c.telefone)] = c; });
     }
     const agora = new Date().toISOString();
     const inserir = [];
     for (const f of fones) {
-      const p = mapa[f], c = existentes[f];
+      const p = mapa[f], c = existentes[WaLista.chaveFone(f)];
       if (!c) { inserir.push({ telefone: f, nome: p.nome || null, perfil_id: p.perfil_id || null, etiquetas: etiquetas, origem: "painel", optin: !!aceite, optin_em: aceite ? agora : null }); continue; }
       const campos = {};
       const et = Array.from(new Set((c.etiquetas || []).concat(etiquetas)));
@@ -526,6 +536,118 @@
       aviso(r.novos + " novos, " + r.atualizados + " atualizados."); telaContatos();
     } catch (e) { falha(e); }
   });
+  /* ---------- listas (importadas de Excel, CSV ou PDF) ---------- */
+  let listaParaDisparo = null;
+  function listasExistentes() {
+    const mapa = {};
+    contatos.forEach(function (c) {
+      (c.etiquetas || []).forEach(function (e) {
+        if (e.indexOf(LISTA) !== 0) return;
+        const m = mapa[e] || (mapa[e] = { et: e, nome: e.slice(LISTA.length), total: 0, podem: 0 });
+        m.total++; if (c.optin && !c.optout) m.podem++;
+      });
+    });
+    return Object.keys(mapa).map(function (k) { return mapa[k]; }).sort(function (a, b) { return a.nome.localeCompare(b.nome, "pt-BR", { numeric: true }); });
+  }
+  function desenharListas() {
+    const ls = listasExistentes();
+    $("lsConta").textContent = ls.length + (ls.length === 1 ? " lista" : " listas");
+    $("lsLista").innerHTML = ls.length ? ls.map(function (l) {
+      return "<tr><td><b>" + esc(l.nome) + "</b></td><td>" + l.total + "</td><td>" + l.podem + (l.podem < l.total ? ' <span class="vazio">(' + (l.total - l.podem) + " sem autorização ou fora)</span>" : "") + '</td><td>' +
+        '<button class="btn peq contorno" data-ls-ver="' + esc(l.et) + '">Ver contatos</button> <button class="btn peq" data-ls-disparar="' + esc(l.et) + '">Disparar</button> ' +
+        '<button class="btn peq perigo" data-ls-apagar="' + esc(l.et) + '">Apagar lista</button></td></tr>';
+    }).join("") : '<tr><td colspan="4" class="vazio">Nenhuma lista ainda. Use “Importar lista de arquivo”.</td></tr>';
+  }
+  $("lsLista").addEventListener("click", async function (ev) {
+    const ver = ev.target.closest("[data-ls-ver]"), dis = ev.target.closest("[data-ls-disparar]"), ap = ev.target.closest("[data-ls-apagar]");
+    if (ver) { $("ctFiltroEt").value = ver.dataset.lsVer; desenharContatos(); $("ctBusca").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+    if (dis) { listaParaDisparo = dis.dataset.lsDisparar; abrirAba("disparos"); return; }
+    if (!ap) return;
+    const et = ap.dataset.lsApagar, l = listasExistentes().find(function (x) { return x.et === et; });
+    if (!l || !confirm('Apagar a lista "' + l.nome + '"?\n\nOs ' + l.total + " contatos continuam salvos; só sai a marcação da lista.")) return;
+    try {
+      const alvo = contatos.filter(function (c) { return (c.etiquetas || []).indexOf(et) > -1; });
+      for (let i = 0; i < alvo.length; i += 10) {
+        await Promise.all(alvo.slice(i, i + 10).map(function (c) {
+          return ler(supa().from("wa_contatos").update({ etiquetas: c.etiquetas.filter(function (x) { return x !== et; }) }).eq("id", c.id).select("id"));
+        }));
+      }
+      aviso("Lista apagada."); telaContatos();
+    } catch (e) { falha(e); }
+  });
+
+  let lsArquivos = [];          // [{ nome, linhas }]
+  let lsResultado = null;
+  const nomeListaLimpo = function (v) { return String(v || "").replace(/[,;]/g, " ").replace(/\s+/g, " ").trim().slice(0, 40); };
+  function proximoNomeLista() {
+    const usados = listasExistentes().map(function (l) { return l.nome.toLowerCase(); });
+    let n = 1; while (usados.indexOf("lista " + n) > -1) n++;
+    return "Lista " + n;
+  }
+  function avisoAceite() {
+    $("lsAviso").textContent = $("lsAceite").checked ? "" : "Sem esta marcação a lista é criada, mas ninguém dela entra nos disparos (só quem autorizou recebe).";
+  }
+  function previaLista(r) {
+    const chip = function (cl, t) { return '<span class="selo ' + cl + '">' + t + "</span>"; };
+    let h = '<div class="ls-resumo">' + chip("ok", r.itens.length + " prontos para a lista") +
+      (r.corrigidos ? chip("ouro", r.corrigidos + " com o número corrigido") : "") +
+      (r.semNome ? chip("pendente", r.semNome + " sem nome (a mensagem sai com um espaço no lugar do nome)") : "") +
+      (r.ignorados.length ? chip("off", r.ignorados.length + " ignorados") : "") +
+      (r.duplicados ? chip("", r.duplicados + " repetidos juntados") : "") + "</div>";
+    if (r.itens.length) {
+      h += '<div class="tabela-wrap"><table class="t"><thead><tr><th>Nome</th><th>WhatsApp</th><th>Observação</th></tr></thead><tbody>' +
+        r.itens.slice(0, 100).map(function (p) { return "<tr><td>" + (p.nome ? esc(p.nome) : '<span class="vazio">(sem nome)</span>') + "</td><td>" + esc(foneBR(p.fone)) + '</td><td class="quebra">' + esc(p.avisos.join("; ")) + "</td></tr>"; }).join("") +
+        (r.itens.length > 100 ? '<tr><td colspan="3" class="vazio">Mostrando 100 de ' + r.itens.length + ".</td></tr>" : "") + "</tbody></table></div>";
+    }
+    if (r.ignorados.length) {
+      h += "<details><summary>Ignorados (" + r.ignorados.length + ')</summary><div class="tabela-wrap"><table class="t"><thead><tr><th>Linha</th><th>Nome</th><th>Telefone no arquivo</th><th>Motivo</th></tr></thead><tbody>' +
+        r.ignorados.slice(0, 200).map(function (i) { return "<tr><td>" + i.linha + "</td><td>" + esc(i.nome) + "</td><td>" + esc(i.bruto) + '</td><td class="quebra">' + esc(i.motivo) + "</td></tr>"; }).join("") + "</tbody></table></div></details>";
+    }
+    $("lsPrev").innerHTML = h;
+  }
+  function reprocessarLista() {
+    if (!lsArquivos.length) { lsResultado = null; $("lsPrev").innerHTML = ""; $("lsSalvar").disabled = true; return; }
+    const ddd = $("lsDdd").value.replace(/\D/g, "");
+    lsResultado = WaLista.juntarResultados(lsArquivos.map(function (a) { return WaLista.processarLinhas(a.linhas, { ddd: ddd }); }));
+    const r = lsResultado;
+    $("lsRes").textContent = r.lidas + " linha(s) lidas de " + lsArquivos.length + " arquivo(s)." + (r.itens.length ? "" : " Não achei nenhum telefone válido.");
+    previaLista(r);
+    $("lsSalvar").disabled = !r.itens.length;
+  }
+  $("ctImpArq").addEventListener("click", function () {
+    lsArquivos = []; lsResultado = null;
+    $("lsArquivo").value = ""; $("lsNome").value = proximoNomeLista(); $("lsRes").textContent = ""; $("lsPrev").innerHTML = ""; $("lsSalvar").disabled = true;
+    avisoAceite(); $("jLista").showModal();
+  });
+  $("lsAceite").addEventListener("change", avisoAceite);
+  $("lsDdd").addEventListener("input", reprocessarLista);
+  $("lsArquivo").addEventListener("change", async function () {
+    const arqs = Array.prototype.slice.call(this.files || []);
+    lsArquivos = []; $("lsSalvar").disabled = true; $("lsPrev").innerHTML = "";
+    if (!arqs.length) { $("lsRes").textContent = ""; return; }
+    $("lsRes").textContent = "Lendo o arquivo...";
+    try {
+      for (const f of arqs) lsArquivos.push({ nome: f.name, linhas: await WaLista.linhasDoArquivo(f) });
+      reprocessarLista();
+    } catch (e) { lsArquivos = []; $("lsRes").textContent = e.message || String(e); }
+  });
+  $("lsSalvar").addEventListener("click", async function () {
+    const r = lsResultado; if (!r || !r.itens.length) return;
+    const digitado = nomeListaLimpo($("lsNome").value) || proximoNomeLista();
+    const igual = listasExistentes().find(function (l) { return l.nome.toLowerCase() === digitado.toLowerCase(); });
+    const et = LISTA + (igual ? igual.nome : digitado), aceite = $("lsAceite").checked;
+    if (!confirm((igual ? 'Já existe a lista "' + igual.nome + '". Estas pessoas serão ACRESCENTADAS a ela.\n\n' : "") + 'Criar a lista "' + (igual ? igual.nome : digitado) + '" com ' + r.itens.length + " pessoa(s)" +
+      (aceite ? ", marcadas como AUTORIZADAS a receber mensagens?" : ", sem autorização para disparos?"))) return;
+    this.disabled = true;
+    try {
+      const x = await salvarContatos(r.itens.map(function (p) { return { nome: p.nome, telefone: p.fone }; }), aceite, [et]);
+      $("lsRes").textContent = 'Lista "' + (igual ? igual.nome : digitado) + '" pronta: ' + x.novos + " novos, " + x.atualizados + " que já existiam" + (x.saiu ? ", " + x.saiu + " continuam fora da lista de disparos (pediram para sair)" : "") + "." +
+        (aceite ? "" : " Como a autorização não foi marcada, ninguém desta lista recebe disparo ainda.");
+      $("lsPrev").innerHTML = ""; lsArquivos = []; lsResultado = null; $("lsArquivo").value = "";
+      aviso("Lista criada."); telaContatos();
+    } catch (e) { falha(e); this.disabled = false; }
+  });
+
   let editando = null;
   $("ctLista").addEventListener("click", function (ev) {
     const cv = ev.target.closest("[data-ct-conversar]");
@@ -700,7 +822,15 @@
       const r = await q; const n = r.count || 0;
       const preco = t.categoria === "MARKETING" ? Number(cfg.preco_marketing) : t.categoria === "UTILITY" ? Number(cfg.preco_utilidade) : 0;
       const dias = Math.max(1, Math.ceil(n / cfg.limite_diario));
-      $("dpResumo").textContent = n + " pessoa(s) vão receber. Custo estimado: " + BR.format(n * preco) + " (" + (ROT_CAT[t.categoria] || "") + "). " +
+      let semNome = 0;
+      try {
+        if (t.qtd_variaveis > 0 && lerVarsDp().vars.some(function (v) { return /\{(primeiro_)?nome\}/i.test(v); })) {
+          let q2 = supa().from("wa_contatos").select("id", { count: "exact", head: true }).eq("optin", true).eq("optout", false).or("nome.is.null,nome.eq.");
+          if ($("dpEtiqueta").value) q2 = q2.contains("etiquetas", [$("dpEtiqueta").value]);
+          semNome = (await q2).count || 0;
+        }
+      } catch (e) {}
+      $("dpResumo").textContent = n + " pessoa(s) vão receber." + (semNome ? " " + semNome + " sem nome: nelas a mensagem sai com um espaço no lugar do nome." : "") + " Custo estimado: " + BR.format(n * preco) + " (" + (ROT_CAT[t.categoria] || "") + "). " +
         (n > cfg.limite_diario ? "Por causa do limite de " + cfg.limite_diario + " pessoas por dia, o envio leva " + dias + " dias; continua sozinho a cada dia." : "Cabe em um dia.");
     } catch (e) { $("dpResumo").textContent = ""; }
   }
@@ -719,6 +849,7 @@
     const atual = $("dpTemplate").value;
     $("dpTemplate").innerHTML = ok.length ? ok.map(function (t) { return '<option value="' + esc(t.nome) + '|' + esc(t.idioma) + '">' + esc(t.nome) + " (" + esc(ROT_CAT[t.categoria] || "") + ")</option>"; }).join("") : '<option value="">Nenhum template aprovado ainda</option>';
     if (atual) $("dpTemplate").value = atual;
+    if (listaParaDisparo) { $("dpEtiqueta").value = listaParaDisparo; listaParaDisparo = null; }
     trocarTemplateDp();
     const u = await wa({ acao: "uso_hoje" });
     $("dpUso").textContent = u.ok ? "Nas últimas 24 h você já enviou template para " + u.usados + " de " + u.limite + " pessoas permitidas." : "";
