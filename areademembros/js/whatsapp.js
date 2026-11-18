@@ -642,7 +642,7 @@
   /* ---------- contatos ---------- */
   async function carregarContatos() {
     contatos = await buscarTudo(function () {
-      return supa().from("wa_contatos").select("id,nome,telefone,username,etiquetas,optin,optout,ultima_msg_em,notas,perfil_id").order("criado_em").order("id");
+      return supa().from("wa_contatos").select("id,nome,telefone,username,etiquetas,optin,optout,ultima_msg_em,notas,perfil_id,origem").order("criado_em").order("id");
     });
     const ets = Array.from(new Set(contatos.reduce(function (a, c) { return a.concat(c.etiquetas || []); }, []))).sort();
     const listas = ets.filter(function (e) { return e.indexOf(LISTA) === 0; }), outras = ets.filter(function (e) { return e.indexOf(LISTA) !== 0; });
@@ -652,6 +652,36 @@
       sel.innerHTML = primeiro + grupo("Listas", listas, function (e) { return e.slice(LISTA.length); }) + grupo("Etiquetas", outras, function (e) { return e; });
       sel.value = v;
     });
+    const origens = Array.from(new Set(contatos.map(function (c) { return c.origem || "__nenhuma"; }))).sort();
+    const so = $("ctFiltroOr"), vo = so.value;
+    so.innerHTML = '<option value="">Qualquer origem</option>' + origens.map(function (o) { return '<option value="' + esc(o) + '">' + esc(rotuloOrigemCurto(o)) + "</option>"; }).join("");
+    so.value = origens.indexOf(vo) > -1 ? vo : "";
+    await carregarFiltrosSalvos();
+  }
+  const ORIGEM_CURTA = { whatsapp: "WhatsApp (escreveu primeiro)", painel: "Painel (adicionado por você)", site: "Site (inscrição)", anuncio: "Anúncio", __nenhuma: "Não informada" };
+  function rotuloOrigemCurto(o) { return ORIGEM_CURTA[o] || ("Outra: " + o); }
+  let filtrosSalvos = [];
+  async function carregarFiltrosSalvos() {
+    try { filtrosSalvos = await ler(supa().from("wa_filtros_salvos").select("id,nome,filtro").order("criado_em")); } catch (e) { filtrosSalvos = []; }
+    const s = $("ctSalvos"), v = s.value;
+    s.innerHTML = '<option value="">Filtros salvos</option>' + filtrosSalvos.map(function (f) { return '<option value="' + esc(f.id) + '">' + esc(f.nome) + " (" + contatosFiltrados(f.filtro).length + ")</option>"; }).join("");
+    s.value = filtrosSalvos.some(function (f) { return f.id === v; }) ? v : "";
+    $("ctApagarFiltro").hidden = !s.value;
+  }
+  const ctSel = new Set();
+  function filtroAtual() { return { busca: $("ctBusca").value.trim(), etiqueta: $("ctFiltroEt").value, situacao: $("ctFiltroSt").value, origem: $("ctFiltroOr").value }; }
+  function contatosFiltrados(f) {
+    f = f || filtroAtual();
+    const b = String(f.busca || "").toLowerCase(), bd = b.replace(/\D/g, "");
+    return contatos.filter(function (c) {
+      if (b && !((c.nome || "").toLowerCase().indexOf(b) > -1 || (bd && (c.telefone || "").indexOf(bd) > -1) || (c.username || "").toLowerCase().indexOf(b.replace(/^@/, "")) > -1)) return false;
+      if (f.etiqueta && (c.etiquetas || []).indexOf(f.etiqueta) === -1) return false;
+      if (f.origem && (c.origem || "__nenhuma") !== f.origem) return false;
+      if (f.situacao === "optin" && !(c.optin && !c.optout)) return false;
+      if (f.situacao === "sem" && (c.optin || c.optout)) return false;
+      if (f.situacao === "optout" && !c.optout) return false;
+      return true;
+    });
   }
   function situacao(c) {
     if (c.optout) return '<span class="selo off">Saiu da lista</span>';
@@ -659,27 +689,92 @@
     return '<span class="selo pendente">Sem autorização</span>';
   }
   function desenharContatos() {
-    const b = $("ctBusca").value.trim().toLowerCase(), et = $("ctFiltroEt").value, st = $("ctFiltroSt").value;
-    const bd = b.replace(/\D/g, "");
-    const lista = contatos.filter(function (c) {
-      if (b && !((c.nome || "").toLowerCase().indexOf(b) > -1 || (bd && (c.telefone || "").indexOf(bd) > -1) || (c.username || "").toLowerCase().indexOf(b.replace(/^@/, "")) > -1)) return false;
-      if (et && (c.etiquetas || []).indexOf(et) === -1) return false;
-      if (st === "optin" && !(c.optin && !c.optout)) return false;
-      if (st === "sem" && (c.optin || c.optout)) return false;
-      if (st === "optout" && !c.optout) return false;
-      return true;
-    });
+    const lista = contatosFiltrados();
     const aut = contatos.filter(function (c) { return c.optin && !c.optout; }).length;
-    $("ctConta").textContent = contatos.length + " no total · " + aut + " podem receber";
+    $("ctConta").textContent = contatos.length + " no total · " + aut + " podem receber" + (lista.length !== contatos.length ? " · " + lista.length + " neste filtro" : "");
     const tb = $("ctLista");
-    if (!lista.length) { tb.innerHTML = '<tr><td colspan="6" class="vazio">Nenhum contato neste filtro.</td></tr>'; return; }
+    ctSel.forEach(function (id) { if (!contatos.some(function (c) { return c.id === id; })) ctSel.delete(id); });
+    if (!lista.length) { tb.innerHTML = '<tr><td colspan="7" class="vazio">Nenhum contato neste filtro.</td></tr>'; desenharSelecao(lista); return; }
     tb.innerHTML = lista.slice(0, 500).map(function (c) {
-      return "<tr><td>" + esc(c.nome || "(sem nome)") + "</td><td>" + esc(foneDe(c)) + "</td><td>" + (c.etiquetas || []).map(seloEt).join("") + "</td><td>" + situacao(c) + "</td><td>" + esc(quando(c.ultima_msg_em)) +
+      return '<tr><td><input type="checkbox" data-ct-sel="' + c.id + '"' + (ctSel.has(c.id) ? " checked" : "") + ' aria-label="Escolher ' + esc(c.nome || "contato") + '"></td><td>' + esc(c.nome || "(sem nome)") + "</td><td>" + esc(foneDe(c)) + "</td><td>" + (c.etiquetas || []).map(seloEt).join("") + "</td><td>" + situacao(c) + "</td><td>" + esc(quando(c.ultima_msg_em)) +
         '</td><td><button class="btn peq contorno" data-ct-conversar="' + c.id + '">Conversar</button> <button class="btn peq contorno" data-ct-editar="' + c.id + '">Editar</button></td></tr>';
-    }).join("") + (lista.length > 500 ? '<tr><td colspan="6" class="vazio">Mostrando 500 de ' + lista.length + ". Use a busca ou os filtros.</td></tr>" : "");
+    }).join("") + (lista.length > 500 ? '<tr><td colspan="7" class="vazio">Mostrando 500 de ' + lista.length + ". Use a busca ou os filtros. \"Escolher todos\" escolhe os " + lista.length + ".</td></tr>" : "");
+    desenharSelecao(lista);
+  }
+  function desenharSelecao(lista) {
+    lista = lista || contatosFiltrados();
+    $("ctSelBarra").hidden = !ctSel.size;
+    $("ctSelTxt").textContent = ctSel.size + (ctSel.size === 1 ? " contato escolhido." : " contatos escolhidos.");
+    const todos = lista.length > 0 && lista.every(function (c) { return ctSel.has(c.id); });
+    $("ctSelTodos").checked = todos; $("ctSelTodos").indeterminate = !todos && lista.some(function (c) { return ctSel.has(c.id); });
+  }
+  function exportarContatos(lista) {
+    if (!lista.length) return aviso("Não há contatos para exportar neste filtro.", true);
+    const W = window.WaCamp;
+    const texto = W.csv(["Nome", "Telefone", "Etiquetas", "Situação", "Origem", "Última mensagem"], lista.map(function (c) {
+      return [c.nome || "", c.telefone ? foneDe(c) : (c.username ? "@" + c.username : ""), (c.etiquetas || []).map(function (e) { return e.indexOf(LISTA) === 0 ? "lista:" + e.slice(LISTA.length) : e; }).join(", "),
+        c.optout ? "Saiu da lista" : c.optin ? "Autorizou" : "Sem autorização", rotuloOrigemCurto(c.origem || "__nenhuma"), c.ultima_msg_em ? quando(c.ultima_msg_em) : ""];
+    }));
+    const url = URL.createObjectURL(new Blob([texto], { type: "text/csv;charset=utf-8" })), a = document.createElement("a");
+    a.href = url; a.download = "contatos-" + new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10) + ".csv"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+    aviso("Arquivo baixado com " + lista.length + (lista.length === 1 ? " contato." : " contatos."));
   }
   async function telaContatos() { await carregarContatos(); desenharListas(); desenharContatos(); }
-  ["ctBusca", "ctFiltroEt", "ctFiltroSt"].forEach(function (id) { $(id).addEventListener("input", desenharContatos); });
+  ["ctBusca", "ctFiltroEt", "ctFiltroSt", "ctFiltroOr"].forEach(function (id) { $(id).addEventListener("input", function () { $("ctSalvos").value = ""; $("ctApagarFiltro").hidden = true; desenharContatos(); }); });
+  $("ctSalvos").addEventListener("change", function () {
+    const f = filtrosSalvos.filter(function (x) { return x.id === $("ctSalvos").value; })[0];
+    $("ctApagarFiltro").hidden = !f;
+    if (!f) return;
+    const v = f.filtro || {};
+    $("ctBusca").value = v.busca || ""; $("ctFiltroEt").value = v.etiqueta || ""; $("ctFiltroSt").value = v.situacao || ""; $("ctFiltroOr").value = v.origem || "";
+    desenharContatos();
+  });
+  $("ctSalvarFiltro").addEventListener("click", async function () {
+    const f = filtroAtual();
+    if (!f.busca && !f.etiqueta && !f.situacao && !f.origem) return aviso("Escolha algum filtro antes de salvar.", true);
+    const nome = (prompt("Nome para este filtro (ex.: Alunos que autorizaram):") || "").trim().slice(0, 60);
+    if (!nome) return;
+    try {
+      const u = await supa().auth.getUser();
+      await ler(supa().from("wa_filtros_salvos").insert({ nome: nome, filtro: f, criado_por: u && u.data && u.data.user ? u.data.user.id : null }).select("id"));
+      aviso("Filtro salvo."); await carregarFiltrosSalvos();
+    } catch (e) { falha(e); }
+  });
+  $("ctApagarFiltro").addEventListener("click", async function () {
+    const id = $("ctSalvos").value; if (!id) return;
+    if (!confirm("Apagar este filtro salvo? Os contatos não são apagados.")) return;
+    try { await ler(supa().from("wa_filtros_salvos").delete().eq("id", id).select("id")); $("ctSalvos").value = ""; aviso("Filtro apagado."); await carregarFiltrosSalvos(); } catch (e) { falha(e); }
+  });
+  $("ctExportar").addEventListener("click", function () { exportarContatos(contatosFiltrados()); });
+  $("ctSelTodos").addEventListener("change", function () {
+    const lista = contatosFiltrados();
+    if (this.checked) lista.forEach(function (c) { ctSel.add(c.id); }); else lista.forEach(function (c) { ctSel.delete(c.id); });
+    desenharContatos();
+  });
+  $("ctSelLimpar").addEventListener("click", function () { ctSel.clear(); desenharContatos(); });
+  $("ctSelCsv").addEventListener("click", function () { exportarContatos(contatos.filter(function (c) { return ctSel.has(c.id); })); });
+  async function etiquetarLote(adicionar) {
+    const ids = Array.from(ctSel); if (!ids.length) return;
+    const txt = (prompt((adicionar ? "Etiqueta para ADICIONAR" : "Etiqueta para REMOVER") + " em " + ids.length + (ids.length === 1 ? " contato" : " contatos") + ":\n(separe várias por vírgula; isso não muda autorização nem saída da lista)") || "").trim();
+    if (!txt) return;
+    const tags = txt.split(",").map(function (x) { return x.trim(); }).filter(Boolean);
+    if (!tags.length) return;
+    if (!confirm((adicionar ? "Adicionar " : "Remover ") + tags.map(function (t) { return '"' + t + '"'; }).join(", ") + " em " + ids.length + " contato(s)?")) return;
+    try {
+      const r = await ler(supa().rpc("wa_contatos_etiquetar", { p_ids: ids, p_adicionar: adicionar ? tags : [], p_remover: adicionar ? [] : tags }));
+      if (!r || !r.ok) throw new Error((r && r.erro) || "Não consegui alterar as etiquetas.");
+      aviso(r.alterados + (r.alterados === 1 ? " contato alterado" : " contatos alterados") + (r.alterados < r.escolhidos ? " (os outros já estavam assim)." : "."));
+      await telaContatos();
+    } catch (e) { falha(e, e.message); }
+  }
+  $("ctSelAdd").addEventListener("click", function () { etiquetarLote(true); });
+  $("ctSelRem").addEventListener("click", function () { etiquetarLote(false); });
+  $("ctLista").addEventListener("change", function (ev) {
+    const cb = ev.target.closest("[data-ct-sel]"); if (!cb) return;
+    if (cb.checked) ctSel.add(cb.dataset.ctSel); else ctSel.delete(cb.dataset.ctSel);
+    desenharSelecao();
+  });
 
   /* grava uma lista de pessoas sem nunca tirar autorização nem reativar quem saiu */
   async function salvarContatos(pessoas, aceite, etiquetas) {

@@ -396,7 +396,19 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
           <select id="ctFiltroEt" aria-label="Filtrar por etiqueta"><option value="">Todas as listas e etiquetas</option></select>
           <select id="ctFiltroSt" aria-label="Filtrar por situação"><option value="">Todas as situações</option><option value="optin">Autorizaram (podem receber)</option><option value="sem">Sem autorização</option><option value="optout">Saíram da lista</option></select>
         </div>
-        <div class="tabela-wrap" style="max-height:560px"><table class="t"><thead><tr><th>Nome</th><th>WhatsApp</th><th>Etiquetas</th><th>Situação</th><th>Última mensagem</th><th></th></tr></thead><tbody id="ctLista"><tr><td colspan="6" class="vazio">Carregando...</td></tr></tbody></table></div>
+        <div class="acoes" style="margin:0 0 10px;align-items:center">
+          <select id="ctFiltroOr" aria-label="Filtrar por origem"><option value="">Qualquer origem</option></select>
+          <select id="ctSalvos" aria-label="Filtros salvos"><option value="">Filtros salvos</option></select>
+          <button class="btn peq contorno" type="button" id="ctSalvarFiltro">Salvar este filtro</button>
+          <button class="btn peq contorno" type="button" id="ctApagarFiltro" hidden>Apagar filtro salvo</button>
+          <button class="btn peq contorno" type="button" id="ctExportar">Exportar (CSV)</button>
+        </div>
+        <div class="wa-fn-aviso" id="ctSelBarra" hidden role="status"><span id="ctSelTxt"></span>
+          <button class="btn peq" type="button" id="ctSelAdd">Adicionar etiqueta</button>
+          <button class="btn peq contorno" type="button" id="ctSelRem">Remover etiqueta</button>
+          <button class="btn peq contorno" type="button" id="ctSelCsv">Exportar selecionados</button>
+          <button class="btn peq contorno" type="button" id="ctSelLimpar">Limpar seleção</button></div>
+        <div class="tabela-wrap" style="max-height:560px"><table class="t"><thead><tr><th><input type="checkbox" id="ctSelTodos" aria-label="Escolher todos os contatos deste filtro"></th><th>Nome</th><th>WhatsApp</th><th>Etiquetas</th><th>Situação</th><th>Última mensagem</th><th></th></tr></thead><tbody id="ctLista"><tr><td colspan="7" class="vazio">Carregando...</td></tr></tbody></table></div>
       </div>
     </section>
 
