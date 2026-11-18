@@ -1642,13 +1642,17 @@
       if (d.status === "agendado" || d.status === "enviando") bt = '<button class="btn peq contorno" data-dp="pausar" data-id="' + d.id + '">Pausar</button> ';
       if (["agendado", "enviando", "pausado"].indexOf(d.status) > -1) bt += '<button class="btn peq perigo" data-dp="cancelar" data-id="' + d.id + '">Cancelar</button>';
       if (["rascunho", "concluido", "cancelado"].indexOf(d.status) > -1) bt += '<button class="btn peq perigo" data-dp="apagar" data-id="' + d.id + '">Apagar</button>';
-      return "<tr><td><b>" + esc(d.nome) + '</b><br><span class="vazio">' + esc(quando(d.criado_em)) + (d.agendado_para ? " · agendado " + esc(quando(d.agendado_para)) : "") + "</span></td><td>" + esc(d.template_nome) + '</td><td><span class="selo ' + st[1] + '">' + esc(st[0]) + "</span></td>" +
-        '<td><div class="wa-barra"><i style="width:' + pct + '%"></i></div><span class="vazio">' + feitos + " de " + d.total + "</span></td><td>" + r.entregues + "</td><td>" + r.lidos + "</td><td>" + r.falhas + "</td><td>" + bt + "</td></tr>";
+      return '<tr><td><button type="button" class="cp-abrir" data-dp-painel="' + d.id + '" title="Abrir o painel desta campanha">' + esc(d.nome) + '</button><br><span class="vazio">' + esc(quando(d.criado_em)) + (d.agendado_para ? " · agendado " + esc(quando(d.agendado_para)) : "") + "</span></td><td>" + esc(d.template_nome) + '</td><td><span class="selo ' + st[1] + '">' + esc(st[0]) + "</span></td>" +
+        '<td><div class="wa-barra"><i style="width:' + pct + '%"></i></div><span class="vazio">' + feitos + " de " + d.total + "</span></td><td>" + r.entregues + "</td><td>" + r.lidos + "</td><td>" + r.falhas + '</td><td><button class="btn peq contorno" data-dp-painel="' + d.id + '">Painel</button> ' + bt + "</td></tr>";
     }).join("");
   }
-  $("dpLista").addEventListener("click", async function (ev) {
+  $("dpLista").addEventListener("click", function (ev) {
+    const p = ev.target.closest("[data-dp-painel]"); if (p) return abrirPainel(p.dataset.dpPainel);
     const b = ev.target.closest("[data-dp]"); if (!b) return;
-    const id = b.dataset.id, acao = b.dataset.dp;
+    acaoDp(b.dataset.dp, b.dataset.id);
+  });
+  /* ações de uma campanha (usadas pela lista e pelo painel) */
+  async function acaoDp(acao, id) {
     try {
       if (acao === "iniciar") {
         const r = await wa({ acao: "iniciar_disparo", disparo_id: id });
@@ -1665,8 +1669,12 @@
         await ler(supa().from("wa_disparos").delete().eq("id", id).select("id")); aviso("Apagado.");
       }
       desenharDisparos();
+      if (cp.id === id && $("jCampanha").open) {
+        if (acao === "apagar") $("jCampanha").close();
+        else carregarPainel(false).then(function () { return carregarDestinatarios(true); }).catch(function () {});
+      }
     } catch (e) { falha(e); }
-  });
+  }
   $("dpAtualizar").addEventListener("click", function () { telaDisparos().catch(falha); });
   $("dpProcessar").addEventListener("click", async function () {
     const r = await wa({ acao: "processar_agora" });
@@ -1704,6 +1712,138 @@
   }
   $("dpCriar").addEventListener("click", function () { criarDisparo(true); });
   $("dpRascunho").addEventListener("click", function () { criarDisparo(false); });
+
+  /* ---------- painel da campanha (Fase 4, item 4.1) ---------- */
+  const cp = { id: null, dados: null, filtro: "todas", busca: "", itens: [], total: 0, seq: 0, tBusca: null };
+  const FILTROS_CP = [["todas", "Todos"], ["respondeu", "Responderam"], ["lido", "Lidos"], ["entregue", "Entregues"], ["enviado", "Enviados"], ["falhou", "Falharam"], ["pulado", "Pulados"], ["pendente", "Pendentes"], ["saiu", "Saíram"]];
+  async function abrirPainel(id) {
+    cp.id = id; cp.dados = null; cp.filtro = "todas"; cp.busca = ""; cp.itens = []; cp.total = 0;
+    $("cpNome").textContent = "Carregando..."; $("cpResumo").innerHTML = '<p class="vazio">Carregando o painel...</p>';
+    $("cpBusca").value = ""; $("cpFiltros").innerHTML = ""; $("cpLista").innerHTML = ""; $("cpMais").hidden = true; $("cpContagem").textContent = "";
+    if (!$("jCampanha").open) $("jCampanha").showModal();
+    await carregarPainel(true);
+  }
+  async function carregarPainel(comLista) {
+    const id = cp.id; if (!id) return;
+    try {
+      const d = await ler(supa().rpc("wa_disparo_painel", { p_id: id }));
+      if (id !== cp.id) return;
+      if (!d) { $("cpNome").textContent = "Campanha"; $("cpResumo").innerHTML = '<p class="vazio">Esta campanha não existe mais.</p>'; return; }
+      cp.dados = d; desenharPainel();
+      if (comLista) await carregarDestinatarios(true);
+    } catch (e) { falha(e); }
+  }
+  function desenharPainel() {
+    const W = window.WaCamp, d = cp.dados, c = d.campanha || {}, it = d.itens || {}, f = d.funil || {}, m = d.mensagens || {};
+    const st = ROT_DP[c.status] || [c.status || "?", "pendente"];
+    const tp = !d.template ? ["Template não encontrado", "off"] : d.template.removido ? ["Removido no Meta", "off"] : (ROT_ST[d.template.status] || [d.template.status || "?", "pendente"]);
+    const fato = function (rotulo, valor) { return '<div><span class="rotulo">' + rotulo + "</span><p>" + valor + "</p></div>"; };
+    $("cpNome").textContent = c.nome || "Campanha";
+    let h = '<div class="cp-fatos">' +
+      fato("Situação", '<span class="selo ' + st[1] + '">' + esc(st[0]) + "</span>") +
+      fato("Template", esc(c.template_nome || "") + ' <span class="selo ' + tp[1] + '">' + esc(tp[0]) + "</span>") +
+      fato("Categoria", esc(ROT_CAT[c.categoria] || c.categoria || "não registrada") + (d.preco != null ? " · " + W.dinheiro(d.preco) + " por mensagem" : "")) +
+      fato("Para quem", esc(W.rotuloPublico(c.publico))) +
+      fato("Criada", esc(quando(c.criado_em)) + (c.criado_por ? " por " + esc(c.criado_por) : "")) +
+      fato("Envio", m.primeira ? "De " + esc(quando(m.primeira)) + " até " + esc(quando(m.ultima)) : c.agendado_para ? "Agendada para " + esc(quando(c.agendado_para)) : "Ainda não enviada") +
+      (c.concluido_em ? fato("Concluída", esc(quando(c.concluido_em))) : "") +
+      (c.midia && /^https:\/\//.test(c.midia) ? fato("Mídia do cabeçalho", '<a href="' + esc(c.midia) + '" target="_blank" rel="noopener noreferrer">Abrir o arquivo</a>') : "") + "</div>";
+    h += '<h3 class="cp-tit">Resultado</h3><div class="cp-funil">' + W.funil(f).map(function (e) {
+      return '<div class="cp-etapa" data-etapa="' + e.chave + '"><span>' + e.rotulo + "</span><b>" + e.n + '</b><span class="cp-pct">' + e.pct + '</span><div class="wa-barra"><i style="width:' + e.largura + '%"></i></div></div>';
+    }).join("") + '</div><p class="ajuda">Enviados em % do total; as outras etapas em % dos enviados. "Responderam" conta a primeira mensagem da pessoa em até ' + (Number(d.janela_resposta_horas) || 72) +
+      " h depois do envio, sem contar pedido de saída. Quem recebeu mais de uma campanha conta só na mais recente.</p>";
+    const quadro = function (rotulo, n, classe, filtro) { n = Number(n) || 0; return '<button type="button" class="cp-quadro' + (n ? " " + classe : "") + '" data-cp-filtro="' + filtro + '" data-cp-rolar="1"><b>' + n + "</b><span>" + rotulo + "</span></button>"; };
+    h += '<div class="cp-quadros">' + quadro("Pediram para sair", d.saidas, "ruim", "saiu") + quadro("Falharam", it.falhou, "ruim", "falhou") + quadro("Pulados", it.pulado, "atencao", "pulado") + quadro("Pendentes", it.pendente, "atencao", "pendente") + "</div>";
+    const repetidas = W.alertaRepetidas(m);
+    if (repetidas) h += '<div class="aviso erro">' + esc(repetidas) + "</div>";
+    h += '<p class="cp-custo"><b>Custo estimado: ' + W.dinheiro(d.custo_estimado) + "</b> (" + (Number(m.entregues) || 0) + " mensagens entregues × " + W.dinheiro(d.preco) + '). <span class="vazio">É uma estimativa: o valor real vem da Meta.</span></p>';
+    const tabela = function (titulo, grupos) {
+      if (!grupos.length) return "";
+      return '<h3 class="cp-tit">' + titulo + '</h3><div class="tabela-wrap"><table class="t"><thead><tr><th class="quebra">Motivo</th><th>Quantas</th></tr></thead><tbody>' + grupos.map(function (g) {
+        return '<tr><td class="quebra"><b>' + esc(g.titulo) + "</b>" + (g.dica ? '<br><span class="vazio">' + esc(g.dica) + "</span>" : "") + "</td><td>" + g.n + "</td></tr>";
+      }).join("") + "</tbody></table></div>";
+    };
+    h += tabela("Falhas por motivo", W.agrupar(d.falhas, W.motivoFalha)) + tabela("Pulados por motivo", W.agrupar(d.pulados, W.motivoPulado));
+    let bt = "";
+    if (c.status === "rascunho") bt += '<button type="button" class="btn peq" data-cp-acao="iniciar">Iniciar</button>';
+    if (c.status === "pausado") bt += '<button type="button" class="btn peq" data-cp-acao="iniciar">Retomar</button>';
+    if (c.status === "agendado" || c.status === "enviando") bt += '<button type="button" class="btn peq contorno" data-cp-acao="pausar">Pausar</button>';
+    if (["agendado", "enviando", "pausado"].indexOf(c.status) > -1) bt += '<button type="button" class="btn peq perigo" data-cp-acao="cancelar">Cancelar</button>';
+    h += '<div class="acoes cp-acoes">' + bt + '<button type="button" class="btn peq contorno" id="cpCsv">Exportar resultado (CSV)</button><span class="vazio">O arquivo tem nomes e telefones: guarde com cuidado.</span></div>';
+    $("cpResumo").innerHTML = h;
+    const cont = { todas: it.total, respondeu: f.responderam, lido: it.lido, entregue: it.entregue, enviado: it.enviado, falhou: it.falhou, pulado: it.pulado, pendente: it.pendente, saiu: d.saidas };
+    $("cpFiltros").innerHTML = FILTROS_CP.map(function (x) {
+      return '<button type="button" class="wa-chip" data-cp-filtro="' + x[0] + '" aria-pressed="' + (cp.filtro === x[0] ? "true" : "false") + '">' + x[1] + "<b>" + (Number(cont[x[0]]) || "") + "</b></button>";
+    }).join("");
+  }
+  async function carregarDestinatarios(zerar) {
+    const id = cp.id, seq = ++cp.seq; if (!id) return;
+    const depois = zerar ? 0 : cp.itens.length;
+    const r = await ler(supa().rpc("wa_disparo_destinatarios", { p_id: id, p_situacao: cp.filtro, p_busca: cp.busca, p_limite: 50, p_depois: depois }));
+    if (id !== cp.id || seq !== cp.seq) return;
+    cp.total = (r && Number(r.total)) || 0;
+    cp.itens = (zerar ? [] : cp.itens).concat((r && r.itens) || []);
+    desenharDestinatarios();
+  }
+  function desenharDestinatarios() {
+    const W = window.WaCamp;
+    $("cpLista").innerHTML = cp.itens.length ? cp.itens.map(function (p) {
+      const st = W.SIT[p.status] || [p.status || "?", "pendente"];
+      const motivo = p.status === "falhou" ? W.motivoFalha(p.erro).titulo : p.status === "pulado" ? W.motivoPulado(p.erro).titulo : "";
+      const resposta = p.saiu ? '<span class="selo off">Pediu para sair</span>' + (p.resposta ? " " + esc(p.resposta) : "")
+        : p.respondeu ? esc(p.resposta || "") + '<br><span class="vazio">' + esc(quando(p.resposta_em)) + "</span>" : "";
+      return '<tr><td><button type="button" class="cp-abrir" data-cp-conversa="' + esc(p.contato_id) + '" title="Abrir a conversa">' + esc(nomeDe(p)) + '</button><br><span class="vazio">' + esc(p.telefone ? foneDe(p) : "sem número visível") + "</span></td>" +
+        '<td><span class="selo ' + st[1] + '">' + esc(st[0]) + "</span>" + (Number(p.mensagens) > 1 ? '<br><span class="vazio">' + Number(p.mensagens) + " envios</span>" : "") + '</td><td class="quebra">' + esc(motivo) + "</td><td>" +
+        (p.enviado_em ? esc(quando(p.enviado_em)) : '<span class="vazio">não enviado</span>') + '</td><td class="quebra">' + resposta + "</td></tr>";
+    }).join("") : '<tr><td colspan="5" class="vazio">' + (cp.busca || cp.filtro !== "todas" ? "Ninguém neste filtro." : "Esta campanha ainda não tem destinatários.") + "</td></tr>";
+    $("cpMais").hidden = cp.itens.length >= cp.total;
+    $("cpContagem").textContent = cp.total ? "Mostrando " + cp.itens.length + " de " + cp.total : "";
+  }
+  async function exportarCsv() {
+    const W = window.WaCamp, b = $("cpCsv"), id = cp.id; if (!id || !cp.dados || !b) return;
+    b.disabled = true; b.textContent = "Preparando...";
+    try {
+      let todos = [], total = 1;
+      while (todos.length < total) {
+        const r = await ler(supa().rpc("wa_disparo_destinatarios", { p_id: id, p_situacao: "todas", p_busca: "", p_limite: 1000, p_depois: todos.length }));
+        const lote = (r && r.itens) || []; total = (r && Number(r.total)) || 0;
+        if (!lote.length) break;
+        todos = todos.concat(lote);
+      }
+      if (!todos.length) { aviso("Esta campanha não tem destinatários para exportar.", true); return; }
+      const texto = W.csv(W.CSV_CABECALHO, todos.map(function (p) { return W.linhaCsv(p, p.telefone ? foneDe(p) : ""); }));
+      const url = URL.createObjectURL(new Blob([texto], { type: "text/csv;charset=utf-8" })), a = document.createElement("a");
+      a.href = url; a.download = W.nomeArquivo(cp.dados.campanha.nome); document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+      aviso("Arquivo baixado com " + todos.length + (todos.length === 1 ? " pessoa." : " pessoas."));
+    } catch (e) { falha(e); }
+    finally { const x = $("cpCsv"); if (x) { x.disabled = false; x.textContent = "Exportar resultado (CSV)"; } }
+  }
+  $("jCampanha").addEventListener("click", function (ev) {
+    const t = ev.target, f = t.closest("[data-cp-filtro]"), c = t.closest("[data-cp-conversa]"), a = t.closest("[data-cp-acao]");
+    if (f) {
+      cp.filtro = f.dataset.cpFiltro;
+      Array.prototype.forEach.call($("cpFiltros").querySelectorAll("[data-cp-filtro]"), function (x) { x.setAttribute("aria-pressed", x.dataset.cpFiltro === cp.filtro ? "true" : "false"); });
+      carregarDestinatarios(true).catch(falha);
+      if (f.dataset.cpRolar) $("cpDestTitulo").scrollIntoView({ block: "start" });
+      return;
+    }
+    if (c) { conversaId = c.dataset.cpConversa; $("jCampanha").close(); abrirAba("conversas"); return; }
+    if (a) return acaoDp(a.dataset.cpAcao, cp.id);
+    if (t.closest("#cpMais")) return carregarDestinatarios(false).catch(falha);
+    if (t.closest("#cpCsv")) return exportarCsv();
+  });
+  $("cpBusca").addEventListener("input", function () {
+    const v = this.value.trim(); clearTimeout(cp.tBusca);
+    cp.tBusca = setTimeout(function () { cp.busca = v; carregarDestinatarios(true).catch(falha); }, 300);
+  });
+  $("jCampanha").addEventListener("close", function () { cp.id = null; cp.dados = null; });
+  /* painel aberto com a campanha na fila ou enviando: atualiza sozinho a cada 30 segundos */
+  setInterval(function () {
+    if (document.hidden || !cp.id || !cp.dados || !$("jCampanha").open) return;
+    if (["agendado", "enviando"].indexOf((cp.dados.campanha || {}).status) === -1) return;
+    carregarPainel(false).then(function () { if (cp.itens.length <= 50 && !cp.busca) return carregarDestinatarios(true); }).catch(function () {});
+  }, 30000);
 
   /* ---------- robô ---------- */
   const ROT_ACAO = { responder: "Responde", sair_lista: "Tira da lista", entrar_lista: "Volta para a lista", chamar_humano: "Chama você" };

@@ -160,6 +160,31 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 .wa-check small{display:block;color:#5b6577}
 .wa-cont{font-size:12px;color:#5b6577;text-align:right}
 @media (max-width:900px){.wa-tp-edit{grid-template-columns:minmax(0,1fr)}.wa-tp-lado{position:static}.wa-tp-barra{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.wa-tp-barra input{grid-column:1/-1}}
+/* painel da campanha (Fase 4) */
+dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:92vh;overflow-y:auto;padding:20px}
+.cp-topo{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cp-topo h2{margin:0;overflow-wrap:anywhere}
+.cp-fatos{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 16px}
+.cp-fatos .rotulo{margin:0}
+.cp-fatos p{font-size:14.5px;overflow-wrap:anywhere;padding:0}
+.cp-tit{margin:18px 0 8px}
+.cp-funil{display:grid;gap:8px}
+.cp-funil+.ajuda{margin-top:10px}
+.cp-etapa{display:grid;grid-template-columns:104px 52px 46px minmax(40px,1fr);gap:8px;align-items:center;font-size:14.5px}
+.cp-etapa b{font:600 20px/1 var(--serif);color:var(--navy);text-align:right}
+.cp-etapa .cp-pct{font-size:13px;color:var(--muted)}
+.cp-etapa .wa-barra{min-width:0}
+.cp-quadros{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px;margin-top:14px}
+.cp-quadro{text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--ink);font:inherit}
+.cp-quadro b{display:block;font:600 22px/1.1 var(--serif);color:var(--navy)}
+.cp-quadro span{font-size:13px;color:var(--muted)}
+.cp-quadro.ruim{border-color:#F2C4BC;background:#FBE9E7}
+.cp-quadro.ruim b{color:#8C2016}
+.cp-quadro.atencao{border-color:#EAD9A6;background:#FBF4DC}
+.cp-custo{margin-top:14px;font-size:14.5px}
+.cp-abrir{background:none;border:0;padding:0;font:600 15px var(--sans);color:var(--navy);text-decoration:underline;cursor:pointer;text-align:left;overflow-wrap:anywhere}
+.cp-acoes{align-items:center}
+@media (max-width:560px){dialog.janela.janela-painel{padding:14px}.cp-etapa{grid-template-columns:88px 40px 42px minmax(30px,1fr);gap:6px}}
 </style>
 </head>
 <body>
@@ -532,6 +557,16 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
   <div class="acoes"><button class="btn auto" type="button" id="rpSalvar">Salvar</button><button class="btn auto contorno" type="button" id="rpNova">Limpar</button><button class="btn auto contorno" type="button" data-fechar="jRespostas">Fechar</button></div>
 </dialog>
 
+<dialog class="janela janela-painel" id="jCampanha" aria-labelledby="cpNome">
+  <div class="cp-topo"><h2 id="cpNome">Campanha</h2><button class="btn peq contorno" type="button" data-fechar="jCampanha">Fechar</button></div>
+  <div id="cpResumo"></div>
+  <h3 class="cp-tit" id="cpDestTitulo">Destinatários</h3>
+  <div class="f"><input id="cpBusca" type="search" placeholder="Buscar por nome ou telefone" aria-label="Buscar destinatário"></div>
+  <div class="wa-filtros" id="cpFiltros" role="group" aria-label="Filtrar destinatários"></div>
+  <div class="tabela-wrap"><table class="t"><thead><tr><th>Pessoa</th><th>Situação</th><th class="quebra">Motivo</th><th>Enviado em</th><th class="quebra">Resposta</th></tr></thead><tbody id="cpLista"></tbody></table></div>
+  <div class="acoes"><button class="btn peq contorno" type="button" id="cpMais" hidden>Carregar mais</button><span class="vazio" id="cpContagem"></span></div>
+</dialog>
+
 <dialog class="janela" id="jTemplate">
   <h2>Enviar um template</h2>
   <p class="ajuda" id="jtPara"></p>
@@ -560,6 +595,7 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 <script src="js/whatsapp-tpl.js"></script>
 <script src="js/whatsapp-lista.js"></script>
 <script src="js/whatsapp-video.js"></script>
+<script src="js/whatsapp-camp.js"></script>
 <script src="js/whatsapp.js"></script>
 </body>
 </html>
