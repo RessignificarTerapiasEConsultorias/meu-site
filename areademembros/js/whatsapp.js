@@ -3040,10 +3040,160 @@
     telaFunil().catch(function () {});
   }, 30000);
 
+  /* ---------- vendas (Fase 6): meta, indicadores, pediram e não pagaram, pedidos ---------- */
+  const vd = { mes: null, limite: 50, grupo: "todos", dados: null, seq: 0, busca: null, pedidosVistos: [] };
+  function vdOpcoesMes() {
+    const hoje = new Date(Date.now() - 3 * 3600e3), out = [];
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth() - i, 1));
+      const v = d.toISOString().slice(0, 10), nomes = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+      out.push('<option value="' + v + '">' + nomes[d.getUTCMonth()] + " de " + d.getUTCFullYear() + "</option>");
+    }
+    return out.join("");
+  }
+  function vdReais(c) { return window.WaVendas.reais(c); }
+  async function telaVendas() {
+    const seq = ++vd.seq;
+    if (!$("vdMes").options.length) $("vdMes").innerHTML = vdOpcoesMes();
+    if (!vd.mes) vd.mes = $("vdMes").options[0].value;
+    $("vdMes").value = vd.mes;
+    const [painel, pedidos, aband] = await Promise.all([
+      ler(supa().rpc("wa_vendas_painel", { p_mes: vd.mes })),
+      ler(supa().rpc("wa_vendas_pedidos", { p_grupo: vd.grupo, p_produto: $("vdProduto").value || null, p_forma: $("vdForma").value || null, p_busca: vd.busca,
+        p_sem_contato: $("vdSemContato").checked, p_incluir_testes: false, p_limite: vd.limite, p_offset: 0 })),
+      ler(supa().rpc("wa_vendas_pedidos", { p_grupo: "abandonados", p_produto: null, p_forma: null, p_busca: null, p_sem_contato: false, p_incluir_testes: false, p_limite: 20, p_offset: 0 }))
+    ]);
+    if (seq !== vd.seq) return;
+    vd.dados = painel; vd.pedidosVistos = (pedidos || []).concat(aband || []);
+    vdDesenharMeta(painel); vdDesenharIndicadores(painel); vdDesenharAband(aband || []); vdDesenharPedidos(pedidos || []);
+  }
+  function vdDesenharMeta(p) {
+    const WV = window.WaVendas, meta = p.meta ? p.meta.valor_centavos : null, pr = WV.projecao(p.receita_centavos, p.dias_passados, p.dias_no_mes, meta);
+    if (meta === null) {
+      $("vdMeta").innerHTML = '<p class="ajuda">Este mês ainda não tem meta. Defina uma abaixo para acompanhar o progresso.</p>';
+      return;
+    }
+    const linhas = [vdReais(p.receita_centavos) + " de " + vdReais(meta) + " (" + pr.percentual + "%)",
+      "Faltam " + vdReais(pr.falta) + " em " + pr.diasRestantes + (pr.diasRestantes === 1 ? " dia" : " dias") + (pr.precisaPorDia !== null ? ": " + vdReais(pr.precisaPorDia) + " por dia" : "")];
+    if (pr.semDados) linhas.push("Ainda não há dias para projetar o mês.");
+    else linhas.push("No ritmo atual: " + vdReais(pr.projetado) + " (estimativa" + (pr.projetadoBate === false ? ", abaixo da meta" : pr.projetadoBate ? ", acima da meta" : "") + ").");
+    $("vdMeta").innerHTML = "<b>" + esc(linhas[0]) + '</b><div class="vd-barra"><i style="width:' + pr.percentual + '%"></i></div>' + linhas.slice(1).map(function (l) { return '<p class="ajuda" style="margin:2px 0">' + esc(l) + "</p>"; }).join("");
+  }
+  function vdDesenharIndicadores(p) {
+    const WV = window.WaVendas, ant = p.anterior || {};
+    const seta = function (atual, anterior) { const v = WV.variacaoPct(atual, anterior); return v === null ? "" : '<small class="' + (v >= 0 ? "vd-up" : "vd-down") + '">' + (v >= 0 ? "▲ " : "▼ ") + Math.abs(v) + "% vs mês anterior</small>"; };
+    const card = function (titulo, valor, sub) { return '<div class="vd-card"><small>' + esc(titulo) + "</small><b>" + valor + "</b>" + (sub || "") + "</div>"; };
+    $("vdIndic").innerHTML = [
+      card("Receita paga", vdReais(p.receita_centavos), seta(p.receita_centavos, ant.receita_centavos)),
+      card("Pedidos pagos", String(p.pedidos_pagos), seta(p.pedidos_pagos, ant.pedidos_pagos)),
+      card("Ticket médio", p.ticket_centavos ? vdReais(p.ticket_centavos) : "—"),
+      card("Conversão", p.conversao_pct === null ? "—" : p.conversao_pct + "%", "<small>" + p.pedidos_pagos + " de " + p.iniciados + " que começaram</small>"),
+      card("Abandonados", String(p.abandonos), "<small>começaram e não pagaram (30 min)</small>"),
+      card("Tempo até pagar", p.mediana_horas_pagar === null ? "—" : p.mediana_horas_pagar + " h", "<small>mediana</small>")
+    ].join("") + (p.testes_ignorados ? '<p class="ajuda vd-aviso" style="grid-column:1/-1">' + p.testes_ignorados + (p.testes_ignorados === 1 ? " pedido de teste ignorado" : " pedidos de teste ignorados") + " neste mês.</p>" : "");
+    const nomes = { travas: "Teste de Travas Mentais", tracos: "Teste de Traços de Caráter" };
+    $("vdProdutos").innerHTML = "<b>Por produto</b>" + ((p.por_produto || []).map(function (x) { return "<div><span>" + esc(nomes[x.produto_chave] || x.nome || x.produto_chave) + "</span><span>" + x.qtd + " · " + vdReais(x.receita) + "</span></div>"; }).join("") || '<p class="vazio">Sem vendas neste mês.</p>');
+    $("vdFormas").innerHTML = "<b>Por forma de pagamento</b>" + ((p.por_forma || []).map(function (x) { return "<div><span>" + esc(WV.rotuloForma(x.forma)) + "</span><span>" + x.qtd + " · " + vdReais(x.receita) + "</span></div>"; }).join("") || '<p class="vazio">Sem vendas neste mês.</p>');
+  }
+  function vdDesenharAband(lista) {
+    const WV = window.WaVendas;
+    $("vdAband").innerHTML = lista.length ? lista.map(function (x) {
+      const min = WV.minutosDesde(x.criado_em), texto = WV.textoCarrinho(x.nome, x.produto);
+      return '<li><div><b>' + esc(x.nome || "(sem nome)") + "</b> · " + esc(x.produto) + " · " + esc(vdReais(x.valor_centavos)) + " · " + esc(WV.tempoTexto(min)) + "</div>"
+        + '<div class="acoes" style="margin:6px 0 0"><button class="btn peq contorno" type="button" data-vd-copiar="' + esc(texto) + '">Copiar resposta</button>'
+        + (x.contato_id ? '<button class="btn peq" type="button" data-vd-conversa="' + esc(x.id) + '">Conversa</button>' : '<span class="vd-aviso">Sem contato no CRM</span>')
+        + "</div></li>";
+    }).join("") : '<li class="vazio">Ninguém pediu e deixou de pagar nos últimos dias.</li>';
+  }
+  function vdDesenharPedidos(lista) {
+    const WV = window.WaVendas;
+    $("vdLista").innerHTML = lista.length ? lista.map(function (p) {
+      const pessoa = p.contato_nome || p.nome || "(sem nome)";
+      const valor = p.status === "ativado" || p.status === "pago" || p.status === "ativando" ? (p.valor_pago_centavos || p.valor_centavos) : p.valor_centavos;
+      const bt = (p.contato_id ? '<button class="btn peq" type="button" data-vd-conversa="' + esc(p.id) + '">Conversa</button>' : '<button class="btn peq contorno" type="button" data-vd-criar="' + esc(p.id) + '">Criar contato</button>');
+      return "<tr><td><b>" + esc(pessoa) + "</b>" + (p.contato_id ? "" : '<br><small class="vd-aviso">sem contato no CRM</small>') + "</td>"
+        + "<td>" + esc(p.produto) + "</td><td>" + esc(vdReais(valor)) + "</td><td>" + esc(WV.rotuloForma(p.forma)) + "</td>"
+        + "<td>" + esc(WV.rotuloStatus(p.status)) + (p.abandonado ? ' <small class="vd-aviso">· parado</small>' : "") + "</td>"
+        + "<td>" + esc(horaCurta(p.criado_em)) + '</td><td><div class="acoes" style="margin:0"><button class="btn peq contorno" type="button" data-vd-detalhe="' + esc(p.id) + '">Detalhe</button>' + bt + "</div></td></tr>";
+    }).join("") : '<tr><td colspan="7" class="vazio">Nenhum pedido com esses filtros.</td></tr>';
+    $("vdMais").hidden = lista.length < vd.limite;
+    $("vdContagem").textContent = lista.length ? "Mostrando " + lista.length : "";
+  }
+  function vdPedidoPorId(id) { return (vd.pedidosVistos || []).filter(function (x) { return x.id === id; })[0] || null; }
+  async function vdAbrirConversa(pedidoId) {
+    const p = vdPedidoPorId(pedidoId) || {};
+    let contato = p.contato_id;
+    if (!contato) {
+      const r = await ler(supa().rpc("wa_vendas_vincular", { p_pedido: pedidoId, p_contato: null, p_criar: true }));
+      if (!r || !r.ok) return aviso((r && r.erro) || "Não consegui criar o contato.", true);
+      contato = r.contato_id;
+    }
+    conversaId = contato; ancora = null;
+    abrirAba("conversas");
+    abrirConversa();
+  }
+  async function vdCriarContato(pedidoId) {
+    const r = await ler(supa().rpc("wa_vendas_vincular", { p_pedido: pedidoId, p_contato: null, p_criar: true }));
+    if (!r || !r.ok) return aviso((r && r.erro) || "Não consegui criar o contato.", true);
+    aviso("Contato criado. Ele entra no CRM sem autorização de marketing.");
+    await telaVendas();
+  }
+  async function vdAbrirDetalhe(id) {
+    $("vdDetBody").innerHTML = '<p class="vazio">Carregando...</p>';
+    $("vdDetConversa").hidden = true;
+    if (!$("jVendaDetalhe").open) $("jVendaDetalhe").showModal();
+    const d = await ler(supa().rpc("wa_vendas_pedido_detalhe", { p_pedido: id }));
+    if (!d || !d.pedido) { $("vdDetBody").innerHTML = '<p class="ajuda">Pedido não encontrado.</p>'; return; }
+    const p = d.pedido, WV = window.WaVendas;
+    $("vdDetTitulo").textContent = p.nome || "Pedido";
+    const lanc = p.lancamento ? "<p class=\"ajuda\">Lançamento no financeiro: " + esc(p.lancamento) + "</p>" : '<p class="ajuda vd-aviso">Sem lançamento financeiro registrado.</p>';
+    const rep = Array.isArray(p.repasses) && p.repasses.length ? "<p class=\"ajuda\">Repasses: " + p.repasses.length + " registrado(s).</p>" : "";
+    const alerta = p.inconsistente ? '<p class="ajuda vd-aviso">Atenção: este pedido está cancelado mas tem data de pagamento. Confira na loja antes de contar como venda.</p>' : "";
+    const eventos = (d.eventos || []).map(function (e) { return "<li>" + esc(e.detalhe || e.tipo) + "<br><small>" + esc(horaCurta(e.criado_em)) + "</small></li>"; }).join("") || '<li class="vazio">Sem eventos.</li>';
+    $("vdDetBody").innerHTML = alerta
+      + '<div class="grade g2"><div><b>Produto</b><p>' + esc(p.produto) + "</p></div><div><b>Situação</b><p>" + esc(WV.rotuloStatus(p.status)) + "</p></div>"
+      + "<div><b>Valor do pedido</b><p>" + esc(vdReais(p.valor_centavos)) + "</p></div><div><b>Valor pago</b><p>" + esc(p.valor_pago_centavos ? vdReais(p.valor_pago_centavos) : "—") + "</p></div>"
+      + "<div><b>Forma</b><p>" + esc(WV.rotuloForma(p.forma)) + "</p></div><div><b>Criado</b><p>" + esc(horaCurta(p.criado_em)) + "</p></div></div>"
+      + lanc + rep + '<h3 class="cp-tit">Linha do tempo</h3><ol class="wa-fn-ativ">' + eventos + "</ol>";
+    if (p.contato_id) { $("vdDetConversa").hidden = false; $("vdDetConversa").onclick = function () { $("jVendaDetalhe").close(); vdAbrirConversa(id); }; }
+  }
+  $("vdMes").addEventListener("change", function () { vd.mes = this.value; telaVendas().catch(function (e) { falha(e); }); });
+  $("vdAtualizar").addEventListener("click", function () { telaVendas().catch(function (e) { falha(e, "Não consegui atualizar as vendas."); }); });
+  $("vdMetaSalvar").addEventListener("click", async function () {
+    const txt = String($("vdMetaValor").value || "").replace(",", ".");
+    const reais = parseFloat(txt);
+    if (!Number.isFinite(reais) || reais <= 0) return aviso("Digite um valor de meta maior que zero.", true);
+    try {
+      const r = await ler(supa().rpc("wa_meta_salvar", { p_mes: vd.mes, p_valor_centavos: Math.round(reais * 100), p_produto_chave: null }));
+      if (r && r.ok === false) throw new Error(r.erro);
+      $("vdMetaValor").value = ""; aviso("Meta salva."); await telaVendas();
+    } catch (e) { falha(e, e.message); }
+  });
+  ["vdGrupo", "vdProduto", "vdForma", "vdSemContato"].forEach(function (id) { $(id).addEventListener("change", function () { vd.limite = 50; vd.grupo = $("vdGrupo").value; telaVendas().catch(function (e) { falha(e); }); }); });
+  let vdBuscaT = null;
+  $("vdBusca").addEventListener("input", function () { clearTimeout(vdBuscaT); vdBuscaT = setTimeout(function () { vd.busca = $("vdBusca").value.trim() || null; vd.limite = 50; telaVendas().catch(function (e) { falha(e); }); }, 350); });
+  $("vdMais").addEventListener("click", function () { vd.limite += 50; telaVendas().catch(function (e) { falha(e); }); });
+  $("vdLista").addEventListener("click", function (ev) {
+    const b = ev.target.closest("button"); if (!b) return;
+    if (b.dataset.vdDetalhe) vdAbrirDetalhe(b.dataset.vdDetalhe);
+    else if (b.dataset.vdConversa) vdAbrirConversa(b.dataset.vdConversa).catch(function (e) { falha(e); });
+    else if (b.dataset.vdCriar) vdCriarContato(b.dataset.vdCriar).catch(function (e) { falha(e); });
+  });
+  $("vdAband").addEventListener("click", function (ev) {
+    const b = ev.target.closest("button"); if (!b) return;
+    if (b.dataset.vdCopiar) {
+      const txt = b.dataset.vdCopiar;
+      const ok = function () { aviso("Resposta copiada. Cole na conversa."); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, function () { aviso("Não consegui copiar. Copie o texto manualmente: " + txt, true); });
+      else aviso("Copie manualmente: " + txt);
+    } else if (b.dataset.vdConversa) vdAbrirConversa(b.dataset.vdConversa).catch(function (e) { falha(e); });
+  });
+  setInterval(function () { if (!document.hidden && abaAtual === "vendas") telaVendas().catch(function () {}); }, 60000);
+
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
     abaAtual = nome;
-    const f = { conversas: telaConversas, funil: telaFunil, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, fluxos: telaFluxos, config: telaConfig }[nome];
+    const f = { conversas: telaConversas, funil: telaFunil, vendas: telaVendas, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, fluxos: telaFluxos, config: telaConfig }[nome];
     f().catch(function (e) { falha(e); });
   });
   setInterval(function () {

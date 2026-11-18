@@ -211,6 +211,22 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 .wa-fn-colunas-lista{display:grid;gap:8px}
 .wa-fn-col-linha{display:grid;grid-template-columns:1fr 46px 120px auto;gap:6px;align-items:center}
 .wa-fn-col-linha input[type=color]{width:46px;height:34px;padding:2px}
+/* vendas (Fase 6) */
+.vd-blocos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vd-bloco{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.vd-barra{height:12px;border-radius:6px;background:#EDE7DA;overflow:hidden;margin:8px 0}
+.vd-barra i{display:block;height:100%;background:#B8862B}
+.vd-indic{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.vd-card{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#FBF9F4}
+.vd-card b{display:block;font-size:17px}
+.vd-card small{color:var(--muted)}
+.vd-up{color:#1F6B3A}.vd-down{color:#B3261E}
+.vd-lista-mini{margin-top:10px;font-size:13.5px}
+.vd-lista-mini div{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.vd-meta-form{margin-top:10px}
+.vd-meta-form input{max-width:180px}
+.vd-aviso{font-size:13px;color:#8A6100}
+@media (max-width:820px){.vd-blocos{grid-template-columns:1fr}}
 /* painel da campanha (Fase 4) */
 dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:92vh;overflow-y:auto;padding:20px}
 .cp-topo{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -265,6 +281,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
     <div class="abas" id="abas" role="tablist">
       <button class="aba" type="button" data-aba="conversas" aria-selected="true">Conversas <span class="selo ouro" id="bdNaoLidas" hidden></span></button>
       <button class="aba" type="button" data-aba="funil" aria-selected="false">Funil</button>
+      <button class="aba" type="button" data-aba="vendas" aria-selected="false">Vendas</button>
       <button class="aba" type="button" data-aba="contatos" aria-selected="false">Contatos</button>
       <button class="aba" type="button" data-aba="disparos" aria-selected="false">Disparos</button>
       <button class="aba" type="button" data-aba="bloqueio" aria-selected="false">Não enviar</button>
@@ -321,6 +338,33 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
         <div class="wa-fn-toast" id="fnToast" hidden role="status"><span id="fnToastTxt"></span> <button class="btn peq contorno" type="button" id="fnToastDesfazer">Desfazer</button></div>
         <h3 class="cp-tit" style="margin-top:18px">Atividades recentes</h3>
         <ol class="wa-fn-ativ" id="fnAtividades"><li class="vazio">Carregando...</li></ol>
+      </div>
+    </section>
+
+    <section data-painel="vendas" hidden>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>Vendas</h2><select id="vdMes" aria-label="Mês"></select><button class="btn peq contorno" type="button" id="vdAtualizar">Atualizar</button></div>
+        <p class="ajuda" style="margin-top:8px">Vendas da loja do site (pedidos pagos pela InfinitePay). Pedidos de teste de R$ 1,00 ficam fora dos números.</p>
+        <div class="vd-blocos" style="margin-top:12px">
+          <div class="vd-bloco" id="vdMetaBox"><h3 class="cp-tit">Meta do mês</h3><div id="vdMeta"></div>
+            <div class="vd-meta-form"><label for="vdMetaValor">Definir meta do mês (R$)</label><div class="acoes" style="margin:0"><input id="vdMetaValor" type="number" min="1" step="1" placeholder="10000"><button class="btn peq" type="button" id="vdMetaSalvar">Salvar meta</button></div></div></div>
+          <div class="vd-bloco"><h3 class="cp-tit">Indicadores</h3><div class="vd-indic" id="vdIndic"><p class="vazio">Carregando...</p></div>
+            <div class="vd-lista-mini" id="vdProdutos"></div><div class="vd-lista-mini" id="vdFormas"></div></div>
+        </div>
+        <div class="vd-bloco" style="margin-top:12px"><h3 class="cp-tit">Pediram e não pagaram</h3><p class="ajuda">Começaram a compra há mais de 30 min e não pagaram. A resposta pronta fala só do pedido.</p><ol class="wa-fn-ativ" id="vdAband"><li class="vazio">Carregando...</li></ol></div>
+        <div class="vd-bloco" style="margin-top:12px">
+          <h3 class="cp-tit">Pedidos</h3>
+          <div class="wa-fn-filtros">
+            <select id="vdGrupo" aria-label="Situação"><option value="todos">Todos</option><option value="pagos">Pagos</option><option value="ativados">Ativados</option><option value="aguardando">Aguardando pagamento</option><option value="abandonados">Abandonados</option><option value="cancelados">Cancelados</option></select>
+            <select id="vdProduto" aria-label="Produto"><option value="">Todos os produtos</option><option value="travas">Teste de Travas Mentais</option><option value="tracos">Teste de Traços de Caráter</option></select>
+            <select id="vdForma" aria-label="Forma de pagamento"><option value="">Qualquer forma</option><option value="pix">Pix</option><option value="credit_card">Cartão</option><option value="manual">Manual</option><option value="nao_informada">Não informada</option></select>
+            <input id="vdBusca" type="search" placeholder="Buscar por nome, e-mail ou telefone" aria-label="Buscar pedido">
+            <label class="wa-fn-chk"><input type="checkbox" id="vdSemContato"> Sem contato no CRM</label>
+          </div>
+          <div class="tabela-wrap" style="margin-top:10px"><table class="tabela"><thead><tr><th>Pessoa</th><th>Produto</th><th>Valor</th><th>Forma</th><th>Situação</th><th>Quando</th><th></th></tr></thead><tbody id="vdLista"><tr><td colspan="7" class="vazio">Carregando...</td></tr></tbody></table></div>
+          <div class="acoes"><button class="btn peq contorno" type="button" id="vdMais" hidden>Mostrar mais</button><span class="vazio" id="vdContagem"></span></div>
+        </div>
+        <p class="ajuda" style="margin-top:12px">Ainda não aparecem nesta aba: origem das vendas, cupons e conciliação com o financeiro. Essas partes vêm nos próximos passos da fase.</p>
       </div>
     </section>
 
@@ -754,6 +798,12 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
   <div class="acoes"><button class="btn auto" type="button" id="fgConfirmar">Confirmar</button><button class="btn auto contorno" type="button" data-fechar="jFunilGanho">Cancelar</button></div>
 </dialog>
 
+<dialog class="janela janela-larga" id="jVendaDetalhe" aria-labelledby="vdDetTitulo">
+  <h2 id="vdDetTitulo">Pedido</h2>
+  <div id="vdDetBody"><p class="vazio">Carregando...</p></div>
+  <div class="acoes"><button class="btn auto" type="button" id="vdDetConversa" hidden>Abrir conversa</button><button class="btn auto contorno" type="button" data-fechar="jVendaDetalhe">Fechar</button></div>
+</dialog>
+
 <dialog class="janela janela-larga" id="jFunilQuadros" aria-labelledby="fqTitulo">
   <h2 id="fqTitulo">Gerenciar quadros</h2>
   <p class="ajuda">Quadros são funis separados. O "Funil principal" espelha a etapa de cada pessoa: suas colunas não podem ser apagadas, e ele não pode ser arquivado.</p>
@@ -834,6 +884,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 <script src="js/whatsapp-video.js"></script>
 <script src="js/whatsapp-camp.js"></script>
 <script src="js/whatsapp-funil.js"></script>
+<script src="js/whatsapp-vendas.js"></script>
 <script src="js/whatsapp.js"></script>
 </body>
 </html>
