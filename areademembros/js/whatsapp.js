@@ -1035,9 +1035,10 @@
   const ROT_ORIGEM = { whatsapp: "WhatsApp (a pessoa escreveu primeiro)", painel: "Adicionado por você no painel", site: "Inscrição pelo site", anuncio: "Anúncio com botão de WhatsApp" };
   const PAUSAS = [[30, "30 min"], [60, "1 h"], [120, "2 h"], [240, "4 h"], [480, "8 h"], [720, "12 h"], [1440, "24 h"], [0, "Para sempre (sem disparos)"]];
   const SEM_PRAZO = "9999-12-31T00:00:00Z";
-  const CAMPOS_LISTA = "id,nome,telefone,username,ultima_msg_em,ultima_msg_texto,nao_lidas,precisa_humano,optout,ultima_entrada_em,prioridade,robo_pausado_ate,sem_resposta,sem_resposta_desde";
+  const CAMPOS_LISTA = "id,nome,telefone,username,ultima_msg_em,ultima_msg_texto,nao_lidas,precisa_humano,optout,ultima_entrada_em,prioridade,etapa,robo_pausado_ate,sem_resposta,sem_resposta_desde";
   const CAMPOS_MSG = "id,direcao,tipo,texto,status,erro,origem,template_nome,criado_em,midia_url,midia_tipo,midia_caminho,midia_mime,midia_nome,midia_id,reacao";
   let filtroCv = "todas";
+  const extraCv = { interessado: false, alta: false };
   let listaCv = [];
   const busca = { termo: "", seq: 0, timer: null, contatos: [], mensagens: [], pronta: false };
   let fichaAberta = window.matchMedia("(min-width:1181px)").matches;
@@ -1085,6 +1086,8 @@
     else if (filtroCv === "nao_lidas") q = q.gt("nao_lidas", 0);
     else if (filtroCv === "lidas") q = q.eq("nao_lidas", 0);
     else if (filtroCv === "pediu") q = q.eq("precisa_humano", true);
+    if (extraCv.interessado) q = q.eq("etapa", "interessado");
+    if (extraCv.alta) q = q.in("prioridade", ["alta", "urgente"]);
     const r = await Promise.all([ler(q), contagemCv()]);
     listaCv = r[0];
     const n = r[1] || {
@@ -1098,10 +1101,20 @@
     $("cvNPediu").textContent = n.pediu ? n.pediu : "";
     $("cvNSemResp").textContent = n.sem_resposta ? n.sem_resposta : "";
     $("cvSemRespAcoes").hidden = filtroCv !== "sem_resposta" || !listaCv.length;
+    contarExtrasCv();
     document.title = (n.msgs_nao_lidas ? "(" + n.msgs_nao_lidas + ") " : "") + "WhatsApp | Ressignificar";
     desenharLista();
   }
+  async function contarExtrasCv() {
+    try {
+      const f = function () { return supa().from("wa_contatos").select("id", { count: "exact", head: true }).not("ultima_msg_em", "is", null); };
+      const r = await Promise.all([f().eq("etapa", "interessado"), f().in("prioridade", ["alta", "urgente"])]);
+      $("cvNInteressados").textContent = r[0] && r[0].count ? r[0].count : ""; $("cvNAlta").textContent = r[1] && r[1].count ? r[1].count : "";
+    } catch (e) {}
+  }
   function passaFiltro(c) {
+    if (extraCv.interessado && c.etapa !== undefined && c.etapa !== "interessado") return false;
+    if (extraCv.alta && c.prioridade !== undefined && c.prioridade !== "alta" && c.prioridade !== "urgente") return false;
     if (filtroCv === "nao_lidas") return c.nao_lidas > 0;
     if (filtroCv === "lidas") return !c.nao_lidas;
     if (filtroCv === "pediu") return !!c.precisa_humano;
@@ -1151,7 +1164,8 @@
       return;
     }
     const vazio = { todas: "Nenhuma conversa ainda. Quando alguém escrever para o número do CRM, aparece aqui.", nao_lidas: "Nenhuma conversa com mensagem não lida.", sem_resposta: "Nenhuma conversa esperando a sua resposta. Tudo em dia!", lidas: "Nenhuma conversa lida.", pediu: "Ninguém está esperando atendimento." }[filtroCv];
-    caixa.innerHTML = listaCv.length ? listaCv.map(itemCv).join("") : '<p class="vazio">' + vazio + "</p>";
+    const vazioX = (extraCv.interessado || extraCv.alta) ? "Nenhuma conversa com esses filtros." : vazio;
+    caixa.innerHTML = listaCv.length ? listaCv.map(itemCv).join("") : '<p class="vazio">' + vazioX + "</p>";
   }
   function buscar() {
     const termo = $("cvBusca").value.trim();
@@ -1186,6 +1200,13 @@
     const b = ev.target.closest("[data-filtro]"); if (!b) return;
     filtroCv = b.dataset.filtro;
     Array.prototype.forEach.call($("cvFiltros").querySelectorAll("[data-filtro]"), function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+    carregarLista().catch(falha);
+  });
+
+  $("cvFiltros2").addEventListener("click", function (ev) {
+    const b = ev.target.closest("[data-extra]"); if (!b) return;
+    extraCv[b.dataset.extra] = !extraCv[b.dataset.extra];
+    b.setAttribute("aria-pressed", extraCv[b.dataset.extra] ? "true" : "false");
     carregarLista().catch(falha);
   });
 

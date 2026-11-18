@@ -285,6 +285,10 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
             <button type="button" class="wa-chip" data-filtro="lidas" aria-pressed="false">Lidas</button>
             <button type="button" class="wa-chip" data-filtro="pediu" aria-pressed="false">Pediu atendimento<b id="cvNPediu"></b></button>
           </div>
+          <div class="wa-filtros" id="cvFiltros2" role="group" aria-label="Filtros para follow-up (podem ser combinados com os de cima)">
+            <button type="button" class="wa-chip" data-extra="interessado" aria-pressed="false" title="Contatos que você marcou na etapa Interessado">Interessados<b id="cvNInteressados"></b></button>
+            <button type="button" class="wa-chip" data-extra="alta" aria-pressed="false" title="Prioridade alta ou urgente">Prioridade alta<b id="cvNAlta"></b></button>
+          </div>
           <div class="acoes" id="cvSemRespAcoes" hidden style="margin:0 0 8px"><small class="vazio">Mais antigas primeiro. Só a sua resposta pelo painel tira a conversa daqui (o robô não conta).</small><button type="button" class="btn peq contorno" id="cvLimparSemResp">Marcar todas como respondidas</button></div>
           <div class="wa-lista" id="cvLista"><p class="vazio">Carregando...</p></div>
         </aside>
