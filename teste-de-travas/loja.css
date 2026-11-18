@@ -187,3 +187,13 @@ footer a{color:#DCE3F1}
 .plano em{font-style:normal;color:#15502E}
 .plano small{display:block;color:var(--muted);margin-top:2px;font-size:14px;line-height:1.4}
 .plano>span{flex:1}
+
+/* depoimentos em vídeo (formato vertical) */
+.sec-depo{padding:46px 0 14px}
+.depo-grade{display:flex;flex-wrap:wrap;gap:24px;justify-content:center}
+.lv.vertical{width:100%;max-width:340px}
+.lv.vertical .lv-caixa{aspect-ratio:9/16}
+@supports not (aspect-ratio:9/16){.lv.vertical .lv-caixa{height:0;padding-bottom:177.78%}}
+.depo-cap{margin-top:12px;text-align:center}
+.depo-cap b{display:block;font:700 17px/1.2 var(--serif);color:var(--navy)}
+.depo-cap span{color:var(--muted);font-size:14.5px}
