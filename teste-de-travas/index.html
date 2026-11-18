@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Teste de Travas Mentais para terapeutas · Ressignificar</title>
-<meta name="description" content="Tenha o seu próprio Teste de Travas Mentais, com a sua marca: o cliente responde pelo celular e o resultado chega para você na hora. R$ 147 por ano.">
+<meta name="description" content="Tenha o seu próprio Teste de Travas Mentais, com a sua marca: o cliente responde pelo celular e o resultado chega para você na hora. R$ 147 por ano ou vitalício.">
 <meta name="theme-color" content="#0B1F3A">
 <meta property="og:title" content="Teste de Travas Mentais para terapeutas">
-<meta property="og:description" content="O seu próprio teste, com o seu nome, a sua foto e as suas cores. R$ 147 por ano, com renovação anual.">
+<meta property="og:description" content="O seu próprio teste, com o seu nome, a sua foto e as suas cores. R$ 147 por ano ou vitalício, no Pix ou no cartão.">
 <meta property="og:image" content="https://ressignificarterapiaseconsultorias.com/teste-de-travas/previa.jpg">
 <link rel="icon" href="../img/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,7 +38,7 @@
       <span class="selo">Para terapeutas</span>
       <h1>Teste de Travas Mentais com a sua marca</h1>
       <p class="lead">O seu cliente responde pelo celular e a maioria termina em cerca de 7 minutos. O mapa das 10 travas sai na hora e chega para você. No final, você gera uma <b style="color:#fff">apresentação personalizada</b> com o resultado dele e o preço que você escolher, pronta para enviar.</p>
-      <div class="preco"><b>R$ 147</b><span>por ano · acesso anual · Pix ou cartão</span></div>
+      <div class="preco" id="heroPreco"><b>R$ 147</b><span>por ano · acesso anual · Pix ou cartão</span></div>
       <a class="btn" href="#comprar" data-ref="hero">Quero o meu teste</a>
       <div class="garantias"><span>Pronto na hora</span><span>Clientes ilimitados</span><span>Seu nome, foto e cores</span></div>
     </div>
@@ -60,7 +60,7 @@
         <button type="button" class="lv-play" id="lvPlay" aria-label="Assistir ao vídeo"><span class="lv-circ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></span><span class="lv-rot">Assista ao vídeo</span></button>
         <span class="lv-pausa" id="lvPausa" aria-hidden="true"></span>
         <button type="button" class="lv-cheia" id="lvCheia" aria-label="Tela cheia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM4 15h2v3h3v2H4zm14 0h2v5h-5v-2h3z"/></svg></button>
-        <div class="lv-fim" id="lvFim" hidden><p>Pronta para ter o seu?</p><a class="btn" href="#comprar" data-ref="video">Quero o meu teste · R$ 147</a><button type="button" class="lv-denovo" id="lvDenovo">↻ Ver de novo</button></div>
+        <div class="lv-fim" id="lvFim" hidden><p>Pronta para ter o seu?</p><a class="btn" href="#comprar" data-ref="video">Quero o meu teste</a><button type="button" class="lv-denovo" id="lvDenovo">↻ Ver de novo</button></div>
         <div class="lv-barra" aria-hidden="true"><i id="lvBarra"></i></div>
       </div>
     </figure>
@@ -72,7 +72,7 @@
     <h2>Como funciona</h2>
     <p class="lead">Sem instalar nada e sem precisar entender de tecnologia.</p>
     <div class="cards">
-      <div class="card"><span class="num">1</span><h3>Você paga</h3><p>R$ 147 por ano, no Pix ou no cartão, pela InfinitePay.</p></div>
+      <div class="card"><span class="num">1</span><h3>Você paga</h3><p>R$ 147 por ano ou, se preferir, o vitalício, no Pix ou no cartão, pela InfinitePay.</p></div>
       <div class="card"><span class="num">2</span><h3>Personaliza</h3><p>Logo depois do pagamento abre um formulário curto: nome, foto, cores e o WhatsApp que recebe os resultados.</p></div>
       <div class="card"><span class="num">3</span><h3>Começa a usar</h3><p>O seu teste fica pronto na mesma hora, com link próprio. Você gera um código para cada cliente, recebe o resultado e manda a proposta com o seu preço.</p></div>
     </div>
@@ -91,7 +91,7 @@
       <li><b>Envio por WhatsApp e por e-mail</b><small>O cliente envia o resultado para você com um toque.</small></li>
       <li><b>A sua área de terapeuta</b><small>Gere códigos, acompanhe quem respondeu e veja quem demonstrou interesse.</small></li>
       <li><b>Personalização da sua marca</b><small>Seu nome, sua foto, suas cores e o seu registro profissional.</small></li>
-      <li><b>Clientes ilimitados durante o ano</b><small>Acesso anual, sem mensalidade: renova a cada 12 meses. E suporte técnico pelo WhatsApp.</small></li>
+      <li><b>Clientes ilimitados</b><small>Sem mensalidade. No plano anual renova a cada 12 meses; no vitalício, você paga uma vez só. E suporte técnico pelo WhatsApp.</small></li>
     </ul>
   </div>
 </section>
@@ -102,6 +102,12 @@
       <h2 style="text-align:center">Garanta o seu teste</h2>
       <p class="lead" style="text-align:center;margin:0 auto 22px">Preencha os dados abaixo e você vai para a página de pagamento. O e-mail será o seu login.</p>
       <form id="formCompra" novalidate>
+        <fieldset class="planos" id="planos" hidden>
+          <legend class="rotulo">Escolha o seu plano</legend>
+          <label class="plano"><input type="radio" name="plano" value="vitalicio" checked><span><b>Vitalício <em id="pvPreco">R$ 247</em></b><small id="pvTxt">Pague uma vez e use para sempre, sem renovação.</small></span></label>
+          <label class="plano"><input type="radio" name="plano" value="anual"><span><b>Anual <em>R$ 147</em></b><small>Por 12 meses. Renova a cada ano, sem mensalidade.</small></span></label>
+          <label class="plano"><input type="radio" name="plano" value="upgrade"><span><b>Já sou cliente do anual <em>R$ 97</em></b><small>Quem já comprou o anual vira vitalício. Use o mesmo e-mail da compra.</small></span></label>
+        </fieldset>
         <div class="ja-cliente" id="cJaCliente" role="status"><b>Você já é cliente da Ressignificar!</b><span id="cJaTxt"></span></div>
         <div class="campo">
           <label for="cNome">Nome completo</label>
@@ -129,7 +135,7 @@
   <div class="w" style="max-width:760px">
     <h2>Perguntas frequentes</h2>
     <details><summary>Preciso saber mexer com tecnologia?</summary><p>Não. Depois do pagamento você preenche um formulário curto e o teste fica pronto sozinho. Para usar, basta tocar em "gerar código" e enviar pelo WhatsApp.</p></details>
-    <details><summary>Quantos clientes posso testar?</summary><p>Quantos quiser. O acesso é anual (R$ 147 por ano, sem mensalidade) e renova a cada 12 meses.</p></details>
+    <details><summary>Quantos clientes posso testar?</summary><p>Quantos quiser. No plano anual (R$ 147 por ano, sem mensalidade) o acesso renova a cada 12 meses. No plano vitalício você paga uma vez e não renova nunca mais.</p></details>
     <details><summary>Como recebo o resultado do cliente?</summary><p>O resultado fica salvo na sua área de terapeuta e o cliente pode enviar para o seu WhatsApp com um toque, com a mensagem já escrita.</p></details>
     <details><summary>O pagamento por Pix demora para liberar?</summary><p>Normalmente libera em segundos. Se você fechar a página antes, guarde o link que aparece depois do pagamento ou fale com a gente pelo WhatsApp que liberamos para você.</p></details>
     <details><summary>Posso trocar a foto ou as cores depois?</summary><p>Pode. Fale com o suporte pelo WhatsApp e a gente ajusta para você.</p></details>
@@ -148,7 +154,7 @@
 </footer>
 
 <div class="barra" id="barra">
-  <a class="btn" href="#comprar" data-ref="barra">Quero o meu teste · R$ 147</a>
+  <a class="btn" href="#comprar" data-ref="barra">Quero o meu teste</a>
   <a class="zap" href="#" data-wa="Olá, Mauricio! Tenho uma dúvida sobre o Teste de Travas Mentais para terapeutas." aria-label="Tirar dúvidas no WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.5-.3Z"/></svg></a>
 </div>
 
@@ -160,10 +166,34 @@
   /* ?teste=... só vale se houver um código de teste ligado no servidor (travas_config.loja_codigo_teste); hoje está desligado */
   var TESTE = (new URLSearchParams(location.search).get("teste") || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 60);
   var TXT_BOTAO = "Ir para o pagamento · R$ 147";
+  var PLANOS = null, PLANO_FUNCAO = FUNCAO.replace("travas-loja", "travas-planos");
+  var reais = function (c) { return "R$ " + (c / 100).toFixed(0).replace(".", ","); };
+  function planoAtual() { var r = document.querySelector("input[name=plano]:checked"); return r ? r.value : "anual"; }
+  function precoDo(p) { return !PLANOS ? 14700 : p === "anual" ? PLANOS.anual : p === "upgrade" ? PLANOS.upgrade : PLANOS.vitalicio.preco; }
+  function atualizaBotao() {
+    TXT_BOTAO = "Ir para o pagamento · " + reais(precoDo(planoAtual()));
+    var b = document.getElementById("btnPagar"); if (b && !b.disabled) b.textContent = TXT_BOTAO;
+  }
+  /* preços e prazo da promoção vêm do servidor: o texto "até sexta" vira "até domingo" no sábado e o preço sobe sozinho depois */
+  fetch(PLANO_FUNCAO, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ acao: "precos" }) })
+    .then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || !j.ok) return; PLANOS = j;
+      var v = j.vitalicio;
+      document.getElementById("pvPreco").textContent = reais(v.preco);
+      document.getElementById("pvTxt").textContent = v.promo
+        ? "Promoção até " + v.ate + ". Pague uma vez e use para sempre, sem renovação."
+        : "Pague uma vez e use para sempre, sem renovação.";
+      document.getElementById("heroPreco").innerHTML = "<b>" + reais(v.preco) + "</b><span>vitalício" + (v.promo ? " (promoção até " + v.ate + ")" : "") + " · ou anual por " + reais(j.anual) + " · Pix ou cartão</span>";
+      document.querySelector("#planos input[value=upgrade] + span em").textContent = reais(j.upgrade);
+      document.querySelector("#planos input[value=anual] + span em").textContent = reais(j.anual);
+      document.getElementById("planos").hidden = false;
+      atualizaBotao();
+    }).catch(function () { /* sem a lista de planos: segue só com o anual, como antes */ });
+  document.getElementById("planos").addEventListener("change", atualizaBotao);
   function evento(nome, dados) {
     window.dataLayer = window.dataLayer || []; window.dataLayer.push(Object.assign({ event: nome }, dados || {}));
     if (window.gtag) gtag("event", nome, dados || {});
-    if (window.fbq) fbq("track", nome === "inicio_checkout" ? "InitiateCheckout" : "ViewContent", { value: 147, currency: "BRL" });
+    if (window.fbq) fbq("track", nome === "inicio_checkout" ? "InitiateCheckout" : "ViewContent", { value: precoDo(planoAtual()) / 100, currency: "BRL" });
   }
   function guardar(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   function ler(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -239,11 +269,12 @@
     if (!$("#cAceite").checked) return erro("Para continuar, aceite a Política de Privacidade.", $("#cAceite"));
     var b = $("#btnPagar"); b.disabled = true; b.textContent = "Abrindo o pagamento…";
     try {
-      var r = await fetch(FUNCAO, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ acao: "criar_pedido", nome: nome, email: email, whatsapp: zap, teste: TESTE }) });
+      var plano = PLANOS ? planoAtual() : "anual";
+      var r = await fetch(PLANO_FUNCAO, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ acao: "criar_pedido", plano: plano, nome: nome, email: email, whatsapp: zap, teste: TESTE }) });
       var j = await r.json();
       if (!r.ok || !j.url) throw new Error(j.erro || "Não foi possível abrir o pagamento.");
       guardar("travas_pedido", j.token);
-      if (!j.teste) evento("inicio_checkout", { produto: "teste_travas", valor: 147 });
+      if (!j.teste) evento("inicio_checkout", { produto: "teste_travas", plano: plano, valor: precoDo(plano) / 100 });
       location.href = j.url;
     } catch (err) {
       b.disabled = false; b.textContent = TXT_BOTAO;

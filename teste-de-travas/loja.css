@@ -177,3 +177,13 @@ footer a{color:#DCE3F1}
 .lv-denovo{border:0;background:none;color:#fff;font:inherit;font-size:14px;text-decoration:underline;cursor:pointer;opacity:.9}
 .lv-bloqueio{position:absolute;top:0;right:0;width:72px;height:72px;z-index:2}
 @media (max-width:420px){.lv-fim p{font-size:18px}.lv-fim .btn{min-width:0;font-size:15px;min-height:44px;padding:10px 16px}.lv-fim{gap:8px}.lv-circ{width:64px;height:64px}}
+
+.planos{border:0;margin:0 0 18px;padding:0;display:grid;gap:10px}
+.planos[hidden]{display:none}
+.plano{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line,#E3DCCD);border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer}
+.plano:has(input:checked){border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,74,.22)}
+.plano input{margin-top:5px;accent-color:#C9A24A}
+.plano b{display:flex;justify-content:space-between;gap:10px;font-size:16px;color:var(--navy)}
+.plano em{font-style:normal;color:#15502E}
+.plano small{display:block;color:var(--muted);margin-top:2px;font-size:14px;line-height:1.4}
+.plano>span{flex:1}

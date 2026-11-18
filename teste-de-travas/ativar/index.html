@@ -217,15 +217,29 @@
       if (j.__status === 404 || !j.ok) { mostrar("eInvalido"); return; }
       pedido = j;
       if (j.status === "ativado" && j.pagina) { pronto(j.pagina, j.email, null, j.nome); return; }
+      if (j.status === "pago" && !j.pagina) {
+        /* quem já tinha o anual e virou vitalício não precisa montar nada: só confirma */
+        fetch(FUNCAO.replace("travas-loja", "travas-planos"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ acao: "ativar_upgrade", token: token }) })
+          .then(function (r) { return r.json(); }).then(function (u) {
+            if (u && u.ok) { j.conta_existente = true; pedido = j; pronto(u.pagina || "../../areademembros/", u.email || j.email, null, j.nome); return; }
+            continuarFluxo(j);
+          }).catch(function () { continuarFluxo(j); });
+        return;
+      }
+      continuarFluxo(j);
+    }).catch(function () {
+      tentativas++;
+      if (tentativas < 40) setTimeout(conferir, 5000); else mostrar("eEsperando");
+    });
+  }
+  function continuarFluxo(j) {
+    {
       if (j.produto_chave === "tracos" || j.produto_chave === "mpcc" || j.produto_chave === "disc" || j.produto_chave === "ansiedade") modoTracos(j.produto_chave);
       if (j.status === "pago" || j.status === "ativando") { abrirForm(j); return; }
       if (j.status === "cancelado") { mostrar("eInvalido"); return; }
       tentativas++;
       if (tentativas < (veioDoPagamento ? 40 : 2)) { mostrar("eConferindo"); setTimeout(conferir, 4000); } else esperando(j);
-    }).catch(function () {
-      tentativas++;
-      if (tentativas < 40) setTimeout(conferir, 5000); else mostrar("eEsperando");
-    });
+    }
   }
   function esperando(j) {
     var link = j && j.checkout_url;
