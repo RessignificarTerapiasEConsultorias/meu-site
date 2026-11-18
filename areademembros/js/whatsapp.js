@@ -1777,6 +1777,7 @@
       '</div><button type="button" class="wa-x" id="fcFechar" aria-label="Fechar a ficha">×</button></div>' +
       '<div class="f wa-fc-form">' +
       '<div><label for="fcNome">Nome</label><input id="fcNome" maxlength="80" value="' + esc(c.nome || "") + '"></div>' +
+      '<div id="fcBloqueio"></div>' +
       '<div class="wa-fc-2"><div><label for="fcEtapa">Etapa</label><select id="fcEtapa">' + opc(ETAPAS, c.etapa) + '</select></div><div><label for="fcPrio">Prioridade</label><select id="fcPrio">' + opc(PRIORIDADES, c.prioridade) + "</select></div></div>" +
       '<div><label for="fcEt">Etiquetas <span class="vazio">(separe por vírgula)</span></label><input id="fcEt" value="' + esc((c.etiquetas || []).join(", ")) + '"></div>' +
       '<div><label for="fcNotas">Anotações</label><textarea id="fcNotas" rows="3" maxlength="2000">' + esc(c.notas || "") + "</textarea></div></div>" +
@@ -1788,6 +1789,8 @@
     const cx = $("fcDados"), c = conversaCont, d = fichaDados; if (!cx || !c || !d || d.id !== c.id) return;
     const campo = $("fcNota"), nota = campo ? campo.value : "", focado = !!campo && document.activeElement === campo;
     const pq = cx.querySelector(".wa-porque"), pqAberto = !!(pq && pq.open), tudo = cx.dataset.tudo === c.id;
+    const bq = $("fcBloqueio");
+    if (bq) bq.innerHTML = d.bloqueio ? '<span class="wa-tag-bloq" title="Esta pessoa está numa lista Não enviar: nenhum disparo é enviado para ela. Você ainda pode responder se ela escrever.">Na lista de bloqueio: ' + esc(d.bloqueio) + "</span>" : "";
     const info = c.origem_info || {};
     let origem = ROT_ORIGEM[c.origem] || (c.origem ? "Outra: " + c.origem : "Não informada");
     if (c.origem === "anuncio" && info.titulo) origem += ': "' + info.titulo + '"';
