@@ -126,6 +126,40 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 .wa-ficha #fcFechar{display:block}
 }
 @media (max-width:760px){.wa-conv,.wa-conv.com-ficha{grid-template-columns:minmax(0,1fr)}.wa-lista{max-height:36vh}.wa-msg{max-width:92%}.wa-dica{display:none}}
+.wa-tp-barra{display:grid;grid-template-columns:minmax(0,2fr) repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}
+.wa-tp-topo{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:6px 0 10px}
+.wa-tp-modo{display:flex;gap:6px}
+.wa-tp-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:12px}
+.wa-tp-card{margin:0;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.wa-tp-card h3{margin:0;font-size:16px;overflow-wrap:anywhere}
+.wa-tp-sub{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+.wa-tp-txt{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;color:#33415c}
+.wa-tp-alerta{margin:0;padding:8px 10px;border-radius:8px;font-size:13px;line-height:1.35}
+.wa-tp-alerta.amarelo{background:#FFF4D6;color:#6B4A00;border:1px solid #F0D98C}
+.wa-tp-alerta.vermelho{background:#FBE9E7;color:#8C2016;border:1px solid #F2C4BC}
+.wa-tp-horas{font-size:13px;line-height:1.45}
+.wa-tp-acoes{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}
+.wa-zap{background:#EFE7DC;border-radius:14px;padding:14px;max-width:340px;margin:0 auto}
+.wa-zap-balao{background:#fff;border-radius:10px 10px 10px 2px;padding:6px 8px 4px;box-shadow:0 1px 1px rgba(0,0,0,.15);font-size:14.5px;line-height:1.4;color:#111;overflow-wrap:anywhere}
+.wa-zap-tit{font-weight:700;padding:4px 2px 2px}
+.wa-zap-midia{margin:0 0 6px;border-radius:8px;overflow:hidden;background:#D6DCE3}
+.wa-zap-midia img,.wa-zap-midia video{display:block;width:100%;max-height:220px;object-fit:cover}
+.wa-zap-vazia{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:130px;color:#4a5568}
+.wa-zap-vazia span{font-size:34px}
+.wa-zap-txt{padding:2px}
+.wa-zap-rod{padding:2px;color:#7a7a7a;font-size:12.5px}
+.wa-zap-hora{text-align:right;font-size:11px;color:#8a8a8a;padding:0 2px}
+.wa-zap-botoes{display:grid;gap:4px;margin-top:4px}
+.wa-zap-botao{background:#fff;border-radius:8px;text-align:center;padding:9px 6px;color:#0A7CFF;font-weight:600;font-size:14px;box-shadow:0 1px 1px rgba(0,0,0,.15);overflow-wrap:anywhere}
+.wa-tp-edit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:18px;align-items:start}
+.wa-tp-lado{position:sticky;top:78px;display:grid;gap:12px}
+.wa-check{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.wa-check li{font-size:13.5px;line-height:1.35;display:grid;grid-template-columns:20px minmax(0,1fr);gap:6px}
+.wa-check .m{font-weight:800}
+.wa-check .ok .m{color:#15502E}.wa-check .falta .m{color:#8C2016}.wa-check .aviso-s .m{color:#B07A00}
+.wa-check small{display:block;color:#5b6577}
+.wa-cont{font-size:12px;color:#5b6577;text-align:right}
+@media (max-width:900px){.wa-tp-edit{grid-template-columns:minmax(0,1fr)}.wa-tp-lado{position:static}.wa-tp-barra{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.wa-tp-barra input{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -148,7 +182,7 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
       <button class="aba" type="button" data-aba="conversas" aria-selected="true">Conversas <span class="selo ouro" id="bdNaoLidas" hidden></span></button>
       <button class="aba" type="button" data-aba="contatos" aria-selected="false">Contatos</button>
       <button class="aba" type="button" data-aba="disparos" aria-selected="false">Disparos</button>
-      <button class="aba" type="button" data-aba="templates" aria-selected="false">Templates</button>
+      <button class="aba" type="button" data-aba="templates" aria-selected="false">Templates<span class="ponto" id="tpPonto" title="Há novidade nos templates" hidden></span></button>
       <button class="aba" type="button" data-aba="robo" aria-selected="false">Robô</button>
       <button class="aba" type="button" data-aba="fluxos" aria-selected="false">Fluxos</button>
       <button class="aba" type="button" data-aba="config" aria-selected="false">Configuração</button>
@@ -233,8 +267,28 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
     <section data-painel="templates" hidden>
       <div class="cartao">
         <div class="empresa-titulo"><h2>Seus templates</h2><button class="btn peq" type="button" id="tpSync">Sincronizar com o Meta</button></div>
+        <p class="ajuda" id="tpSyncInfo" aria-live="polite" style="margin-bottom:8px"></p>
+        <div id="tpNovidades" hidden></div>
         <p class="ajuda">Template é a mensagem pré-aprovada que você pode mandar a qualquer momento. Utilidade custa menos que marketing. Depois de criar, o Meta analisa em minutos ou horas.</p>
-        <div class="tabela-wrap"><table class="t"><thead><tr><th>Nome</th><th>Categoria</th><th>Situação</th><th>Envio e aprovação</th><th>Variáveis</th><th class="quebra">Texto</th><th></th></tr></thead><tbody id="tpLista"><tr><td colspan="6" class="vazio">Carregando...</td></tr></tbody></table></div>
+        <div class="wa-tp-topo">
+          <div class="wa-filtros" id="tpChips" role="group" aria-label="Filtrar templates por situação" style="margin:0">
+            <button type="button" class="wa-chip" data-tpsit="" aria-pressed="true">Todos <b id="tpN_todos"></b></button>
+            <button type="button" class="wa-chip" data-tpsit="APPROVED" aria-pressed="false">Aprovados <b id="tpN_APPROVED"></b></button>
+            <button type="button" class="wa-chip" data-tpsit="PENDING" aria-pressed="false">Em análise <b id="tpN_PENDING"></b></button>
+            <button type="button" class="wa-chip" data-tpsit="REJECTED" aria-pressed="false">Reprovados <b id="tpN_REJECTED"></b></button>
+            <button type="button" class="wa-chip" data-tpsit="OUTROS" aria-pressed="false">Pausados e outros <b id="tpN_OUTROS"></b></button>
+          </div>
+          <div class="wa-tp-modo" role="group" aria-label="Modo de exibição"><button type="button" class="wa-chip" id="tpModoCartoes" aria-pressed="true">Cartões</button><button type="button" class="wa-chip" id="tpModoTabela" aria-pressed="false">Tabela</button></div>
+        </div>
+        <div class="wa-tp-barra">
+          <input id="tpBusca" type="search" placeholder="Buscar por nome ou texto" aria-label="Buscar template">
+          <select id="tpFCat" aria-label="Categoria"><option value="">Todas as categorias</option><option value="UTILITY">Utilidade</option><option value="MARKETING">Marketing</option></select>
+          <select id="tpFCab" aria-label="Cabeçalho"><option value="">Com ou sem mídia</option><option value="midia">Com imagem, vídeo ou PDF</option><option value="texto">Só texto</option></select>
+          <select id="tpFBot" aria-label="Botões"><option value="">Com ou sem botões</option><option value="com">Com botões</option><option value="sem">Sem botões</option></select>
+          <select id="tpOrdem" aria-label="Ordem"><option value="recentes">Mais recentes</option><option value="nome">Nome (A a Z)</option><option value="tempo">Mais demorados na análise</option></select>
+        </div>
+        <div id="tpCartoes" class="wa-tp-grade"></div>
+        <div class="tabela-wrap" id="tpTabelaWrap" hidden><table class="t"><thead><tr><th>Nome</th><th>Categoria</th><th>Situação</th><th>Envio e aprovação</th><th>Variáveis</th><th class="quebra">Texto</th><th></th></tr></thead><tbody id="tpLista"><tr><td colspan="6" class="vazio">Carregando...</td></tr></tbody></table></div>
       </div>
       <div class="cartao">
         <h2>Criar template</h2>
@@ -244,7 +298,7 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
           <button class="btn peq contorno" type="button" data-modelo="boasvindas">Boas-vindas</button>
           <button class="btn peq contorno" type="button" data-modelo="lancamento">Convite (marketing)</button>
         </div>
-        <div class="f">
+        <div class="wa-tp-edit"><div class="f">
           <div class="grade g2">
             <div><label for="tcNome">Nome <span class="vazio">(minúsculas, números e _)</span></label><input id="tcNome" maxlength="60" placeholder="aviso_aula_quinta"></div>
             <div><label for="tcCat">Categoria</label><select id="tcCat"><option value="UTILITY">Utilidade (aviso sobre algo que a pessoa já contratou)</option><option value="MARKETING">Marketing (convite, oferta, divulgação)</option></select></div>
@@ -271,7 +325,12 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
             <small id="tcBotoesAviso" class="vazio"></small>
           </div>
           <div class="acoes"><button class="btn auto" type="button" id="tcEnviar">Enviar para aprovação do Meta</button></div>
+          <small id="tcBloqueio" class="vazio" aria-live="polite"></small>
         </div>
+        <aside class="wa-tp-lado" aria-label="Prévia e checklist">
+          <div><label>Como vai aparecer no celular</label><div id="tcPrevia"></div><div class="wa-cont" id="tcContador"></div></div>
+          <div><label>Antes de enviar</label><ul class="wa-check" id="tcCheck"></ul></div>
+        </aside></div>
       </div>
     </section>
 
@@ -338,6 +397,9 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
           <label style="margin-top:12px">Token de verificação</label>
           <div class="wa-copia"><input id="cfVerify" readonly><button class="btn peq contorno" type="button" data-copiar="cfVerify">Copiar</button></div>
         </div>
+        <h3 style="margin:16px 0 4px;font-size:15px">Aviso de templates do Meta</h3>
+        <p class="ajuda" id="cfAvisoTpl" aria-live="polite"></p>
+        <p class="ajuda">Para assinar: developers.facebook.com, seu app, WhatsApp, Configuração, em Webhook clique em Gerenciar, procure <b>message_template_status_update</b> e clique em Assinar. Com isso a aprovação aparece aqui na hora.</p>
       </div>
       <div class="cartao">
         <h2>Registrar o número novo</h2>
@@ -482,10 +544,20 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
   <div class="acoes"><button class="btn auto" type="button" id="jtEnviar">Enviar</button><button class="btn auto contorno" type="button" data-fechar="jTemplate">Fechar</button></div>
 </dialog>
 
+<dialog class="janela" id="jPrevia">
+  <h2 id="jpTitulo">Prévia</h2>
+  <p class="ajuda" id="jpSub"></p>
+  <div id="jpVars" class="f"></div>
+  <div id="jpCorpo" style="margin-top:12px"></div>
+  <p class="ajuda">A prévia é uma aproximação: o aparelho de quem recebe pode mostrar um pouco diferente.</p>
+  <div class="acoes"><button class="btn auto contorno" type="button" data-fechar="jPrevia">Fechar</button></div>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
+<script src="js/whatsapp-tpl.js"></script>
 <script src="js/whatsapp-lista.js"></script>
 <script src="js/whatsapp-video.js"></script>
 <script src="js/whatsapp.js"></script>

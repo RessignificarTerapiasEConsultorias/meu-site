@@ -157,6 +157,12 @@
     else if (cfg.ultimo_teste_ok) { s.textContent = "Conectado" + (cfg.numero_exibicao ? " · " + cfg.numero_exibicao : ""); s.className = "selo ok"; }
     else { s.textContent = "Teste a conexão"; s.className = "selo pendente"; }
   }
+  function desenharAvisoTpl() {
+    const el = $("cfAvisoTpl"); if (!el) return;
+    const em = cfg.ultimo_aviso_template_em;
+    el.innerHTML = em ? '<span class="selo ok">Funcionando</span> O último aviso de template do Meta chegou ' + esc(quando(em)) + " (" + esc(haQuanto(em)) + ")."
+      : '<span class="selo pendente">Nunca recebido</span> Ainda não chegou nenhum aviso de template. Se você já assinou o campo, é porque nenhum template mudou de situação desde então. Enquanto isso, o CRM confere sozinho a cada 15 minutos.';
+  }
   async function telaConfig() {
     await carregarConfig();
     $("cfNumId").value = cfg.phone_number_id || "";
@@ -167,6 +173,7 @@
     $("cfSegredo").placeholder = cfg.segredo_app_configurado ? "já salva (cole outra só para trocar)" : "32 letras e números";
     $("cfUrl").value = SUPABASE_URL + "/functions/v1/whatsapp";
     $("cfVerify").value = cfg.verify_token || "";
+    desenharAvisoTpl();
     $("cfLimite").value = cfg.limite_diario; $("cfHi").value = cfg.disparo_hora_inicio; $("cfHf").value = cfg.disparo_hora_fim;
     $("cfPm").value = cfg.preco_marketing; $("cfPu").value = cfg.preco_utilidade;
     let webhook = false, recebidas = 0;
@@ -248,16 +255,139 @@
     }
     return h;
   }
+  /* template que pode ser usado em envio: aprovado e ainda existente no Meta */
+  function tplUsavel(t) { return String(t.status).toUpperCase() === "APPROVED" && !t.removido_no_meta; }
+
+  /* ----- sincronização automática (Fase 3, item 3.1): o servidor confere os templates com o Meta a cada 15 min ----- */
+  const SIT_SYNC = { APPROVED: "aprovado", PENDING: "em análise", REJECTED: "reprovado", PAUSED: "pausado pelo Meta", DISABLED: "desativado", IN_APPEAL: "em recurso" };
+  function haQuanto(iso) { return "há " + duracao(Math.max(0, Date.now() - new Date(iso).getTime())); }
+  function desenharSync() {
+    const el = $("tpSyncInfo"); if (!el) return;
+    const em = cfg.templates_sync_em, okEm = cfg.templates_sync_ok_em;
+    if (!em) { el.textContent = "O CRM confere os templates com o Meta sozinho, a cada 15 minutos. A primeira conferência ainda não rodou."; return; }
+    let h;
+    if (cfg.templates_sync_ok) h = "Última sincronização: <b>" + esc(quando(em)) + "</b> (" + esc(haQuanto(em)) + "). O CRM confere sozinho a cada 15 minutos.";
+    else h = '<span class="selo off">Sincronização falhou</span> A última tentativa, em ' + esc(quando(em)) + " (" + esc(haQuanto(em)) + "), não deu certo: " + esc(cfg.templates_sync_msg || "motivo não informado") +
+      (okEm ? " A última que deu certo foi em " + esc(quando(okEm)) + "." : "");
+    if (Date.now() - new Date(em).getTime() > 3600000) h += ' <span class="selo pendente">Sincronização atrasada</span> Passou de 1 hora sem conferir. Clique em "Sincronizar com o Meta".';
+    el.innerHTML = h;
+  }
+  /* o que mudou desde a última vez que você olhou a aba (guardado só neste navegador) */
+  function lerVisto() { try { return localStorage.getItem("wa_tpl_visto") || ""; } catch (e) { return ""; } }
+  function gravarVisto() { try { localStorage.setItem("wa_tpl_visto", new Date().toISOString()); } catch (e) {} }
+  function novidadesTemplates(lista) {
+    const visto = new Date(lerVisto()).getTime(); if (!visto) return [];
+    const depois = function (iso) { return !!iso && new Date(iso).getTime() > visto; };
+    return (lista || []).filter(function (t) { return t.removido_no_meta ? depois(t.removido_em) : depois(t.resultado_em); }).map(function (t) {
+      return { nome: t.nome, txt: t.removido_no_meta ? "não existe mais no Meta" : t.status === "APPROVED" ? "foi aprovado" : t.status === "REJECTED" ? "foi reprovado" : "mudou de situação" };
+    });
+  }
+  function desenharNovidades() {
+    const cx = $("tpNovidades"); if (!cx) return;
+    const nv = novidadesTemplates(templates);
+    if (!lerVisto()) gravarVisto();   // primeira visita: começa a contar daqui
+    cx.hidden = !nv.length;
+    cx.innerHTML = nv.length ? '<div class="aviso ok" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:0 0 14px"><span>Desde a sua última visita: ' +
+      nv.map(function (n) { return "<b>" + esc(n.nome) + "</b> " + n.txt; }).join("; ") + '.</span><button type="button" class="btn peq contorno" id="tpNovOk">Entendi</button></div>' : "";
+    const p = $("tpPonto"); if (p) p.hidden = true;
+  }
+  document.addEventListener("click", function (ev) { if (ev.target.closest("#tpNovOk")) { gravarVisto(); desenharNovidades(); } });
+  /* ao abrir o CRM: avisa se algum template foi aprovado, reprovado ou removido desde a última visita */
+  async function avisarNovidadesTemplates() {
+    try {
+      if (!lerVisto()) return gravarVisto();
+      const nv = novidadesTemplates(await ler(supa().from("wa_templates").select("nome,status,resultado_em,removido_no_meta,removido_em")));
+      if (!nv.length) return;
+      const p = $("tpPonto"); if (p) p.hidden = false;
+      aviso("Template " + nv[0].nome + " " + nv[0].txt + (nv.length > 1 ? " (e mais " + (nv.length - 1) + ")" : "") + ". Veja na aba Templates.");
+    } catch (e) { console.error(e); }
+  }
+
+  /* ----- lista de templates: cartões ou tabela, com filtros e busca (Fase 3, itens 3.2 a 3.4) ----- */
+  const tpF = { busca: "", sit: "", cat: "", cab: "", botoes: "", ordem: "recentes", modo: "cartoes" };
+  try { if (localStorage.getItem("wa_tpl_modo") === "tabela") tpF.modo = "tabela"; } catch (e) {}
+  let templateParaDisparo = null;
+  function alertaTpl(t) {
+    if (t.removido_no_meta) return '<p class="wa-tp-alerta amarelo">Não existe mais na sua conta do Meta. Fica aqui só para consulta e não pode ser enviado.</p>';
+    const s = String(t.status).toUpperCase();
+    if (s === "REJECTED") return '<p class="wa-tp-alerta vermelho"><b>Reprovado.</b> ' + esc(WaTpl.motivo(t.motivo_recusa) || "O Meta não informou o motivo. Veja no Gerenciador do WhatsApp.") + "</p>";
+    if (s === "PAUSED") return '<p class="wa-tp-alerta amarelo"><b>Pausado pelo Meta</b> por baixa qualidade. Não dá para enviar até ele voltar.</p>';
+    if (s === "DISABLED") return '<p class="wa-tp-alerta vermelho"><b>Desativado pelo Meta.</b> Crie um novo, com outro nome.</p>';
+    if (WaTpl.emAnalise(t) && t.enviado_em && Date.now() - new Date(t.enviado_em).getTime() >= 24 * 3600000)
+      return '<p class="wa-tp-alerta amarelo"><b>Em análise há mais de 24 horas.</b> Se continuar assim, confira no Gerenciador do WhatsApp do Meta.</p>';
+    return "";
+  }
+  function selosTpl(t) {
+    const st = t.removido_no_meta ? ["Removido no Meta", "off"] : (ROT_ST[t.status] || [t.status || "?", "pendente"]);
+    return { st: st, html: '<span class="selo ' + st[1] + '">' + esc(st[0]) + "</span>" };
+  }
+  function acoesTpl(t) {
+    return '<button class="btn peq contorno" type="button" data-tp-previa="' + esc(t.id) + '">Ver prévia</button>' +
+      '<button class="btn peq contorno" type="button" data-tp-dup="' + esc(t.id) + '">Duplicar</button>' +
+      (tplUsavel(t) ? '<button class="btn peq" type="button" data-tp-usar="' + esc(t.id) + '">Usar em disparo</button>' : "") +
+      '<button class="btn peq contorno" type="button" data-tp-horas="' + esc(t.id) + '">Ajustar horas</button>' +
+      '<button class="btn peq perigo" type="button" data-tp-apagar="' + esc(t.nome) + '"' + (t.removido_no_meta ? ' data-tp-removido="1"' : "") + ">Apagar</button>";
+  }
+  function cartaoTpl(t) {
+    const nb = WaTpl.botoesDe(t.componentes).length, sl = selosTpl(t);
+    return '<article class="cartao wa-tp-card"><div><h3>' + esc(t.nome) + '</h3><div class="wa-tp-sub"><span class="vazio">' + esc(t.idioma) + '</span><span class="selo">' + esc(ROT_CAT[t.categoria] || t.categoria || "") + "</span>" + sl.html + "</div></div>" +
+      '<div class="wa-tp-sub">' + rotuloCab(t) + '<span class="vazio">' + (t.qtd_variaveis || 0) + (t.qtd_variaveis === 1 ? " variável" : " variáveis") + " · " + (nb ? nb + (nb === 1 ? " botão" : " botões") : "sem botões") + "</span></div>" +
+      alertaTpl(t) + '<div class="wa-tp-txt">' + esc(corpoDe(t)) + '</div><div class="wa-tp-horas">' + horasTemplate(t) + '</div><div class="wa-tp-acoes">' + acoesTpl(t) + "</div></article>";
+  }
+  function linhaTpl(t) {
+    const sl = selosTpl(t), al = alertaTpl(t);
+    return "<tr><td><b>" + esc(t.nome) + '</b><br><span class="vazio">' + esc(t.idioma) + "</span></td><td>" + esc(ROT_CAT[t.categoria] || t.categoria || "") + "</td><td>" + sl.html + (al ? al.replace('class="wa-tp-alerta', 'style="margin-top:6px" class="wa-tp-alerta') : "") +
+      '</td><td class="tpl-horas">' + horasTemplate(t) + "</td><td>" + (t.qtd_variaveis || 0) + '</td><td class="quebra tpl-texto">' + rotuloCab(t) + esc(corpoDe(t)) + '</td><td><div class="wa-tp-acoes">' + acoesTpl(t) + "</div></td></tr>";
+  }
+  function desenharTemplates() {
+    const todos = templates || [], n = WaTpl.contar(todos);
+    ["todos", "APPROVED", "PENDING", "REJECTED", "OUTROS"].forEach(function (k) { const el = $("tpN_" + k); if (el) el.textContent = n[k] || ""; });
+    Array.prototype.forEach.call($("tpChips").querySelectorAll("[data-tpsit]"), function (b) { b.setAttribute("aria-pressed", b.dataset.tpsit === tpF.sit ? "true" : "false"); });
+    $("tpModoCartoes").setAttribute("aria-pressed", tpF.modo === "cartoes" ? "true" : "false"); $("tpModoTabela").setAttribute("aria-pressed", tpF.modo === "tabela" ? "true" : "false");
+    const lista = WaTpl.ordenar(WaTpl.filtrar(todos, tpF), tpF.ordem);
+    $("tpCartoes").hidden = tpF.modo !== "cartoes"; $("tpTabelaWrap").hidden = tpF.modo !== "tabela";
+    const vazio = !todos.length ? 'Nenhum template ainda. Clique em "Sincronizar com o Meta" ou crie um abaixo.' : "Nenhum template com esses filtros.";
+    $("tpCartoes").innerHTML = lista.length ? lista.map(cartaoTpl).join("") : '<p class="vazio">' + vazio + "</p>";
+    $("tpLista").innerHTML = lista.length ? lista.map(linhaTpl).join("") : '<tr><td colspan="7" class="vazio">' + vazio + "</td></tr>";
+  }
   async function telaTemplates() {
     await carregarConfig(); await carregarTemplates();
-    const tb = $("tpLista");
-    if (!templates.length) { tb.innerHTML = '<tr><td colspan="7" class="vazio">Nenhum template ainda. Clique em "Sincronizar com o Meta" ou crie um abaixo.</td></tr>'; return; }
-    tb.innerHTML = templates.map(function (t) {
-      const st = ROT_ST[t.status] || [t.status || "?", "pendente"];
-      return "<tr><td><b>" + esc(t.nome) + '</b><br><span class="vazio">' + esc(t.idioma) + "</span></td><td>" + esc(ROT_CAT[t.categoria] || t.categoria || "") + '</td><td><span class="selo ' + st[1] + '">' + esc(st[0]) + "</span>" +
-        (t.motivo_recusa ? '<br><span class="vazio">' + esc(t.motivo_recusa) + "</span>" : "") + '</td><td class="tpl-horas">' + horasTemplate(t) + '<br><button class="btn peq contorno" data-tp-horas="' + esc(t.id) + '">Ajustar horas</button></td><td>' + t.qtd_variaveis + '</td><td class="quebra tpl-texto">' + rotuloCab(t) + esc(corpoDe(t)) + '</td><td><button class="btn peq perigo" data-tp-apagar="' + esc(t.nome) + '">Apagar</button></td></tr>';
-    }).join("");
+    desenharSync(); desenharNovidades(); desenharTemplates(); atualizarEditor();
   }
+  $("tpChips").addEventListener("click", function (ev) { const b = ev.target.closest("[data-tpsit]"); if (!b) return; tpF.sit = b.dataset.tpsit; desenharTemplates(); });
+  $("tpBusca").addEventListener("input", function () { tpF.busca = this.value; desenharTemplates(); });
+  [["tpFCat", "cat"], ["tpFCab", "cab"], ["tpFBot", "botoes"], ["tpOrdem", "ordem"]].forEach(function (x) { $(x[0]).addEventListener("change", function () { tpF[x[1]] = this.value; desenharTemplates(); }); });
+  function trocarModoTpl(m) { tpF.modo = m; try { localStorage.setItem("wa_tpl_modo", m); } catch (e) {} desenharTemplates(); }
+  $("tpModoCartoes").addEventListener("click", function () { trocarModoTpl("cartoes"); });
+  $("tpModoTabela").addEventListener("click", function () { trocarModoTpl("tabela"); });
+
+  /* prévia de um template já criado */
+  function abrirPrevia(t) {
+    const comps = t.componentes || [], ex = WaTpl.exemplosDe(comps), n = WaTpl.varsDe(corpoDe(t)).length;
+    $("jpTitulo").textContent = t.nome; $("jpSub").textContent = (ROT_CAT[t.categoria] || "") + " · " + (selosTpl(t).st[0]);
+    let h = "";
+    for (let i = 1; i <= n; i++) h += '<div class="wa-linha-var"><b>{{' + i + '}}</b><input data-jp-var="' + i + '" maxlength="100" value="' + esc(ex[i - 1] || "") + '" aria-label="Valor da variável ' + i + '"></div>';
+    $("jpVars").innerHTML = n ? '<label>Teste com outros valores</label>' + h : "";
+    const redesenhar = function () {
+      const vars = Array.prototype.map.call($("jpVars").querySelectorAll("input"), function (i) { return i.value; });
+      $("jpCorpo").innerHTML = WaTpl.previaHtml(comps, { vars: vars });
+    };
+    $("jpVars").oninput = redesenhar; redesenhar(); $("jPrevia").showModal();
+  }
+
+  /* duplicar: abre o editor já preenchido */
+  function duplicarTpl(t) {
+    const p = WaTpl.paraEditor(t, (templates || []).filter(function (x) { return x.idioma === t.idioma; }).map(function (x) { return x.nome; }));
+    $("tcNome").value = p.nome; $("tcCat").value = p.cat;
+    $("tcCabTipo").value = p.cabTipo; $("tcCabTipo").dispatchEvent(new Event("change"));
+    $("tcTitulo").value = p.cabTexto; $("tcCorpo").value = p.corpo; $("tcRodape").value = p.rodape;
+    botoesTc = p.botoes; desenharBotoes(); atualizarExemplos();
+    Array.prototype.forEach.call($("tcExemplos").querySelectorAll("input"), function (i, k) { i.value = p.exemplos[k] || ""; });
+    mostrarAvisoCorpo(); atualizarEditor();
+    $("tcNome").scrollIntoView({ behavior: "smooth", block: "center" }); $("tcNome").focus();
+    aviso("Cópia de " + t.nome + " pronta para editar." + (p.precisaMidia ? " Anexe o arquivo do cabeçalho de novo: o exemplo do Meta não pode ser reaproveitado." : "") + " Mude alguma coisa: o Meta pode recusar template idêntico a outro.");
+  }
+
   function lerDataBR(txt) {
     const m = String(txt || "").trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})$/); if (!m) return undefined;
     const d = new Date(Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4] + 3, +m[5])); // horário de Brasília (UTC-3)
@@ -278,20 +408,28 @@
     }
     try { await ler(supa().rpc("wa_template_horas", { p_id: id, p_enviado: env, p_resultado: res })); aviso("Horas salvas."); telaTemplates(); } catch (e) { falha(e); }
   }
-  $("tpLista").addEventListener("click", async function (ev) {
+  async function acaoTpl(ev) {
+    const achar = function (id) { return (templates || []).find(function (x) { return x.id === id; }); };
+    const pv = ev.target.closest("[data-tp-previa]"); if (pv) { const t = achar(pv.dataset.tpPrevia); if (t) abrirPrevia(t); return; }
+    const dp = ev.target.closest("[data-tp-dup]"); if (dp) { const t = achar(dp.dataset.tpDup); if (t) duplicarTpl(t); return; }
+    const us = ev.target.closest("[data-tp-usar]"); if (us) { const t = achar(us.dataset.tpUsar); if (t && tplUsavel(t)) { templateParaDisparo = t.nome + "|" + t.idioma; abrirAba("disparos"); } return; }
     const h = ev.target.closest("[data-tp-horas]"); if (h) return ajustarHoras(h.dataset.tpHoras);
     const b = ev.target.closest("[data-tp-apagar]"); if (!b) return;
-    if (!confirm('Apagar o template "' + b.dataset.tpApagar + '" no Meta? Não dá para desfazer.')) return;
-    const r = await wa({ acao: "apagar_template", nome: b.dataset.tpApagar });
+    const nome = b.dataset.tpApagar, removido = b.dataset.tpRemovido === "1";
+    if (!confirm(removido ? 'Apagar "' + nome + '" do CRM? Ele já não existe no Meta.' : 'Apagar o template "' + nome + '" no Meta? Não dá para desfazer.')) return;
+    let r = await wa({ acao: "apagar_template", nome: nome });
+    if (!r.ok && r.pode_so_crm && confirm("O Meta não apagou: " + (r.erro || "erro") + "\n\nApagar só do CRM? Se ele ainda existir no Meta, volta na próxima sincronização.")) r = await wa({ acao: "apagar_template", nome: nome, so_crm: true });
     if (!r.ok) return aviso(r.erro || "Não apagou.", true);
-    aviso("Template apagado."); telaTemplates();
-  });
+    aviso(r.so_crm ? "Template apagado do CRM." : "Template apagado."); telaTemplates();
+  }
+  $("tpLista").addEventListener("click", acaoTpl); $("tpCartoes").addEventListener("click", acaoTpl);
   $("tpSync").addEventListener("click", async function () {
     const b = this; b.disabled = true; b.textContent = "Sincronizando...";
     const r = await wa({ acao: "sincronizar_templates" });
     b.disabled = false; b.textContent = "Sincronizar com o Meta";
-    if (!r.ok) return aviso(r.erro || "Não sincronizou.", true);
-    aviso(r.total + " template(s) sincronizados."); telaTemplates();
+    if (!r.ok) { aviso(r.erro || "Não sincronizou.", true); return telaTemplates(); }
+    const mud = (r.mudaram || []).map(function (m) { return m.nome + " agora está " + (SIT_SYNC[m.para] || m.para); });
+    aviso(r.total + " template(s) conferidos." + (mud.length ? " " + mud.join("; ") + "." : "") + (r.removidos ? " " + r.removidos + " não existe(m) mais no Meta." : "")); telaTemplates();
   });
 
   /* validação igual à do servidor, para avisar enquanto escreve */
@@ -320,11 +458,36 @@
     mostrarAvisoCorpo();
   }
   function exemplosAtuais() { return Array.prototype.slice.call($("tcExemplos").querySelectorAll("input")).map(function (i) { return i.value.trim(); }); }
+  /* prévia e checklist do editor, ao vivo */
+  function estadoEditor() {
+    let amostra = false, midiaUrl = "";
+    try { amostra = !!(cabArq && cabArq.handle); midiaUrl = cabArq && cabArq.tipo !== "DOCUMENT" ? cabArq.url : ""; } catch (e) {}
+    return { nome: $("tcNome").value.trim(), existentes: (templates || []).filter(function (t) { return t.idioma === "pt_BR"; }).map(function (t) { return t.nome; }),
+      cat: $("tcCat").value, corpo: $("tcCorpo").value, exemplos: exemplosAtuais(), rodape: $("tcRodape").value, botoes: botoesTc,
+      cabTipo: $("tcCabTipo").value, cabTexto: $("tcTitulo").value, cabAmostra: amostra, midiaUrl: midiaUrl };
+  }
+  function atualizarEditor() {
+    if (!window.WaTpl || !$("tcCheck")) return;
+    const e = estadoEditor(), itens = WaTpl.checklist(e);
+    $("tcCheck").innerHTML = itens.map(function (i) {
+      const cls = i.ok ? "ok" : i.obrigatorio ? "falta" : "aviso-s", mk = i.ok ? "✓" : i.obrigatorio ? "✗" : "!";
+      return '<li class="' + cls + '"><span class="m" aria-hidden="true">' + mk + "</span><span>" + esc(i.rotulo) + (i.ok ? "" : "<small>" + esc(i.dica) + "</small>") + (i.obrigatorio || i.ok ? "" : ' <small>(aviso, não bloqueia)</small>') + "</span></li>";
+    }).join("");
+    $("tcPrevia").innerHTML = WaTpl.previaHtml(WaTpl.compsDoForm(e), { vars: e.exemplos, midiaUrl: e.midiaUrl });
+    const c = e.corpo.length;
+    $("tcContador").textContent = "Texto: " + c + " de 1.024 · Rodapé: " + e.rodape.length + " de 60";
+    const pronto = WaTpl.checklistPronto(itens), primeiro = itens.find(function (i) { return i.obrigatorio && !i.ok; });
+    if ($("tcEnviar").dataset.ocupado !== "1") $("tcEnviar").disabled = !pronto;
+    $("tcBloqueio").textContent = pronto ? "" : "Falta: " + primeiro.rotulo.toLowerCase() + ".";
+  }
+  ["tcNome", "tcRodape", "tcTitulo"].forEach(function (id) { $(id).addEventListener("input", atualizarEditor); });
+  $("tcCat").addEventListener("change", atualizarEditor); $("tcCabTipo").addEventListener("change", atualizarEditor);
   function mostrarAvisoCorpo() {
     const e = validarCorpo($("tcCorpo").value, $("tcCat").value, exemplosAtuais());
     const a = $("tcAviso");
     a.textContent = e || ($("tcCorpo").value.trim() ? "Texto no formato aceito pelo Meta." : "");
     a.style.color = e ? "#8C2016" : "#15502E";
+    atualizarEditor();
   }
   $("tcCorpo").addEventListener("input", atualizarExemplos);
   $("tcExemplos").addEventListener("input", mostrarAvisoCorpo);
@@ -366,6 +529,7 @@
     const tem = botoesTc.some(function (b) { return b.tipo === "QUICK_REPLY" && String(b.texto).trim().toLowerCase() === "sair da lista"; });
     $("tcBotaoSair").disabled = tem || botoesTc.length >= MAX_BOTOES;
     $("tcBotoesAviso").textContent = botoesTc.length >= MAX_BOTOES ? "Limite de 3 botões." : "";
+    atualizarEditor();
   }
   function lerCampoBotao(el, trocou) {
     const cx = el.closest ? el.closest("[data-bt]") : null, campo = el.getAttribute && el.getAttribute("data-bt-campo"); if (!cx || !campo) return;
@@ -373,6 +537,7 @@
     if (campo === "perguntar") b.perguntar = el.checked;
     else b[campo] = el.value;
     if (campo === "tipo" && trocou) { b.valor = ""; desenharBotoes(); }
+    atualizarEditor();
   }
   $("tcBotoes").addEventListener("input", function (ev) { lerCampoBotao(ev.target, false); });
   $("tcBotoes").addEventListener("change", function (ev) { lerCampoBotao(ev.target, true); });
@@ -404,7 +569,7 @@
       const r = await wa({ acao: "enviar_exemplo_midia", url: up.url, tipo: tipo });
       if (!r.ok) throw new Error(r.erro || "O Meta não aceitou o arquivo de exemplo.");
       cabArq = { url: up.url, handle: r.handle, tipo: tipo, nome: up.nome };
-      st.textContent = "Pronto: " + up.nome + " (exemplo aceito pelo Meta)"; $("tcCabPrev").innerHTML = prevMidia(up.url, up.tipo);
+      st.textContent = "Pronto: " + up.nome + " (exemplo aceito pelo Meta)"; $("tcCabPrev").innerHTML = prevMidia(up.url, up.tipo); atualizarEditor();
     } catch (e) { st.textContent = "nenhum arquivo"; aviso(e.message || String(e), true); }
   });
 
@@ -438,13 +603,13 @@
     if (CAB_TIPO[cabT] && !(cabArq && cabArq.handle)) return aviso('Escolha o arquivo do cabeçalho e espere o aviso "exemplo aceito pelo Meta".', true);
     if (cabT === "TEXT" && !$("tcTitulo").value.trim()) return aviso('Escreva o título ou escolha "Sem cabeçalho".', true);
     if (!confirm('Enviar "' + nome + '" para o Meta analisar? Depois de aprovado, o texto não pode ser editado (só criar outro).')) return;
-    const bt = this; bt.disabled = true;
+    const bt = this; bt.disabled = true; bt.dataset.ocupado = "1";
     const r = await wa({
       acao: "criar_template", nome: nome, categoria: $("tcCat").value, idioma: "pt_BR", corpo: $("tcCorpo").value.trim(), exemplos: exemplosAtuais(),
       cabecalho_tipo: (cabT === "TEXT" || CAB_TIPO[cabT]) ? cabT : "", cabecalho_texto: cabT === "TEXT" ? $("tcTitulo").value.trim() : "",
       cabecalho_handle: CAB_TIPO[cabT] && cabArq ? cabArq.handle : "", rodape: $("tcRodape").value.trim(), botoes: botoes
     });
-    bt.disabled = false;
+    bt.dataset.ocupado = ""; bt.disabled = false; atualizarEditor();
     if (!r.ok) return aviso(r.erro || "O Meta não aceitou.", true);
     let extra = "";
     for (const rb of robos) {
@@ -1387,7 +1552,7 @@
   let lerVarsJt = function () { return { vars: [], midia: "" }; };
   async function abrirEnvioTemplate(c) {
     await carregarTemplates();
-    const ok = templates.filter(function (t) { return t.status === "APPROVED"; });
+    const ok = templates.filter(tplUsavel);
     if (!ok.length) return aviso("Ainda não há template aprovado. Crie um na aba Templates e espere a aprovação do Meta.", true);
     $("jtPara").textContent = "Para: " + nomeDe(c) + (c.telefone && (c.nome || c.username) ? " · " + foneDe(c) : "");
     $("jtSel").innerHTML = ok.map(function (t) { return '<option value="' + esc(t.nome) + '|' + esc(t.idioma) + '">' + esc(t.nome) + " (" + esc(ROT_CAT[t.categoria] || "") + ")</option>"; }).join("");
@@ -1416,7 +1581,7 @@
   let lerVarsDp = function () { return { vars: [], midia: "" }; };
   function tplSelecionado() {
     const [n, i] = ($("dpTemplate").value || "|").split("|");
-    return templates.find(function (t) { return t.nome === n && t.idioma === i && t.status === "APPROVED"; });
+    return templates.find(function (t) { return t.nome === n && t.idioma === i && tplUsavel(t); });
   }
   async function resumoDisparo() {
     const t = tplSelecionado(); if (!t) return ($("dpResumo").textContent = "");
@@ -1449,11 +1614,12 @@
   $("dpEtiqueta").addEventListener("change", resumoDisparo);
   async function telaDisparos() {
     await carregarConfig(); await carregarTemplates(); await carregarContatos();
-    const ok = templates.filter(function (t) { return t.status === "APPROVED"; });
+    const ok = templates.filter(tplUsavel);
     const atual = $("dpTemplate").value;
     $("dpTemplate").innerHTML = ok.length ? ok.map(function (t) { return '<option value="' + esc(t.nome) + '|' + esc(t.idioma) + '">' + esc(t.nome) + " (" + esc(ROT_CAT[t.categoria] || "") + ")</option>"; }).join("") : '<option value="">Nenhum template aprovado ainda</option>';
     if (atual) $("dpTemplate").value = atual;
     if (listaParaDisparo) { $("dpEtiqueta").value = listaParaDisparo; listaParaDisparo = null; }
+    if (templateParaDisparo) { const v = templateParaDisparo; templateParaDisparo = null; if (Array.prototype.some.call($("dpTemplate").options, function (o) { return o.value === v; })) $("dpTemplate").value = v; }
     trocarTemplateDp();
     const u = await wa({ acao: "uso_hoje" });
     $("dpUso").textContent = u.ok ? "Nas últimas 24 h você já enviou template para " + u.usados + " de " + u.limite + " pessoas permitidas." : "";
@@ -1628,7 +1794,7 @@
     d.querySelector(".fpTexto").value = p ? p.texto || "" : "";
     d.querySelector(".fpLink").checked = !!(p && p.incluir_link);
     const sel = d.querySelector(".fpTpl");
-    sel.innerHTML = '<option value="">Nenhum (só texto)</option>' + (templates || []).filter(function (t) { return String(t.status).toUpperCase() === "APPROVED"; }).map(function (t) { return '<option value="' + esc(t.nome) + '">' + esc(t.nome) + "</option>"; }).join("");
+    sel.innerHTML = '<option value="">Nenhum (só texto)</option>' + (templates || []).filter(tplUsavel).map(function (t) { return '<option value="' + esc(t.nome) + '">' + esc(t.nome) + "</option>"; }).join("");
     sel.value = p && p.template_nome ? p.template_nome : "";
     d.querySelector(".fpDel").addEventListener("click", function () { d.remove(); });
     $("jfPassos").appendChild(d);
@@ -1689,6 +1855,10 @@
     atualizarConversa().catch(function () {});
   }, 8000);
 
+  /* aba Templates aberta: recarrega sozinha a cada minuto (situação e "há quanto tempo") */
+  setInterval(function () { if (!document.hidden && abaAtual === "templates") telaTemplates().catch(function () {}); }, 60000);
+
   try { await carregarConfig(); } catch (e) { falha(e, "Não consegui ler a configuração. Atualize a página."); }
+  avisarNovidadesTemplates();
   abrirAba("conversas");
 })();
