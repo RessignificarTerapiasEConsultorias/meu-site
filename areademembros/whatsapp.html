@@ -211,6 +211,18 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 .wa-fn-colunas-lista{display:grid;gap:8px}
 .wa-fn-col-linha{display:grid;grid-template-columns:1fr 46px 120px auto;gap:6px;align-items:center}
 .wa-fn-col-linha input[type=color]{width:46px;height:34px;padding:2px}
+/* assistente de disparo (Fase 4, item 4.2) */
+.wz-passos{display:flex;flex-wrap:wrap;gap:6px;list-style:none;padding:0;margin:10px 0}
+.wz-passos button{font:600 13px var(--sans);padding:6px 10px;border-radius:999px;border:1px solid #CFC6B3;background:#fff;color:var(--navy);cursor:pointer}
+.wz-passos button[aria-current="step"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.wz-passos button.feita:not([aria-current="step"]){border-color:#1F6B3A;color:#1F6B3A}
+.wz-resumo{font-size:13.5px;color:var(--muted);margin:0 0 10px;overflow-wrap:anywhere}
+.f.wz .wz-etapa{display:none}.f.wz .wz-etapa.on{display:block}
+.f.wz .wz-etapa h3{margin:0 0 10px}
+.f.rapido .wz-etapa{display:block;margin-top:14px}.f.rapido .wz-nav{display:none}
+.f.rapido .wz-etapa h3{display:none}
+.wz-modo-rapido .wz-passos,.wz-modo-rapido .wz-resumo{display:none}
+@media (max-width:600px){.wz-passos button{padding:5px 8px;font-size:12px}}
 /* vendas (Fase 6) */
 .vd-blocos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .vd-bloco{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
@@ -414,23 +426,42 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 
     <!-- ===== DISPAROS ===== -->
     <section data-painel="disparos" hidden>
-      <div class="cartao">
-        <h2>Novo disparo</h2>
+      <div class="cartao" id="wzCartao">
+        <div class="empresa-titulo"><h2>Novo disparo</h2><button class="btn peq contorno" type="button" id="wzModo" title="Troca entre o passo a passo e o formulário único">Modo rápido</button></div>
         <p class="ajuda" id="dpUso">Carregando limite do dia...</p>
-        <div class="f">
-          <div class="grade g2">
-            <div><label for="dpNome">Nome do disparo <span class="vazio">(só para você)</span></label><input id="dpNome" maxlength="80" placeholder="Aviso da aula de quinta"></div>
+        <ol class="wz-passos" id="wzPassos" aria-label="Etapas do disparo">
+          <li><button type="button" data-wz="1">1 · Nome</button></li><li><button type="button" data-wz="2">2 · Template</button></li><li><button type="button" data-wz="3">3 · Público</button></li><li><button type="button" data-wz="4">4 · Variáveis</button></li><li><button type="button" data-wz="5">5 · Quando</button></li><li><button type="button" data-wz="6">6 · Revisão</button></li><li><button type="button" data-wz="7">7 · Confirmar</button></li>
+        </ol>
+        <p class="wz-resumo" id="wzResumoFixo" aria-live="polite"></p>
+        <div class="f wz" id="dpForm">
+          <div class="wz-etapa on" data-etapa="1"><h3 class="cp-tit">1. Nome e objetivo</h3>
+            <div class="grade g2">
+              <div><label for="dpNome">Nome do disparo <span class="vazio">(só para você)</span></label><input id="dpNome" maxlength="80" placeholder="Aviso da aula de quinta"></div>
+              <div><label for="dpObjetivo">Objetivo em uma frase <span class="vazio">(só para você)</span></label><input id="dpObjetivo" maxlength="160" placeholder="Lembrar quem se inscreveu da aula"></div>
+            </div></div>
+          <div class="wz-etapa" data-etapa="2"><h3 class="cp-tit">2. Template</h3>
             <div><label for="dpTemplate">Template aprovado</label><select id="dpTemplate"></select></div>
+            <p class="ajuda" id="wzTplInfo"></p></div>
+          <div class="wz-etapa" data-etapa="3"><h3 class="cp-tit">3. Público</h3>
             <div><label for="dpEtiqueta">Para quem</label><select id="dpEtiqueta"><option value="">Todos que autorizaram</option></select></div>
-            <div><label for="dpQuando">Quando enviar <span class="vazio">(vazio = agora)</span></label><input id="dpQuando" type="datetime-local"></div>
-          </div>
-          <div id="dpVars" style="margin-top:14px"></div>
-          <div id="dpMidiaBox" style="margin-top:10px" hidden><label for="dpMidia">Link do arquivo do cabeçalho (https://...)</label><input id="dpMidia" type="url" placeholder="https://..."></div>
-          <div style="margin-top:14px"><label>Como vai chegar (exemplo)</label><div class="wa-prev" id="dpPrev">Escolha um template.</div></div>
-          <p class="ajuda" id="dpResumo" style="margin-top:12px"></p>
-          <div style="margin-top:12px"><label>Conferência antes de enviar</label><ul class="wa-check" id="dpTravas"></ul>
+            <p class="ajuda" id="dpResumo" style="margin-top:12px"></p>
+            <p class="ajuda" id="wzPublico"></p>
             <div class="checks" id="dpExcluirBox" style="margin-top:8px" hidden><label><input type="checkbox" id="dpExcluirRecentes"> <span id="dpExcluirTxt">Não enviar para quem recebeu marketing nos últimos dias</span></label></div></div>
-          <div class="acoes"><button class="btn auto" type="button" id="dpCriar">Criar e iniciar</button><button class="btn auto contorno" type="button" id="dpRascunho">Salvar como rascunho</button><button class="btn auto contorno" type="button" id="dpTeste">Enviar teste</button></div>
+          <div class="wz-etapa" data-etapa="4"><h3 class="cp-tit">4. Variáveis e arquivo</h3>
+            <div id="dpVars"></div>
+            <div id="dpMidiaBox" style="margin-top:10px" hidden><label for="dpMidia">Link do arquivo do cabeçalho (https://...)</label><input id="dpMidia" type="url" placeholder="https://..."></div>
+            <div style="margin-top:14px"><label>Como vai chegar (exemplo)</label><div class="wa-prev" id="dpPrev">Escolha um template.</div></div></div>
+          <div class="wz-etapa" data-etapa="5"><h3 class="cp-tit">5. Quando enviar</h3>
+            <div><label for="dpQuando">Data e hora <span class="vazio">(vazio = agora; horário de Brasília)</span></label><input id="dpQuando" type="datetime-local"></div>
+            <p class="ajuda" id="wzPrevisao" style="margin-top:10px"></p></div>
+          <div class="wz-etapa" data-etapa="6"><h3 class="cp-tit">6. Revisão e conferência</h3>
+            <label>Conferência antes de enviar</label><ul class="wa-check" id="dpTravas"></ul>
+            <p class="ajuda" id="wzCusto" style="margin-top:8px"></p>
+            <div class="acoes"><button class="btn auto contorno" type="button" id="dpTeste">Enviar teste para mim</button></div></div>
+          <div class="wz-etapa" data-etapa="7"><h3 class="cp-tit">7. Confirmar</h3>
+            <ul class="wa-fn-ativ" id="wzRevisao"></ul>
+            <div class="acoes"><button class="btn auto" type="button" id="dpCriar">Criar e iniciar</button><button class="btn auto contorno" type="button" id="dpRascunho">Salvar como rascunho</button></div></div>
+          <div class="acoes wz-nav" id="wzNav"><button class="btn auto contorno" type="button" id="wzVoltar">Voltar</button><button class="btn auto" type="button" id="wzContinuar">Continuar</button><span class="vazio" id="wzSalvo" role="status"></span></div>
         </div>
       </div>
       <div class="cartao">

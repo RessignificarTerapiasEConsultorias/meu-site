@@ -2048,7 +2048,12 @@
     const ok = templates.filter(tplUsavel);
     const atual = $("dpTemplate").value;
     $("dpTemplate").innerHTML = ok.length ? ok.map(function (t) { return '<option value="' + esc(t.nome) + '|' + esc(t.idioma) + '">' + esc(t.nome) + " (" + esc(ROT_CAT[t.categoria] || "") + ")</option>"; }).join("") : '<option value="">Nenhum template aprovado ainda</option>';
-    if (atual) $("dpTemplate").value = atual;
+    const indis = templates.filter(function (t) { return !tplUsavel(t); });
+    if (indis.length) $("dpTemplate").insertAdjacentHTML("beforeend", '<optgroup label="Indisponíveis (não dá para escolher)">' + indis.map(function (t) {
+      const motivo = (t.removido || t.removido_no_meta) ? "removido no Meta" : ({ PENDING: "em análise no Meta", REJECTED: "reprovado pelo Meta", PAUSED: "pausado pelo Meta", DISABLED: "desativado pelo Meta", IN_APPEAL: "em recurso" }[String(t.status || "").toUpperCase()] || String(t.status || "indisponível").toLowerCase());
+      return '<option value="!' + esc(t.nome) + "|" + esc(t.idioma) + '" disabled>' + esc(t.nome) + " (" + esc(motivo) + ")</option>";
+    }).join("") + "</optgroup>");
+    if (atual && atual.charAt(0) !== "!") $("dpTemplate").value = atual;
     if (listaParaDisparo) { $("dpEtiqueta").value = listaParaDisparo; listaParaDisparo = null; }
     if (templateParaDisparo) { const v = templateParaDisparo; templateParaDisparo = null; if (Array.prototype.some.call($("dpTemplate").options, function (o) { return o.value === v; })) $("dpTemplate").value = v; }
     trocarTemplateDp();
@@ -2090,7 +2095,7 @@
       const feitos = Number(r.enviados) + Number(r.falhas) + Number(r.pulados), pct = d.total ? Math.min(100, Math.round(feitos / d.total * 100)) : 0;
       const st = ROT_DP[d.status] || [d.status, "pendente"];
       let bt = "";
-      if (d.status === "rascunho") bt = '<button class="btn peq" data-dp="iniciar" data-id="' + d.id + '">Iniciar</button> ';
+      if (d.status === "rascunho") bt = '<button class="btn peq contorno" data-dp="editar" data-id="' + d.id + '">Continuar editando</button> <button class="btn peq" data-dp="iniciar" data-id="' + d.id + '">Iniciar</button> ';
       if (d.status === "pausado") bt = '<button class="btn peq" data-dp="iniciar" data-id="' + d.id + '">Retomar</button> ';
       if (d.status === "agendado" || d.status === "enviando") bt = '<button class="btn peq contorno" data-dp="pausar" data-id="' + d.id + '">Pausar</button> ';
       if (["agendado", "enviando", "pausado"].indexOf(d.status) > -1) bt += '<button class="btn peq perigo" data-dp="cancelar" data-id="' + d.id + '">Cancelar</button>';
@@ -2107,6 +2112,7 @@
   /* ações de uma campanha (usadas pela lista e pelo painel) */
   async function acaoDp(acao, id) {
     try {
+      if (acao === "editar") return await wzCarregarRascunho(id);
       if (acao === "iniciar") {
         const r = await confirmarRepetida(await wa({ acao: "iniciar_disparo", disparo_id: id }), id);
         if (!r.ok) return aviso(r.erro || "Não iniciou.", true);
@@ -2157,13 +2163,17 @@
       if (!confirm("Enviar \"" + nome + "\"?\n\n" + $("dpResumo").textContent + (rs.avisos.length ? "\n\nAtenção:\n- " + rs.avisos.map(function (a) { return a.titulo; }).join("\n- ") : ""))) return;
     }
     try {
-      const novo = await ler(supa().from("wa_disparos").insert({
+      const corpo = {
         nome: nome, template_nome: t.nome, idioma: t.idioma, categoria: t.categoria, variaveis: v.vars, cabecalho_midia: precisaMidia ? v.midia : null,
         filtro_etiqueta: $("dpEtiqueta").value || null, agendado_para: quando_ ? quando_.toISOString() : null, status: "rascunho", criado_por: perfil.id,
-        excluir_recentes: !$("dpExcluirBox").hidden && $("dpExcluirRecentes").checked,
+        excluir_recentes: !$("dpExcluirBox").hidden && $("dpExcluirRecentes").checked, objetivo: $("dpObjetivo").value.trim() || null, rascunho_etapa: null,
         origem_id: dpOrigem ? dpOrigem.id : null, origem_tipo: dpOrigem ? "copia" : null
-      }).select("id").single());
-      $("dpNome").value = ""; dpOrigem = null;
+      };
+      // se o assistente já guardou um rascunho, usa o mesmo (não cria outro)
+      const novo = wz.draftId
+        ? await ler(supa().from("wa_disparos").update(corpo).eq("id", wz.draftId).select("id").single())
+        : await ler(supa().from("wa_disparos").insert(corpo).select("id").single());
+      $("dpNome").value = ""; $("dpObjetivo").value = ""; dpOrigem = null; wz.draftId = null; wzIr(1); $("wzSalvo").textContent = "";
       if (iniciar) {
         const r = await confirmarRepetida(await wa({ acao: "iniciar_disparo", disparo_id: novo.id, confirmar_repetido: confirmouRepetida }), novo.id);
         if (!r.ok) { aviso("Salvei como rascunho, mas não iniciou: " + (r.erro || ""), true); return desenharDisparos(); }
@@ -2173,6 +2183,7 @@
         } else aviso("Agendado.");
       } else aviso("Rascunho salvo.");
       desenharDisparos();
+      if (iniciar) abrirPainel(novo.id);
     } catch (e) { falha(e); }
   }
   let dpOrigem = null;   // preenchido quando o formulário foi aberto por "Duplicar" no painel de uma campanha
@@ -2187,6 +2198,131 @@
   });
   $("dpCriar").addEventListener("click", function () { criarDisparo(true); });
   $("dpRascunho").addEventListener("click", function () { criarDisparo(false); });
+
+  /* ---------- assistente em 7 etapas (Fase 4, item 4.2): os mesmos campos do formulário, em passos ---------- */
+  const wz = { etapa: 1, rapido: false, draftId: null, ultima: null, lista: null, salvando: false };
+  function wzLocal(iso) { const d = new Date(iso); if (isNaN(d.getTime())) return ""; return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); }
+  function wzQuando() { const v = $("dpQuando").value; const d = v ? new Date(v) : null; return d && !isNaN(d.getTime()) ? d : null; }
+  function wzTextoPublico() { const s = $("dpEtiqueta"); const o = s.options[s.selectedIndex]; return o ? o.textContent : ""; }
+  function wzVars() { try { return lerVarsDp() || { vars: [], midia: "" }; } catch (e) { return { vars: [], midia: "" }; } }
+  function wzIr(n) {
+    wz.etapa = Math.max(1, Math.min(7, n));
+    document.querySelectorAll("#dpForm .wz-etapa").forEach(function (e) { e.classList.toggle("on", Number(e.dataset.etapa) === wz.etapa); });
+    document.querySelectorAll("#wzPassos button").forEach(function (b) {
+      const k = Number(b.dataset.wz); if (k === wz.etapa) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
+      b.classList.toggle("feita", k < wz.etapa);
+    });
+    $("wzVoltar").disabled = wz.etapa === 1;
+    $("wzContinuar").hidden = wz.etapa === 7;
+    if (wz.etapa >= 5) conferirDisparo(false).catch(function () {});
+    wzAtualizar();
+  }
+  function wzAtualizar() {
+    const t = tplSelecionado(), a = wz.ultima, pub = a && a.publico ? a.publico : null, q = wzQuando();
+    $("wzResumoFixo").textContent = [$("dpNome").value.trim() || "(sem nome ainda)", t ? t.nome : "sem template", wzTextoPublico(), q ? "agendado " + quando(q.toISOString()) : "envio agora"].join(" · ");
+    $("wzTplInfo").textContent = t ? (ROT_CAT[t.categoria] || t.categoria || "") + " · " + (t.categoria === "MARKETING" ? BR.format(Number(cfg.preco_marketing) || 0) : t.categoria === "UTILITY" ? BR.format(Number(cfg.preco_utilidade) || 0) : "sem custo") + " por mensagem · idioma " + (t.idioma || "") + (t.qtd_variaveis ? " · " + t.qtd_variaveis + " variável(is)" : "") : "Escolha um template aprovado. Os que estão em análise, reprovados ou removidos aparecem desabilitados, com o motivo.";
+    $("wzPublico").textContent = pub ? Number(pub.vao_receber) + " vão receber · " + Number(pub.sem_aceite || 0) + " sem aceite (não recebem) · " + Number(pub.sairam || 0) + " saíram da lista (não recebem)" + (Number(pub.sem_nome) ? " · " + Number(pub.sem_nome) + " sem nome" : "") + "." : "";
+    const lim = a && a.limite ? a.limite : null, hr = a && a.horario ? a.horario : null;
+    if (pub && lim) {
+      const n = Number(pub.vao_receber) || 0, livres = Math.max(0, Number(lim.livres) || 0), diario = Math.max(1, Number(lim.diario) || cfg.limite_diario || 250);
+      let txt;
+      if (n <= livres) txt = "Cabe tudo no limite de hoje: " + n + " pessoa(s), e ainda sobram " + (livres - n) + " vagas nas últimas 24 h.";
+      else {
+        const dias = 1 + Math.ceil((n - livres) / diario), base = q || new Date(), fim = new Date(base.getTime() + (dias - 1) * 86400000);
+        txt = "Limite de " + diario + " pessoas a cada 24 h: hoje cabem " + livres + ". O envio leva cerca de " + dias + " dia(s) e termina por volta de " + new Date(fim.getTime() - 3 * 3600e3).toISOString().slice(8, 10) + "/" + new Date(fim.getTime() - 3 * 3600e3).toISOString().slice(5, 7) + ". Continua sozinho a cada dia.";
+      }
+      if (hr) txt += " Os envios só saem entre " + hr.inicio + "h e " + hr.fim + "h (Brasília)" + (!q && hr.dentro === false ? "; agora está fora do horário, então começa às " + hr.inicio + "h." : ".");
+      $("wzPrevisao").textContent = txt;
+      const preco = Number(a.preco);
+      $("wzCusto").textContent = Number.isFinite(preco) && preco > 0 ? "Custo estimado: " + BR.format(n * preco) + " (" + n + " × " + BR.format(preco) + ")." : "Custo estimado: sem custo por mensagem para este tipo de template.";
+    } else { $("wzPrevisao").textContent = ""; $("wzCusto").textContent = ""; }
+    if (wz.etapa === 7) {
+      const v = wzVars(), lis = [];
+      const linha = function (r, x) { lis.push("<li><b>" + esc(r) + ":</b> " + esc(x) + "</li>"); };
+      linha("Nome", $("dpNome").value.trim() || "—"); if ($("dpObjetivo").value.trim()) linha("Objetivo", $("dpObjetivo").value.trim());
+      linha("Template", t ? t.nome : "—"); linha("Público", wzTextoPublico() + (pub ? " (" + Number(pub.vao_receber) + " vão receber)" : ""));
+      linha("Mensagem", t ? preencherPrev(t, v.vars) : "—"); if (v.midia) linha("Arquivo", v.midia);
+      linha("Quando", q ? quando(q.toISOString()) : "assim que iniciar (dentro do horário)");
+      if ($("wzCusto").textContent) linha("Custo", $("wzCusto").textContent.replace(/^Custo estimado: /, ""));
+      const rs = wz.lista ? WaCamp.resumoTravas(wz.lista) : null;
+      if (rs) linha("Conferência", rs.bloqueia ? "há um bloqueio: " + rs.bloqueia.titulo : rs.avisos.length ? rs.avisos.length + " aviso(s): " + rs.avisos.map(function (x) { return x.titulo; }).join("; ") : "tudo certo");
+      $("wzRevisao").innerHTML = lis.join("");
+    }
+  }
+  /* o que precisa estar certo para sair de cada etapa (devolve o aviso, ou "" se pode seguir) */
+  function wzValida(n) {
+    if (n === 1 && !$("dpNome").value.trim()) return "Dê um nome ao disparo.";
+    if (n === 2 && !tplSelecionado()) return "Escolha um template aprovado.";
+    if (n === 3 && wz.ultima && wz.ultima.publico && Number(wz.ultima.publico.vao_receber) === 0) return "Ninguém neste público pode receber. Escolha outra lista ou etiqueta.";
+    if (n === 4) {
+      const t = tplSelecionado(); if (!t) return "Escolha um template aprovado.";
+      const v = wzVars();
+      if (v.vars.some(function (x) { return !String(x || "").trim(); })) return "Preencha todas as variáveis do template.";
+      if (["IMAGE", "VIDEO", "DOCUMENT"].indexOf(String(t.cabecalho_tipo || "").toUpperCase()) > -1 && !/^https:\/\//.test(v.midia || "")) return "Informe o link (https://) do arquivo do cabeçalho.";
+    }
+    if (n === 5) { const q = wzQuando(); if (q && q.getTime() < Date.now() - 60000) return "A data de envio já passou."; }
+    if (n === 6 && wz.lista) { const rs = WaCamp.resumoTravas(wz.lista); if (rs.bloqueia) return rs.bloqueia.titulo + (rs.bloqueia.detalhe ? " " + rs.bloqueia.detalhe : ""); }
+    return "";
+  }
+  /* guarda o rascunho sozinho depois de cada etapa concluída (sem enviar nada) */
+  async function wzSalvarRascunho(proxima) {
+    const t = tplSelecionado(), nome = $("dpNome").value.trim();
+    if (!t || !nome || wz.salvando) return;
+    wz.salvando = true;
+    try {
+      const v = wzVars(), q = wzQuando(), precisaMidia = ["IMAGE", "VIDEO", "DOCUMENT"].indexOf(String(t.cabecalho_tipo || "").toUpperCase()) > -1;
+      const corpo = { nome: nome, template_nome: t.nome, idioma: t.idioma, categoria: t.categoria, variaveis: v.vars, cabecalho_midia: precisaMidia && /^https:\/\//.test(v.midia || "") ? v.midia : null,
+        filtro_etiqueta: $("dpEtiqueta").value || null, agendado_para: q && q.getTime() > Date.now() ? q.toISOString() : null, excluir_recentes: !$("dpExcluirBox").hidden && $("dpExcluirRecentes").checked,
+        objetivo: $("dpObjetivo").value.trim() || null, rascunho_etapa: proxima };
+      if (wz.draftId) await ler(supa().from("wa_disparos").update(corpo).eq("id", wz.draftId).select("id"));
+      else { const r = await ler(supa().from("wa_disparos").insert(Object.assign({ status: "rascunho", criado_por: perfil.id, origem_id: dpOrigem ? dpOrigem.id : null, origem_tipo: dpOrigem ? "copia" : null }, corpo)).select("id").single()); wz.draftId = r.id; }
+      $("wzSalvo").textContent = "Rascunho salvo automaticamente.";
+    } catch (e) { $("wzSalvo").textContent = "Não consegui salvar o rascunho agora."; }
+    finally { wz.salvando = false; }
+  }
+  $("wzContinuar").addEventListener("click", async function () {
+    const erro = wzValida(wz.etapa); if (erro) return aviso(erro, true);
+    const prox = wz.etapa + 1;
+    wzIr(prox);
+    if (wz.etapa >= 3) await wzSalvarRascunho(prox);
+  });
+  $("wzVoltar").addEventListener("click", function () { wzIr(wz.etapa - 1); });
+  $("wzPassos").addEventListener("click", function (ev) {
+    const b = ev.target.closest("[data-wz]"); if (!b) return;
+    const alvo = Number(b.dataset.wz);
+    if (alvo > wz.etapa) { for (let k = wz.etapa; k < alvo; k++) { const e = wzValida(k); if (e) { wzIr(k); return aviso(e, true); } } }
+    wzIr(alvo);
+  });
+  function wzModo(rapido) {
+    wz.rapido = !!rapido;
+    $("dpForm").classList.toggle("wz", !rapido); $("dpForm").classList.toggle("rapido", rapido);
+    $("wzCartao").classList.toggle("wz-modo-rapido", rapido);
+    $("wzModo").textContent = rapido ? "Passo a passo" : "Modo rápido";
+    try { localStorage.setItem("wa_disparo_modo", rapido ? "rapido" : "passo"); } catch (e) {}
+    if (!rapido) wzIr(wz.etapa);
+  }
+  $("wzModo").addEventListener("click", function () { wzModo(!wz.rapido); });
+  ["dpNome", "dpObjetivo", "dpTemplate", "dpEtiqueta", "dpQuando", "dpExcluirRecentes"].forEach(function (id) { $(id).addEventListener("input", wzAtualizar); $(id).addEventListener("change", wzAtualizar); });
+  $("dpVars").addEventListener("input", wzAtualizar);
+  async function wzCarregarRascunho(id) {
+    const d = await ler(supa().from("wa_disparos").select("*").eq("id", id).single());
+    if (!d || d.status !== "rascunho") return aviso("Este disparo não é mais um rascunho.", true);
+    const chave = d.template_nome + "|" + d.idioma;
+    $("dpNome").value = d.nome || ""; $("dpObjetivo").value = d.objetivo || "";
+    if (Array.prototype.some.call($("dpTemplate").options, function (o) { return o.value === chave; })) $("dpTemplate").value = chave; else aviso("O template deste rascunho não está mais aprovado. Escolha outro na etapa 2.", true);
+    trocarTemplateDp();
+    if (Array.prototype.some.call($("dpEtiqueta").options, function (o) { return o.value === (d.filtro_etiqueta || ""); })) $("dpEtiqueta").value = d.filtro_etiqueta || "";
+    $("dpQuando").value = d.agendado_para && new Date(d.agendado_para).getTime() > Date.now() ? wzLocal(d.agendado_para) : "";
+    (d.variaveis || []).forEach(function (v, i) { const el = $("dpVars").querySelector('[data-var="' + (i + 1) + '"]'); if (el) el.value = v; });
+    const m = $("dpVars").querySelector("[data-midia]"); if (m && d.cabecalho_midia) m.value = d.cabecalho_midia;
+    $("dpVars").dispatchEvent(new Event("input", { bubbles: true }));
+    wz.draftId = d.id; dpOrigem = null;
+    $("dpExcluirRecentes").checked = !!d.excluir_recentes;
+    wzModo(false); wzIr(Number(d.rascunho_etapa) || 1);
+    $("wzSalvo").textContent = "Continuando o rascunho \"" + (d.nome || "") + "\".";
+    $("wzCartao").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  (function () { let modo = ""; try { modo = localStorage.getItem("wa_disparo_modo") || ""; } catch (e) {} wzModo(modo === "rapido"); wzIr(1); })();
 
   /* ---------- travas de segurança antes de enviar (Fase 4, item 4.3) ---------- */
   const tvDp = { midia: { url: "", tipo: "", ok: null, erro: "" }, seq: 0, t: null };
@@ -2217,6 +2353,7 @@
     }
   }
   function desenharTravas(a, f) {
+    wz.ultima = a || null;
     if (!a) {
       $("dpTravas").innerHTML = '<li class="aviso-s"><span class="m" aria-hidden="true">!</span><span>Escolha um template aprovado para ver a conferência.</span></li>';
       $("dpExcluirBox").hidden = true; return null;
@@ -2231,6 +2368,7 @@
       const cls = i.nivel === "ok" ? "ok" : i.nivel === "bloqueia" ? "falta" : "aviso-s", mk = i.nivel === "ok" ? "✓" : i.nivel === "bloqueia" ? "✗" : "!";
       return '<li class="' + cls + '" data-trava="' + i.id + '"><span class="m" aria-hidden="true">' + mk + "</span><span>" + esc(i.titulo) + (i.detalhe ? "<small>" + esc(i.detalhe) + "</small>" : "") + "</span></li>";
     }).join("");
+    wz.lista = lista; wzAtualizar();
     return lista;
   }
   function agendarConferencia() { clearTimeout(tvDp.t); tvDp.t = setTimeout(function () { if (abaAtual === "disparos") conferirDisparo(false); }, 500); }
