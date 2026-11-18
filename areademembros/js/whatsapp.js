@@ -3202,6 +3202,12 @@
       ? "Pausadas" + (e.por ? " por " + e.por : "") + (e.pausadas_em ? " em " + horaCurta(e.pausadas_em) : "") + ". Nada automático é enviado até você religar."
       : "Ligadas. " + (Number(e.fluxos_ativos) || 0) + " fluxo(s) ativo(s), " + (Number(e.pessoas_dentro) || 0) + " pessoa(s) dentro agora. Toda mensagem automática passa por um portão único: lista de Não enviar, saída da lista, pausa para sempre, horário, frequência e limite diário.";
     const motivos = (e && e.paradas_com_motivo) || [];
+    ler(supa().rpc("wa_automacoes_lista")).then(function (l) {
+      $("auMotor").innerHTML = (l || []).length ? l.map(function (x) {
+        return "<li><b>" + esc(x.nome) + "</b> · " + (x.ativa ? "motor novo LIGADO" : "desligada (o Fluxo antigo está " + (x.fluxo_ativo ? "ligado" : "desligado") + ")") + " · " + Number(x.passos) + " passos · " + Number(x.pessoas) + " pessoa(s) dentro"
+          + ' <button type="button" class="btn peq contorno" data-au-motor="' + esc(x.id) + '" data-au-ativa="' + (x.ativa ? "1" : "") + '">' + (x.ativa ? "Voltar para o Fluxo antigo" : "Passar para o motor novo") + "</button></li>";
+      }).join("") : '<li class="vazio">Nenhuma automação ainda.</li>';
+    }).catch(function () { $("auMotor").innerHTML = '<li class="vazio">Não consegui carregar as automações.</li>'; });
     $("auMotivos").innerHTML = motivos.length ? "<li><b>Por que algumas mensagens não saíram nos últimos 7 dias</b></li>" + motivos.map(function (m) { return "<li>" + esc(m.motivo) + " <small>· " + Number(m.n) + (Number(m.n) === 1 ? " vez" : " vezes") + "</small></li>"; }).join("") : "";
   }
   $("auPausar").addEventListener("click", async function () {
@@ -3212,6 +3218,16 @@
       if (!r || !r.ok) throw new Error("Não consegui " + (pausar ? "pausar" : "religar") + " as automações.");
       aviso(pausar ? "Automações pausadas. Nada automático será enviado." : "Automações religadas.");
       await auAtualizar();
+    } catch (e) { falha(e, e.message); }
+  });
+  $("auMotor").addEventListener("click", async function (ev) {
+    const b = ev.target.closest("[data-au-motor]"); if (!b) return;
+    const ligar = !b.dataset.auAtiva;
+    if (!confirm(ligar ? "Passar esta automação para o motor novo?\n\nO Fluxo antigo é desligado agora. Dá para voltar quando quiser." : "Voltar para o Fluxo antigo?\n\nA automação nova é desligada e quem estava dentro fica esperando.")) return;
+    try {
+      const r = await ler(supa().rpc(ligar ? "wa_automacao_assumir" : "wa_automacao_devolver", { p_automacao: b.dataset.auMotor }));
+      if (!r || !r.ok) throw new Error((r && r.erro) || "Não consegui trocar.");
+      aviso(ligar ? "Motor novo ligado." : "Fluxo antigo religado."); await auAtualizar();
     } catch (e) { falha(e, e.message); }
   });
   auAtualizar().catch(function () { /* sem login de master ainda: o selo fica escondido */ });
