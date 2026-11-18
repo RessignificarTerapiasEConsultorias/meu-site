@@ -503,6 +503,9 @@
     aula: { nome: "aviso_aula", cat: "UTILITY", corpo: "Oi, {{1}}! Passando para avisar que a nossa próxima aula é {{2}}. O link de acesso chega por aqui, alguns minutos antes de começar. Até lá!", ex: ["Maria", "quinta-feira, às 20h"] },
     lembrete: { nome: "lembrete_pagamento", cat: "UTILITY", corpo: "Oi, {{1}}! Lembrete: o pagamento de {{2}} vence em {{3}}. Se você já pagou, pode ignorar esta mensagem. Qualquer dúvida, é só responder por aqui.", ex: ["Maria", "R$ 150,00", "15/12"] },
     boasvindas: { nome: "boas_vindas_acesso", cat: "UTILITY", corpo: "Oi, {{1}}! Seu acesso ao {{2}} foi liberado. Qualquer dúvida, é só responder esta mensagem que eu te ajudo.", ex: ["Maria", "programa de mentoria"] },
+    tracos_a: { nome: "curiosidade_tracos_raiz", cat: "MARKETING", corpo: "Oi, {{1}}! Seu cliente já perguntou \"mas por que eu sou assim?\" e você ficou sem um mapa que mostrasse a raiz desse padrão?\n\nCriamos o Teste de Traços de Caráter: o cliente responde pelo celular, os 5 traços saem em porcentagem na hora e a devolutiva fica pronta em um clique, com o seu nome.\n\nGravei um vídeo curto mostrando como isso funciona por dentro. Quer dar uma olhada?", ex: ["João"], botoes: ["Quero ver o vídeo", "Já tenho o teste", "Não tenho interesse"], rodape: "Ressignificar Terapias & Consultorias" },
+    tracos_b: { nome: "curiosidade_tracos_casal", cat: "MARKETING", corpo: "Oi, {{1}}! Casal que chega brigando sempre pelo mesmo motivo e você sem um mapa dos dois juntos?\n\nDesenvolvemos o Teste de Traços de Caráter, individual ou em casal: cada um responde no próprio celular, aparece a devolutiva de cada um e a do casal, com o acordo assinado na tela.\n\nGravei um vídeo curto mostrando na prática. Quer dar uma olhada?", ex: ["João"], botoes: ["Quero ver o vídeo", "Já tenho o teste", "Não tenho interesse"], rodape: "Ressignificar Terapias & Consultorias" },
+    tracos_c: { nome: "curiosidade_tracos_devolutiva", cat: "MARKETING", corpo: "Oi, {{1}}! Quanto tempo você gasta montando uma devolutiva caprichada, com gráfico e plano de acompanhamento?\n\nCom o Teste de Traços de Caráter o cliente responde pelo celular e a devolutiva completa sai na hora: 5 traços em porcentagem, gráfico de teia, dor central e ações práticas, com o seu nome e a sua foto.\n\nGravei um vídeo de menos de 2 minutos mostrando como funciona. Quer ver?", ex: ["João"], botoes: ["Quero ver o vídeo", "Já tenho o teste", "Não tenho interesse"], rodape: "Ressignificar Terapias & Consultorias" },
     lancamento: { nome: "convite_nova_turma", cat: "MARKETING", corpo: "Oi, {{1}}! Abri as inscrições para {{2}}. As vagas são limitadas e eu quis te avisar primeiro. Quer saber como funciona?", ex: ["Maria", "a nova turma de mentoria"], botao: "Quero saber mais" }
   };
   document.querySelectorAll("[data-modelo]").forEach(function (b) {
@@ -510,10 +513,11 @@
       const m = MODELOS[b.dataset.modelo];
       $("tcNome").value = m.nome; $("tcCat").value = m.cat; $("tcCorpo").value = m.corpo;
       // o modelo começa limpo: sem o cabeçalho, o título e o rodapé que tinham ficado no editor
-      $("tcCabTipo").value = ""; $("tcCabTipo").dispatchEvent(new Event("change")); $("tcTitulo").value = ""; $("tcRodape").value = "";
+      $("tcCabTipo").value = ""; $("tcCabTipo").dispatchEvent(new Event("change")); $("tcTitulo").value = ""; $("tcRodape").value = m.rodape || "";
       botoesTc = [];
-      if (m.botao) botoesTc.push({ tipo: "QUICK_REPLY", texto: m.botao });
-      if (m.cat === "MARKETING") botoesTc.push({ tipo: "QUICK_REPLY", texto: "Sair da lista" });
+      if (m.botoes) m.botoes.forEach(function (t) { botoesTc.push({ tipo: "QUICK_REPLY", texto: t }); });
+      else if (m.botao) botoesTc.push({ tipo: "QUICK_REPLY", texto: m.botao });
+      if (m.cat === "MARKETING" && !m.botoes) botoesTc.push({ tipo: "QUICK_REPLY", texto: "Sair da lista" });
       desenharBotoes();
       atualizarExemplos();
       Array.prototype.slice.call($("tcExemplos").querySelectorAll("input")).forEach(function (i, k) { i.value = m.ex[k] || ""; });
