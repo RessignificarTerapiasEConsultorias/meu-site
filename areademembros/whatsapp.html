@@ -185,6 +185,12 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 .cp-abrir{background:none;border:0;padding:0;font:600 15px var(--sans);color:var(--navy);text-decoration:underline;cursor:pointer;text-align:left;overflow-wrap:anywhere}
 .cp-acoes{align-items:center}
 @media (max-width:560px){dialog.janela.janela-painel{padding:14px}.cp-etapa{grid-template-columns:88px 40px 42px minmax(30px,1fr);gap:6px}}
+.wa-tarefas{position:fixed;left:12px;bottom:12px;z-index:70;display:grid;gap:8px;width:min(340px,calc(100% - 24px))}
+.wa-tarefas[hidden]{display:none}
+.wa-tf{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:0 8px 28px rgba(6,20,42,.22);display:grid;gap:6px;font-size:13.5px}
+.wa-tf-nome{overflow-wrap:anywhere}
+.wa-tf-msg.erro{color:#8C2016}
+.wa-tf-acoes{display:flex;gap:6px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -590,6 +596,18 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
   <p class="ajuda">A prévia é uma aproximação: o aparelho de quem recebe pode mostrar um pouco diferente.</p>
   <div class="acoes"><button class="btn auto contorno" type="button" data-fechar="jPrevia">Fechar</button></div>
 </dialog>
+
+<dialog class="janela janela-larga" id="jProntos" aria-labelledby="prTitulo">
+  <h2 id="prTitulo">Arquivos prontos</h2>
+  <p class="ajuda" id="prTxt"></p>
+  <div class="acoes"><button class="btn peq" type="button" id="prAdd">+ Adicionar arquivo</button>
+    <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="prQualidade"> Melhor qualidade (a compactação demora mais)</label>
+    <input type="file" id="prArquivo" hidden accept="video/*,audio/*,image/jpeg,image/png,application/pdf,.mp4,.mov,.m4v,.webm,.mkv,.mp3,.m4a,.ogg,.pdf,.jpg,.jpeg,.png"></div>
+  <div class="tabela-wrap"><table class="t"><thead><tr><th>Arquivo</th><th>Tipo</th><th>Tamanho</th><th>Guardado</th><th></th></tr></thead><tbody id="prLista"></tbody></table></div>
+  <div class="acoes"><button class="btn auto contorno" type="button" data-fechar="jProntos">Fechar</button></div>
+</dialog>
+
+<div class="wa-tarefas" id="waTarefas" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="js/config.js"></script>

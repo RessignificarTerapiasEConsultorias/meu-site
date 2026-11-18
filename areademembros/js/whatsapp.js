@@ -100,7 +100,7 @@
     const caminho = new Date().toISOString().slice(0, 10) + "/" + sorteio + "." + ext;
     const { error } = await supa().storage.from("wa-midia").upload(caminho, file, { contentType: mime, upsert: false });
     if (error) throw error;
-    return { url: supa().storage.from("wa-midia").getPublicUrl(caminho).data.publicUrl, tipo: tipo, mime: mime, nome: file.name };
+    return { url: supa().storage.from("wa-midia").getPublicUrl(caminho).data.publicUrl, tipo: tipo, mime: mime, nome: file.name, caminho: caminho, tamanho: file.size };
   }
   function prevMidia(url, tipo, nome) {
     const u = esc(url);
@@ -136,7 +136,7 @@
     if (mid) {
       const tp = String(t.cabecalho_tipo).toLowerCase();
       html += '<div style="margin-top:8px" data-caixa-midia data-tipo="' + tp + '"><label>Arquivo do cabeçalho: ' + ROT_TIPO[tp] + ' <span class="vazio">(escolha o arquivo ou cole um link https://)</span></label>' +
-        '<div class="wa-copia"><input data-midia type="url" placeholder="https://..."><button type="button" class="btn peq contorno" data-escolher-midia>Escolher arquivo</button></div>' +
+        '<div class="wa-copia"><input data-midia type="url" placeholder="https://..."><button type="button" class="btn peq contorno" data-escolher-midia>Escolher arquivo</button><button type="button" class="btn peq contorno" data-prontos-midia>Prontos</button></div>' +
         '<input type="file" hidden data-midia-arquivo accept="' + ACEITA[tp] + '"><small class="vazio" data-midia-st></small><div data-midia-prev style="margin-top:6px"></div></div>';
     }
     caixa.innerHTML = html || '<p class="vazio">Este template não tem variáveis.</p>';
@@ -1161,6 +1161,7 @@
       '<button type="button" id="cvEmojiBtn" title="Emoji" aria-label="Abrir emojis">😊</button>' +
       '<button type="button" id="cvFotoBtn" title="Enviar foto" aria-label="Enviar foto">📷</button>' +
       '<button type="button" id="cvAnexo" title="Anexar vídeo, áudio ou PDF" aria-label="Anexar arquivo">📎</button>' +
+      '<button type="button" id="cvProntosBtn" title="Arquivos prontos (vídeos já compactados)" aria-label="Arquivos prontos">📚</button>' +
       '<button type="button" id="cvRapBtn" title="Respostas prontas" aria-label="Respostas prontas">/</button>' +
       '<span class="vazio wa-dica">Digite / para respostas prontas · Ctrl + Enter envia · cole ou arraste uma foto</span>' +
       '<input type="file" id="cvFoto" hidden accept="image/*"><input type="file" id="cvArquivo" hidden accept="' + ACEITA.todos + '"></div>' +
@@ -1225,6 +1226,7 @@
     $("cvEmojiBtn").addEventListener("click", alternarEmojis);
     $("cvFotoBtn").addEventListener("click", function () { $("cvFoto").click(); });
     $("cvAnexo").addEventListener("click", function () { $("cvArquivo").click(); });
+    $("cvProntosBtn").addEventListener("click", function () { abrirProntos("conversa"); });
     $("cvRapBtn").addEventListener("click", function () { if (rap.aberta) return fecharPops(); rap.ini = -1; abrirRapidas(""); tx.focus(); });
     $("cvFoto").addEventListener("change", function () { const f = this.files[0]; this.value = ""; if (f) anexar(f); });
     $("cvArquivo").addEventListener("change", function () { const f = this.files[0]; this.value = ""; if (f) anexar(f); });
@@ -1263,36 +1265,169 @@
     throw new Error("Não consegui reduzir a imagem para 5 MB.");
   }
   function descartarAnexo() {
-    if (anexo && anexo.url) URL.revokeObjectURL(anexo.url);
+    if (anexo && anexo.url && !anexo.pronto) URL.revokeObjectURL(anexo.url);
     anexo = null;
     const p = $("cvAnexoPrev"); if (p) { p.hidden = true; p.innerHTML = ""; }
     const t = $("cvTexto"); if (t) t.placeholder = "Escreva sua resposta...";
   }
+  function tamanhoTxt(bytes) { const kb = (bytes || 0) / 1024; return kb >= 1024 ? (kb / 1024).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(kb)) + " KB"; }
+  function desenharAnexo(extra) {
+    const p = $("cvAnexoPrev"); if (!p || !anexo) return;
+    const tipo = anexo.tipo;
+    p.innerHTML = (tipo === "image" ? '<img alt="" src="' + esc(anexo.url) + '">' : '<span class="wa-arq">' + { video: "🎬", audio: "🎤", document: "📄" }[tipo] + "</span>") +
+      '<span class="wa-anexo-txt"><b>' + esc(anexo.nome) + "</b><small>" + ROT_TIPO[tipo] + " · " + tamanhoTxt(anexo.bytes) + (extra || "") + (tipo === "audio" ? " · áudio vai sem legenda" : "") +
+      '</small></span><button type="button" class="wa-x" id="cvAnexoTirar" aria-label="Tirar o anexo">×</button>';
+    p.hidden = false;
+    $("cvAnexoTirar").addEventListener("click", descartarAnexo);
+    $("cvTexto").placeholder = tipo === "audio" ? "Escreva sua resposta..." : "Legenda (opcional)...";
+  }
+  const precisaCompactar = function (file) {
+    return (/^video\//i.test(file.type || "") || /\.(mp4|mov|m4v|3gp|webm|mkv)$/i.test(file.name || "")) && !!(window.waVideo && window.waVideo.segundoPlano) &&
+      (file.size > LIMITE_MB * 1024 * 1024 || !/^video\/(mp4|3gpp)$/.test(mimeDoArquivo(file)));
+  };
   async function anexar(file) {
     try {
+      /* vídeo grande ou em formato que o WhatsApp não aceita: compacta em segundo plano e guarda nos "Arquivos prontos" */
+      if (precisaCompactar(file)) {
+        iniciarTarefa(file, { conversa: conversaId, anexar: true });
+        aviso("Compactando o vídeo em segundo plano. Pode continuar usando o CRM: aviso quando estiver pronto.");
+        return;
+      }
       let f = file;
       if (/^image\//.test(file.type) || /\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i.test(file.name || "")) f = await prepararImagem(file);
-      /* vídeo grande (mais de 16 MB) ou em formato que o WhatsApp não aceita (mov, webm...): compacta e converte para MP4, igual ao template e ao disparo */
-      if ((/^video\//i.test(file.type || "") || /\.(mp4|mov|m4v|3gp|webm|mkv)$/i.test(file.name || "")) && window.waVideo) {
-        const ehMp4 = /^video\/(mp4|3gpp)$/.test(mimeDoArquivo(file));
-        if (file.size > LIMITE_MB * 1024 * 1024 || !ehMp4) f = await window.waVideo.preparar(file);
-      }
       const tipo = tipoDoArquivo(mimeDoArquivo(f));
       if (!tipo) throw new Error("Formato não aceito pelo WhatsApp. Use foto (JPG ou PNG), vídeo MP4, áudio MP3, M4A ou OGG, ou PDF.");
       if (f.size > LIMITE_MB * 1024 * 1024) throw new Error("O arquivo passa de " + LIMITE_MB + " MB (limite do WhatsApp).");
-      const p = $("cvAnexoPrev"); if (!p) return;
+      if (!$("cvAnexoPrev")) return;
       descartarAnexo();
-      anexo = { file: f, tipo: tipo, nome: f.name || "arquivo", url: URL.createObjectURL(f) };
-      const kb = f.size / 1024, tam = kb >= 1024 ? (kb / 1024).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(kb)) + " KB";
-      p.innerHTML = (tipo === "image" ? '<img alt="" src="' + anexo.url + '">' : '<span class="wa-arq">' + { video: "🎬", audio: "🎤", document: "📄" }[tipo] + "</span>") +
-        '<span class="wa-anexo-txt"><b>' + esc(anexo.nome) + "</b><small>" + ROT_TIPO[tipo] + " · " + tam + (f !== file ? (tipo === "video" ? " · compactado para o WhatsApp" : " · ajustada para o WhatsApp") : "") + (tipo === "audio" ? " · áudio vai sem legenda" : "") +
-        '</small></span><button type="button" class="wa-x" id="cvAnexoTirar" aria-label="Tirar o anexo">×</button>';
-      p.hidden = false;
-      $("cvAnexoTirar").addEventListener("click", descartarAnexo);
-      $("cvTexto").placeholder = tipo === "audio" ? "Escreva sua resposta..." : "Legenda (opcional)...";
+      anexo = { file: f, tipo: tipo, nome: f.name || "arquivo", url: URL.createObjectURL(f), bytes: f.size };
+      desenharAnexo(f !== file ? " · ajustada para o WhatsApp" : "");
       $("cvTexto").focus();
     } catch (e) { aviso(e.message || String(e), true); }
   }
+
+  /* ---------- vídeo em segundo plano e arquivos prontos ---------- */
+  const tarefas = [];
+  let seqTarefa = 0, prontos = [], modoProntos = "conversa", alvoMidia = null, tipoProntos = "";
+  function modoVideo() { try { return localStorage.getItem("wa_video_qualidade") === "1" ? "qualidade" : "rapido"; } catch (e) { return "rapido"; } }
+  function desenharTarefas() {
+    const cx = $("waTarefas"); if (!cx) return;
+    cx.hidden = !tarefas.length;
+    cx.innerHTML = tarefas.map(function (t) {
+      const pct = Math.min(100, Math.round((t.p || 0) * 100));
+      let corpo, acoes = "";
+      if (t.estado === "andando") {
+        corpo = '<span class="wa-tf-msg">' + esc(t.msg || "Compactando…") + (pct ? " <b>" + pct + "%</b>" : "") + '</span><div class="wa-barra"><i style="width:' + pct + '%"></i></div>';
+        acoes = '<button type="button" class="btn peq contorno" data-tf-cancelar="' + t.id + '">Cancelar</button>';
+      } else if (t.estado === "pronto") {
+        corpo = '<span class="wa-tf-msg"><b>Pronto</b> · ' + esc(tamanhoTxt(t.item && t.item.tamanho)) + ". Guardado em Arquivos prontos.</span>";
+        acoes = ($("cvAnexoPrev") && t.item ? '<button type="button" class="btn peq" data-tf-usar="' + t.id + '">Anexar na conversa aberta</button>' : "") + '<button type="button" class="btn peq contorno" data-tf-fechar="' + t.id + '">Fechar</button>';
+      } else {
+        corpo = '<span class="wa-tf-msg erro">' + esc(t.erro || "Não deu certo.") + "</span>";
+        acoes = '<button type="button" class="btn peq contorno" data-tf-fechar="' + t.id + '">Fechar</button>';
+      }
+      return '<div class="wa-tf"><b class="wa-tf-nome">' + esc(t.nome) + "</b>" + corpo + '<div class="wa-tf-acoes">' + acoes + "</div></div>";
+    }).join("");
+  }
+  async function guardarPronto(arquivo, originalNome) {
+    const up = await subirMidia(arquivo, null);
+    const linha = await ler(supa().from("wa_arquivos").insert({ nome: arquivo.name, tipo: up.tipo, url: up.url, caminho: up.caminho, mime: up.mime, tamanho: arquivo.size, original_nome: originalNome || arquivo.name }).select("*").single());
+    return Object.assign({ id: null, nome: arquivo.name, tipo: up.tipo, url: up.url, caminho: up.caminho, mime: up.mime, tamanho: arquivo.size }, linha || {});
+  }
+  function iniciarTarefa(file, opc) {
+    opc = opc || {};
+    const t = { id: ++seqTarefa, nome: file.name || "arquivo", msg: "Na fila…", p: 0, estado: "andando", item: null, erro: "", job: null };
+    tarefas.push(t); desenharTarefas();
+    (async function () {
+      try {
+        let arq = file;
+        if (precisaCompactar(file)) {
+          t.job = window.waVideo.segundoPlano(file, { modo: modoVideo(), aoMudar: function (e) { if (e.msg) t.msg = e.msg; t.p = e.p || 0; desenharTarefas(); } });
+          arq = await t.job.promessa;
+        }
+        t.msg = "Guardando…"; t.p = 0; desenharTarefas();
+        t.item = await guardarPronto(arq, file.name);
+        t.estado = "pronto"; desenharTarefas();
+        if (opc.anexar && opc.conversa && opc.conversa === conversaId && !anexo && $("cvAnexoPrev")) { usarPronto(t.item); aviso("Vídeo pronto e anexado na conversa. É só enviar."); }
+        else aviso('Pronto: "' + t.nome + '". Está em Arquivos prontos.');
+        if ($("jProntos").open) carregarProntos().then(desenharProntos).catch(function () {});
+      } catch (e) {
+        t.estado = "erro"; t.erro = /cancelado/i.test(e.message || "") ? "Cancelado." : (e.message || String(e)); desenharTarefas();
+        if (t.erro !== "Cancelado.") aviso(t.erro, true);
+      }
+    })();
+    return t;
+  }
+  $("waTarefas").addEventListener("click", function (ev) {
+    const c = ev.target.closest("[data-tf-cancelar]"), u = ev.target.closest("[data-tf-usar]"), f = ev.target.closest("[data-tf-fechar]");
+    const acha = function (id) { return tarefas.find(function (x) { return String(x.id) === String(id); }); };
+    if (c) { const t = acha(c.dataset.tfCancelar); if (t && t.job) t.job.cancelar(); return; }
+    if (u) { const t = acha(u.dataset.tfUsar); if (t && t.item) { usarPronto(t.item); } return; }
+    if (f) { const i = tarefas.findIndex(function (x) { return String(x.id) === String(f.dataset.tfFechar); }); if (i > -1) tarefas.splice(i, 1); desenharTarefas(); }
+  });
+  window.addEventListener("beforeunload", function (ev) { if (tarefas.some(function (t) { return t.estado === "andando"; })) { ev.preventDefault(); ev.returnValue = ""; } });
+
+  function usarPronto(item) {
+    if (!$("cvAnexoPrev")) return aviso("Abra uma conversa primeiro.", true);
+    descartarAnexo();
+    anexo = { file: null, pronto: true, tipo: item.tipo, nome: item.nome, url: item.url, bytes: item.tamanho || 0 };
+    desenharAnexo(" · pronto para enviar");
+    $("cvTexto").focus();
+  }
+  async function carregarProntos() { prontos = await ler(supa().from("wa_arquivos").select("*").order("criado_em", { ascending: false }).limit(100)); }
+  function desenharProntos() {
+    const tipoDisparo = modoProntos === "midia" ? tipoProntos : "";
+    const lista = prontos.filter(function (x) { return !tipoDisparo || x.tipo === tipoDisparo; });
+    $("prTxt").textContent = modoProntos === "midia" ? "Escolha o arquivo do cabeçalho." + (tipoDisparo ? " Só aparecem arquivos do tipo " + ROT_TIPO[tipoDisparo] + "." : "")
+      : "Vídeos e arquivos já compactados e guardados. Escolha um para mandar na conversa, sem esperar a compactação de novo.";
+    $("prLista").innerHTML = lista.length ? lista.map(function (x) {
+      return "<tr><td><b>" + esc(x.nome) + '</b></td><td>' + esc(ROT_TIPO[x.tipo] || x.tipo) + "</td><td>" + esc(tamanhoTxt(x.tamanho)) + "</td><td>" + esc(quando(x.criado_em)) + '</td><td><div class="wa-tp-acoes">' +
+        '<button type="button" class="btn peq" data-pr-usar="' + esc(x.id) + '">' + (modoProntos === "midia" ? "Usar este arquivo" : "Anexar na conversa") + "</button>" +
+        '<a class="btn peq contorno" href="' + esc(x.url) + '" target="_blank" rel="noopener noreferrer">Ver</a>' +
+        '<button type="button" class="btn peq perigo" data-pr-apagar="' + esc(x.id) + '">Apagar</button></div></td></tr>';
+    }).join("") : '<tr><td colspan="5" class="vazio">' + (prontos.length ? "Nenhum arquivo deste tipo." : 'Nada guardado ainda. Anexe um vídeo grande numa conversa (ele fica aqui depois de compactado) ou use "Adicionar arquivo".') + "</td></tr>";
+    $("prQualidade").checked = modoVideo() === "qualidade";
+  }
+  async function abrirProntos(modo) {
+    modoProntos = modo || "conversa";
+    try { await carregarProntos(); } catch (e) { return falha(e); }
+    desenharProntos(); if (!$("jProntos").open) $("jProntos").showModal();
+  }
+  $("jProntos").addEventListener("click", async function (ev) {
+    const u = ev.target.closest("[data-pr-usar]"), d = ev.target.closest("[data-pr-apagar]");
+    if (ev.target.closest("#prAdd")) return $("prArquivo").click();
+    if (u) {
+      const x = prontos.find(function (y) { return y.id === u.dataset.prUsar; }); if (!x) return;
+      if (modoProntos === "midia") {
+        if (alvoMidia) {
+          alvoMidia.value = x.url; alvoMidia.dispatchEvent(new Event("input", { bubbles: true })); alvoMidia.dispatchEvent(new Event("change", { bubbles: true }));
+          const cx = alvoMidia.closest("[data-caixa-midia]"), pv = cx && cx.querySelector("[data-midia-prev]"), st = cx && cx.querySelector("[data-midia-st]");
+          if (pv) pv.innerHTML = prevMidia(x.url, x.tipo, x.nome); if (st) st.textContent = "Pronto: " + x.nome;
+        }
+        $("jProntos").close(); aviso("Arquivo escolhido.");
+      }
+      else { $("jProntos").close(); usarPronto(x); }
+      return;
+    }
+    if (d) {
+      const x = prontos.find(function (y) { return y.id === d.dataset.prApagar; }); if (!x) return;
+      if (!confirm('Apagar "' + x.nome + '" dos arquivos prontos? Conversas que já receberam este arquivo não são afetadas.')) return;
+      try {
+        await supa().storage.from("wa-midia").remove([x.caminho]);
+        await ler(supa().from("wa_arquivos").delete().eq("id", x.id).select("id"));
+        await carregarProntos(); desenharProntos(); aviso("Apagado.");
+      } catch (e) { falha(e); }
+    }
+  });
+  $("prArquivo").addEventListener("change", function () { const f = this.files[0]; this.value = ""; if (f) { iniciarTarefa(f, {}); aviso("Preparando o arquivo em segundo plano."); } });
+  $("prQualidade").addEventListener("change", function () { try { localStorage.setItem("wa_video_qualidade", this.checked ? "1" : "0"); } catch (e) {} });
+  document.addEventListener("click", function (ev) {
+    const b = ev.target.closest("[data-prontos-midia]"); if (!b) return;
+    const cx = b.closest("[data-caixa-midia]"); if (!cx) return;
+    alvoMidia = cx.querySelector("input[data-midia]"); tipoProntos = { image: "image", video: "video", document: "document" }[cx.dataset.tipo] || "";
+    abrirProntos("midia");
+  });
+
   async function enviar() {
     const tx = $("cvTexto"), b = $("cvEnviar");
     if (enviando || !tx || !b) return;
@@ -1303,7 +1438,7 @@
       let r;
       if (anexo) {
         b.textContent = "Enviando...";
-        const up = await subirMidia(anexo.file, null), audio = up.tipo === "audio";
+        const up = anexo.pronto ? { url: anexo.url, tipo: anexo.tipo, nome: anexo.nome } : await subirMidia(anexo.file, null), audio = up.tipo === "audio";
         r = await wa({ acao: "enviar_midia", contato_id: conversaId, url: up.url, tipo: up.tipo, nome: up.nome, legenda: audio ? "" : t });
         if (r.ok) { descartarAnexo(); if (!audio) tx.value = ""; }
       } else {

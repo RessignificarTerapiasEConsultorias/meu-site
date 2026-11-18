@@ -49,9 +49,9 @@
   }
 
   /* escolhe resolução e taxa de bits para ocupar o máximo possível sem passar de ALVO_MB */
-  function planejar(info) {
+  function planejar(info, alvo) {
     const audio = info.s > 420 ? 48 : 64;                                  // kbps, mono
-    const total = ALVO_MB * 1024 * 8 / info.s;                              // kbit/s para o arquivo todo
+    const total = (alvo || ALVO_MB) * 1024 * 8 / info.s;                              // kbit/s para o arquivo todo
     const video = Math.floor((total - audio) * 0.97);                       // 3% de folga do contêiner
     const proporcao = info.w / info.h;
     let alt = Math.min(480, info.h), perda = false;
@@ -71,7 +71,7 @@
     return d;
   }
 
-  async function compactar(file, info, plano, atualizar) {
+  async function compactar(file, info, plano, atualizar, modo) {
     const f = await carregar(atualizar);
     const prog = function (e) { atualizar(null, e.progress); };
     f.on("progress", prog);
@@ -82,11 +82,19 @@
       let kbps = plano.video, saida = null;
       for (let tentativa = 0; tentativa < 3; tentativa++) {
         const vf = "scale=-2:" + plano.alt + ",format=yuv420p";
-        const base = ["-y", "-i", ent, "-vf", vf, "-c:v", "libx264", "-preset", "medium", "-profile:v", "main", "-b:v", kbps + "k", "-maxrate", Math.round(kbps * 1.6) + "k", "-bufsize", Math.round(kbps * 3) + "k", "-passlogfile", "pl"];
-        atualizar("Analisando o vídeo (passo 1 de 2)…", 0);
-        await f.exec(base.concat(["-pass", "1", "-an", "-f", "null", "-"]));
-        atualizar("Compactando (passo 2 de 2)…", 0);
-        await f.exec(base.concat(["-pass", "2", "-c:a", "aac", "-b:a", plano.audio + "k", "-ac", "1", "-ar", "44100", "-movflags", "+faststart", "saida.mp4"]));
+        const rapido = modo === "rapido";
+        const base = ["-y", "-i", ent, "-vf", vf, "-c:v", "libx264", "-preset", rapido ? "veryfast" : "medium", "-profile:v", "main", "-b:v", kbps + "k", "-maxrate", Math.round(kbps * 1.6) + "k", "-bufsize", Math.round(kbps * 3) + "k"];
+        const audioArgs = ["-c:a", "aac", "-b:a", plano.audio + "k", "-ac", "1", "-ar", "44100", "-movflags", "+faststart", "saida.mp4"];
+        if (rapido) {
+          atualizar("Compactando…", 0);
+          await f.exec(base.concat(audioArgs));
+        } else {
+          const dois = base.concat(["-passlogfile", "pl"]);
+          atualizar("Analisando o vídeo (passo 1 de 2)…", 0);
+          await f.exec(dois.concat(["-pass", "1", "-an", "-f", "null", "-"]));
+          atualizar("Compactando (passo 2 de 2)…", 0);
+          await f.exec(dois.concat(["-pass", "2"]).concat(audioArgs));
+        }
         const dados = await f.readFile("saida.mp4");
         await f.deleteFile("saida.mp4").catch(function () {});
         if (dados.length <= TETO_BYTES) { saida = dados; break; }
@@ -141,5 +149,37 @@
     });
   }
 
-  window.waVideo = { preparar: preparar, planejar: planejar };
+
+  /* compactação em segundo plano: sem janela que prende a tela. Uma de cada vez (o compactador só roda um vídeo por vez).
+     opcoes: { modo: "rapido" (padrão, 1 passada, alvo 14 MB) | "qualidade" (2 passadas, alvo 15 MB), aoMudar({msg, p, info}) }
+     devolve { promessa, cancelar(), info } */
+  let fila = Promise.resolve();
+  function segundoPlano(file, opcoes) {
+    opcoes = opcoes || {};
+    const modo = opcoes.modo === "qualidade" ? "qualidade" : "rapido";
+    const job = { cancelado: false, rodando: false, info: null, modo: modo };
+    const avisar = function (m, p) { if (!job.cancelado && opcoes.aoMudar) opcoes.aoMudar({ msg: m, p: p || 0, info: job.info }); };
+    job.cancelar = function () {
+      job.cancelado = true;
+      if (job.rodando && ffmpeg) { try { ffmpeg.terminate(); } catch (e) {} ffmpeg = null; carregando = null; }
+    };
+    job.promessa = new Promise(function (ok, no) {
+      fila = fila.then(async function () {
+        if (job.cancelado) return no(new Error("Cancelado."));
+        job.rodando = true;
+        try {
+          avisar("Lendo o vídeo…", 0);
+          job.info = await infoVideo(file);
+          const plano = planejar(job.info, modo === "rapido" ? 14 : ALVO_MB);
+          const novo = await compactar(file, job.info, plano, avisar, modo);
+          if (job.cancelado) throw new Error("Cancelado.");
+          ok(novo);
+        } catch (e) { no(job.cancelado ? new Error("Cancelado.") : e); }
+        finally { job.rodando = false; }
+      });
+    });
+    return job;
+  }
+
+  window.waVideo = { preparar: preparar, planejar: planejar, segundoPlano: segundoPlano };
 })();
