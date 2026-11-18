@@ -2506,65 +2506,515 @@
     try { await ler(supa().from("wa_fluxos").delete().eq("id", fluxoAtual.id).select("id")); $("jFluxo").close(); aviso("Fluxo apagado."); telaFluxos(); } catch (e) { falha(e); }
   });
 
-  /* ---------- funil (Fase 5, item 5.2): quadro e cartões, só leitura ---------- */
-  const fnEstado = { quadro: null, limite: 50 };
-  function telaFunil() {
-    return ler(supa().rpc("wa_funil_carregar", { p_quadro: fnEstado.quadro, p_filtros: {}, p_limite: fnEstado.limite })).then(desenharFunil);
+  /* ---------- funil (Fase 5, itens 5.2 a 5.8) ---------- */
+  const WF = function () { return window.WaFunil; };
+  const fn = { quadro: null, quadros: [], colunas: [], dados: null, atividades: [], limite: 50, filtros: {}, seq: 0, masters: null, arrasto: null, teclado: null, pendente: null, toast: null, fantasma: null, clique: false, ptr: null, cartaoAberto: null };
+  function fnCarregarFiltros() { try { const s = localStorage.getItem("wa_funil_filtros"); return s ? JSON.parse(s) || {} : {}; } catch (e) { return {}; } }
+  function fnSalvarFiltros() { try { localStorage.setItem("wa_funil_filtros", JSON.stringify(fn.filtros)); } catch (e) { /* sem armazenamento: segue sem guardar */ } }
+  fn.filtros = fnCarregarFiltros();
+  fn.atalhoPrecisa = !!fn.filtros.precisa_de_mim;
+  function fnPreencherFiltros() {
+    $("fnFBusca").value = fn.filtros.busca || ""; $("fnFResp").value = fn.filtros.responsavel || ""; $("fnFPrio").value = fn.filtros.prioridade || "";
+    $("fnFEtiq").value = fn.filtros.etiqueta || ""; $("fnFOrig").value = fn.filtros.origem || ""; $("fnFParado").value = fn.filtros.parados_dias || "";
+    $("fnFAtend").checked = !!fn.filtros.so_atendimento; $("fnFNL").checked = !!fn.filtros.so_nao_lidas; $("fnFPrazo").checked = !!fn.filtros.prazo_vencido; $("fnFEnc").checked = !!fn.filtros.encerrados;
   }
-  function desenharFunil(d) {
-    const WF = window.WaFunil, q = d.quadro || {}, quadros = d.quadros || [], t = d.totais || {}, cfg = d.config || {};
-    fnEstado.quadro = q.id || null;
+  function fnLerFiltros() {
+    fn.filtros = { busca: $("fnFBusca").value, responsavel: $("fnFResp").value, prioridade: $("fnFPrio").value, etiqueta: $("fnFEtiq").value, origem: $("fnFOrig").value,
+      parados_dias: $("fnFParado").value, so_atendimento: $("fnFAtend").checked, so_nao_lidas: $("fnFNL").checked, prazo_vencido: $("fnFPrazo").checked, encerrados: $("fnFEnc").checked,
+      precisa_de_mim: !!fn.atalhoPrecisa };
+    fnSalvarFiltros();
+  }
+  function fnMudouFiltro() { fnLerFiltros(); fn.limite = 50; telaFunil().catch(function (e) { falha(e, "Não consegui aplicar o filtro."); }); }
+  let fnBuscaT = null;
+  $("fnFBusca").addEventListener("input", function () { clearTimeout(fnBuscaT); fnBuscaT = setTimeout(fnMudouFiltro, 350); });
+  ["fnFResp", "fnFPrio", "fnFOrig", "fnFParado", "fnFAtend", "fnFNL", "fnFPrazo", "fnFEnc"].forEach(function (id) { $(id).addEventListener("change", fnMudouFiltro); });
+  $("fnFEtiq").addEventListener("change", fnMudouFiltro);
+  $("fnAtPrecisa").addEventListener("click", function () { fn.atalhoPrecisa = !fn.atalhoPrecisa; $("fnAtPrecisa").setAttribute("aria-pressed", fn.atalhoPrecisa ? "true" : "false"); fnMudouFiltro(); });
+  $("fnAtParados").addEventListener("click", function () { $("fnFParado").value = String((fn.dados && fn.dados.config && fn.dados.config.dias_amarelo) || 3); fnMudouFiltro(); });
+  $("fnAtPrazo").addEventListener("click", function () { $("fnFPrazo").checked = true; fnMudouFiltro(); });
+  $("fnAtLimpar").addEventListener("click", function () { fn.filtros = {}; fn.atalhoPrecisa = false; $("fnAtPrecisa").setAttribute("aria-pressed", "false"); fnSalvarFiltros(); fnPreencherFiltros(); fn.limite = 50; telaFunil().catch(function (e) { falha(e); }); });
+
+  async function fnListarMasters() {
+    try { return await ler(supa().from("perfis").select("id,nome").eq("papel", "master").eq("ativo", true)); } catch (e) { return []; }
+  }
+  async function telaFunil() {
+    const seq = ++fn.seq;
+    const [d, at] = await Promise.all([
+      ler(supa().rpc("wa_funil_carregar", { p_quadro: fn.quadro, p_filtros: WF().filtrosDaTela(fn.filtros), p_limite: fn.limite })),
+      ler(supa().rpc("wa_funil_atividades", { p_quadro: fn.quadro, p_limite: 50, p_cartao: null }))
+    ]);
+    if (seq !== fn.seq) return;
+    if (!fn.masters) fn.masters = await fnListarMasters();
+    fn.dados = d; fn.atividades = at || [];
+    fn.quadro = d.quadro ? d.quadro.id : null; fn.quadros = d.quadros || []; fn.colunas = d.colunas || [];
+    desenharFunil();
+  }
+  function fnNomeDoResp(id) { const m = (fn.masters || []).filter(function (x) { return x.id === id; })[0]; return m ? m.nome : ""; }
+  function fnOpcoesResp(sel, atual) {
+    sel.innerHTML = '<option value="">Sem responsável</option>' + (fn.masters || []).map(function (m) { return '<option value="' + esc(m.id) + '">' + esc(m.nome) + "</option>"; }).join("");
+    sel.value = atual || "";
+  }
+  function desenharFunil() {
+    const d = fn.dados, cfg = d.config || {}, t = d.totais || {}, WFu = WF();
     const sel = $("fnQuadro");
-    sel.innerHTML = quadros.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.nome) + (x.principal ? " (espelha a etapa)" : "") + "</option>"; }).join("");
-    if (q.id) sel.value = q.id;
-    const valor = WF.valorReais(t.valor);
-    $("fnResumo").textContent = WF.contaTexto(Number(t.cartoes) || 0, "pessoa no quadro", "pessoas no quadro") + (valor ? " · " + valor + " em valor" : "")
-      + " · " + (Number(t.precisa_de_mim) || 0) + " precisam de você · " + (Number(t.parados) || 0) + " parados há " + (cfg.dias_amarelo || 3) + " dias ou mais";
-    const cols = d.colunas || [];
+    sel.innerHTML = fn.quadros.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.nome) + (x.principal ? " (espelha a etapa)" : "") + "</option>"; }).join("");
+    if (fn.quadro) sel.value = fn.quadro;
+    fnRenderQuadro(cfg, t, WFu);
+    fnRenderAtividades();
+  }
+  function fnRenderQuadro(cfg, t, WFu) {
+    const valor = WFu.valorReais(t.valor);
+    $("fnResumo").textContent = WFu.contaTexto(Number(t.cartoes) || 0, "pessoa neste quadro", "pessoas neste quadro") + (valor ? " · " + valor + " em valor" : "")
+      + " · " + (Number(t.precisa_de_mim) || 0) + " precisam de você · " + (Number(t.parados) || 0) + " parados há " + (cfg.dias_amarelo || 3) + " dias ou mais"
+      + (fn.dados.encerrados ? " · mostrando os encerrados" : "");
+    const cols = fn.colunas;
+    fn.limiteOk = true;
     $("fnColunas").innerHTML = cols.length ? cols.map(function (c) {
       const cartoes = c.cartoes || [];
-      const vt = WF.valorReais(c.valor_total);
-      return '<section class="wa-fn-col' + (c.tipo && c.tipo !== "normal" ? " " + esc(c.tipo) : "") + '" aria-label="' + esc(c.nome) + '">'
+      const vt = WFu.valorReais(c.valor_total);
+      return '<section class="wa-fn-col' + (c.tipo && c.tipo !== "normal" ? " " + esc(c.tipo) : "") + '" data-fn-coluna="' + esc(c.id) + '" aria-label="' + esc(c.nome) + '">'
         + "<header><h4>" + esc(c.nome) + '</h4><span class="wa-fn-cont">' + (Number(c.total) || 0) + (vt ? " · " + esc(vt) : "") + "</span></header>"
-        + '<div class="wa-fn-lista">' + (cartoes.length ? cartoes.map(function (k) { return cartaoFunil(k, cfg); }).join("") : '<p class="vazio">Ninguém aqui.</p>') + "</div></section>";
+        + '<div class="wa-fn-lista">' + (cartoes.length ? cartoes.map(function (k) { return fnCartaoHtml(k, cfg, c); }).join("") : '<p class="vazio">Ninguém aqui.</p>') + "</div></section>";
     }).join("") : '<p class="vazio">Este quadro ainda não tem colunas.</p>';
     $("fnMais").hidden = !cols.some(function (c) { return (Number(c.total) || 0) > (c.cartoes || []).length; });
+    $("fnFEnc").checked = !!fn.filtros.encerrados;
+    fnRestaurarFoco();
   }
-  function metaCartao(k, cls, etiquetas) {
-    const partes = ['<span class="wa-fn-parado ' + cls + '">há ' + esc(window.WaFunil.textoParado(k.dias_parado)) + "</span>"];
-    if (k.responsavel) partes.push('<span class="wa-fn-resp" title="' + esc(k.responsavel) + '">' + esc(k.responsavel.charAt(0).toUpperCase()) + "</span>");
-    if (etiquetas.length) partes.push(etiquetas.slice(0, 2).map(esc).join(", ") + (etiquetas.length > 2 ? " +" + (etiquetas.length - 2) : ""));
-    return partes.join(" · ");
-  }
-  function cartaoFunil(k, cfg) {
-    const WF = window.WaFunil, nome = k.nome || (k.username ? "@" + k.username : "") || (k.telefone ? foneBR(k.telefone) : "Sem número visível");
-    const cls = WF.classeParado(k.dias_parado, cfg.dias_amarelo, cfg.dias_vermelho);
+  function fnCartaoHtml(k, cfg, coluna) {
+    const WFu = WF(), nome = k.nome || (k.username ? "@" + k.username : "") || (k.telefone ? foneBR(k.telefone) : "Sem número visível");
+    const cls = WFu.classeParado(k.dias_parado, cfg.dias_amarelo, cfg.dias_vermelho);
     const selos = [];
     if (Number(k.nao_lidas) > 0) selos.push('<span class="wa-fn-selo naolida" title="Mensagens não lidas">' + Number(k.nao_lidas) + "</span>");
     if (k.precisa_humano) selos.push('<span class="wa-fn-selo atendimento">Pediu atendimento</span>');
     if (k.optout) selos.push('<span class="wa-fn-selo">Saiu da lista</span>');
     else if (!k.janela_aberta) selos.push('<span class="wa-fn-selo">Fora da janela de 24 h</span>');
     if (k.prioridade === "alta" || k.prioridade === "urgente") selos.push('<span class="wa-fn-selo ' + esc(k.prioridade) + '">' + (k.prioridade === "urgente" ? "Urgente" : "Prioridade alta") + "</span>");
-    const valor = WF.valorReais(k.valor);
-    const etiquetas = k.etiquetas || [];
-    const acao = k.proxima_acao ? '<span class="wa-fn-acao' + (k.prazo_vencido ? " venc" : "") + '">' + esc(k.proxima_acao) + (k.prazo ? " · " + esc(WF.prazoRotulo(k.prazo, k.prazo_vencido)) : "") + "</span>" : "";
-    return '<button type="button" class="wa-fn-cartao" data-fn-contato="' + esc(k.contato_id || "") + '">'
+    const valor = WFu.valorReais(k.valor), etiquetas = k.etiquetas || [];
+    const acao = k.proxima_acao ? '<span class="wa-fn-acao' + (k.prazo_vencido ? " venc" : "") + '">' + esc(k.proxima_acao) + (k.prazo ? " · " + esc(WFu.prazoRotulo(k.prazo, k.prazo_vencido)) : "") + "</span>" : "";
+    const meta = ['<span class="wa-fn-parado ' + cls + '">há ' + esc(WFu.textoParado(k.dias_parado)) + "</span>"];
+    if (k.responsavel) meta.push('<span class="wa-fn-resp" title="' + esc(k.responsavel) + '">' + esc(k.responsavel.charAt(0).toUpperCase()) + "</span>");
+    if (etiquetas.length) meta.push(etiquetas.slice(0, 2).map(esc).join(", ") + (etiquetas.length > 2 ? " +" + (etiquetas.length - 2) : ""));
+    const outras = fn.colunas.filter(function (x) { return x.id !== coluna.id; });
+    const mover = '<select class="wa-fn-mover" aria-label="Mover ' + esc(nome) + ' para outra coluna"><option value="">Mover para…</option>'
+      + outras.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.nome) + "</option>"; }).join("") + "</select>";
+    return '<div class="wa-fn-cartao" role="button" tabindex="0" data-fn-cartao="' + esc(k.id) + '" data-fn-cartao-coluna="' + esc(coluna.id) + '" aria-label="' + esc(nome) + ". Espaço para pegar e mover com as setas.\">"
       + '<span class="wa-fn-nome">' + esc(nome) + "</span>"
       + (valor ? '<span class="wa-fn-linha"><b>' + esc(valor) + "</b></span>" : "")
       + (selos.length ? '<span class="wa-fn-linha">' + selos.join(" ") + "</span>" : "")
-      + '<span class="wa-fn-linha">' + metaCartao(k, cls, etiquetas) + "</span>"
-      + acao
-      + "</button>";
+      + '<span class="wa-fn-linha">' + meta.join(" · ") + "</span>" + acao + mover + "</div>";
   }
-  $("fnQuadro").addEventListener("change", function () { fnEstado.quadro = this.value || null; fnEstado.limite = 50; telaFunil().catch(function (e) { falha(e, "Não consegui abrir o funil."); }); });
-  $("fnAtualizar").addEventListener("click", function () { telaFunil().catch(function (e) { falha(e, "Não consegui atualizar o funil."); }); });
-  $("fnMais").addEventListener("click", function () { fnEstado.limite += 50; telaFunil().catch(function (e) { falha(e); }); });
-  $("fnColunas").addEventListener("click", function (ev) {
-    const b = ev.target.closest("[data-fn-contato]"); if (!b || !b.dataset.fnContato) return;
-    conversaId = b.dataset.fnContato; ancora = null;
+  function fnRenderAtividades() {
+    const ul = $("fnAtividades");
+    if (!fn.atividades.length) { ul.innerHTML = '<li class="vazio">Nada aconteceu no funil ainda.</li>'; return; }
+    ul.innerHTML = fn.atividades.map(function (a) {
+      return '<li><button type="button" data-fn-ativ-cartao="' + esc(a.cartao_id || "") + '" data-fn-ativ-contato="' + esc(a.contato_id || "") + '">'
+        + "<b>" + esc(a.pessoa || "Pessoa") + "</b> · " + esc(a.descricao || "") + '<br><small>' + esc(a.autor || "robô") + " · " + esc(horaCurta(a.criado_em)) + "</small></button></li>";
+    }).join("");
+  }
+  function fnAbrirPessoa(contatoId) {
+    conversaId = contatoId; ancora = null;
     abrirAba("conversas");
     abrirConversa();
+  }
+  $("fnAtividades").addEventListener("click", function (ev) {
+    const b = ev.target.closest("[data-fn-ativ-cartao]"); if (!b) return;
+    const k = fnAcharCartao(b.dataset.fnAtivCartao);
+    if (k) fnAbrirCartao(k.id); else if (b.dataset.fnAtivContato) fnAbrirPessoa(b.dataset.fnAtivContato);
   });
+  function fnAcharCartao(id) {
+    for (const c of fn.colunas) { const k = (c.cartoes || []).filter(function (x) { return x.id === id; })[0]; if (k) return k; }
+    return null;
+  }
+  function fnAcharColuna(id) { return fn.colunas.filter(function (c) { return c.id === id; })[0] || null; }
+  function fnPosicaoDoCartao(id) {
+    for (const c of fn.colunas) { const i = (c.cartoes || []).findIndex(function (x) { return x.id === id; }); if (i >= 0) return { coluna: c, idx: i }; }
+    return null;
+  }
+
+  /* ---------- mover (arrastar, teclado, "Mover para…" e o botão de desfazer) ---------- */
+  function fnMarcarDestino(colId, idx) {
+    document.querySelectorAll(".wa-fn-marca").forEach(function (m) { m.remove(); });
+    document.querySelectorAll(".wa-fn-col.alvo").forEach(function (c) { c.classList.remove("alvo"); });
+    if (!colId) return;
+    const col = document.querySelector('[data-fn-coluna="' + colId + '"]'); if (!col) return;
+    col.classList.add("alvo");
+    const lista = col.querySelector(".wa-fn-lista");
+    const marca = document.createElement("div"); marca.className = "wa-fn-marca"; marca.setAttribute("aria-hidden", "true");
+    const cards = Array.prototype.filter.call(lista.querySelectorAll("[data-fn-cartao]"), function (x) { return !(fn.arrasto && x.dataset.fnCartao === fn.arrasto.cartao) && !(fn.teclado && x.dataset.fnCartao === fn.teclado.cartao); });
+    if (cards[idx]) lista.insertBefore(marca, cards[idx]); else lista.appendChild(marca);
+  }
+  function fnRestaurarFoco() {
+    if (!fn.teclado) return;
+    const el = document.querySelector('[data-fn-cartao="' + fn.teclado.cartao + '"]');
+    if (el) { el.classList.add("pego"); el.focus(); }
+    fnMarcarDestino(fn.teclado.coluna, fn.teclado.idx);
+  }
+  function fnMostrarToast(texto, desfazer) {
+    $("fnToastTxt").textContent = texto; $("fnToastDesfazer").hidden = !desfazer; $("fnToast").hidden = false;
+    fn.toast = desfazer || null;
+    clearTimeout(fnMostrarToast.t); fnMostrarToast.t = setTimeout(function () { $("fnToast").hidden = true; fn.toast = null; }, 7000);
+  }
+  $("fnToastDesfazer").addEventListener("click", function () {
+    const u = fn.toast; $("fnToast").hidden = true; fn.toast = null; if (!u) return;
+    fnMoverCartao(u.cartao, u.coluna, u.idx, {}, true);
+  });
+  async function fnMoverCartao(cartaoId, colunaId, idx, extra, deDesfazer) {
+    const pos = fnPosicaoDoCartao(cartaoId), destino = fnAcharColuna(colunaId);
+    if (!pos || !destino) return;
+    const origem = pos.coluna, mesma = origem.id === destino.id, WFu = WF();
+    extra = extra || {};
+    if (!mesma && WFu.precisaMotivo(origem.tipo, destino.tipo, false) && extra.motivo === undefined) { fnPedirMotivo(cartaoId, colunaId, idx); return; }
+    if (!mesma && WFu.precisaValor(origem.tipo, destino.tipo, false) && extra.valor === undefined) { fnPedirValor(cartaoId, colunaId, idx); return; }
+    const idxOrig = pos.idx;
+    const ids = (destino.cartoes || []).map(function (x) { return x.id; });
+    const p = WFu.posicaoSolta(ids, cartaoId, idx);
+    // aplica na tela antes de falar com o banco; se o banco recusar, volta
+    const k = origem.cartoes.splice(idxOrig, 1)[0];
+    if (mesma) { destino.cartoes.splice(p.indice, 0, k); }
+    else {
+      k.coluna_id = destino.id; k.fechado_em = destino.tipo !== "normal" ? (k.fechado_em || new Date().toISOString()) : null;
+      if (destino.tipo === "perdido") k.motivo_perda = extra.motivo || null;
+      destino.cartoes = destino.cartoes || []; destino.cartoes.splice(p.indice, 0, k);
+      destino.total = (Number(destino.total) || 0) + 1; origem.total = Math.max(0, (Number(origem.total) || 0) - 1);
+    }
+    fnRenderQuadro(fn.dados.config || {}, fn.dados.totais || {}, WFu);
+    try {
+      const r = await ler(supa().rpc("wa_cartao_mover", { p_cartao: cartaoId, p_coluna: colunaId, p_depois: p.depois, p_antes: p.antes, p_motivo: extra.motivo || null, p_valor: extra.valor === undefined ? null : extra.valor }));
+      if (!r || r.ok === false) throw new Error((r && r.erro) || "Não consegui mover.");
+      if (!deDesfazer && !mesma && WFu.podeDesfazer(origem.tipo, destino.tipo)) {
+        fnMostrarToast("Movido para " + destino.nome + ".", { cartao: cartaoId, coluna: origem.id, idx: idxOrig });
+      } else if (!deDesfazer && !mesma) fnMostrarToast("Movido para " + destino.nome + ".", null);
+      if (deDesfazer) fnMostrarToast("Movimento desfeito.", null);
+      fn.teclado = null; fn.arrasto = null;
+    } catch (e) {
+      aviso(e.message || "Não consegui mover. Voltei o cartão ao lugar.", true);
+      fn.teclado = null; fn.arrasto = null;
+    }
+    await telaFunil().catch(function () {});
+  }
+
+  /* motivo de perda e valor de ganho (pedidos antes de mover) */
+  function fnPedirMotivo(cartaoId, colunaId, idx) {
+    fn.pendente = { cartao: cartaoId, coluna: colunaId, idx: idx, tipo: "motivo" };
+    const motivos = (fn.dados.config && fn.dados.config.motivos_perda) || [];
+    $("fmMotivo").innerHTML = motivos.map(function (m) { return '<option value="' + esc(m) + '">' + esc(m) + "</option>"; }).join("") + '<option value="__outro">Outro…</option>';
+    $("fmOutroBox").hidden = true; $("fmOutro").value = ""; $("fmMotivo").value = motivos[0] || "__outro"; $("fmOutroBox").hidden = $("fmMotivo").value !== "__outro";
+    if (!$("jFunilMotivo").open) $("jFunilMotivo").showModal();
+  }
+  $("fmMotivo").addEventListener("change", function () { $("fmOutroBox").hidden = this.value !== "__outro"; });
+  $("fmConfirmar").addEventListener("click", function () {
+    const p = fn.pendente; if (!p) return;
+    const motivo = $("fmMotivo").value === "__outro" ? $("fmOutro").value.trim() : $("fmMotivo").value;
+    if (!motivo) return aviso("Escreva o motivo da perda.", true);
+    $("jFunilMotivo").close(); fn.pendente = null;
+    fnMoverCartao(p.cartao, p.coluna, p.idx, { motivo: motivo });
+  });
+  function fnPedirValor(cartaoId, colunaId, idx) {
+    fn.pendente = { cartao: cartaoId, coluna: colunaId, idx: idx, tipo: "valor" };
+    const k = fnAcharCartao(cartaoId);
+    $("fgValor").value = k && k.valor != null ? k.valor : "";
+    if (!$("jFunilGanho").open) $("jFunilGanho").showModal();
+  }
+  $("fgConfirmar").addEventListener("click", function () {
+    const p = fn.pendente; if (!p) return;
+    const v = $("fgValor").value === "" ? null : Number($("fgValor").value);
+    if (v !== null && (!Number.isFinite(v) || v < 0)) return aviso("Confira o valor final.", true);
+    $("jFunilGanho").close(); fn.pendente = null;
+    fnMoverCartao(p.cartao, p.coluna, p.idx, { valor: v });
+  });
+  $("fnColunas").addEventListener("change", function (ev) {
+    const s = ev.target.closest(".wa-fn-mover"); if (!s || !s.value) return;
+    const card = s.closest("[data-fn-cartao]"); const dest = s.value; s.value = "";
+    fnMoverCartao(card.dataset.fnCartao, dest, 0, {});
+  });
+
+  /* arrastar com mouse (movimento de 5 px) e com toque (segurar 300 ms, para não atrapalhar a rolagem) */
+  $("fnColunas").addEventListener("pointerdown", function (ev) {
+    const c = ev.target.closest("[data-fn-cartao]"); if (!c || ev.target.closest("button,select,input,textarea,a")) return;
+    if (ev.button > 0) return;
+    fn.clique = false;
+    fn.ptr = { cartao: c.dataset.fnCartao, x: ev.clientX, y: ev.clientY, id: ev.pointerId, tipo: ev.pointerType, el: c, moveu: false };
+    if (ev.pointerType === "touch") fn.ptr.t = setTimeout(function () { if (fn.ptr && !fn.ptr.moveu) fnComecarArrasto(ev.clientX, ev.clientY); }, 300);
+  });
+  document.addEventListener("pointermove", function (ev) {
+    const p = fn.ptr; if (!p) return;
+    if (!fn.arrasto) {
+      const d = Math.hypot(ev.clientX - p.x, ev.clientY - p.y);
+      if (p.tipo === "touch" && d > 8) { clearTimeout(p.t); fn.ptr = null; return; }
+      if (p.tipo !== "touch" && d > 5) fnComecarArrasto(ev.clientX, ev.clientY);
+      return;
+    }
+    ev.preventDefault();
+    if (fn.fantasma) { fn.fantasma.style.left = (ev.clientX + 6) + "px"; fn.fantasma.style.top = (ev.clientY + 6) + "px"; }
+    const alvo = document.elementFromPoint(ev.clientX, ev.clientY), col = alvo && alvo.closest && alvo.closest("[data-fn-coluna]");
+    if (!col) { fn.arrasto.coluna = null; fnMarcarDestino(null); return; }
+    const lista = col.querySelector(".wa-fn-lista");
+    const cards = Array.prototype.filter.call(lista.querySelectorAll("[data-fn-cartao]"), function (x) { return x.dataset.fnCartao !== fn.arrasto.cartao; });
+    const meios = cards.map(function (x) { const r = x.getBoundingClientRect(); return r.top + r.height / 2; });
+    fn.arrasto.coluna = col.dataset.fnColuna; fn.arrasto.idx = WF().indiceNaSolta(meios, ev.clientY);
+    fnMarcarDestino(fn.arrasto.coluna, fn.arrasto.idx);
+  }, { passive: false });
+  function fnComecarArrasto(x, y) {
+    const p = fn.ptr; if (!p || fn.arrasto) return;
+    p.moveu = true;
+    fn.arrasto = { cartao: p.cartao, coluna: null, idx: 0 };
+    p.el.classList.add("pego");
+    fn.fantasma = p.el.cloneNode(true); fn.fantasma.classList.add("wa-fn-fantasma"); fn.fantasma.classList.remove("pego"); document.body.appendChild(fn.fantasma);
+    fn.fantasma.style.left = (x + 6) + "px"; fn.fantasma.style.top = (y + 6) + "px";
+  }
+  function fnTerminarArrasto(cancelar) {
+    clearTimeout(fn.ptr && fn.ptr.t);
+    const a = fn.arrasto, p = fn.ptr;
+    if (fn.fantasma) { fn.fantasma.remove(); fn.fantasma = null; }
+    fn.ptr = null;
+    if (!a) return;
+    fn.arrasto = null; fnMarcarDestino(null);
+    if (p && p.el) p.el.classList.remove("pego");
+    if (!cancelar && a.coluna) { fn.clique = true; fnMoverCartao(a.cartao, a.coluna, a.idx, {}); }
+    else if (!cancelar) { fn.clique = true; }
+  }
+  document.addEventListener("pointerup", function () { if (fn.ptr) fnTerminarArrasto(false); });
+  document.addEventListener("pointercancel", function () { if (fn.ptr) fnTerminarArrasto(true); });
+
+  /* teclado: espaço pega, setas escolhem coluna e posição, espaço solta, Esc cancela */
+  $("fnColunas").addEventListener("keydown", function (ev) {
+    const c = ev.target.closest && ev.target.closest("[data-fn-cartao]"); if (!c || ev.target !== c) return;
+    const cols = fn.colunas, pos = fnPosicaoDoCartao(c.dataset.fnCartao); if (!pos) return;
+    if (ev.key === " " || ev.key === "Enter") {
+      ev.preventDefault();
+      if (!fn.teclado) { fn.teclado = { cartao: c.dataset.fnCartao, coluna: pos.coluna.id, idx: pos.idx, original: { coluna: pos.coluna.id, idx: pos.idx } }; c.classList.add("pego"); fnMarcarDestino(fn.teclado.coluna, fn.teclado.idx); }
+      else { const t = fn.teclado; fn.teclado = null; fnMoverCartao(t.cartao, t.coluna, t.idx, {}); }
+      return;
+    }
+    if (!fn.teclado) return;
+    ev.preventDefault();
+    const t = fn.teclado, ci = cols.findIndex(function (x) { return x.id === t.coluna; });
+    if (ev.key === "Escape") { fn.teclado = null; c.classList.remove("pego"); fnMarcarDestino(null); return; }
+    if (ev.key === "ArrowLeft" && ci > 0) t.coluna = cols[ci - 1].id;
+    if (ev.key === "ArrowRight" && ci < cols.length - 1) t.coluna = cols[ci + 1].id;
+    const tamanho = ((fnColunaDe(t.coluna) || { cartoes: [] }).cartoes || []).filter(function (x) { return x.id !== t.cartao; }).length;
+    if (ev.key === "ArrowUp") t.idx = Math.max(0, t.idx - 1);
+    if (ev.key === "ArrowDown") t.idx = t.idx + 1;
+    t.idx = Math.min(t.idx, tamanho);
+    fnMarcarDestino(t.coluna, t.idx);
+    const dest = fnColunaDe(t.coluna);
+    const el = c; el.setAttribute("aria-label", el.getAttribute("aria-label").split(".")[0] + ". Coluna " + (dest ? dest.nome : "") + ", posição " + (t.idx + 1) + ". Espaço para soltar, Esc para cancelar.");
+  });
+  function fnColunaDe(id) { return fn.colunas.filter(function (x) { return x.id === id; })[0] || null; }
+  $("fnColunas").addEventListener("click", function (ev) {
+    if (fn.clique) { fn.clique = false; return; }
+    const c = ev.target.closest("[data-fn-cartao]"); if (!c || ev.target.closest("button,select,input,textarea,a")) return;
+    fnAbrirCartao(c.dataset.fnCartao);
+  });
+
+  $("fnQuadro").addEventListener("change", function () { fn.quadro = this.value || null; fn.limite = 50; telaFunil().catch(function (e) { falha(e, "Não consegui abrir o funil."); }); });
+  $("fnAtualizar").addEventListener("click", function () { telaFunil().catch(function (e) { falha(e, "Não consegui atualizar o funil."); }); });
+  $("fnMais").addEventListener("click", function () { fn.limite += 50; telaFunil().catch(function (e) { falha(e); }); });
+
+  /* ---------- painel do cartão (5.2 e 5.4) ---------- */
+  function fnAbrirCartao(id) {
+    const k = fnAcharCartao(id); if (!k) return;
+    fn.cartaoAberto = id;
+    const WFu = WF(), nome = k.nome || (k.username ? "@" + k.username : "") || (k.telefone ? foneBR(k.telefone) : "Sem número visível");
+    const pos = fnPosicaoDoCartao(id), col = pos ? pos.coluna : null, quadro = fn.quadros.filter(function (x) { return x.id === fn.quadro; })[0] || {};
+    $("fcTitulo").textContent = nome;
+    $("fcInfo").textContent = (col ? "Coluna: " + col.nome + " · " : "") + (quadro.nome || "") + " · parado há " + WFu.textoParado(k.dias_parado) + (k.optout ? " · saiu da lista de mensagens" : "");
+    $("fcValor").value = k.valor == null ? "" : k.valor; $("fcPrazo").value = k.prazo || ""; $("fcAcao").value = k.proxima_acao || "";
+    fnOpcoesResp($("fcResp"), k.responsavel_id); $("fcPrio").value = ""; $("fcNotas").value = "";
+    $("fcNotas").disabled = true; $("fcSalvar").disabled = true;
+    ler(supa().rpc("wa_cartao_detalhe", { p_cartao: id })).then(function (d) {
+      if (fn.cartaoAberto !== id) return;
+      $("fcPrio").value = (d && d.prioridade_cartao) || ""; $("fcNotas").value = (d && d.notas) || "";
+      $("fcNotas").disabled = false; $("fcSalvar").disabled = false;
+    }).catch(function (e) { falha(e, "Não consegui abrir as anotações deste cartão. Tente de novo."); });
+    const encerrado = !!k.fechado_em;
+    $("fcGanho").hidden = encerrado; $("fcPerdido").hidden = encerrado; $("fcReabrir").hidden = !encerrado;
+    $("fcHist").innerHTML = '<li class="vazio">Carregando...</li>';
+    if (!$("jFunilCartao").open) $("jFunilCartao").showModal();
+    ler(supa().rpc("wa_funil_atividades", { p_quadro: fn.quadro, p_limite: 50, p_cartao: id })).then(function (h) {
+      $("fcHist").innerHTML = (h || []).length ? h.map(function (a) { return "<li><b>" + esc(a.descricao || "") + "</b><br><small>" + esc(a.autor || "robô") + " · " + esc(horaCurta(a.criado_em)) + "</small></li>"; }).join("") : '<li class="vazio">Sem registros ainda.</li>';
+    }).catch(function () { $("fcHist").innerHTML = '<li class="vazio">Não consegui carregar o histórico.</li>'; });
+  }
+  $("fcSalvar").addEventListener("click", async function () {
+    const id = fn.cartaoAberto; if (!id) return;
+    const campos = { valor: $("fcValor").value === "" ? null : Number($("fcValor").value), prazo: $("fcPrazo").value || null, proxima_acao: $("fcAcao").value.trim(),
+      responsavel_id: $("fcResp").value || null, prioridade: $("fcPrio").value || null, notas: $("fcNotas").value.trim() };
+    if (campos.valor !== null && (!Number.isFinite(campos.valor) || campos.valor < 0)) return aviso("Confira o valor.", true);
+    try {
+      const r = await ler(supa().rpc("wa_cartao_editar", { p_cartao: id, p_campos: campos }));
+      if (!r || !r.ok) throw new Error((r && r.erro) || "Não consegui salvar.");
+      aviso("Alterações salvas."); $("jFunilCartao").close(); fn.cartaoAberto = null; await telaFunil();
+    } catch (e) { falha(e, e.message); }
+  });
+  $("fcAbrir").addEventListener("click", function () { const k = fnAcharCartao(fn.cartaoAberto); $("jFunilCartao").close(); if (k) fnAbrirPessoa(k.contato_id); });
+  function fnColunaDoTipo(tipo) { return fn.colunas.filter(function (c) { return c.tipo === tipo; })[0] || null; }
+  $("fcGanho").addEventListener("click", function () { const c = fnColunaDoTipo("ganho"); if (!c) return aviso("Este quadro não tem uma coluna de ganho.", true); const id = fn.cartaoAberto; $("jFunilCartao").close(); fnMoverCartao(id, c.id, 0, {}); });
+  $("fcPerdido").addEventListener("click", function () { const c = fnColunaDoTipo("perdido"); if (!c) return aviso("Este quadro não tem uma coluna de perdido.", true); const id = fn.cartaoAberto; $("jFunilCartao").close(); fnMoverCartao(id, c.id, 0, {}); });
+  $("fcReabrir").addEventListener("click", function () { const c = fn.colunas.filter(function (x) { return x.tipo === "normal"; })[0]; if (!c) return; const id = fn.cartaoAberto; $("jFunilCartao").close(); fnMoverCartao(id, c.id, 0, {}); });
+
+  /* ---------- novo lead (5.5) ---------- */
+  function fnAviso(el, texto, erro) { el.textContent = texto; el.classList.toggle("erro", !!erro); el.hidden = !texto; }
+  $("fnNovo").addEventListener("click", function () {
+    ["flTel", "flNome", "flValor", "flPrazo", "flAcao", "flEtiq", "flNota"].forEach(function (id) { $(id).value = ""; });
+    $("flOrigem").value = "indicacao"; $("flAceite").checked = false;
+    $("flColuna").innerHTML = fn.colunas.filter(function (c) { return c.tipo === "normal"; }).map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.nome) + "</option>"; }).join("");
+    fnOpcoesResp($("flResp"), "");
+    $("flAdicionar").hidden = true; fnAviso($("flAviso"), "", false);
+    $("jFunilLead").showModal();
+  });
+  function fnDadosLead() {
+    const etiquetas = $("flEtiq").value.split(",").map(function (x) { return x.trim(); }).filter(Boolean);
+    const valor = $("flValor").value === "" ? null : Number($("flValor").value);
+    return { p_telefone: $("flTel").value, p_nome: $("flNome").value.trim() || null, p_origem: $("flOrigem").value, p_quadro: fn.quadro, p_coluna: $("flColuna").value || null,
+      p_valor: valor, p_responsavel: $("flResp").value || null, p_proxima_acao: $("flAcao").value.trim() || null, p_prazo: $("flPrazo").value || null,
+      p_anotacao: $("flNota").value.trim() || null, p_aceite: $("flAceite").checked, p_etiquetas: etiquetas };
+  }
+  function fnMostrarExistente(c) {
+    $("flAdicionar").hidden = false;
+    fnAviso($("flAviso"), "Esta pessoa já está no CRM: " + (c.nome || "(sem nome)") + " (" + c.telefone + ")" + (c.no_funil_principal ? ". Já está no Funil principal" : "") + ". Você pode adicioná-la a este quadro em vez de criar outro contato.", false);
+  }
+  $("flVerificar").addEventListener("click", async function () {
+    const tel = WF().telefoneValido($("flTel").value);
+    if (!tel) return fnAviso($("flAviso"), "Confira o WhatsApp com DDD. Ex.: (81) 99999-9999.", true);
+    try {
+      const r = await ler(supa().rpc("wa_lead_verificar", { p_telefone: $("flTel").value }));
+      if (!r || !r.ok) return fnAviso($("flAviso"), (r && r.erro) || "Não consegui verificar.", true);
+      if (r.existe) fnMostrarExistente(r.contato);
+      else { $("flAdicionar").hidden = true; fnAviso($("flAviso"), "Não existe ninguém com este número. Pode criar o lead.", false); }
+    } catch (e) { falha(e, "Não consegui verificar agora."); }
+  });
+  $("flCriar").addEventListener("click", async function () {
+    if (!WF().telefoneValido($("flTel").value)) return fnAviso($("flAviso"), "Confira o WhatsApp com DDD. Ex.: (81) 99999-9999.", true);
+    if ($("flValor").value !== "" && Number($("flValor").value) < 0) return fnAviso($("flAviso"), "O valor não pode ser negativo.", true);
+    try {
+      const r = await ler(supa().rpc("wa_lead_criar", Object.assign(fnDadosLead(), { p_adicionar_existente: false })));
+      if (r && r.ja_existe) return fnMostrarExistente(r.contato);
+      if (!r || !r.ok) return fnAviso($("flAviso"), (r && r.erro) || "Não consegui criar o lead.", true);
+      $("jFunilLead").close(); aviso(r.criado ? "Lead criado no " + r.quadro + "." : "Esta pessoa já estava no quadro."); await telaFunil();
+    } catch (e) { falha(e, "Não consegui criar o lead."); }
+  });
+  $("flAdicionar").addEventListener("click", async function () {
+    try {
+      const r = await ler(supa().rpc("wa_lead_criar", Object.assign(fnDadosLead(), { p_adicionar_existente: true })));
+      if (!r || !r.ok) return fnAviso($("flAviso"), (r && r.erro) || "Não consegui adicionar.", true);
+      $("jFunilLead").close(); aviso(r.ja_estava_no_quadro ? "Esta pessoa já estava neste quadro." : "Pessoa adicionada ao " + r.quadro + "."); await telaFunil();
+    } catch (e) { falha(e, "Não consegui adicionar."); }
+  });
+
+  /* ---------- gerir quadros e colunas (5.8) ---------- */
+  $("fnGerir").addEventListener("click", function () { fnAbrirGerir(); });
+  function fnAbrirGerir() {
+    $("fqNovoNome").value = ""; $("fqColNome").value = ""; $("fqNovoModelo").value = ""; $("fqColTipo").value = "normal";
+    $("fqNovoCopiar").innerHTML = '<option value="">Não copiar</option>' + fn.quadros.map(function (q) { return '<option value="' + esc(q.id) + '">' + esc(q.nome) + "</option>"; }).join("");
+    const cfg = fn.dados.config || {};
+    $("fqMotivos").value = (cfg.motivos_perda || []).join("\n"); $("fqAmarelo").value = cfg.dias_amarelo || 3; $("fqVermelho").value = cfg.dias_vermelho || 7;
+    fnDesenharColunas();
+    if (!$("jFunilQuadros").open) $("jFunilQuadros").showModal();
+  }
+  function fnDesenharColunas() {
+    $("fqColunas").innerHTML = fn.colunas.map(function (c, i) {
+      const etapa = !!c.etapa_ligada, usado = Number(c.total) > 0;
+      const outras = fn.colunas.filter(function (x) { return x.id !== c.id; });
+      return '<div class="wa-fn-col-linha" data-fq-coluna="' + esc(c.id) + '">'
+        + '<input type="text" maxlength="40" value="' + esc(c.nome) + '" aria-label="Nome da coluna" data-fq="nome">'
+        + '<input type="color" value="' + esc(c.cor || "#e8dfcc") + '" aria-label="Cor da coluna" data-fq="cor">'
+        + '<select aria-label="Tipo da coluna" data-fq="tipo"' + (etapa || usado ? " disabled" : "") + '>'
+        + ["normal", "ganho", "perdido"].map(function (t) { return '<option value="' + t + '"' + (c.tipo === t ? " selected" : "") + ">" + (t === "normal" ? "Normal" : t === "ganho" ? "Ganho" : "Perdido") + "</option>"; }).join("") + "</select>"
+        + '<span class="acoes" style="margin:0"><button class="btn peq contorno" type="button" data-fq="subir"' + (i === 0 ? " disabled" : "") + ' aria-label="Subir">↑</button>'
+        + '<button class="btn peq contorno" type="button" data-fq="descer"' + (i === fn.colunas.length - 1 ? " disabled" : "") + ' aria-label="Descer">↓</button>'
+        + (etapa ? "" : '<button class="btn peq perigo" type="button" data-fq="apagar">Apagar</button>') + "</span>"
+        + (etapa ? '<small class="vazio" style="grid-column:1/-1">Coluna de etapa: nome e cor podem mudar; tipo e exclusão não.</small>' : "")
+        + (usado && !etapa ? '<small class="vazio" style="grid-column:1/-1">' + Number(c.total) + " cartões: o tipo só muda sem cartões.</small>" : "")
+        + (outras.length ? "" : "")
+        + "</div>";
+    }).join("");
+  }
+  $("fqColunas").addEventListener("change", async function (ev) {
+    const el = ev.target, linha = el.closest("[data-fq-coluna]"); if (!linha) return;
+    const id = linha.dataset.fqColuna, f = el.dataset.fq; if (!f) return;
+    try {
+      let r;
+      if (f === "nome") r = await ler(supa().rpc("wa_coluna_salvar", { p_id: id, p_nome: el.value }));
+      if (f === "cor") r = await ler(supa().rpc("wa_coluna_salvar", { p_id: id, p_cor: el.value }));
+      if (f === "tipo") r = await ler(supa().rpc("wa_coluna_salvar", { p_id: id, p_tipo: el.value }));
+      if (r && r.ok === false) throw new Error(r.erro);
+      await telaFunil(); fnDesenharColunas();
+    } catch (e) { falha(e, e.message); await telaFunil().catch(function () {}); fnDesenharColunas(); }
+  });
+  $("fqColunas").addEventListener("click", async function (ev) {
+    const b = ev.target.closest("[data-fq]"); if (!b || b.tagName !== "BUTTON") return;
+    const linha = b.closest("[data-fq-coluna]"), id = linha.dataset.fqColuna, i = fn.colunas.findIndex(function (c) { return c.id === id; });
+    try {
+      if (b.dataset.fq === "subir" || b.dataset.fq === "descer") {
+        const alvo = b.dataset.fq === "subir" ? i : i + 2;
+        const r = await ler(supa().rpc("wa_coluna_salvar", { p_id: id, p_ordem: b.dataset.fq === "subir" ? i : i + 2 }));
+        if (r && r.ok === false) throw new Error(r.erro);
+      } else if (b.dataset.fq === "apagar") {
+        const c = fn.colunas[i];
+        let destino = null;
+        if (Number(c.total) > 0) {
+          const outras = fn.colunas.filter(function (x) { return x.id !== id; });
+          const escolha = prompt("Esta coluna tem " + c.total + " cartões. Para qual coluna eles vão?\n" + outras.map(function (x, k) { return (k + 1) + " - " + x.nome; }).join("\n"), "1");
+          if (escolha === null) return;
+          const k = parseInt(escolha, 10) - 1; if (!outras[k]) return aviso("Escolha um número da lista.", true);
+          destino = outras[k].id;
+        } else if (!confirm("Apagar a coluna \"" + c.nome + "\"?")) return;
+        const r = await ler(supa().rpc("wa_coluna_apagar", { p_id: id, p_destino: destino }));
+        if (r && r.ok === false) throw new Error(r.erro);
+      }
+      await telaFunil(); fnDesenharColunas();
+    } catch (e) { falha(e, e.message); }
+  });
+  $("fqColCriar").addEventListener("click", async function () {
+    try {
+      const r = await ler(supa().rpc("wa_coluna_salvar", { p_id: null, p_quadro: fn.quadro, p_nome: $("fqColNome").value, p_tipo: $("fqColTipo").value }));
+      if (r && r.ok === false) throw new Error(r.erro);
+      $("fqColNome").value = ""; await telaFunil(); fnDesenharColunas(); aviso("Coluna adicionada.");
+    } catch (e) { falha(e, e.message); }
+  });
+  $("fqRenomear").addEventListener("click", async function () {
+    const q = fn.quadros.filter(function (x) { return x.id === fn.quadro; })[0]; if (!q) return;
+    const nome = prompt("Novo nome do quadro:", q.nome); if (nome === null) return;
+    try { const r = await ler(supa().rpc("wa_quadro_salvar", { p_id: q.id, p_nome: nome })); if (r && r.ok === false) throw new Error(r.erro); $("jFunilQuadros").close(); await telaFunil(); aviso("Quadro renomeado."); }
+    catch (e) { falha(e, e.message); }
+  });
+  $("fqCopiar").addEventListener("click", async function () {
+    const q = fn.quadros.filter(function (x) { return x.id === fn.quadro; })[0]; if (!q) return;
+    const nome = prompt("Nome da cópia:", q.nome + " (cópia)"); if (!nome) return;
+    try { const r = await ler(supa().rpc("wa_quadro_salvar", { p_id: null, p_nome: nome, p_copiar_de: q.id, p_modelo: null })); if (r && r.ok === false) throw new Error(r.erro); $("jFunilQuadros").close(); fn.quadro = r.id; await telaFunil(); aviso("Quadro copiado."); }
+    catch (e) { falha(e, e.message); }
+  });
+  $("fqArquivar").addEventListener("click", async function () {
+    const q = fn.quadros.filter(function (x) { return x.id === fn.quadro; })[0]; if (!q) return;
+    try {
+      let r = await ler(supa().rpc("wa_quadro_arquivar", { p_id: q.id, p_confirmar: false }));
+      if (r && r.precisa_confirmar) { if (!confirm(r.erro + "\n\nArquivar mesmo assim?")) return; r = await ler(supa().rpc("wa_quadro_arquivar", { p_id: q.id, p_confirmar: true })); }
+      if (r && r.ok === false) throw new Error(r.erro);
+      $("jFunilQuadros").close(); fn.quadro = null; await telaFunil(); aviso("Quadro arquivado. Os dados continuam guardados.");
+    } catch (e) { falha(e, e.message); }
+  });
+  $("fqNovoCriar").addEventListener("click", async function () {
+    try {
+      const copiar = $("fqNovoCopiar").value || null, modelo = copiar ? null : ($("fqNovoModelo").value || null);
+      const r = await ler(supa().rpc("wa_quadro_salvar", { p_id: null, p_nome: $("fqNovoNome").value, p_copiar_de: copiar, p_modelo: modelo }));
+      if (r && r.ok === false) throw new Error(r.erro);
+      $("fqNovoNome").value = ""; fn.quadro = r.id; $("jFunilQuadros").close(); await telaFunil(); aviso("Quadro criado. Confira as colunas e comece a mover as pessoas.");
+    } catch (e) { falha(e, e.message); }
+  });
+  $("fqConfigSalvar").addEventListener("click", async function () {
+    try {
+      const r = await ler(supa().rpc("wa_funil_config_salvar", { p_motivos: WF().motivosDoTexto($("fqMotivos").value), p_amarelo: parseInt($("fqAmarelo").value, 10), p_vermelho: parseInt($("fqVermelho").value, 10) }));
+      if (r && r.ok === false) throw new Error(r.erro);
+      await telaFunil(); aviso("Critérios salvos.");
+    } catch (e) { falha(e, e.message); }
+  });
+
+  /* o quadro se atualiza sozinho a cada 30 s, sem interromper quem está arrastando, movendo pelo teclado ou com uma janela aberta */
+  setInterval(function () {
+    if (document.hidden || abaAtual !== "funil" || fn.arrasto || fn.teclado || fn.ptr) return;
+    if (document.querySelector("dialog[open]")) return;
+    telaFunil().catch(function () {});
+  }, 30000);
 
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
@@ -2577,9 +3027,6 @@
     carregarLista().catch(function () {});
     atualizarConversa().catch(function () {});
   }, 8000);
-
-  /* aba Funil aberta: atualiza a cada 30 segundos (sem interromper; é só leitura) */
-  setInterval(function () { if (!document.hidden && abaAtual === "funil") telaFunil().catch(function () {}); }, 30000);
 
   /* aba Templates aberta: recarrega sozinha a cada minuto (situação e "há quanto tempo") */
   setInterval(function () { if (!document.hidden && abaAtual === "templates") telaTemplates().catch(function () {}); }, 60000);
