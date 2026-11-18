@@ -175,6 +175,7 @@
     $("cfVerify").value = cfg.verify_token || "";
     desenharAvisoTpl();
     $("cfLimite").value = cfg.limite_diario; $("cfHi").value = cfg.disparo_hora_inicio; $("cfHf").value = cfg.disparo_hora_fim;
+    if ($("cfDiasMkt")) $("cfDiasMkt").value = cfg.marketing_dias_entre_envios == null ? 3 : cfg.marketing_dias_entre_envios;
     $("cfPm").value = cfg.preco_marketing; $("cfPu").value = cfg.preco_utilidade;
     let webhook = false, recebidas = 0;
     try {
@@ -224,7 +225,8 @@
     const pm = parseFloat($("cfPm").value), pu = parseFloat($("cfPu").value);
     if (!(lim >= 1) || !(hi >= 0 && hi <= 23) || !(hf >= 1 && hf <= 24) || hf <= hi || !(pm >= 0) || !(pu >= 0)) return aviso("Confira os números: o horário final precisa ser depois do inicial.", true);
     try {
-      await ler(supa().from("wa_config").update({ limite_diario: lim, disparo_hora_inicio: hi, disparo_hora_fim: hf, preco_marketing: pm, preco_utilidade: pu }).eq("id", 1).select("id"));
+      await ler(supa().from("wa_config").update({ limite_diario: lim, disparo_hora_inicio: hi, disparo_hora_fim: hf, preco_marketing: pm, preco_utilidade: pu,
+        marketing_dias_entre_envios: (function (v) { return isNaN(v) ? 3 : Math.min(60, Math.max(0, v)); })(parseInt(($("cfDiasMkt") || {}).value, 10)) }).eq("id", 1).select("id"));
       aviso("Limites salvos."); await carregarConfig();
     } catch (e) { falha(e); }
   });
@@ -1616,7 +1618,7 @@
     lerVarsDp = montarVars($("dpVars"), t, []);
     $("dpMidiaBox").hidden = true;
     const prev = function () { $("dpPrev").textContent = t ? preencherPrev(t, lerVarsDp().vars) : "Escolha um template."; };
-    $("dpVars").oninput = prev; prev(); resumoDisparo();
+    $("dpVars").oninput = prev; prev(); resumoDisparo(); agendarConferencia();
   }
   $("dpTemplate").addEventListener("change", trocarTemplateDp);
   $("dpEtiqueta").addEventListener("change", resumoDisparo);
@@ -1663,7 +1665,7 @@
   async function acaoDp(acao, id) {
     try {
       if (acao === "iniciar") {
-        const r = await wa({ acao: "iniciar_disparo", disparo_id: id });
+        const r = await confirmarRepetida(await wa({ acao: "iniciar_disparo", disparo_id: id }), id);
         if (!r.ok) return aviso(r.erro || "Não iniciou.", true);
         const p = await wa({ acao: "processar_agora" });
         aviso(p.ok && (p.enviados || p.falhas) ? p.enviados + " enviadas agora." + (p.motivo ? " " + p.motivo : "") : (p.motivo || "Na fila. O envio roda a cada 5 minutos, entre " + cfg.disparo_hora_inicio + "h e " + cfg.disparo_hora_fim + "h."));
@@ -1700,15 +1702,26 @@
     if (precisaMidia && !/^https:\/\//.test(v.midia)) return aviso("Informe o link (https://) do arquivo do cabeçalho.", true);
     const quando_ = $("dpQuando").value ? new Date($("dpQuando").value) : null;
     if (quando_ && quando_.getTime() < Date.now() - 60000) return aviso("A data de envio já passou.", true);
-    if (iniciar && !confirm("Enviar \"" + nome + "\"?\n\n" + $("dpResumo").textContent)) return;
+    let confirmouRepetida = false;
+    if (iniciar) {
+      // travas de segurança (item 4.3): confere de novo na hora. O servidor repete as obrigatórias ao iniciar.
+      const lista = await conferirDisparo(true), rs = WaCamp.resumoTravas(lista);
+      if (rs.bloqueia) return aviso(rs.bloqueia.titulo + (rs.bloqueia.detalhe ? " " + rs.bloqueia.detalhe : ""), true);
+      if (rs.confirma) {
+        if (!confirm(rs.confirma.detalhe.replace(" Ao iniciar, o CRM vai pedir a sua confirmação.", "") + "\n\nQuer enviar de novo mesmo assim?")) return;
+        confirmouRepetida = true;
+      }
+      if (!confirm("Enviar \"" + nome + "\"?\n\n" + $("dpResumo").textContent + (rs.avisos.length ? "\n\nAtenção:\n- " + rs.avisos.map(function (a) { return a.titulo; }).join("\n- ") : ""))) return;
+    }
     try {
       const novo = await ler(supa().from("wa_disparos").insert({
         nome: nome, template_nome: t.nome, idioma: t.idioma, categoria: t.categoria, variaveis: v.vars, cabecalho_midia: precisaMidia ? v.midia : null,
-        filtro_etiqueta: $("dpEtiqueta").value || null, agendado_para: quando_ ? quando_.toISOString() : null, status: "rascunho", criado_por: perfil.id
+        filtro_etiqueta: $("dpEtiqueta").value || null, agendado_para: quando_ ? quando_.toISOString() : null, status: "rascunho", criado_por: perfil.id,
+        excluir_recentes: !$("dpExcluirBox").hidden && $("dpExcluirRecentes").checked
       }).select("id").single());
       $("dpNome").value = "";
       if (iniciar) {
-        const r = await wa({ acao: "iniciar_disparo", disparo_id: novo.id });
+        const r = await confirmarRepetida(await wa({ acao: "iniciar_disparo", disparo_id: novo.id, confirmar_repetido: confirmouRepetida }), novo.id);
         if (!r.ok) { aviso("Salvei como rascunho, mas não iniciou: " + (r.erro || ""), true); return desenharDisparos(); }
         if (!quando_) {
           const p = await wa({ acao: "processar_agora" });
@@ -1720,6 +1733,63 @@
   }
   $("dpCriar").addEventListener("click", function () { criarDisparo(true); });
   $("dpRascunho").addEventListener("click", function () { criarDisparo(false); });
+
+  /* ---------- travas de segurança antes de enviar (Fase 4, item 4.3) ---------- */
+  const tvDp = { midia: { url: "", tipo: "", ok: null, erro: "" }, seq: 0, t: null };
+  function formTravas() {
+    const t = tplSelecionado(), v = t ? lerVarsDp() : { vars: [], midia: "" };
+    const cab = t ? String(t.cabecalho_tipo || "").toUpperCase() : "";
+    const quando_ = $("dpQuando").value ? new Date($("dpQuando").value) : null;
+    return { t: t, vars: v.vars || [], midiaUrl: String(v.midia || "").trim(), midiaTipo: ["IMAGE", "VIDEO", "DOCUMENT"].indexOf(cab) > -1 ? cab : "",
+      usaNome: (v.vars || []).some(function (x) { return /\{(primeiro_)?nome\}/i.test(x); }),
+      excluirRecentes: !$("dpExcluirBox").hidden && $("dpExcluirRecentes").checked, agendado: quando_ && !isNaN(quando_.getTime()) ? quando_.toISOString() : null };
+  }
+  /* pede ao banco os números da conferência e, se o template tem arquivo no cabeçalho, pede ao servidor para conferir o link */
+  async function conferirDisparo(completo) {
+    const f = formTravas(), seq = ++tvDp.seq;
+    if (!f.t) return desenharTravas(null, f);
+    try {
+      const a = await ler(supa().rpc("wa_disparo_conferir", { p_template: f.t.nome, p_idioma: f.t.idioma, p_publico: $("dpEtiqueta").value || null, p_variaveis: f.vars }));
+      if (f.midiaTipo && /^https:\/\/\S+$/.test(f.midiaUrl) && (completo || tvDp.midia.url !== f.midiaUrl || tvDp.midia.tipo !== f.midiaTipo)) {
+        const r = await wa({ acao: "conferir_midia", url: f.midiaUrl, tipo: f.midiaTipo });
+        tvDp.midia = { url: f.midiaUrl, tipo: f.midiaTipo, ok: !!r.ok, erro: r.ok ? "" : (r.erro || "Não consegui conferir o arquivo.") };
+      }
+      if (seq !== tvDp.seq && !completo) return null;   // o formulário mudou no meio: vale a conferência mais nova
+      return desenharTravas(a, f);
+    } catch (e) {
+      console.error(e);
+      $("dpTravas").innerHTML = '<li class="aviso-s"><span class="m" aria-hidden="true">!</span><span>Não consegui carregar a conferência agora.<small>O servidor confere de novo ao iniciar.</small></span></li>';
+      return null;
+    }
+  }
+  function desenharTravas(a, f) {
+    if (!a) {
+      $("dpTravas").innerHTML = '<li class="aviso-s"><span class="m" aria-hidden="true">!</span><span>Escolha um template aprovado para ver a conferência.</span></li>';
+      $("dpExcluirBox").hidden = true; return null;
+    }
+    const rec = a.recentes || {};
+    $("dpExcluirBox").hidden = !(rec.vale && Number(rec.pessoas) > 0);
+    $("dpExcluirTxt").textContent = "Não enviar para " + (Number(rec.pessoas) === 1 ? "a pessoa que recebeu" : "as " + (Number(rec.pessoas) || 0) + " pessoas que receberam") + " marketing nos últimos " + (Number(rec.dias) || 3) + " dias";
+    const m = tvDp.midia, mesma = m.url === f.midiaUrl && m.tipo === f.midiaTipo;
+    const lista = WaCamp.travas(a, { usaNome: f.usaNome, midiaTipo: f.midiaTipo, midiaUrl: f.midiaUrl, midiaOk: mesma ? m.ok : null, midiaErro: mesma ? m.erro : "",
+      excluirRecentes: !$("dpExcluirBox").hidden && $("dpExcluirRecentes").checked, agendado: f.agendado });
+    $("dpTravas").innerHTML = lista.map(function (i) {
+      const cls = i.nivel === "ok" ? "ok" : i.nivel === "bloqueia" ? "falta" : "aviso-s", mk = i.nivel === "ok" ? "✓" : i.nivel === "bloqueia" ? "✗" : "!";
+      return '<li class="' + cls + '" data-trava="' + i.id + '"><span class="m" aria-hidden="true">' + mk + "</span><span>" + esc(i.titulo) + (i.detalhe ? "<small>" + esc(i.detalhe) + "</small>" : "") + "</span></li>";
+    }).join("");
+    return lista;
+  }
+  function agendarConferencia() { clearTimeout(tvDp.t); tvDp.t = setTimeout(function () { if (abaAtual === "disparos") conferirDisparo(false); }, 500); }
+  (function () {
+    const f = document.querySelector('[data-painel="disparos"] .f'); if (!f) return;
+    f.addEventListener("input", agendarConferencia); f.addEventListener("change", agendarConferencia);
+  })();
+  /* o servidor avisou que já existe campanha igual: pergunta e, se você confirmar, inicia de novo já com a confirmação */
+  async function confirmarRepetida(r, id) {
+    if (!r || r.ok || !r.precisa_confirmar) return r;
+    if (!confirm(WaCamp.textoRepetida(r.repetida) + "\n\nQuer enviar de novo mesmo assim?")) return { ok: false, erro: "Não iniciei. A campanha ficou como rascunho." };
+    return await wa({ acao: "iniciar_disparo", disparo_id: id, confirmar_repetido: true });
+  }
 
   /* ---------- painel da campanha (Fase 4, item 4.1) ---------- */
   const cp = { id: null, dados: null, filtro: "todas", busca: "", itens: [], total: 0, seq: 0, tBusca: null };

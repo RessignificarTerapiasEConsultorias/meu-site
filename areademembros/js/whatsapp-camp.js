@@ -59,6 +59,7 @@
     if (/sem aceite/i.test(t)) return { titulo: "Sem aceite", dica: "A pessoa não autorizou receber mensagens." };
     if (/cancelada/i.test(t)) return { titulo: "Campanha cancelada", dica: "Você cancelou antes de chegar a vez desta pessoa." };
     if (/mesmo template/i.test(t)) return { titulo: "Disparo repetido", dica: "A pessoa tinha recebido este mesmo template há menos de 10 minutos." };
+    if (/recebeu marketing/i.test(t)) return { titulo: "Recebeu marketing há pouco", dica: "Você pediu para não enviar a quem recebeu marketing nos últimos dias." };
     return { titulo: t ? t.slice(0, 140) : "Motivo não registrado", dica: "" };
   }
   /* junta os grupos do banco (por texto) pelo título em português, somando as quantidades */
@@ -125,7 +126,85 @@
     return "campanha-" + base + "-" + dataBrasilia(agoraIso || new Date().toISOString()).slice(0, 10).split("/").reverse().join("-") + ".csv";
   }
 
+  /* ---------- travas de segurança antes de enviar (item 4.3) ---------- */
+  /* previsão pelo limite diário: quantas pessoas saem hoje, quantas ficam para depois e em quantos dias de envio termina */
+  function previsao(publico, limiteDiario, livresHoje) {
+    publico = Math.max(0, num(publico)); limiteDiario = Math.max(1, num(limiteDiario)); livresHoje = Math.max(0, Math.min(num(livresHoje), limiteDiario));
+    if (!publico) return { hoje: 0, depois: 0, dias: 0 };
+    const hoje = Math.min(publico, livresHoje), depois = publico - hoje;
+    return { hoje: hoje, depois: depois, dias: (hoje ? 1 : 0) + Math.ceil(depois / limiteDiario) };
+  }
+  function plural(n, um, varios) { return n + " " + (n === 1 ? um : varios); }
+  function textoRepetida(rep) {
+    rep = rep || {};
+    return 'Já existe a campanha "' + (rep.nome || "") + '" igual a esta (mesmo template e mesmo público), de ' + dataBrasilia(rep.criado_em).slice(0, 5) + " às " + dataBrasilia(rep.criado_em).slice(11) +
+      (num(rep.enviados) ? ", com " + plural(num(rep.enviados), "envio", "envios") : "") + ".";
+  }
+  /* as conferências mostradas antes de enviar. a = resposta de wa_disparo_conferir.
+     f = { usaNome, midiaTipo, midiaUrl, midiaOk (true, false ou null = ainda não conferido), midiaErro, excluirRecentes, agendado (ISO) }
+     nível: ok | aviso | confirma (pede confirmação) | bloqueia */
+  function travas(a, f) {
+    a = a || {}; f = f || {};
+    const L = [], add = function (id, nivel, titulo, detalhe) { L.push({ id: id, nivel: nivel, titulo: titulo, detalhe: detalhe || "" }); };
+    const t = a.template, pub = a.publico || {}, rec = a.recentes || {}, lim = a.limite || {}, h = a.horario || {};
+    const vao = num(pub.vao_receber), recentes = rec.vale ? num(rec.pessoas) : 0;
+    const publicoFinal = Math.max(0, vao - (f.excluirRecentes ? recentes : 0));
+    if (!t) add("template", "bloqueia", "Template não encontrado.", "Sincronize os templates e escolha um aprovado.");
+    else if (t.removido) add("template", "bloqueia", "Este template não existe mais no Meta.", "Escolha outro ou crie de novo.");
+    else if (String(t.status).toUpperCase() !== "APPROVED") add("template", "bloqueia", "O template ainda não está aprovado pelo Meta.", "Só dá para enviar template aprovado.");
+    else add("template", "ok", "Template aprovado");
+    if (t && num(t.qtd_variaveis) > 0) {
+      if ((a.variaveis || {}).ok) add("variaveis", "ok", "Variáveis preenchidas");
+      else add("variaveis", "bloqueia", "Preencha todas as variáveis do template.", "");
+    }
+    if (!vao) add("publico", "bloqueia", "Ninguém deste público autorizou receber mensagens.", "Escolha outra lista ou etiqueta.");
+    else add("publico", "ok", plural(vao, "pessoa vai receber", "pessoas vão receber"), (num(pub.sem_aceite) || num(pub.sairam)) ? "Ficam de fora: " + num(pub.sem_aceite) + " sem aceite e " + num(pub.sairam) + " que saíram da lista." : "");
+    if (a.repetida) add("repetida", "confirma", "Campanha repetida", textoRepetida(a.repetida) + " Ao iniciar, o CRM vai pedir a sua confirmação.");
+    else add("repetida", "ok", "Nenhuma campanha igual nas últimas 24 horas");
+    if (rec.vale) {
+      if (!recentes) add("recentes", "ok", "Ninguém deste público recebeu marketing nos últimos " + plural(num(rec.dias), "dia", "dias"));
+      else if (f.excluirRecentes && publicoFinal === 0) add("recentes", "bloqueia", "Todas as pessoas deste público receberam marketing nos últimos " + plural(num(rec.dias), "dia", "dias") + ".", "Desmarque a opção de não enviar para elas, ou espere.");
+      else add("recentes", "aviso", plural(recentes, "pessoa já recebeu", "pessoas já receberam") + " marketing seu nos últimos " + plural(num(rec.dias), "dia", "dias"),
+        f.excluirRecentes ? "Elas vão ficar de fora desta campanha. Vão receber: " + publicoFinal + "." : "Se não quiser enviar para elas, marque a opção logo abaixo.");
+    }
+    const p = previsao(publicoFinal, lim.diario, lim.livres);
+    if (publicoFinal) {
+      if (p.depois > 0) add("limite", "aviso", "Passa do limite de hoje: leva " + plural(p.dias, "dia", "dias") + " de envio",
+        "Limite de " + num(lim.diario) + " pessoas por dia, com " + num(lim.livres) + " livres agora. Hoje " + (p.hoje ? "saem " + p.hoje : "não sai nenhuma") + " e " + p.depois + " ficam para os dias seguintes, sozinhas.");
+      else add("limite", "ok", "Cabe no limite de hoje", publicoFinal + " de " + num(lim.livres) + " envios livres agora (limite de " + num(lim.diario) + " pessoas por dia).");
+    }
+    const faixa = num(h.inicio) + "h às " + num(h.fim) + "h";
+    if (f.agendado) {
+      const d = dataBrasilia(f.agendado), hora = parseInt(d.slice(11, 13), 10);
+      if (hora < num(h.inicio) || hora >= num(h.fim)) add("horario", "aviso", "Agendada para fora do horário de envio", "Marcada para " + d.slice(0, 5) + " às " + d.slice(11) + ". O envio só começa no horário permitido (" + faixa + ").");
+      else add("horario", "ok", "Agendada para " + d.slice(0, 5) + " às " + d.slice(11));
+    } else if (h.dentro === false) add("horario", "aviso", "Agora está fora do horário de envio", "O envio começa sozinho no próximo horário permitido (" + faixa + ").");
+    else add("horario", "ok", "Dentro do horário de envio (" + faixa + ")");
+    if (f.midiaTipo) {
+      if (!/^https:\/\/\S+$/.test(String(f.midiaUrl || ""))) add("midia", "bloqueia", "Falta o arquivo do cabeçalho.", "Informe o link do arquivo, começando com https://.");
+      else if (f.midiaOk === true) add("midia", "ok", "Arquivo do cabeçalho conferido");
+      else if (f.midiaOk === false) add("midia", "bloqueia", "Problema no arquivo do cabeçalho.", f.midiaErro || "O link não abre.");
+      else add("midia", "aviso", "Arquivo do cabeçalho ainda não conferido", "Ele é conferido ao criar a campanha.");
+    }
+    if (f.usaNome) {
+      if (num(pub.sem_nome) > 0) add("nome", "aviso", plural(num(pub.sem_nome), "pessoa está sem nome", "pessoas estão sem nome"), "Para elas a mensagem sai com um espaço no lugar do nome (por exemplo: \"Oi,  !\").");
+      else add("nome", "ok", "Todas as pessoas têm nome");
+    }
+    if ((a.pagamento || {}).bloqueia) add("pagamento", "bloqueia", "Pagamento pendente na conta do WhatsApp.", "O último envio falhou por isso. Regularize no Gerenciador do WhatsApp e mande um template para o seu número: quando ele sair, o disparo é liberado.");
+    else add("pagamento", "ok", "Sem erro de pagamento recente");
+    const te = (a.teste || {}).enviado_em;
+    if (te) add("teste", "ok", "Você enviou este template para alguém nas últimas 24 horas", "Último envio fora de campanha: " + dataBrasilia(te).slice(0, 5) + " às " + dataBrasilia(te).slice(11) + ".");
+    else add("teste", "aviso", "Recomendado: testar antes no seu número", "Abra a sua conversa e use \"Enviar template\" para ver a mensagem no celular antes de disparar.");
+    return L;
+  }
+  function resumoTravas(lista) {
+    lista = lista || [];
+    return { bloqueia: lista.filter(function (i) { return i.nivel === "bloqueia"; })[0] || null, confirma: lista.filter(function (i) { return i.nivel === "confirma"; })[0] || null,
+      avisos: lista.filter(function (i) { return i.nivel === "aviso"; }) };
+  }
+
   raiz.WaCamp = {
+    previsao: previsao, travas: travas, resumoTravas: resumoTravas, textoRepetida: textoRepetida,
     pct: pct, dinheiro: dinheiro, custo: custo, codigoDe: codigoDe, motivoFalha: motivoFalha, motivoPulado: motivoPulado, agrupar: agrupar,
     rotuloPublico: rotuloPublico, funil: funil, alertaRepetidas: alertaRepetidas, SIT: SIT, dataBrasilia: dataBrasilia,
     csv: csv, celula: celula, linhaCsv: linhaCsv, CSV_CABECALHO: CSV_CABECALHO, nomeArquivo: nomeArquivo
