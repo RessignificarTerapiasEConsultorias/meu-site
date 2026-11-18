@@ -227,7 +227,13 @@
     const data = function (t) { return new Date(t.enviado_em || t.atualizado_em || 0).getTime() || 0; };
     if (ordem === "nome") a.sort(function (x, y) { return String(x.nome).localeCompare(String(y.nome), "pt-BR"); });
     else if (ordem === "tempo") a.sort(function (x, y) { return tempoAnalise(y) - tempoAnalise(x) || data(y) - data(x); });
-    else a.sort(function (x, y) { return data(y) - data(x); });
+    else a.sort(function (x, y) {
+      // quem tem hora de envio vem primeiro, do mais novo para o mais velho; os antigos, sem hora, ficam depois
+      // (a data de atualização muda a cada sincronização automática, então não serve para dizer quem é mais novo)
+      const hx = x.enviado_em ? new Date(x.enviado_em).getTime() || 0 : 0, hy = y.enviado_em ? new Date(y.enviado_em).getTime() || 0 : 0;
+      if (hx || hy) return hy - hx;
+      return String(x.nome).localeCompare(String(y.nome), "pt-BR");
+    });
     return a;
   }
 

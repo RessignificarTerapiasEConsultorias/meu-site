@@ -328,10 +328,16 @@
       '<button class="btn peq contorno" type="button" data-tp-horas="' + esc(t.id) + '">Ajustar horas</button>' +
       '<button class="btn peq perigo" type="button" data-tp-apagar="' + esc(t.nome) + '"' + (t.removido_no_meta ? ' data-tp-removido="1"' : "") + ">Apagar</button>";
   }
+  /* tipos dos botões do template, em palavras: "resposta, link, ligar" */
+  function tiposBotoes(t) {
+    const nomes = { QUICK_REPLY: "resposta", URL: "link", PHONE_NUMBER: "ligar" }, vistos = [];
+    WaTpl.botoesDe(t.componentes).forEach(function (b) { const k = String(b.type || "").toUpperCase(), n = nomes[k] || k.toLowerCase(); if (n && vistos.indexOf(n) < 0) vistos.push(n); });
+    return vistos.join(", ");
+  }
   function cartaoTpl(t) {
     const nb = WaTpl.botoesDe(t.componentes).length, sl = selosTpl(t);
     return '<article class="cartao wa-tp-card"><div><h3>' + esc(t.nome) + '</h3><div class="wa-tp-sub"><span class="vazio">' + esc(t.idioma) + '</span><span class="selo">' + esc(ROT_CAT[t.categoria] || t.categoria || "") + "</span>" + sl.html + "</div></div>" +
-      '<div class="wa-tp-sub">' + rotuloCab(t) + '<span class="vazio">' + (t.qtd_variaveis || 0) + (t.qtd_variaveis === 1 ? " variável" : " variáveis") + " · " + (nb ? nb + (nb === 1 ? " botão" : " botões") : "sem botões") + "</span></div>" +
+      '<div class="wa-tp-sub">' + rotuloCab(t) + '<span class="vazio">' + (t.qtd_variaveis || 0) + (t.qtd_variaveis === 1 ? " variável" : " variáveis") + " · " + (nb ? nb + (nb === 1 ? " botão" : " botões") + " (" + esc(tiposBotoes(t)) + ")" : "sem botões") + "</span></div>" +
       alertaTpl(t) + '<div class="wa-tp-txt">' + esc(corpoDe(t)) + '</div><div class="wa-tp-horas">' + horasTemplate(t) + '</div><div class="wa-tp-acoes">' + acoesTpl(t) + "</div></article>";
   }
   function linhaTpl(t) {
@@ -501,6 +507,8 @@
     b.addEventListener("click", function () {
       const m = MODELOS[b.dataset.modelo];
       $("tcNome").value = m.nome; $("tcCat").value = m.cat; $("tcCorpo").value = m.corpo;
+      // o modelo começa limpo: sem o cabeçalho, o título e o rodapé que tinham ficado no editor
+      $("tcCabTipo").value = ""; $("tcCabTipo").dispatchEvent(new Event("change")); $("tcTitulo").value = ""; $("tcRodape").value = "";
       botoesTc = [];
       if (m.botao) botoesTc.push({ tipo: "QUICK_REPLY", texto: m.botao });
       if (m.cat === "MARKETING") botoesTc.push({ tipo: "QUICK_REPLY", texto: "Sair da lista" });
