@@ -1272,6 +1272,11 @@
     try {
       let f = file;
       if (/^image\//.test(file.type) || /\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i.test(file.name || "")) f = await prepararImagem(file);
+      /* vídeo grande (mais de 16 MB) ou em formato que o WhatsApp não aceita (mov, webm...): compacta e converte para MP4, igual ao template e ao disparo */
+      if ((/^video\//i.test(file.type || "") || /\.(mp4|mov|m4v|3gp|webm|mkv)$/i.test(file.name || "")) && window.waVideo) {
+        const ehMp4 = /^video\/(mp4|3gpp)$/.test(mimeDoArquivo(file));
+        if (file.size > LIMITE_MB * 1024 * 1024 || !ehMp4) f = await window.waVideo.preparar(file);
+      }
       const tipo = tipoDoArquivo(mimeDoArquivo(f));
       if (!tipo) throw new Error("Formato não aceito pelo WhatsApp. Use foto (JPG ou PNG), vídeo MP4, áudio MP3, M4A ou OGG, ou PDF.");
       if (f.size > LIMITE_MB * 1024 * 1024) throw new Error("O arquivo passa de " + LIMITE_MB + " MB (limite do WhatsApp).");
@@ -1280,7 +1285,7 @@
       anexo = { file: f, tipo: tipo, nome: f.name || "arquivo", url: URL.createObjectURL(f) };
       const kb = f.size / 1024, tam = kb >= 1024 ? (kb / 1024).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(kb)) + " KB";
       p.innerHTML = (tipo === "image" ? '<img alt="" src="' + anexo.url + '">' : '<span class="wa-arq">' + { video: "🎬", audio: "🎤", document: "📄" }[tipo] + "</span>") +
-        '<span class="wa-anexo-txt"><b>' + esc(anexo.nome) + "</b><small>" + ROT_TIPO[tipo] + " · " + tam + (f !== file ? " · ajustada para o WhatsApp" : "") + (tipo === "audio" ? " · áudio vai sem legenda" : "") +
+        '<span class="wa-anexo-txt"><b>' + esc(anexo.nome) + "</b><small>" + ROT_TIPO[tipo] + " · " + tam + (f !== file ? (tipo === "video" ? " · compactado para o WhatsApp" : " · ajustada para o WhatsApp") : "") + (tipo === "audio" ? " · áudio vai sem legenda" : "") +
         '</small></span><button type="button" class="wa-x" id="cvAnexoTirar" aria-label="Tirar o anexo">×</button>';
       p.hidden = false;
       $("cvAnexoTirar").addEventListener("click", descartarAnexo);
