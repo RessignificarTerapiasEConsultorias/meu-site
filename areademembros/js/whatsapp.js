@@ -1239,6 +1239,12 @@
       const d = new Date(m.criado_em), chave = d.toDateString();
       if (chave !== dia) { dia = chave; h += '<div class="wa-dia"><span>' + esc(diaRotulo(d)) + "</span></div>"; }
       if (m.tipo === "system") { h += '<div class="wa-aviso" data-msg-id="' + m.id + '">' + esc(m.texto || "") + "</div>"; return; }
+      if (m.tipo === "unsupported") {   // enquete, visualização única e outros: a Meta avisa que chegou, mas não entrega o conteúdo
+        h += '<div class="wa-msg wa-nao-entregue" data-msg-id="' + m.id + '"><div class="texto"><b>Mensagem que o WhatsApp oficial não entrega</b><br>Pode ser enquete, foto ou vídeo de visualização única ou outro tipo. O conteúdo não chega ao CRM, mas a pessoa quis te mostrar alguma coisa.</div>' +
+          '<div class="acoes" style="margin-top:6px"><button type="button" class="btn peq" data-pedir-reenvio="1">Pedir para reenviar</button></div>' +
+          '<div class="meta"><span>' + esc(d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })) + "</span></div></div>";
+        return;
+      }
       const cls = m.direcao === "saida" ? "saida" + (m.origem === "robo" ? " robo" : "") : "";
       const quem = m.direcao === "saida" ? ({ robo: "Robô", disparo: "Disparo", painel: "Você" }[m.origem] || "") : "";
       const midia = midiaHtml(m);
@@ -1830,6 +1836,12 @@
     const t = ev.target, p = t.closest("[data-pausa]"), em = t.closest("[data-emoji]"), rp = t.closest("[data-rap]"), bx = t.closest("[data-baixar]");
     if (p) return pausar(Number(p.dataset.pausa));
     if (t.closest("#cvRoboVoltar")) return salvarContato({ robo_pausado_ate: null, precisa_humano: false }, "O robô voltou a responder nesta conversa.");
+    if (t.closest("[data-pedir-reenvio]")) {
+      if (!$("cvTexto")) return aviso("A janela de 24 h fechou: só dá para mandar template. Use \"Enviar template\".", true);
+      const r = (respostas || []).find(function (x) { return x.atalho === "naoabriu"; });
+      inserirNoCursor($("cvTexto"), preencherResposta(r ? r.texto : "Oi, {primeiro_nome}! Não consegui abrir a sua mensagem por aqui. Pode me mandar de novo por texto, foto, áudio ou PDF?"));
+      return;
+    }
     if (t.closest("#cvAtendido")) return salvarContato({ precisa_humano: false, sem_resposta: false, sem_resposta_desde: null }, "Marcado como atendido.");
     if (t.closest("#cvFichaBtn")) { fichaAberta = !fichaAberta; mostrarFicha(); return; }
     if (t.closest("#cvTemplate")) return abrirEnvioTemplate(conversaCont);
