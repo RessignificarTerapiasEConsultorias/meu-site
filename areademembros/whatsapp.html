@@ -278,6 +278,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
     <div class="empresa-titulo"><h1>WhatsApp</h1><span class="selo" id="selStatus">Verificando...</span></div>
     <p class="sub">Conversas, disparos de templates e robô de respostas, pela API oficial do WhatsApp (Meta). Só o master vê esta página.</p>
 
+    <div class="aviso erro" id="auSelo" hidden role="status"><b>Automações pausadas (emergência).</b> Nenhuma sequência automática está enviando. Para religar, abra a aba Fluxos.</div>
     <div class="abas" id="abas" role="tablist">
       <button class="aba" type="button" data-aba="conversas" aria-selected="true">Conversas <span class="selo ouro" id="bdNaoLidas" hidden></span></button>
       <button class="aba" type="button" data-aba="funil" aria-selected="false">Funil</button>
@@ -555,6 +556,11 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 
     <!-- ===== FLUXOS ===== -->
     <section data-painel="fluxos" hidden>
+      <div class="cartao" id="auCartao">
+        <div class="empresa-titulo"><h2>Segurança das automações</h2><button class="btn peq perigo" type="button" id="auPausar">Pausar todas as automações</button></div>
+        <p class="ajuda" id="auEstado">Toda mensagem automática passa por um portão único: lista de Não enviar, saída da lista, pausa para sempre, horário, frequência e limite diário.</p>
+        <ul class="wa-fn-ativ" id="auMotivos"></ul>
+      </div>
       <div class="cartao">
         <div class="empresa-titulo"><h2>Fluxos do robô</h2><button class="btn peq" type="button" id="flNovo">Novo fluxo</button></div>
         <p class="ajuda">Quando a pessoa toca no botão de um template, o robô responde (com o link, se você quiser), pergunta se conseguiu e faz os follow-ups que você definir. Tudo roda sozinho no servidor. Para mensagens depois de 24 h sem a pessoa responder, o WhatsApp exige template aprovado (cobrado). Não existe como o WhatsApp confirmar se a pessoa realmente entrou no grupo: vale a resposta dela.</p>

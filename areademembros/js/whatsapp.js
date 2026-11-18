@@ -3190,10 +3190,36 @@
   });
   setInterval(function () { if (!document.hidden && abaAtual === "vendas") telaVendas().catch(function () {}); }, 60000);
 
+  /* ---------- automações: botão de emergência e motivos de bloqueio (Fase 7, item 7.1) ---------- */
+  const au = { pausadas: false };
+  async function auAtualizar() {
+    const e = await ler(supa().rpc("wa_automacoes_estado"));
+    au.pausadas = !!(e && e.pausadas);
+    $("auSelo").hidden = !au.pausadas;
+    $("auPausar").textContent = au.pausadas ? "Religar as automações" : "Pausar todas as automações";
+    $("auPausar").classList.toggle("perigo", !au.pausadas);
+    $("auEstado").textContent = au.pausadas
+      ? "Pausadas" + (e.por ? " por " + e.por : "") + (e.pausadas_em ? " em " + horaCurta(e.pausadas_em) : "") + ". Nada automático é enviado até você religar."
+      : "Ligadas. " + (Number(e.fluxos_ativos) || 0) + " fluxo(s) ativo(s), " + (Number(e.pessoas_dentro) || 0) + " pessoa(s) dentro agora. Toda mensagem automática passa por um portão único: lista de Não enviar, saída da lista, pausa para sempre, horário, frequência e limite diário.";
+    const motivos = (e && e.paradas_com_motivo) || [];
+    $("auMotivos").innerHTML = motivos.length ? "<li><b>Por que algumas mensagens não saíram nos últimos 7 dias</b></li>" + motivos.map(function (m) { return "<li>" + esc(m.motivo) + " <small>· " + Number(m.n) + (Number(m.n) === 1 ? " vez" : " vezes") + "</small></li>"; }).join("") : "";
+  }
+  $("auPausar").addEventListener("click", async function () {
+    const pausar = !au.pausadas;
+    if (!confirm(pausar ? "Pausar TODAS as automações agora?\n\nNenhuma sequência automática envia até você religar. Campanhas e conversas manuais não mudam." : "Religar as automações?\n\nAs sequências voltam a andar pelas regras normais.")) return;
+    try {
+      const r = await ler(supa().rpc("wa_automacoes_pausar", { p_pausar: pausar }));
+      if (!r || !r.ok) throw new Error("Não consegui " + (pausar ? "pausar" : "religar") + " as automações.");
+      aviso(pausar ? "Automações pausadas. Nada automático será enviado." : "Automações religadas.");
+      await auAtualizar();
+    } catch (e) { falha(e, e.message); }
+  });
+  auAtualizar().catch(function () { /* sem login de master ainda: o selo fica escondido */ });
+
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
     abaAtual = nome;
-    const f = { conversas: telaConversas, funil: telaFunil, vendas: telaVendas, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, fluxos: telaFluxos, config: telaConfig }[nome];
+    const f = { conversas: telaConversas, funil: telaFunil, vendas: telaVendas, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, fluxos: function () { auAtualizar().catch(function () {}); return telaFluxos(); }, config: telaConfig }[nome];
     f().catch(function (e) { falha(e); });
   });
   setInterval(function () {
