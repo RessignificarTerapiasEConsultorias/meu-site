@@ -876,24 +876,48 @@
     if (txt) f.push({ nome: "texto colado", linhas: txt.split(/\r?\n/).map(function (l) { return /[;\t]/.test(l) ? l.split(/[;\t]/) : [l]; }) });
     return f;
   }
+  /* lista de bloqueio considera o número como veio: o que o leitor de listas descartaria (sem DDD, fixo, internacional, DDD estranho)
+     também é bloqueado. Só fica de fora o que não tem número nenhum ou tem menos de 8 dígitos. */
+  function bqExtras(r) {
+    const vistos = {}; r.itens.forEach(function (p) { vistos[WaLista.chaveFone(p.fone)] = 1; });
+    const extras = [], sem = [];
+    r.ignorados.forEach(function (i) {
+      let achou = false;
+      String(i.bruto || "").split(/\s*(?:[\/;|]|\bou\b)\s*/i).forEach(function (pt) {
+        const d = pt.replace(/\D/g, "").replace(/^0+/, "");
+        if (d.length < 8 || d.length > 15) return;
+        achou = true;
+        const suf = d.length <= 9, k = suf ? "sufixo:" + d.slice(-8) : WaLista.chaveFone(d.length === 10 || d.length === 11 ? "55" + d : d);
+        if (vistos[k]) return; vistos[k] = 1;
+        extras.push({ fone: d, nome: i.nome || "", sufixo: suf, aviso: suf ? "sem DDD: bloqueia em qualquer DDD" : "fora do padrão brasileiro: bloqueado pelos dígitos" });
+      });
+      if (!achou) sem.push(i);
+    });
+    return { extras: extras, sem: sem };
+  }
   function bqProcessar() {
     const fontes = bqFontes();
     if (!fontes.length) { bq.resultado = null; $("bqRes").textContent = ""; $("bqPrev").innerHTML = ""; $("bqSalvar").disabled = true; return; }
-    const ddd = $("bqDdd").value.replace(/\D/g, "");
+    const ddd = $("bqDdd").value.replace(/\D/g, "") || "00";   // sem DDD digitado: não chuta nenhum (o número sem DDD é bloqueado em qualquer DDD)
     const r = bq.resultado = WaLista.juntarResultados(fontes.map(function (a) { return WaLista.processarLinhas(a.linhas, { ddd: ddd }); }));
-    $("bqRes").textContent = r.lidas + " linha(s) lidas." + (r.itens.length ? "" : " Não achei nenhum telefone válido.");
+    const x = bq.extras = bqExtras(r), total = r.itens.length + x.extras.length;
+    r.total = total;
+    $("bqRes").textContent = r.lidas + " linha(s) lidas." + (total ? "" : " Não achei nenhum telefone para bloquear.");
     let h = "";
-    if (r.itens.length) {
-      h += '<p><b>' + r.itens.length + (r.itens.length === 1 ? " pessoa" : " pessoas") + "</b> vão ficar fora dos disparos." + (r.duplicados ? " " + r.duplicados + " repetidos juntados." : "") + "</p>" +
-        '<div class="tabela-wrap" style="max-height:260px"><table class="t"><thead><tr><th>Nome</th><th>WhatsApp</th></tr></thead><tbody>' +
-        r.itens.slice(0, 50).map(function (p) { return "<tr><td>" + (p.nome ? esc(p.nome) : '<span class="vazio">(sem nome)</span>') + "</td><td>" + esc(foneBR(p.fone)) + "</td></tr>"; }).join("") +
-        (r.itens.length > 50 ? '<tr><td colspan="2" class="vazio">Mostrando 50 de ' + r.itens.length + ".</td></tr>" : "") + "</tbody></table></div>";
+    if (total) {
+      h += "<p><b>" + total + (total === 1 ? " pessoa" : " pessoas") + "</b> vão ficar fora dos disparos." + (r.duplicados ? " " + r.duplicados + " repetidos juntados." : "") +
+        (x.extras.length ? " <b>" + x.extras.length + "</b> são bloqueadas pelo número como veio (sem DDD, fixo ou fora do padrão)." : "") + "</p>" +
+        '<div class="tabela-wrap" style="max-height:260px"><table class="t"><thead><tr><th>Nome</th><th>WhatsApp</th><th>Observação</th></tr></thead><tbody>' +
+        r.itens.map(function (p) { return { n: p.nome, f: foneBR(p.fone), o: p.avisos.join("; ") }; }).concat(x.extras.map(function (p) { return { n: p.nome, f: p.fone, o: p.aviso }; })).slice(0, 80)
+          .map(function (p) { return "<tr><td>" + (p.n ? esc(p.n) : '<span class="vazio">(sem nome)</span>') + "</td><td>" + esc(p.f) + '</td><td class="quebra">' + esc(p.o) + "</td></tr>"; }).join("") +
+        (total > 80 ? '<tr><td colspan="3" class="vazio">Mostrando 80 de ' + total + ".</td></tr>" : "") + "</tbody></table></div>";
     }
-    if (r.ignorados.length) {
-      h += "<details><summary>Ignorados (" + r.ignorados.length + ')</summary><div class="tabela-wrap"><table class="t"><thead><tr><th>Linha</th><th>Telefone no arquivo</th><th>Motivo</th></tr></thead><tbody>' +
-        r.ignorados.slice(0, 200).map(function (i) { return "<tr><td>" + i.linha + "</td><td>" + esc(i.bruto) + '</td><td class="quebra">' + esc(i.motivo) + "</td></tr>"; }).join("") + "</tbody></table></div></details>";
+    if (x.sem.length) {
+      h += '<div class="aviso erro" style="margin-top:10px"><b>' + x.sem.length + (x.sem.length === 1 ? " linha não pode" : " linhas não podem") + " ser bloqueada" + (x.sem.length === 1 ? "" : "s") + "</b>: não tem telefone ou tem menos de 8 dígitos.</div>" +
+        '<div class="tabela-wrap"><table class="t"><thead><tr><th>Linha</th><th>Nome</th><th>No arquivo</th><th>Motivo</th></tr></thead><tbody>' +
+        x.sem.slice(0, 200).map(function (i) { return "<tr><td>" + i.linha + "</td><td>" + esc(i.nome) + "</td><td>" + esc(i.bruto) + '</td><td class="quebra">' + esc(i.motivo) + "</td></tr>"; }).join("") + "</tbody></table></div>";
     }
-    $("bqPrev").innerHTML = h; $("bqSalvar").disabled = !r.itens.length;
+    $("bqPrev").innerHTML = h; $("bqSalvar").disabled = !total;
   }
   $("bqDdd").addEventListener("input", bqProcessar); $("bqTexto").addEventListener("input", bqProcessar);
   $("bqArquivo").addEventListener("change", async function () {
@@ -904,16 +928,17 @@
     catch (e) { bq.arquivos = []; $("bqRes").textContent = e.message || String(e); $("bqPrev").innerHTML = ""; }
   });
   $("bqSalvar").addEventListener("click", async function () {
-    const r = bq.resultado; if (!r || !r.itens.length) return;
+    const r = bq.resultado; if (!r || !r.total) return;
+    const todos = r.itens.map(function (p) { return { telefone: p.fone, nome: p.nome || null }; }).concat(((bq.extras || {}).extras || []).map(function (p) { return { telefone: p.fone, nome: p.nome || null, sufixo: p.sufixo }; }));
     const nome = $("bqNome").value.trim().slice(0, 60); if (!nome) return aviso("Dê um nome à lista.", true);
     const existe = (bq.listas || []).some(function (l) { return String(l.nome).toLowerCase() === nome.toLowerCase(); });
-    if (!confirm((existe ? 'Já existe a lista "' + nome + '". Estas pessoas serão ACRESCENTADAS a ela.\n\n' : "") + "Bloquear " + r.itens.length + (r.itens.length === 1 ? " pessoa" : " pessoas") + ' na lista "' + nome +
+    if (!confirm((existe ? 'Já existe a lista "' + nome + '". Estas pessoas serão ACRESCENTADAS a ela.\n\n' : "") + "Bloquear " + todos.length + (todos.length === 1 ? " pessoa" : " pessoas") + ' na lista "' + nome +
       '"?\n\nElas deixam de receber QUALQUER disparo, mesmo que já estejam no CRM com autorização ou sejam cadastradas depois. Para desfazer, tire a pessoa da lista ou apague a lista.')) return;
     const b = this; b.disabled = true;
     try {
       let add = 0, ja = 0, noCrm = 0, canc = 0;
-      for (let i = 0; i < r.itens.length; i += 2000) {
-        const x = await ler(supa().rpc("wa_bloqueio_criar", { p_nome: nome, p_pessoas: r.itens.slice(i, i + 2000).map(function (p) { return { telefone: p.fone, nome: p.nome || null }; }) }));
+      for (let i = 0; i < todos.length; i += 2000) {
+        const x = await ler(supa().rpc("wa_bloqueio_criar", { p_nome: nome, p_pessoas: todos.slice(i, i + 2000) }));
         if (!x || !x.ok) throw new Error((x && x.erro) || "Não consegui salvar a lista.");
         add += Number(x.adicionados) || 0; ja += Number(x.ja_estavam) || 0; noCrm = Number(x.no_crm) || 0; canc += Number(x.itens_cancelados) || 0;
       }
