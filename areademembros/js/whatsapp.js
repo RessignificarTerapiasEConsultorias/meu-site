@@ -869,6 +869,103 @@
     } catch (e) { falha(e); this.disabled = false; }
   });
 
+  /* ---------- aba Não enviar: listas de pessoas que ficam fora de todos os disparos ---------- */
+  const bq = { arquivos: [], resultado: null, lista: null, seqBusca: 0, tBusca: null };
+  function bqFontes() {
+    const f = bq.arquivos.slice(), txt = $("bqTexto").value.trim();
+    if (txt) f.push({ nome: "texto colado", linhas: txt.split(/\r?\n/).map(function (l) { return /[;\t]/.test(l) ? l.split(/[;\t]/) : [l]; }) });
+    return f;
+  }
+  function bqProcessar() {
+    const fontes = bqFontes();
+    if (!fontes.length) { bq.resultado = null; $("bqRes").textContent = ""; $("bqPrev").innerHTML = ""; $("bqSalvar").disabled = true; return; }
+    const ddd = $("bqDdd").value.replace(/\D/g, "");
+    const r = bq.resultado = WaLista.juntarResultados(fontes.map(function (a) { return WaLista.processarLinhas(a.linhas, { ddd: ddd }); }));
+    $("bqRes").textContent = r.lidas + " linha(s) lidas." + (r.itens.length ? "" : " Não achei nenhum telefone válido.");
+    let h = "";
+    if (r.itens.length) {
+      h += '<p><b>' + r.itens.length + (r.itens.length === 1 ? " pessoa" : " pessoas") + "</b> vão ficar fora dos disparos." + (r.duplicados ? " " + r.duplicados + " repetidos juntados." : "") + "</p>" +
+        '<div class="tabela-wrap" style="max-height:260px"><table class="t"><thead><tr><th>Nome</th><th>WhatsApp</th></tr></thead><tbody>' +
+        r.itens.slice(0, 50).map(function (p) { return "<tr><td>" + (p.nome ? esc(p.nome) : '<span class="vazio">(sem nome)</span>') + "</td><td>" + esc(foneBR(p.fone)) + "</td></tr>"; }).join("") +
+        (r.itens.length > 50 ? '<tr><td colspan="2" class="vazio">Mostrando 50 de ' + r.itens.length + ".</td></tr>" : "") + "</tbody></table></div>";
+    }
+    if (r.ignorados.length) {
+      h += "<details><summary>Ignorados (" + r.ignorados.length + ')</summary><div class="tabela-wrap"><table class="t"><thead><tr><th>Linha</th><th>Telefone no arquivo</th><th>Motivo</th></tr></thead><tbody>' +
+        r.ignorados.slice(0, 200).map(function (i) { return "<tr><td>" + i.linha + "</td><td>" + esc(i.bruto) + '</td><td class="quebra">' + esc(i.motivo) + "</td></tr>"; }).join("") + "</tbody></table></div></details>";
+    }
+    $("bqPrev").innerHTML = h; $("bqSalvar").disabled = !r.itens.length;
+  }
+  $("bqDdd").addEventListener("input", bqProcessar); $("bqTexto").addEventListener("input", bqProcessar);
+  $("bqArquivo").addEventListener("change", async function () {
+    const arqs = Array.prototype.slice.call(this.files || []);
+    bq.arquivos = []; if (!arqs.length) return bqProcessar();
+    $("bqRes").textContent = "Lendo o arquivo..."; $("bqSalvar").disabled = true;
+    try { for (const f of arqs) bq.arquivos.push({ nome: f.name, linhas: await WaLista.linhasDoArquivo(f) }); bqProcessar(); }
+    catch (e) { bq.arquivos = []; $("bqRes").textContent = e.message || String(e); $("bqPrev").innerHTML = ""; }
+  });
+  $("bqSalvar").addEventListener("click", async function () {
+    const r = bq.resultado; if (!r || !r.itens.length) return;
+    const nome = $("bqNome").value.trim().slice(0, 60); if (!nome) return aviso("Dê um nome à lista.", true);
+    const existe = (bq.listas || []).some(function (l) { return String(l.nome).toLowerCase() === nome.toLowerCase(); });
+    if (!confirm((existe ? 'Já existe a lista "' + nome + '". Estas pessoas serão ACRESCENTADAS a ela.\n\n' : "") + "Bloquear " + r.itens.length + (r.itens.length === 1 ? " pessoa" : " pessoas") + ' na lista "' + nome +
+      '"?\n\nElas deixam de receber QUALQUER disparo, mesmo que já estejam no CRM com autorização ou sejam cadastradas depois. Para desfazer, tire a pessoa da lista ou apague a lista.')) return;
+    const b = this; b.disabled = true;
+    try {
+      let add = 0, ja = 0, noCrm = 0, canc = 0;
+      for (let i = 0; i < r.itens.length; i += 2000) {
+        const x = await ler(supa().rpc("wa_bloqueio_criar", { p_nome: nome, p_pessoas: r.itens.slice(i, i + 2000).map(function (p) { return { telefone: p.fone, nome: p.nome || null }; }) }));
+        if (!x || !x.ok) throw new Error((x && x.erro) || "Não consegui salvar a lista.");
+        add += Number(x.adicionados) || 0; ja += Number(x.ja_estavam) || 0; noCrm = Number(x.no_crm) || 0; canc += Number(x.itens_cancelados) || 0;
+      }
+      $("bqRes").textContent = 'Pronto: "' + nome + '" bloqueou ' + add + " pessoa(s)" + (ja ? " (" + ja + " já estavam na lista)" : "") + ". " + noCrm + " delas já estão no CRM" + (canc ? "; " + canc + " envio(s) que estava(m) na fila foi/foram cancelado(s)." : ".");
+      $("bqPrev").innerHTML = ""; bq.arquivos = []; bq.resultado = null; $("bqArquivo").value = ""; $("bqTexto").value = ""; $("bqSalvar").disabled = true;
+      aviso("Lista de não enviar salva."); await telaBloqueio();
+    } catch (e) { falha(e); b.disabled = !bq.resultado; }
+  });
+  async function telaBloqueio() {
+    const ls = await ler(supa().from("wa_bloqueios").select("id,nome,criado_em,wa_bloqueio_itens(count)").order("criado_em", { ascending: false }));
+    bq.listas = ls.map(function (l) { return { id: l.id, nome: l.nome, criado_em: l.criado_em, n: (l.wa_bloqueio_itens && l.wa_bloqueio_itens[0] && Number(l.wa_bloqueio_itens[0].count)) || 0 }; });
+    const total = bq.listas.reduce(function (s, l) { return s + l.n; }, 0);
+    $("bqConta").textContent = bq.listas.length ? bq.listas.length + (bq.listas.length === 1 ? " lista · " : " listas · ") + total + " telefones" : "";
+    if (!$("bqNome").value) $("bqNome").value = "Não enviar " + (bq.listas.length + 1);
+    $("bqListas").innerHTML = bq.listas.length ? bq.listas.map(function (l) {
+      return "<tr><td><b>" + esc(l.nome) + "</b></td><td>" + l.n + "</td><td>" + esc(quando(l.criado_em)) + '</td><td><div class="wa-tp-acoes"><button type="button" class="btn peq contorno" data-bq-ver="' + esc(l.id) + '">Ver pessoas</button>' +
+        '<button type="button" class="btn peq perigo" data-bq-apagar="' + esc(l.id) + '">Apagar lista</button></div></td></tr>';
+    }).join("") : '<tr><td colspan="4" class="vazio">Nenhuma lista de não enviar ainda.</td></tr>';
+  }
+  async function carregarBqPessoas() {
+    const l = bq.lista; if (!l) return; const seq = ++bq.seqBusca, q = $("bqBusca").value.trim().replace(/[%,()]/g, " ");
+    let req = supa().from("wa_bloqueio_itens").select("telefone_chave,telefone,nome", { count: "exact" }).eq("lista_id", l.id).order("criado_em", { ascending: false }).limit(100);
+    if (q) req = req.or("nome.ilike.%" + q + "%,telefone.ilike.%" + q.replace(/\D/g, "") + "%");
+    const r = await req; if (r.error) throw r.error; if (seq !== bq.seqBusca) return;
+    $("bqPessoas").innerHTML = (r.data || []).length ? r.data.map(function (p) {
+      return "<tr><td>" + (p.nome ? esc(p.nome) : '<span class="vazio">(sem nome)</span>') + "</td><td>" + esc(foneBR(p.telefone || "")) + '</td><td><button type="button" class="btn peq perigo" data-bq-tirar="' + esc(p.telefone_chave) + '">Tirar da lista</button></td></tr>';
+    }).join("") : '<tr><td colspan="3" class="vazio">' + (q ? "Ninguém com esse nome ou telefone." : "Lista vazia.") + "</td></tr>";
+    $("bqCont").textContent = r.count ? "Mostrando " + (r.data || []).length + " de " + r.count : "";
+  }
+  $("bqListas").addEventListener("click", async function (ev) {
+    const v = ev.target.closest("[data-bq-ver]"), a = ev.target.closest("[data-bq-apagar]");
+    if (v) {
+      bq.lista = bq.listas.find(function (l) { return l.id === v.dataset.bqVer; }); if (!bq.lista) return;
+      $("bqTitulo").textContent = bq.lista.nome; $("bqSub").textContent = bq.lista.n + " telefones bloqueados. Quem for tirado daqui volta a poder receber disparos (se tiver autorização).";
+      $("bqBusca").value = ""; $("bqPessoas").innerHTML = ""; $("jBloqueio").showModal(); carregarBqPessoas().catch(falha); return;
+    }
+    if (a) {
+      const l = bq.listas.find(function (x) { return x.id === a.dataset.bqApagar; }); if (!l) return;
+      if (!confirm('Apagar a lista "' + l.nome + '"?\n\nAs ' + l.n + " pessoas dela voltam a poder receber disparos (se tiverem autorização e não estiverem em outra lista de não enviar).")) return;
+      try { await ler(supa().from("wa_bloqueios").delete().eq("id", l.id).select("id")); aviso("Lista apagada."); await telaBloqueio(); } catch (e) { falha(e); }
+    }
+  });
+  $("bqPessoas").addEventListener("click", async function (ev) {
+    const t = ev.target.closest("[data-bq-tirar]"); if (!t || !bq.lista) return;
+    try {
+      await ler(supa().from("wa_bloqueio_itens").delete().eq("lista_id", bq.lista.id).eq("telefone_chave", t.dataset.bqTirar).select("telefone_chave"));
+      aviso("Pessoa tirada da lista."); await carregarBqPessoas(); await telaBloqueio();
+      bq.lista = bq.listas.find(function (l) { return l.id === bq.lista.id; }) || bq.lista; $("bqSub").textContent = bq.lista.n + " telefones bloqueados.";
+    } catch (e) { falha(e); }
+  });
+  $("bqBusca").addEventListener("input", function () { clearTimeout(bq.tBusca); bq.tBusca = setTimeout(function () { carregarBqPessoas().catch(falha); }, 300); });
+
   let editando = null;
   $("ctLista").addEventListener("click", function (ev) {
     const cv = ev.target.closest("[data-ct-conversar]");
@@ -2375,7 +2472,7 @@
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
     abaAtual = nome;
-    const f = { conversas: telaConversas, contatos: telaContatos, disparos: telaDisparos, templates: telaTemplates, robo: telaRobo, fluxos: telaFluxos, config: telaConfig }[nome];
+    const f = { conversas: telaConversas, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, fluxos: telaFluxos, config: telaConfig }[nome];
     f().catch(function (e) { falha(e); });
   });
   setInterval(function () {

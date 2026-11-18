@@ -222,6 +222,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
       <button class="aba" type="button" data-aba="conversas" aria-selected="true">Conversas <span class="selo ouro" id="bdNaoLidas" hidden></span></button>
       <button class="aba" type="button" data-aba="contatos" aria-selected="false">Contatos</button>
       <button class="aba" type="button" data-aba="disparos" aria-selected="false">Disparos</button>
+      <button class="aba" type="button" data-aba="bloqueio" aria-selected="false">Não enviar</button>
       <button class="aba" type="button" data-aba="templates" aria-selected="false">Templates<span class="ponto" id="tpPonto" title="Há novidade nos templates" hidden></span></button>
       <button class="aba" type="button" data-aba="robo" aria-selected="false">Robô</button>
       <button class="aba" type="button" data-aba="fluxos" aria-selected="false">Fluxos</button>
@@ -384,6 +385,30 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
           <div><label>Como vai aparecer no celular</label><div id="tcPrevia"></div><div class="wa-cont" id="tcContador"></div></div>
           <div><label>Antes de enviar</label><ul class="wa-check" id="tcCheck"></ul></div>
         </aside></div>
+      </div>
+    </section>
+
+    <!-- ===== NÃO ENVIAR ===== -->
+    <section data-painel="bloqueio" hidden>
+      <div class="cartao">
+        <h2>Lista de não enviar</h2>
+        <p class="ajuda">Envie uma planilha (Excel, CSV) ou um PDF com os telefones de quem <b>não pode receber disparo</b>. Essas pessoas ficam fora de <b>todas</b> as campanhas, mesmo que já estejam no CRM com autorização ou sejam cadastradas depois. O número é reconhecido com ou sem o 9.</p>
+        <div class="f">
+          <div class="grade g2">
+            <div><label for="bqNome">Nome da lista</label><input id="bqNome" maxlength="60" placeholder="Não enviar 1"></div>
+            <div><label for="bqDdd">DDD padrão <span class="vazio">(para número sem DDD)</span></label><input id="bqDdd" inputmode="numeric" maxlength="2" value="81"></div>
+          </div>
+          <div style="margin-top:12px"><label for="bqArquivo">Arquivo(s) <span class="vazio">(Excel, CSV ou PDF)</span></label><input type="file" id="bqArquivo" accept=".xlsx,.xls,.xlsm,.xlsb,.ods,.csv,.pdf,.txt" multiple></div>
+          <div style="margin-top:12px"><label for="bqTexto">Ou cole os telefones <span class="vazio">(um por linha, pode ter o nome ao lado)</span></label><textarea id="bqTexto" rows="3" placeholder="(81) 99999-8888 Maria&#10;11 98888-7777"></textarea></div>
+          <p class="ajuda" id="bqRes" style="margin-top:8px"></p>
+          <div id="bqPrev"></div>
+          <div class="acoes"><button class="btn auto" type="button" id="bqSalvar" disabled>Não enviar para estas pessoas</button></div>
+        </div>
+      </div>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>Listas de não enviar</h2><span class="selo" id="bqConta"></span></div>
+        <div class="tabela-wrap"><table class="t"><thead><tr><th>Lista</th><th>Pessoas</th><th>Criada em</th><th></th></tr></thead><tbody id="bqListas"><tr><td colspan="4" class="vazio">Carregando...</td></tr></tbody></table></div>
+        <p class="ajuda" style="margin-top:10px">Também ficam fora dos disparos: quem pediu para sair da lista e quem está com o robô pausado <b>para sempre</b>.</p>
       </div>
     </section>
 
@@ -584,6 +609,15 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
     <div style="margin-top:12px"><label for="rpTexto">Texto da resposta</label><textarea id="rpTexto" rows="4" maxlength="4000" placeholder="Oi, {primeiro_nome}! ..."></textarea></div>
   </div>
   <div class="acoes"><button class="btn auto" type="button" id="rpSalvar">Salvar</button><button class="btn auto contorno" type="button" id="rpNova">Limpar</button><button class="btn auto contorno" type="button" data-fechar="jRespostas">Fechar</button></div>
+</dialog>
+
+<dialog class="janela janela-larga" id="jBloqueio" aria-labelledby="bqTitulo">
+  <h2 id="bqTitulo">Lista de não enviar</h2>
+  <p class="ajuda" id="bqSub"></p>
+  <div class="f"><input id="bqBusca" type="search" placeholder="Buscar por nome ou telefone" aria-label="Buscar na lista"></div>
+  <div class="tabela-wrap" style="max-height:50vh"><table class="t"><thead><tr><th>Pessoa</th><th>Telefone</th><th></th></tr></thead><tbody id="bqPessoas"></tbody></table></div>
+  <p class="ajuda" id="bqCont"></p>
+  <div class="acoes"><button class="btn auto contorno" type="button" data-fechar="jBloqueio">Fechar</button></div>
 </dialog>
 
 <dialog class="janela" id="jTeste" aria-labelledby="tsTitulo">
