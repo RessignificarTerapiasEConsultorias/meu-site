@@ -907,7 +907,7 @@
   const ETAPAS = [["novo", "Novo"], ["em_conversa", "Em conversa"], ["interessado", "Interessado"], ["proposta", "Proposta"], ["cliente", "Cliente"], ["perdido", "Perdido"]];
   const PRIORIDADES = [["baixa", "Baixa"], ["normal", "Normal"], ["alta", "Alta"], ["urgente", "Urgente"]];
   const ROT_ORIGEM = { whatsapp: "WhatsApp (a pessoa escreveu primeiro)", painel: "Adicionado por você no painel", site: "Inscrição pelo site", anuncio: "Anúncio com botão de WhatsApp" };
-  const PAUSAS = [[30, "30 min"], [60, "1 h"], [120, "2 h"], [240, "4 h"], [480, "8 h"], [720, "12 h"], [1440, "24 h"], [0, "Para sempre"]];
+  const PAUSAS = [[30, "30 min"], [60, "1 h"], [120, "2 h"], [240, "4 h"], [480, "8 h"], [720, "12 h"], [1440, "24 h"], [0, "Para sempre (sem disparos)"]];
   const SEM_PRAZO = "9999-12-31T00:00:00Z";
   const CAMPOS_LISTA = "id,nome,telefone,username,ultima_msg_em,ultima_msg_texto,nao_lidas,precisa_humano,optout,ultima_entrada_em,prioridade,robo_pausado_ate,sem_resposta,sem_resposta_desde";
   const CAMPOS_MSG = "id,direcao,tipo,texto,status,erro,origem,template_nome,criado_em,midia_url,midia_tipo,midia_caminho,midia_mime,midia_nome,midia_id,reacao";
@@ -1136,7 +1136,7 @@
   /* ----- topo da conversa: janela de 24 h, robô e pedido de atendimento ----- */
   function topoHtml(c) {
     const jm = janelaMs(c);
-    const robo = semPrazo(c) ? '<span class="selo pendente">Robô pausado sem prazo</span>'
+    const robo = semPrazo(c) ? '<span class="selo pendente">Robô pausado sem prazo</span><span class="selo off" title="Pausado para sempre: a pessoa não recebe disparos nem follow-ups">Sem disparos</span>'
       : pausado(c) ? '<span class="selo pendente">Robô pausado até ' + esc(quando(c.robo_pausado_ate)) + "</span>"
       : cfg.robo_ativo ? '<span class="selo ok">Robô respondendo</span>' : '<span class="selo" title="Ligue na aba Robô">Robô desligado</span>';
     return '<div class="wa-topo-l"><b>' + esc(nomeDe(c)) + '</b><span class="vazio">' + (c.nome || c.username ? esc(foneDe(c)) : "") + (c.username && c.telefone ? " · @" + esc(c.username) : "") + "</span>" + situacao(c) +
@@ -1163,9 +1163,10 @@
   }
   function pausar(min) {
     const m = $("cvPausaMenu"); if (m) m.open = false;
+    if (!min && !confirm("Pausar para sempre?\n\nO robô não responde mais esta pessoa E ela deixa de receber disparos e follow-ups. Você pode desfazer a qualquer momento em \"Voltar a responder\".")) return;
     const rot = (PAUSAS.filter(function (p) { return p[0] === min; })[0] || [0, ""])[1];
     salvarContato({ robo_pausado_ate: min ? new Date(Date.now() + min * 60000).toISOString() : SEM_PRAZO },
-      min ? "Robô pausado por " + rot + " nesta conversa." : 'Robô pausado sem prazo nesta conversa. Para religar, use "Voltar a responder".');
+      min ? "Robô pausado por " + rot + " nesta conversa." : 'Pausado para sempre: o robô não responde e a pessoa não recebe disparos. Para desfazer, use "Voltar a responder".');
   }
 
   /* ----- abrir a conversa ----- */

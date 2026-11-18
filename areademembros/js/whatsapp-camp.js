@@ -59,6 +59,7 @@
     if (/sem aceite/i.test(t)) return { titulo: "Sem aceite", dica: "A pessoa não autorizou receber mensagens." };
     if (/cancelada/i.test(t)) return { titulo: "Campanha cancelada", dica: "Você cancelou antes de chegar a vez desta pessoa." };
     if (/mesmo template/i.test(t)) return { titulo: "Disparo repetido", dica: "A pessoa tinha recebido este mesmo template há menos de 10 minutos." };
+    if (/bloqueado/i.test(t)) return { titulo: "Bloqueado: robô pausado para sempre", dica: "Você pausou o robô desta pessoa para sempre, o que também tira ela dos disparos. Para voltar, use \"Voltar a responder\" na conversa." };
     if (/recebeu marketing/i.test(t)) return { titulo: "Recebeu marketing há pouco", dica: "Você pediu para não enviar a quem recebeu marketing nos últimos dias." };
     return { titulo: t ? t.slice(0, 140) : "Motivo não registrado", dica: "" };
   }
@@ -158,7 +159,7 @@
       else add("variaveis", "bloqueia", "Preencha todas as variáveis do template.", "");
     }
     if (!vao) add("publico", "bloqueia", "Ninguém deste público autorizou receber mensagens.", "Escolha outra lista ou etiqueta.");
-    else add("publico", "ok", plural(vao, "pessoa vai receber", "pessoas vão receber"), (num(pub.sem_aceite) || num(pub.sairam)) ? "Ficam de fora: " + num(pub.sem_aceite) + " sem aceite e " + num(pub.sairam) + " que saíram da lista." : "");
+    else add("publico", "ok", plural(vao, "pessoa vai receber", "pessoas vão receber"), (num(pub.sem_aceite) || num(pub.sairam) || num(pub.bloqueados)) ? "Ficam de fora: " + num(pub.sem_aceite) + " sem aceite, " + num(pub.sairam) + " que saíram da lista" + (num(pub.bloqueados) ? " e " + num(pub.bloqueados) + " com o robô pausado para sempre (sem disparos)" : "") + "." : "");
     if (a.repetida) add("repetida", "confirma", "Campanha repetida", textoRepetida(a.repetida) + " Ao iniciar, o CRM vai pedir a sua confirmação.");
     else add("repetida", "ok", "Nenhuma campanha igual nas últimas 24 horas");
     if (rec.vale) {
