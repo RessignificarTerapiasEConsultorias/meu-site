@@ -168,6 +168,30 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 .ts-item[aria-pressed="true"]{border-color:var(--gold-deep);background:#FBF4DC}
 .cp-nota{margin-top:10px;padding:9px 12px;border-radius:10px;background:#F1F4F9;border:1px solid var(--line);font-size:14px;overflow-wrap:anywhere}
 .cp-nota.alerta{background:#FBF4DC;border-color:#EAD9A6}
+/* funil (Fase 5, item 5.2: só leitura) */
+.wa-fn-cols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(232px,1fr);gap:10px;overflow-x:auto;align-items:start;padding-bottom:6px}
+.wa-fn-col{background:#F4EFE5;border-radius:10px;padding:10px;min-width:0;min-height:120px}
+.wa-fn-col.ganho{background:#EEF6EC}
+.wa-fn-col.perdido{background:#F6EEEE}
+.wa-fn-col header{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:8px}
+.wa-fn-col h4{font-size:13px;text-transform:uppercase;letter-spacing:.03em;color:var(--goldtxt);margin:0;overflow-wrap:anywhere}
+.wa-fn-cont{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.wa-fn-lista{display:grid;gap:8px}
+.wa-fn-cartao{display:grid;gap:4px;text-align:left;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:13.5px;color:var(--ink);cursor:pointer;min-width:0}
+.wa-fn-cartao:focus-visible{outline:2px solid var(--gold-deep);outline-offset:2px}
+.wa-fn-nome{font-weight:600;overflow-wrap:anywhere}
+.wa-fn-linha{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:12px;color:var(--muted)}
+.wa-fn-selo{display:inline-block;border-radius:999px;padding:1px 7px;font-size:11.5px;background:#EDE7DA;color:var(--ink)}
+.wa-fn-selo.naolida{background:#1F6B3A;color:#fff;font-weight:600}
+.wa-fn-selo.atendimento{background:#B3261E;color:#fff}
+.wa-fn-selo.alta{background:#FBE7CF;color:#7A4A00}
+.wa-fn-selo.urgente{background:#F8D7D4;color:#7A1812}
+.wa-fn-parado.am{color:#8A6100;font-weight:600}
+.wa-fn-parado.vm{color:#B3261E;font-weight:600}
+.wa-fn-acao.venc{color:#B3261E;font-weight:600}
+.wa-fn-resp{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#B8862B;color:#fff;font-size:11px;font-weight:700}
+#fnQuadro{min-width:230px;max-width:100%}
+.wa-fn-col h4{white-space:nowrap}
 /* painel da campanha (Fase 4) */
 dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:92vh;overflow-y:auto;padding:20px}
 .cp-topo{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -221,6 +245,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 
     <div class="abas" id="abas" role="tablist">
       <button class="aba" type="button" data-aba="conversas" aria-selected="true">Conversas <span class="selo ouro" id="bdNaoLidas" hidden></span></button>
+      <button class="aba" type="button" data-aba="funil" aria-selected="false">Funil</button>
       <button class="aba" type="button" data-aba="contatos" aria-selected="false">Contatos</button>
       <button class="aba" type="button" data-aba="disparos" aria-selected="false">Disparos</button>
       <button class="aba" type="button" data-aba="bloqueio" aria-selected="false">Não enviar</button>
@@ -251,6 +276,15 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
     </section>
 
     <!-- ===== CONTATOS ===== -->
+    <section data-painel="funil" hidden>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>Funil</h2><select id="fnQuadro" aria-label="Quadro do funil"></select><button class="btn peq contorno" type="button" id="fnAtualizar">Atualizar</button></div>
+        <p class="ajuda" id="fnResumo" style="margin-top:8px"></p>
+        <div class="wa-fn-cols" id="fnColunas" style="margin-top:12px"><p class="vazio">Carregando...</p></div>
+        <div class="acoes"><button class="btn peq contorno" type="button" id="fnMais" hidden>Mostrar mais</button></div>
+      </div>
+    </section>
+
     <section data-painel="contatos" hidden>
       <div class="cartao">
         <h2>Adicionar contatos</h2>
@@ -681,6 +715,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 <script src="js/whatsapp-lista.js"></script>
 <script src="js/whatsapp-video.js"></script>
 <script src="js/whatsapp-camp.js"></script>
+<script src="js/whatsapp-funil.js"></script>
 <script src="js/whatsapp.js"></script>
 </body>
 </html>

@@ -2506,10 +2506,70 @@
     try { await ler(supa().from("wa_fluxos").delete().eq("id", fluxoAtual.id).select("id")); $("jFluxo").close(); aviso("Fluxo apagado."); telaFluxos(); } catch (e) { falha(e); }
   });
 
+  /* ---------- funil (Fase 5, item 5.2): quadro e cartões, só leitura ---------- */
+  const fnEstado = { quadro: null, limite: 50 };
+  function telaFunil() {
+    return ler(supa().rpc("wa_funil_carregar", { p_quadro: fnEstado.quadro, p_filtros: {}, p_limite: fnEstado.limite })).then(desenharFunil);
+  }
+  function desenharFunil(d) {
+    const WF = window.WaFunil, q = d.quadro || {}, quadros = d.quadros || [], t = d.totais || {}, cfg = d.config || {};
+    fnEstado.quadro = q.id || null;
+    const sel = $("fnQuadro");
+    sel.innerHTML = quadros.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.nome) + (x.principal ? " (espelha a etapa)" : "") + "</option>"; }).join("");
+    if (q.id) sel.value = q.id;
+    const valor = WF.valorReais(t.valor);
+    $("fnResumo").textContent = WF.contaTexto(Number(t.cartoes) || 0, "pessoa no quadro", "pessoas no quadro") + (valor ? " · " + valor + " em valor" : "")
+      + " · " + (Number(t.precisa_de_mim) || 0) + " precisam de você · " + (Number(t.parados) || 0) + " parados há " + (cfg.dias_amarelo || 3) + " dias ou mais";
+    const cols = d.colunas || [];
+    $("fnColunas").innerHTML = cols.length ? cols.map(function (c) {
+      const cartoes = c.cartoes || [];
+      const vt = WF.valorReais(c.valor_total);
+      return '<section class="wa-fn-col' + (c.tipo && c.tipo !== "normal" ? " " + esc(c.tipo) : "") + '" aria-label="' + esc(c.nome) + '">'
+        + "<header><h4>" + esc(c.nome) + '</h4><span class="wa-fn-cont">' + (Number(c.total) || 0) + (vt ? " · " + esc(vt) : "") + "</span></header>"
+        + '<div class="wa-fn-lista">' + (cartoes.length ? cartoes.map(function (k) { return cartaoFunil(k, cfg); }).join("") : '<p class="vazio">Ninguém aqui.</p>') + "</div></section>";
+    }).join("") : '<p class="vazio">Este quadro ainda não tem colunas.</p>';
+    $("fnMais").hidden = !cols.some(function (c) { return (Number(c.total) || 0) > (c.cartoes || []).length; });
+  }
+  function metaCartao(k, cls, etiquetas) {
+    const partes = ['<span class="wa-fn-parado ' + cls + '">há ' + esc(window.WaFunil.textoParado(k.dias_parado)) + "</span>"];
+    if (k.responsavel) partes.push('<span class="wa-fn-resp" title="' + esc(k.responsavel) + '">' + esc(k.responsavel.charAt(0).toUpperCase()) + "</span>");
+    if (etiquetas.length) partes.push(etiquetas.slice(0, 2).map(esc).join(", ") + (etiquetas.length > 2 ? " +" + (etiquetas.length - 2) : ""));
+    return partes.join(" · ");
+  }
+  function cartaoFunil(k, cfg) {
+    const WF = window.WaFunil, nome = k.nome || (k.username ? "@" + k.username : "") || (k.telefone ? foneBR(k.telefone) : "Sem número visível");
+    const cls = WF.classeParado(k.dias_parado, cfg.dias_amarelo, cfg.dias_vermelho);
+    const selos = [];
+    if (Number(k.nao_lidas) > 0) selos.push('<span class="wa-fn-selo naolida" title="Mensagens não lidas">' + Number(k.nao_lidas) + "</span>");
+    if (k.precisa_humano) selos.push('<span class="wa-fn-selo atendimento">Pediu atendimento</span>');
+    if (k.optout) selos.push('<span class="wa-fn-selo">Saiu da lista</span>');
+    else if (!k.janela_aberta) selos.push('<span class="wa-fn-selo">Fora da janela de 24 h</span>');
+    if (k.prioridade === "alta" || k.prioridade === "urgente") selos.push('<span class="wa-fn-selo ' + esc(k.prioridade) + '">' + (k.prioridade === "urgente" ? "Urgente" : "Prioridade alta") + "</span>");
+    const valor = WF.valorReais(k.valor);
+    const etiquetas = k.etiquetas || [];
+    const acao = k.proxima_acao ? '<span class="wa-fn-acao' + (k.prazo_vencido ? " venc" : "") + '">' + esc(k.proxima_acao) + (k.prazo ? " · " + esc(WF.prazoRotulo(k.prazo, k.prazo_vencido)) : "") + "</span>" : "";
+    return '<button type="button" class="wa-fn-cartao" data-fn-contato="' + esc(k.contato_id || "") + '">'
+      + '<span class="wa-fn-nome">' + esc(nome) + "</span>"
+      + (valor ? '<span class="wa-fn-linha"><b>' + esc(valor) + "</b></span>" : "")
+      + (selos.length ? '<span class="wa-fn-linha">' + selos.join(" ") + "</span>" : "")
+      + '<span class="wa-fn-linha">' + metaCartao(k, cls, etiquetas) + "</span>"
+      + acao
+      + "</button>";
+  }
+  $("fnQuadro").addEventListener("change", function () { fnEstado.quadro = this.value || null; fnEstado.limite = 50; telaFunil().catch(function (e) { falha(e, "Não consegui abrir o funil."); }); });
+  $("fnAtualizar").addEventListener("click", function () { telaFunil().catch(function (e) { falha(e, "Não consegui atualizar o funil."); }); });
+  $("fnMais").addEventListener("click", function () { fnEstado.limite += 50; telaFunil().catch(function (e) { falha(e); }); });
+  $("fnColunas").addEventListener("click", function (ev) {
+    const b = ev.target.closest("[data-fn-contato]"); if (!b || !b.dataset.fnContato) return;
+    conversaId = b.dataset.fnContato; ancora = null;
+    abrirAba("conversas");
+    abrirConversa();
+  });
+
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
     abaAtual = nome;
-    const f = { conversas: telaConversas, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, fluxos: telaFluxos, config: telaConfig }[nome];
+    const f = { conversas: telaConversas, funil: telaFunil, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, fluxos: telaFluxos, config: telaConfig }[nome];
     f().catch(function (e) { falha(e); });
   });
   setInterval(function () {
@@ -2517,6 +2577,9 @@
     carregarLista().catch(function () {});
     atualizarConversa().catch(function () {});
   }, 8000);
+
+  /* aba Funil aberta: atualiza a cada 30 segundos (sem interromper; é só leitura) */
+  setInterval(function () { if (!document.hidden && abaAtual === "funil") telaFunil().catch(function () {}); }, 30000);
 
   /* aba Templates aberta: recarrega sozinha a cada minuto (situação e "há quanto tempo") */
   setInterval(function () { if (!document.hidden && abaAtual === "templates") telaTemplates().catch(function () {}); }, 60000);
