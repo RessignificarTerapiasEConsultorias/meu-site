@@ -1796,15 +1796,37 @@
     trocarTemplateDp();
     const u = await wa({ acao: "uso_hoje" });
     $("dpUso").textContent = u.ok ? "Nas últimas 24 h você já enviou template para " + u.usados + " de " + u.limite + " pessoas permitidas." : "";
+    await opcoesFiltroDisparos();
     await desenharDisparos();
   }
   const ROT_DP = { rascunho: ["Rascunho", "pendente"], agendado: ["Na fila", "pendente"], enviando: ["Enviando", "ouro"], pausado: ["Pausado", "off"], concluido: ["Concluído", "ok"], cancelado: ["Cancelado", "off"] };
+  /* histórico: 30 por vez, com filtro por situação, template e período */
+  const dpHist = { limite: 30 };
+  async function opcoesFiltroDisparos() {
+    try {
+      const nomes = Array.from(new Set((await ler(supa().from("wa_disparos").select("template_nome"))).map(function (d) { return d.template_nome; }).filter(Boolean))).sort();
+      const atual = $("dpFTpl").value;
+      $("dpFTpl").innerHTML = '<option value="">Todos os templates</option>' + nomes.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + "</option>"; }).join("");
+      if (nomes.indexOf(atual) > -1) $("dpFTpl").value = atual;
+    } catch (e) { console.error(e); }
+  }
+  ["dpFSit", "dpFTpl", "dpFPer"].forEach(function (id) { $(id).addEventListener("change", function () { dpHist.limite = 30; desenharDisparos().catch(falha); }); });
+  $("dpMais").addEventListener("click", function () { dpHist.limite += 30; desenharDisparos().catch(falha); });
   async function desenharDisparos() {
-    const ds = await ler(supa().from("wa_disparos").select("*").order("criado_em", { ascending: false }).limit(30));
+    let q = supa().from("wa_disparos").select("*", { count: "exact" }).order("criado_em", { ascending: false });
+    const fSit = $("dpFSit").value, fTpl = $("dpFTpl").value, fPer = Number($("dpFPer").value) || 0;
+    if (fSit) q = q.eq("status", fSit);
+    if (fTpl) q = q.eq("template_nome", fTpl);
+    if (fPer) q = q.gte("criado_em", new Date(Date.now() - fPer * 86400000).toISOString());
+    const pg = await q.range(0, dpHist.limite - 1);
+    if (pg.error) throw pg.error;
+    const ds = pg.data || [], totalHist = pg.count == null ? ds.length : pg.count;
+    $("dpMais").hidden = ds.length >= totalHist;
+    $("dpContagem").textContent = totalHist ? "Mostrando " + ds.length + " de " + totalHist : "";
     let res = {};
     try { (await ler(supa().rpc("wa_disparos_resumo"))).forEach(function (r) { res[r.disparo_id] = r; }); } catch (e) {}
     const tb = $("dpLista");
-    if (!ds.length) { tb.innerHTML = '<tr><td colspan="8" class="vazio">Nenhum disparo ainda.</td></tr>'; return; }
+    if (!ds.length) { tb.innerHTML = '<tr><td colspan="8" class="vazio">' + (fSit || fTpl || fPer ? "Nenhum disparo com esses filtros." : "Nenhum disparo ainda.") + "</td></tr>"; return; }
     tb.innerHTML = ds.map(function (d) {
       const r = res[d.id] || { enviados: 0, entregues: 0, lidos: 0, falhas: 0, pulados: 0 };
       const feitos = Number(r.enviados) + Number(r.falhas) + Number(r.pulados), pct = d.total ? Math.min(100, Math.round(feitos / d.total * 100)) : 0;
@@ -1880,9 +1902,10 @@
       const novo = await ler(supa().from("wa_disparos").insert({
         nome: nome, template_nome: t.nome, idioma: t.idioma, categoria: t.categoria, variaveis: v.vars, cabecalho_midia: precisaMidia ? v.midia : null,
         filtro_etiqueta: $("dpEtiqueta").value || null, agendado_para: quando_ ? quando_.toISOString() : null, status: "rascunho", criado_por: perfil.id,
-        excluir_recentes: !$("dpExcluirBox").hidden && $("dpExcluirRecentes").checked
+        excluir_recentes: !$("dpExcluirBox").hidden && $("dpExcluirRecentes").checked,
+        origem_id: dpOrigem ? dpOrigem.id : null, origem_tipo: dpOrigem ? "copia" : null
       }).select("id").single());
-      $("dpNome").value = "";
+      $("dpNome").value = ""; dpOrigem = null;
       if (iniciar) {
         const r = await confirmarRepetida(await wa({ acao: "iniciar_disparo", disparo_id: novo.id, confirmar_repetido: confirmouRepetida }), novo.id);
         if (!r.ok) { aviso("Salvei como rascunho, mas não iniciou: " + (r.erro || ""), true); return desenharDisparos(); }
@@ -1894,6 +1917,16 @@
       desenharDisparos();
     } catch (e) { falha(e); }
   }
+  let dpOrigem = null;   // preenchido quando o formulário foi aberto por "Duplicar" no painel de uma campanha
+  $("dpTemplate").addEventListener("change", function () { dpOrigem = null; });
+  $("dpTeste").addEventListener("click", function () {
+    const t = tplSelecionado(); if (!t) return aviso("Escolha um template aprovado.", true);
+    const v = lerVarsDp();
+    if (v.vars.some(function (x) { return !String(x || "").trim(); })) return aviso("Preencha todas as variáveis do template antes do teste.", true);
+    const precisaMidia = ["IMAGE", "VIDEO", "DOCUMENT"].indexOf(String(t.cabecalho_tipo || "").toUpperCase()) > -1;
+    if (precisaMidia && !/^https:\/\//.test(v.midia || "")) return aviso("Informe o link (https://) do arquivo do cabeçalho antes do teste.", true);
+    abrirTeste({ template_nome: t.nome, idioma: t.idioma, variaveis: v.vars, midia: precisaMidia ? v.midia : null });
+  });
   $("dpCriar").addEventListener("click", function () { criarDisparo(true); });
   $("dpRascunho").addEventListener("click", function () { criarDisparo(false); });
 
@@ -1954,6 +1987,102 @@
     return await wa({ acao: "iniciar_disparo", disparo_id: id, confirmar_repetido: true });
   }
 
+  /* ---------- envio de teste (Fase 4, item 4.4) ---------- */
+  const ts = { dados: null, contato: null, seq: 0 };
+  function abrirTeste(dados) {
+    ts.dados = dados; ts.seq++;
+    let lembrado = ""; try { lembrado = localStorage.getItem("wa_teste_contato") || ""; } catch (e) {}
+    const primeiro = WaCamp.candidatosTeste(contatos, "", lembrado)[0];
+    ts.contato = primeiro ? primeiro.id : null;
+    $("tsResumo").textContent = "Template " + dados.template_nome + (dados.nome ? ", da campanha \"" + dados.nome + "\"" : "") + ". A mensagem sai com as variáveis trocadas pelos dados de quem receber.";
+    $("tsBusca").value = ""; $("tsResultado").innerHTML = ""; desenharTeste();
+    if (!$("jTeste").open) $("jTeste").showModal();
+  }
+  function desenharTeste() {
+    const q = $("tsBusca").value, lista = WaCamp.candidatosTeste(contatos, q, ts.contato).slice(0, 8);
+    $("tsLista").innerHTML = lista.length ? lista.map(function (c) {
+      return '<button type="button" class="ts-item" data-ts="' + esc(c.id) + '" aria-pressed="' + (c.id === ts.contato ? "true" : "false") + '"><b>' + esc(nomeDe(c)) + "</b><span>" + esc(foneDe(c)) + "</span></button>";
+    }).join("") : '<p class="vazio">' + (q.trim() ? "Nenhum contato com aceite com esse nome ou número." : "Digite o nome ou o número de um contato com aceite. Pode ser o seu.") + "</p>";
+    $("tsEnviar").disabled = !ts.contato;
+  }
+  $("tsBusca").addEventListener("input", desenharTeste);
+  $("tsLista").addEventListener("click", function (ev) { const b = ev.target.closest("[data-ts]"); if (!b) return; ts.contato = b.dataset.ts; desenharTeste(); });
+  $("tsEnviar").addEventListener("click", async function () {
+    const b = this, d = ts.dados; if (!ts.contato || !d) return;
+    b.disabled = true; b.textContent = "Enviando...";
+    try {
+      const r = await wa(d.disparo_id ? { acao: "enviar_teste_disparo", contato_id: ts.contato, disparo_id: d.disparo_id }
+        : { acao: "enviar_teste_disparo", contato_id: ts.contato, template_nome: d.template_nome, idioma: d.idioma, variaveis: d.variaveis, midia: d.midia });
+      if (!r.ok) { $("tsResultado").innerHTML = '<div class="aviso erro">' + esc(r.erro || "O teste não saiu.") + "</div>"; return; }
+      try { localStorage.setItem("wa_teste_contato", ts.contato); } catch (e) {}
+      const c = (contatos || []).filter(function (x) { return x.id === ts.contato; })[0] || { telefone: r.para, nome: r.nome };
+      $("tsResultado").innerHTML = '<div class="aviso ok">Enviado para ' + esc(nomeDe(c)) + " (" + esc(foneDe(c)) + '). Confira no celular. <span id="tsStatus">Situação: enviado, esperando a entrega.</span> <span class="vazio">Testes nas últimas 24 h: ' + (Number(r.testes_hoje) || 1) + " de 10.</span></div>";
+      acompanharTeste(r.wamid);
+      if (abaAtual === "disparos") agendarConferencia();   // a conferência passa a mostrar que o teste foi feito
+    } catch (e) { falha(e); }
+    finally { b.textContent = "Enviar teste"; b.disabled = !ts.contato; }
+  });
+  /* acompanha a mensagem de teste por até 45 segundos: enviado, entregue, lido */
+  function acompanharTeste(wamid) {
+    const seq = ++ts.seq; let n = 0; if (!wamid) return;
+    const olhar = async function () {
+      if (seq !== ts.seq || !$("jTeste").open || ++n > 15) return;
+      try {
+        const m = await ler(supa().from("wa_mensagens").select("status,erro").eq("wamid", wamid).maybeSingle());
+        if (m && $("tsStatus")) $("tsStatus").textContent = "Situação: " + WaCamp.situacaoTeste(m.status, m.erro);
+        if (m && (m.status === "lida" || m.status === "falhou")) return;
+      } catch (e) { /* tenta de novo */ }
+      setTimeout(olhar, 3000);
+    };
+    setTimeout(olhar, 2500);
+  }
+
+  /* ---------- painel: reenviar para quem falhou, duplicar e enviar fora do horário (itens 4.5 e 4.6) ---------- */
+  async function extraPainel(qual) {
+    const W = window.WaCamp, d = cp.dados, c = d && d.campanha; if (!c) return;
+    try {
+      if (qual === "teste") return abrirTeste({ disparo_id: c.id, nome: c.nome, template_nome: c.template_nome });
+      if (qual === "duplicar") return duplicarCampanha(d);
+      if (qual === "fora") {
+        if (!confirm(W.textoForaDoHorario(d.horario))) return;
+        const r = await ler(supa().rpc("wa_disparo_ignorar_horario", { p_id: c.id, p_ligar: true }));
+        if (!r || !r.ok) return aviso((r && r.erro) || "Não consegui liberar.", true);
+        const p = await wa({ acao: "processar_agora" });
+        aviso(p.ok && (p.enviados || p.falhas) ? p.enviados + " enviadas agora." + (p.motivo ? " " + p.motivo : "") : (p.motivo || "Liberada. O envio começa em até 5 minutos."));
+      } else if (qual === "dentro") {
+        const r = await ler(supa().rpc("wa_disparo_ignorar_horario", { p_id: c.id, p_ligar: false }));
+        if (!r || !r.ok) return aviso((r && r.erro) || "Não consegui alterar.", true);
+        aviso("Esta campanha voltou a respeitar o horário de envio.");
+      } else if (qual === "reenviar") {
+        const pr = await ler(supa().rpc("wa_disparo_reenviar_falhas", { p_id: c.id, p_criar: false }));
+        if (!pr || !pr.ok) return aviso((pr && pr.erro) || "Ninguém para reenviar.", true);
+        if (!confirm(W.textoReenvio(pr, d.reenvio))) return;
+        const r = await ler(supa().rpc("wa_disparo_reenviar_falhas", { p_id: c.id, p_criar: true }));
+        if (!r || !r.ok) return aviso((r && r.erro) || "Não consegui criar o reenvio.", true);
+        aviso("Rascunho de reenvio criado com " + r.reenviar + (Number(r.reenviar) === 1 ? " pessoa" : " pessoas") + ". Confira e clique em Iniciar.");
+        await desenharDisparos();
+        return abrirPainel(r.id);
+      } else return;
+      await desenharDisparos(); await carregarPainel(false);
+    } catch (e) { falha(e); }
+  }
+  /* duplicar: leva template, variáveis, público e arquivo para o formulário, com o nome "(cópia)" e sem data */
+  function duplicarCampanha(d) {
+    const c = d.campanha, chave = c.template_nome + "|" + c.idioma;
+    if (!Array.prototype.some.call($("dpTemplate").options, function (o) { return o.value === chave; })) return aviso("O template desta campanha não está mais aprovado. Não dá para copiar.", true);
+    $("jCampanha").close();
+    $("dpNome").value = WaCamp.nomeCopia(c.nome); $("dpTemplate").value = chave; $("dpQuando").value = "";
+    if (Array.prototype.some.call($("dpEtiqueta").options, function (o) { return o.value === (c.publico || ""); })) $("dpEtiqueta").value = c.publico || "";
+    trocarTemplateDp();
+    (c.variaveis || []).forEach(function (v, i) { const el = $("dpVars").querySelector('[data-var="' + (i + 1) + '"]'); if (el) el.value = v; });
+    const m = $("dpVars").querySelector("[data-midia]"); if (m && c.midia) m.value = c.midia;
+    $("dpVars").dispatchEvent(new Event("input", { bubbles: true }));
+    dpOrigem = { id: c.id };
+    resumoDisparo(); agendarConferencia();
+    $("dpNome").scrollIntoView({ block: "center" }); $("dpNome").focus();
+    aviso("Cópia de \"" + c.nome + "\" no formulário, sem data. Confira e crie quando quiser.");
+  }
+
   /* ---------- painel da campanha (Fase 4, item 4.1) ---------- */
   const cp = { id: null, dados: null, filtro: "todas", busca: "", itens: [], total: 0, seq: 0, tBusca: null };
   const FILTROS_CP = [["todas", "Todos"], ["respondeu", "Responderam"], ["lido", "Lidos"], ["entregue", "Entregues"], ["enviado", "Enviados"], ["falhou", "Falharam"], ["pulado", "Pulados"], ["pendente", "Pendentes"], ["saiu", "Saíram"]];
@@ -1984,11 +2113,16 @@
       fato("Situação", '<span class="selo ' + st[1] + '">' + esc(st[0]) + "</span>") +
       fato("Template", esc(c.template_nome || "") + ' <span class="selo ' + tp[1] + '">' + esc(tp[0]) + "</span>") +
       fato("Categoria", esc(ROT_CAT[c.categoria] || c.categoria || "não registrada") + (d.preco != null ? " · " + W.dinheiro(d.preco) + " por mensagem" : "")) +
-      fato("Para quem", esc(W.rotuloPublico(c.publico))) +
+      fato("Para quem", esc(W.rotuloPublico(c.publico)) + (c.publico_fixo ? " (só quem falhou na campanha de origem)" : "")) +
+      (c.objetivo ? fato("Objetivo", esc(c.objetivo)) : "") +
+      (c.origem ? fato(c.origem.tipo === "reenvio" ? "Reenvio de" : "Cópia de", '<button type="button" class="cp-abrir" data-cp-abrir="' + esc(c.origem.id) + '">' + esc(c.origem.nome) + "</button>") : "") +
       fato("Criada", esc(quando(c.criado_em)) + (c.criado_por ? " por " + esc(c.criado_por) : "")) +
       fato("Envio", m.primeira ? "De " + esc(quando(m.primeira)) + " até " + esc(quando(m.ultima)) : c.agendado_para ? "Agendada para " + esc(quando(c.agendado_para)) : "Ainda não enviada") +
       (c.concluido_em ? fato("Concluída", esc(quando(c.concluido_em))) : "") +
       (c.midia && /^https:\/\//.test(c.midia) ? fato("Mídia do cabeçalho", '<a href="' + esc(c.midia) + '" target="_blank" rel="noopener noreferrer">Abrir o arquivo</a>') : "") + "</div>";
+    h += W.notasPainel(d).map(function (n) { return '<div class="cp-nota' + (n.tipo === "alerta" ? " alerta" : "") + '">' + esc(n.texto) + "</div>"; }).join("");
+    if ((d.derivadas || []).length) h += '<p class="ajuda" style="margin-top:8px">Criadas a partir desta: ' + d.derivadas.map(function (x) {
+      return '<button type="button" class="cp-abrir" data-cp-abrir="' + esc(x.id) + '">' + esc(x.nome) + "</button> (" + esc((ROT_DP[x.status] || [x.status || "?"])[0]) + ")"; }).join(", ") + "</p>";
     h += '<h3 class="cp-tit">Resultado</h3><div class="cp-funil">' + W.funil(f).map(function (e) {
       return '<div class="cp-etapa" data-etapa="' + e.chave + '"><span>' + e.rotulo + "</span><b>" + e.n + '</b><span class="cp-pct">' + e.pct + '</span><div class="wa-barra"><i style="width:' + e.largura + '%"></i></div></div>';
     }).join("") + '</div><p class="ajuda">Enviados em % do total; as outras etapas em % dos enviados. "Responderam" conta a primeira mensagem da pessoa em até ' + (Number(d.janela_resposta_horas) || 72) +
@@ -2010,6 +2144,12 @@
     if (c.status === "pausado") bt += '<button type="button" class="btn peq" data-cp-acao="iniciar">Retomar</button>';
     if (c.status === "agendado" || c.status === "enviando") bt += '<button type="button" class="btn peq contorno" data-cp-acao="pausar">Pausar</button>';
     if (["agendado", "enviando", "pausado"].indexOf(c.status) > -1) bt += '<button type="button" class="btn peq perigo" data-cp-acao="cancelar">Cancelar</button>';
+    const ativa = ["rascunho", "agendado", "enviando", "pausado"].indexOf(c.status) > -1, rv = d.reenvio || {}, hr = d.horario || {};
+    if (ativa) bt += '<button type="button" class="btn peq contorno" data-cp-extra="teste">Enviar teste</button>';
+    if ((c.status === "agendado" || c.status === "enviando") && hr.dentro === false && !c.ignorar_horario) bt += '<button type="button" class="btn peq contorno" data-cp-extra="fora">Enviar agora (ignorar horário)</button>';
+    if (c.ignorar_horario && ativa) bt += '<button type="button" class="btn peq contorno" data-cp-extra="dentro">Voltar a respeitar o horário</button>';
+    if (Number(rv.recuperaveis) > 0 && c.status !== "rascunho") bt += '<button type="button" class="btn peq contorno" data-cp-extra="reenviar">Reenviar para quem falhou (' + Number(rv.recuperaveis) + ")</button>";
+    bt += '<button type="button" class="btn peq contorno" data-cp-extra="duplicar">Duplicar</button>';
     h += '<div class="acoes cp-acoes">' + bt + '<button type="button" class="btn peq contorno" id="cpCsv">Exportar resultado (CSV)</button><span class="vazio">O arquivo tem nomes e telefones: guarde com cuidado.</span></div>';
     $("cpResumo").innerHTML = h;
     const cont = { todas: it.total, respondeu: f.responderam, lido: it.lido, entregue: it.entregue, enviado: it.enviado, falhou: it.falhou, pulado: it.pulado, pendente: it.pendente, saiu: d.saidas };
@@ -2062,6 +2202,9 @@
   }
   $("jCampanha").addEventListener("click", function (ev) {
     const t = ev.target, f = t.closest("[data-cp-filtro]"), c = t.closest("[data-cp-conversa]"), a = t.closest("[data-cp-acao]");
+    const extra = t.closest("[data-cp-extra]"), outra = t.closest("[data-cp-abrir]");
+    if (outra) return abrirPainel(outra.dataset.cpAbrir);
+    if (extra) return extraPainel(extra.dataset.cpExtra);
     if (f) {
       cp.filtro = f.dataset.cpFiltro;
       Array.prototype.forEach.call($("cpFiltros").querySelectorAll("[data-cp-filtro]"), function (x) { x.setAttribute("aria-pressed", x.dataset.cpFiltro === cp.filtro ? "true" : "false"); });

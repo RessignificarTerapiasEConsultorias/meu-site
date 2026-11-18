@@ -194,7 +194,7 @@
     else add("pagamento", "ok", "Sem erro de pagamento recente");
     const te = (a.teste || {}).enviado_em;
     if (te) add("teste", "ok", "Você enviou este template para alguém nas últimas 24 horas", "Último envio fora de campanha: " + dataBrasilia(te).slice(0, 5) + " às " + dataBrasilia(te).slice(11) + ".");
-    else add("teste", "aviso", "Recomendado: testar antes no seu número", "Abra a sua conversa e use \"Enviar template\" para ver a mensagem no celular antes de disparar.");
+    else add("teste", "aviso", "Recomendado: testar antes no seu número", "Use o botão \"Enviar teste\" para ver a mensagem no celular antes de disparar.");
     return L;
   }
   function resumoTravas(lista) {
@@ -203,7 +203,59 @@
       avisos: lista.filter(function (i) { return i.nivel === "aviso"; }) };
   }
 
+  /* ---------- itens 4.4 a 4.7: teste, reenvio, cópia, fora do horário e avisos do painel ---------- */
+  function semAcento(s) { return String(s == null ? "" : s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+  /* nome para a cópia de uma campanha: "X (cópia)", depois "X (cópia 2)"... */
+  function nomeCopia(nome) {
+    const n = String(nome || "Campanha").trim(), m = /\s*\(cópia(?: (\d+))?\)$/i.exec(n);
+    const base = (m ? n.slice(0, m.index) : n).slice(0, 66);
+    return base + (m ? " (cópia " + ((Number(m[1]) || 1) + 1) + ")" : " (cópia)");
+  }
+  function textoForaDoHorario(h) {
+    h = h || {};
+    return "Enviar agora, fora do horário?\n\nAgora são " + num(h.agora) + "h e o seu horário de envio é das " + num(h.inicio) + "h às " + num(h.fim) +
+      "h. Quem receber tarde da noite ou de madrugada pode se incomodar.\n\nA liberação vale só para esta campanha e por 2 horas. Tem certeza?";
+  }
+  /* pr = contagem devolvida pelo banco { reenviar, nao_recuperaveis, sairam_ou_sem_aceite }; rv = resumo do painel { limite_por_pessoa } */
+  function textoReenvio(pr, rv) {
+    pr = pr || {}; rv = rv || {};
+    const n = num(pr.reenviar), fora = num(pr.nao_recuperaveis) + num(pr.sairam_ou_sem_aceite);
+    return "Criar uma campanha nova só para " + (n === 1 ? "a pessoa que falhou" : "as " + n + " pessoas que falharam") + " por motivo passageiro?" +
+      (fora ? "\n\nFicam de fora " + fora + ": número sem WhatsApp, quem saiu da lista ou envio interrompido." : "") +
+      (num(rv.limite_por_pessoa) ? "\n\nAtenção: em " + num(rv.limite_por_pessoa) + " dessas falhas a Meta segurou o marketing para a pessoa. Reenviar no mesmo dia costuma falhar de novo: o melhor é esperar pelo menos um dia." : "") +
+      "\n\nA campanha nova fica como rascunho, para você conferir antes de iniciar.";
+  }
+  /* avisos mostrados no alto do painel: última rodada, liberação fora do horário e exclusão de quem recebeu há pouco */
+  function notasPainel(d) {
+    const c = (d && d.campanha) || {}, L = [], hora = function (iso) { return dataBrasilia(iso).slice(11); };
+    const ativa = ["agendado", "enviando", "pausado"].indexOf(c.status) > -1;
+    if (c.aviso && ativa) L.push({ tipo: /^Pausada/.test(c.aviso) ? "alerta" : "nota", texto: "Última rodada de envio" + (c.aviso_em ? " (" + hora(c.aviso_em) + ")" : "") + ": " + c.aviso });
+    if (c.ignorar_horario && (ativa || c.status === "rascunho")) L.push({ tipo: "alerta", texto: "Liberada para enviar fora do horário" + (c.ignorar_horario_ate ? " até " + hora(c.ignorar_horario_ate) : "") + (c.ignorar_horario_por ? ", por " + c.ignorar_horario_por : "") + "." });
+    if (c.excluir_recentes && (ativa || c.status === "rascunho")) L.push({ tipo: "nota", texto: "Quem recebeu marketing nos últimos dias fica de fora desta campanha." });
+    return L;
+  }
+  /* quem pode receber o teste: só contato com aceite. O escolhido vem primeiro, depois quem tem a etiqueta "teste", depois por nome */
+  function candidatosTeste(contatos, busca, escolhido) {
+    const q = semAcento(busca).trim(), dig = /^[0-9 ()+.-]+$/.test(String(busca || "").trim()) ? String(busca).replace(/\D/g, "") : "";
+    const eTeste = function (c) { return (c.etiquetas || []).some(function (e) { return semAcento(e) === "teste"; }); };
+    return (contatos || []).filter(function (c) {
+      if (!c || !c.optin || c.optout) return false;
+      if (!q) return c.id === escolhido || eTeste(c);
+      return semAcento(c.nome).indexOf(q) > -1 || semAcento(c.username).indexOf(q) > -1 || (dig.length >= 3 && String(c.telefone || "").indexOf(dig) > -1);
+    }).sort(function (a, b) {
+      return (b.id === escolhido) - (a.id === escolhido) || eTeste(b) - eTeste(a) || semAcento(a.nome || "~").localeCompare(semAcento(b.nome || "~"));
+    });
+  }
+  function situacaoTeste(status, erro) {
+    const s = String(status || "");
+    if (s === "lida") return "lido no celular.";
+    if (s === "entregue") return "entregue no celular.";
+    if (s === "falhou") return "falhou. " + motivoFalha(erro).titulo + ".";
+    return "enviado, esperando a entrega.";
+  }
+
   raiz.WaCamp = {
+    nomeCopia: nomeCopia, textoForaDoHorario: textoForaDoHorario, textoReenvio: textoReenvio, notasPainel: notasPainel, candidatosTeste: candidatosTeste, situacaoTeste: situacaoTeste,
     previsao: previsao, travas: travas, resumoTravas: resumoTravas, textoRepetida: textoRepetida,
     pct: pct, dinheiro: dinheiro, custo: custo, codigoDe: codigoDe, motivoFalha: motivoFalha, motivoPulado: motivoPulado, agrupar: agrupar,
     rotuloPublico: rotuloPublico, funil: funil, alertaRepetidas: alertaRepetidas, SIT: SIT, dataBrasilia: dataBrasilia,
