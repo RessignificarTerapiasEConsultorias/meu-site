@@ -191,6 +191,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 .wa-tf-nome{overflow-wrap:anywhere}
 .wa-tf-msg.erro{color:#8C2016}
 .wa-tf-acoes{display:flex;gap:6px;flex-wrap:wrap}
+.wa-item .l3{display:flex;margin-top:5px}
 </style>
 </head>
 <body>
@@ -227,9 +228,11 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
           <div class="wa-filtros" id="cvFiltros" role="group" aria-label="Filtrar conversas">
             <button type="button" class="wa-chip" data-filtro="todas" aria-pressed="true">Todas</button>
             <button type="button" class="wa-chip" data-filtro="nao_lidas" aria-pressed="false">Não lidas<b id="cvNNaoLidas"></b></button>
+            <button type="button" class="wa-chip" data-filtro="sem_resposta" aria-pressed="false" title="Conversas em que a pessoa escreveu e você ainda não respondeu (lidas ou não)">Não respondidas<b id="cvNSemResp"></b></button>
             <button type="button" class="wa-chip" data-filtro="lidas" aria-pressed="false">Lidas</button>
             <button type="button" class="wa-chip" data-filtro="pediu" aria-pressed="false">Pediu atendimento<b id="cvNPediu"></b></button>
           </div>
+          <div class="acoes" id="cvSemRespAcoes" hidden style="margin:0 0 8px"><small class="vazio">Mais antigas primeiro. Só a sua resposta pelo painel tira a conversa daqui (o robô não conta).</small><button type="button" class="btn peq contorno" id="cvLimparSemResp">Marcar todas como respondidas</button></div>
           <div class="wa-lista" id="cvLista"><p class="vazio">Carregando...</p></div>
         </aside>
         <div id="cvThread"><div class="cartao"><p class="vazio">Escolha uma conversa ao lado.</p></div></div>

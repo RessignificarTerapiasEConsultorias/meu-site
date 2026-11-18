@@ -909,7 +909,7 @@
   const ROT_ORIGEM = { whatsapp: "WhatsApp (a pessoa escreveu primeiro)", painel: "Adicionado por você no painel", site: "Inscrição pelo site", anuncio: "Anúncio com botão de WhatsApp" };
   const PAUSAS = [[30, "30 min"], [60, "1 h"], [120, "2 h"], [240, "4 h"], [480, "8 h"], [720, "12 h"], [1440, "24 h"], [0, "Para sempre"]];
   const SEM_PRAZO = "9999-12-31T00:00:00Z";
-  const CAMPOS_LISTA = "id,nome,telefone,username,ultima_msg_em,ultima_msg_texto,nao_lidas,precisa_humano,optout,ultima_entrada_em,prioridade,robo_pausado_ate";
+  const CAMPOS_LISTA = "id,nome,telefone,username,ultima_msg_em,ultima_msg_texto,nao_lidas,precisa_humano,optout,ultima_entrada_em,prioridade,robo_pausado_ate,sem_resposta,sem_resposta_desde";
   const CAMPOS_MSG = "id,direcao,tipo,texto,status,erro,origem,template_nome,criado_em,midia_url,midia_tipo,midia_caminho,midia_mime,midia_nome,midia_id,reacao";
   let filtroCv = "todas";
   let listaCv = [];
@@ -955,7 +955,8 @@
   }
   async function carregarLista() {
     let q = supa().from("wa_contatos").select(CAMPOS_LISTA).not("ultima_msg_em", "is", null).order("ultima_msg_em", { ascending: false }).limit(200);
-    if (filtroCv === "nao_lidas") q = q.gt("nao_lidas", 0);
+    if (filtroCv === "sem_resposta") q = supa().from("wa_contatos").select(CAMPOS_LISTA).eq("sem_resposta", true).order("sem_resposta_desde", { ascending: true }).limit(200);
+    else if (filtroCv === "nao_lidas") q = q.gt("nao_lidas", 0);
     else if (filtroCv === "lidas") q = q.eq("nao_lidas", 0);
     else if (filtroCv === "pediu") q = q.eq("precisa_humano", true);
     const r = await Promise.all([ler(q), contagemCv()]);
@@ -963,11 +964,14 @@
     const n = r[1] || {
       nao_lidas: listaCv.filter(function (c) { return c.nao_lidas > 0; }).length,
       msgs_nao_lidas: listaCv.reduce(function (s, c) { return s + (c.nao_lidas || 0); }, 0),
-      pediu: listaCv.filter(function (c) { return c.precisa_humano; }).length
+      pediu: listaCv.filter(function (c) { return c.precisa_humano; }).length,
+      sem_resposta: listaCv.filter(function (c) { return c.sem_resposta; }).length
     };
     const bd = $("bdNaoLidas"); bd.hidden = !n.msgs_nao_lidas; bd.textContent = n.msgs_nao_lidas;
     $("cvNNaoLidas").textContent = n.nao_lidas ? n.nao_lidas : "";
     $("cvNPediu").textContent = n.pediu ? n.pediu : "";
+    $("cvNSemResp").textContent = n.sem_resposta ? n.sem_resposta : "";
+    $("cvSemRespAcoes").hidden = filtroCv !== "sem_resposta" || !listaCv.length;
     document.title = (n.msgs_nao_lidas ? "(" + n.msgs_nao_lidas + ") " : "") + "WhatsApp | Ressignificar";
     desenharLista();
   }
@@ -975,15 +979,24 @@
     if (filtroCv === "nao_lidas") return c.nao_lidas > 0;
     if (filtroCv === "lidas") return !c.nao_lidas;
     if (filtroCv === "pediu") return !!c.precisa_humano;
+    if (filtroCv === "sem_resposta") return !!c.sem_resposta;
     return true;
   }
+  /* "há 40 min", "há 5 h", "há 3 dias" */
+  function haEspera(iso) {
+    const ms = Math.max(0, Date.now() - new Date(iso).getTime()), min = Math.round(ms / 60000);
+    if (min < 60) return "há " + Math.max(1, min) + " min";
+    if (min < 48 * 60) return "há " + Math.round(min / 60) + " h";
+    return "há " + Math.round(min / 1440) + " dias";
+  }
   function itemCv(c) {
+    const espera = c.sem_resposta && c.sem_resposta_desde ? '<span class="l3"><span class="selo pendente" title="A pessoa escreveu e você ainda não respondeu">Sem resposta ' + esc(haEspera(c.sem_resposta_desde)) + "</span></span>" : "";
     const selos = (c.nao_lidas ? '<span class="selo ouro" title="Mensagens não lidas">' + c.nao_lidas + "</span>" : "") +
       (c.precisa_humano ? '<span class="selo off" title="Pediu atendimento">!</span>' : "") +
       (pausado(c) ? '<span class="selo wa-tag" title="Robô pausado nesta conversa">robô pausado</span>' : "");
     const pri = c.prioridade === "urgente" || c.prioridade === "alta" ? '<i class="wa-pri ' + c.prioridade + '" title="Prioridade ' + c.prioridade + '"></i>' : "";
     return '<button type="button" class="wa-item' + (c.id === conversaId ? " ativa" : "") + '" data-cv="' + c.id + '"><span class="l1"><b>' + pri + esc(nomeDe(c)) + "</b><time>" + esc(horaCurta(c.ultima_msg_em)) +
-      '</time></span><span class="l2"><small>' + esc(c.ultima_msg_texto || "") + "</small>" + selos + "</span></button>";
+      '</time></span><span class="l2"><small>' + esc(c.ultima_msg_texto || "") + "</small>" + selos + "</span>" + espera + "</button>";
   }
   /* pedaço da mensagem em volta do termo buscado, com o termo marcado */
   function trecho(texto, termo) {
@@ -1011,7 +1024,7 @@
       caixa.innerHTML = h || '<p class="vazio">Nada encontrado para "' + esc(busca.termo) + '".</p>';
       return;
     }
-    const vazio = { todas: "Nenhuma conversa ainda. Quando alguém escrever para o número do CRM, aparece aqui.", nao_lidas: "Nenhuma conversa com mensagem não lida.", lidas: "Nenhuma conversa lida.", pediu: "Ninguém está esperando atendimento." }[filtroCv];
+    const vazio = { todas: "Nenhuma conversa ainda. Quando alguém escrever para o número do CRM, aparece aqui.", nao_lidas: "Nenhuma conversa com mensagem não lida.", sem_resposta: "Nenhuma conversa esperando a sua resposta. Tudo em dia!", lidas: "Nenhuma conversa lida.", pediu: "Ninguém está esperando atendimento." }[filtroCv];
     caixa.innerHTML = listaCv.length ? listaCv.map(itemCv).join("") : '<p class="vazio">' + vazio + "</p>";
   }
   function buscar() {
@@ -1033,6 +1046,14 @@
     const b = ev.target.closest("[data-cv]"); if (!b) return;
     conversaId = b.dataset.cv; ancora = b.dataset.msg || null;
     abrirConversa();
+  });
+  $("cvLimparSemResp").addEventListener("click", async function () {
+    const n = listaCv.length;
+    if (!n || !confirm("Marcar " + n + (n === 1 ? " conversa" : " conversas") + " como respondidas?\n\nElas saem de Não respondidas. Se a pessoa escrever de novo, a conversa volta para a lista.")) return;
+    try {
+      await ler(supa().from("wa_contatos").update({ sem_resposta: false, sem_resposta_desde: null }).eq("sem_resposta", true).select("id"));
+      aviso("Pronto: nenhuma conversa esperando resposta."); await carregarLista();
+    } catch (e) { falha(e); }
   });
   $("cvBusca").addEventListener("input", buscar);
   $("cvFiltros").addEventListener("click", function (ev) {
@@ -1125,7 +1146,9 @@
       '<details class="wa-menu" id="cvPausaMenu"><summary class="btn peq contorno">Pausar robô</summary><div class="wa-menu-lista">' +
       PAUSAS.map(function (p) { return '<button type="button" data-pausa="' + p[0] + '">' + p[1] + "</button>"; }).join("") + "</div></details>" +
       (pausado(c) ? '<button type="button" class="btn peq" id="cvRoboVoltar">Voltar a responder</button>' : "") +
-      (c.precisa_humano ? '<span class="selo off">Pediu atendimento</span><button type="button" class="btn peq contorno" id="cvAtendido">Marcar como atendido</button>' : "") + "</div>";
+      (c.precisa_humano ? '<span class="selo off">Pediu atendimento</span>' : "") +
+      (c.sem_resposta && c.sem_resposta_desde ? '<span class="selo pendente" title="A pessoa escreveu e você ainda não respondeu">Esperando sua resposta ' + esc(haEspera(c.sem_resposta_desde)) + "</span>" : "") +
+      (c.precisa_humano || c.sem_resposta ? '<button type="button" class="btn peq contorno" id="cvAtendido" title="Tira a conversa de Não respondidas e de Pediu atendimento sem mandar mensagem">' + (c.precisa_humano ? "Marcar como atendido" : "Não precisa responder") + "</button>" : "") + "</div>";
   }
   function atualizarTopo() { const t = $("cvTopo"); if (t && conversaCont) t.innerHTML = topoHtml(conversaCont); }
   async function salvarContato(campos, msg) {
@@ -1680,7 +1703,7 @@
     const t = ev.target, p = t.closest("[data-pausa]"), em = t.closest("[data-emoji]"), rp = t.closest("[data-rap]"), bx = t.closest("[data-baixar]");
     if (p) return pausar(Number(p.dataset.pausa));
     if (t.closest("#cvRoboVoltar")) return salvarContato({ robo_pausado_ate: null, precisa_humano: false }, "O robô voltou a responder nesta conversa.");
-    if (t.closest("#cvAtendido")) return salvarContato({ precisa_humano: false }, "Marcado como atendido.");
+    if (t.closest("#cvAtendido")) return salvarContato({ precisa_humano: false, sem_resposta: false, sem_resposta_desde: null }, "Marcado como atendido.");
     if (t.closest("#cvFichaBtn")) { fichaAberta = !fichaAberta; mostrarFicha(); return; }
     if (t.closest("#cvTemplate")) return abrirEnvioTemplate(conversaCont);
     if (em) { inserirNoCursor($("cvTexto"), em.dataset.emoji); guardarEmoji(em.dataset.emoji); return; }
