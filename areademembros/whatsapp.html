@@ -229,6 +229,11 @@ dialog#jAutomacao,dialog#jAutPessoas{max-width:900px;width:calc(100% - 16px);max
 .au-passo-topo{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .au-passo-topo b{overflow-wrap:anywhere}
 .au-passo .grade{margin-top:8px}
+.au-passo[draggable=true] .au-passo-topo{cursor:grab}
+.au-passo.au-arrastando{opacity:.45}
+.au-passo.au-alvo{outline:2px dashed var(--accent,#0B4A8F);outline-offset:2px}
+.au-alca{font-weight:700;color:var(--muted,#667);margin-right:4px;user-select:none}
+.au-dias{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px}
 .au-passo textarea{width:100%}
 .au-frase{font-size:13px;color:var(--muted);margin:2px 0 0;overflow-wrap:anywhere}
 .au-prev{margin-top:8px}
@@ -646,7 +651,8 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
     <section data-painel="automacoes" hidden>
       <div class="cartao">
         <div class="empresa-titulo"><h2>Automações</h2><button class="btn peq" type="button" id="auNova">Nova automação</button><button class="btn peq contorno" type="button" id="auAtualizar2">Atualizar</button></div>
-        <p class="ajuda">Uma automação é: <b>quando acontece X</b>, faça Y, espere Z... Toda mensagem automática passa antes pelas travas do CRM: lista de Não enviar, saída da lista, pausa para sempre, horário, frequência e limite diário. O botão de emergência fica no topo da aba Fluxos e o selo vermelho aparece em todas as abas quando ele está ligado.</p>
+        <p class="ajuda">Uma automação é: <b>quando acontece X</b>, faça Y, espere Z... Toda mensagem automática passa antes pelas travas do CRM: lista de Não enviar, saída da lista, pausa para sempre, horário, frequência e limite diário. Quando o botão de emergência está ligado, o selo vermelho aparece em todas as abas.</p>
+        <div class="acoes" style="margin-top:8px"><button class="btn peq perigo" type="button" id="auPausar2">Pausar todas as automações</button><span class="ajuda" id="auEstado2"></span></div>
         <div class="tabela-wrap" style="margin-top:12px"><table class="t"><thead><tr><th>Automação</th><th>Quando começa</th><th>Passos</th><th>Dentro</th><th>Enviadas</th><th>Responderam</th><th>Compraram</th><th>Saíram</th><th>Falhas</th><th></th></tr></thead>
           <tbody id="auLista2"><tr><td colspan="10" class="vazio">Carregando...</td></tr></tbody></table></div>
       </div>
@@ -1080,10 +1086,20 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
       <div id="aeReentrarBox"><label for="aeReentrar">Só volta depois de quantos dias <span class="vazio">(0 = pode voltar já)</span></label><input id="aeReentrar" type="number" min="0" max="365" value="0"></div>
       <div><label for="aeLimite">Limite de pessoas por dia <span class="vazio">(0 = sem limite)</span></label><input id="aeLimite" type="number" min="0" max="5000" value="0"></div>
       <div><label for="aeLink">Link usado nas mensagens <span class="vazio">(use {link} no texto)</span></label><input id="aeLink" type="url" maxlength="300" placeholder="https://..."></div>
+      <div><label for="aeCOrigem">Só quem veio de <span class="vazio">(opcional)</span></label><select id="aeCOrigem"><option value="">Qualquer origem</option></select></div>
     </div>
+    <h3 class="cp-tit" style="margin-top:14px">Horário desta automação <span class="vazio">(opcional)</span></h3>
+    <p class="ajuda">Fora deste horário as mensagens e e-mails desta automação esperam o próximo horário permitido. A resposta imediata a quem acabou de escrever não espera. O horário geral do CRM continua valendo.</p>
+    <div class="grade g3">
+      <div><label for="aeCHoraIni">Começa às (0 a 23)</label><input id="aeCHoraIni" type="number" min="0" max="23" placeholder="ex.: 9"></div>
+      <div><label for="aeCHoraFim">Termina às (1 a 24)</label><input id="aeCHoraFim" type="number" min="1" max="24" placeholder="ex.: 18"></div>
+    </div>
+    <div class="checks au-dias" id="aeCDias" aria-label="Dias da semana"><label><input type="checkbox" value="1" checked> seg</label><label><input type="checkbox" value="2" checked> ter</label><label><input type="checkbox" value="3" checked> qua</label><label><input type="checkbox" value="4" checked> qui</label><label><input type="checkbox" value="5" checked> sex</label><label><input type="checkbox" value="6" checked> sáb</label><label><input type="checkbox" value="0" checked> dom</label></div>
+    <p class="ajuda" id="aeHorarioFrase"></p>
     <div class="checks" style="margin-top:8px"><label><input type="checkbox" id="aeCAceite"> Só quem autorizou receber mensagens</label>
       <label><input type="checkbox" id="aeCNaoComprou"> Só quem ainda não comprou</label>
-      <label><input type="checkbox" id="aeCParar" checked> Parar a sequência se a pessoa responder</label></div>
+      <label><input type="checkbox" id="aeCParar" checked> Parar a sequência se a pessoa responder</label>
+      <label><input type="checkbox" id="aeCAtend" checked> Sair da automação se a pessoa pedir atendimento</label></div>
     <h3 class="cp-tit" style="margin-top:14px">Passos</h3>
     <p class="ajuda" id="aeResumo"></p>
     <div id="aePassos"></div>

@@ -19,7 +19,11 @@
     pedido_pago: { rotulo: "Um pedido é pago", campos: [{ k: "produto", rotulo: "Produto (opcional)", tipo: "produto" }] },
     pedido_abandonado: { rotulo: "Pediu e não pagou (30 min depois)", campos: [{ k: "produto", rotulo: "Produto (opcional)", tipo: "produto" }] },
     sem_resposta: { rotulo: "Você mandou e a pessoa não respondeu há N dias", campos: [{ k: "dias", rotulo: "Dias sem resposta", tipo: "num", padrao: 3 }] },
-    data_hora: { rotulo: "Numa data e hora, para quem tem uma lista ou etiqueta", campos: [{ k: "quando", rotulo: "Data e hora", tipo: "datahora" }, { k: "etiqueta", rotulo: "Lista ou etiqueta de quem entra", tipo: "etiqueta" }] }
+    data_hora: { rotulo: "Numa data e hora, para quem tem uma lista ou etiqueta", campos: [{ k: "quando", rotulo: "Data e hora", tipo: "datahora" }, { k: "etiqueta", rotulo: "Lista ou etiqueta de quem entra", tipo: "etiqueta" }] },
+    sem_resposta_sua: { rotulo: "A pessoa escreveu e você não respondeu há N horas", campos: [{ k: "horas", rotulo: "Horas sem resposta sua", tipo: "num", padrao: 4, max: 720 }] },
+    dias_na_lista: { rotulo: "N dias depois de entrar numa lista ou etiqueta", campos: [{ k: "etiqueta", rotulo: "Lista ou etiqueta", tipo: "etiqueta" }, { k: "dias", rotulo: "Quantos dias depois de entrar", tipo: "num", padrao: 3 }] },
+    inscricao: { rotulo: "A pessoa confirma a inscrição pela página", campos: [{ k: "pagina", rotulo: "Página de inscrição (opcional)", tipo: "pagina" }] },
+    coluna: { rotulo: "O cartão chega numa coluna do funil (qualquer quadro)", campos: [{ k: "coluna", rotulo: "Quadro e coluna", tipo: "coluna" }] }
   };
   /* o que cada passo faz */
   var PASSOS = {
@@ -34,6 +38,7 @@
     pausar_robo: { rotulo: "Pausar o robô", icone: "⏸", padrao: { horas: 24 } },
     parar: { rotulo: "Parar a automação", icone: "■", padrao: { escopo: "esta", motivo: "" } },
     chamar_automacao: { rotulo: "Chamar outra automação", icone: "⇢", padrao: { automacao: "" } },
+    enviar_email: { rotulo: "Enviar e-mail", icone: "@", padrao: { modelo_id: "", assunto: "", corpo: "", tipo: "marketing" } },
     sms: { rotulo: "SMS (em breve)", icone: "✆", padrao: {}, emBreve: true }
   };
   function n(v) { var x = Number(v); return isFinite(x) ? x : 0; }
@@ -60,7 +65,8 @@
     if (t === "enviar_texto") return (c.template_nome ? "Enviar o template " + c.template_nome : "Enviar mensagem") + (c.texto ? ": “" + recorte(c.texto, 70) + "”" : "") + (c.fora_janela === "esperar_resposta" ? " (fora das 24 h, espera a pessoa escrever)" : "");
     if (t === "perguntar_botoes") return "Perguntar “" + recorte(c.texto, 50) + "” com os botões " + (c.botoes || []).join(" / ");
     if (t === "etiquetar") return (c.remover ? "Tirar a etiqueta " : "Colocar a etiqueta ") + (c.etiqueta || "(escolha)");
-    if (t === "mover_funil") return "Mover no funil para " + (ETAPAS[c.etapa] || c.etapa || "(escolha)");
+    if (t === "mover_funil") return "Mover no funil para " + (c.coluna ? (c.coluna_nome || "a coluna escolhida") : (ETAPAS[c.etapa] || c.etapa || "(escolha)"));
+    if (t === "enviar_email") return "Enviar e-mail" + (c.modelo_id ? ": modelo " + (c.modelo_nome || "escolhido") : c.assunto ? ": “" + recorte(c.assunto, 60) + "”" : "") + " (só para quem tem e-mail na ficha)";
     if (t === "prioridade") return "Mudar a prioridade para " + (PRIORIDADES[c.valor] || c.valor || "(escolha)");
     if (t === "pontuacao") return "Ajustar a pontuação (" + (n(c.ajuste) > 0 ? "+" : "") + n(c.ajuste) + ")";
     if (t === "avisar") return "Avisar você" + (c.motivo ? ": " + recorte(c.motivo, 60) : "") + " (a conversa aparece em Não respondidas)";
@@ -76,6 +82,7 @@
       if (t === "esperar") return esperaTexto(c).replace(/;.*$/, "");
       if (t === "enviar_texto") return c.template_nome ? "Template " + c.template_nome : "Mensagem";
       if (t === "perguntar_botoes") return "Pergunta";
+      if (t === "enviar_email") return "E-mail";
       return (PASSOS[t] && PASSOS[t].rotulo) || t;
     }).join(" → ");
   }
@@ -92,6 +99,10 @@
     if (tipo === "pedido_abandonado") return "Pediu e não pagou" + (g.produto ? " (" + (PRODUTOS[g.produto] || g.produto) + ")" : "");
     if (tipo === "sem_resposta") return "Sem resposta há " + plural(n(g.dias) || 3, "dia", "dias");
     if (tipo === "data_hora") return "Em uma data marcada, para quem tem " + q(g.etiqueta || "?");
+    if (tipo === "sem_resposta_sua") return "Escreveu e você não respondeu há " + plural(n(g.horas) || 4, "hora", "horas");
+    if (tipo === "dias_na_lista") return plural(n(g.dias) || 1, "dia", "dias") + " depois de entrar em " + q(String(g.etiqueta || "?").replace(/^lista:/, "lista "));
+    if (tipo === "inscricao") return "Confirmou a inscrição" + (g.pagina_nome ? " em " + q(g.pagina_nome) : " (qualquer página)");
+    if (tipo === "coluna") return "Chegou na coluna " + (g.coluna_nome ? q(g.coluna_nome) : "escolhida");
     return String(tipo || "");
   }
   /* devolve o aviso do que falta, ou "" se o passo está pronto */
@@ -112,7 +123,11 @@
       if (c.ate_hora !== undefined && c.ate_hora !== null && c.ate_hora !== "" && (n(c.ate_hora) < 0 || n(c.ate_hora) > 23)) return "A hora vai de 0 a 23.";
     }
     if (t === "etiquetar" && !String(c.etiqueta || "").trim()) return "Escolha a etiqueta.";
-    if (t === "mover_funil" && !ETAPAS[c.etapa]) return "Escolha a etapa.";
+    if (t === "mover_funil" && !ETAPAS[c.etapa] && !c.coluna) return "Escolha para onde mover.";
+    if (t === "enviar_email") {
+      if (!c.modelo_id && (!String(c.assunto || "").trim() || !String(c.corpo || "").trim())) return "Escolha um modelo de e-mail, ou escreva o assunto e o texto.";
+      if (!c.modelo_id && String(c.assunto || "").length > 150) return "O assunto aceita até 150 letras.";
+    }
     if (t === "prioridade" && !PRIORIDADES[c.valor]) return "Escolha a prioridade.";
     if (t === "pausar_robo" && (n(c.horas) < 1 || n(c.horas) > 720)) return "O robô pode ficar pausado de 1 a 720 horas.";
     if (t === "chamar_automacao" && !c.automacao) return "Escolha qual automação chamar.";
@@ -127,6 +142,9 @@
     if (tipo === "etapa" && !ETAPAS[g.para]) return "Escolha a etapa.";
     if (tipo === "sem_resposta" && n(g.dias) < 1) return "Informe quantos dias.";
     if (tipo === "data_hora" && (!g.quando || !String(g.etiqueta || "").trim())) return "Informe a data e hora e a lista de quem entra.";
+    if (tipo === "sem_resposta_sua" && (n(g.horas) < 1 || n(g.horas) > 720)) return "Informe de 1 a 720 horas.";
+    if (tipo === "dias_na_lista" && (!String(g.etiqueta || "").trim() || n(g.dias) < 1)) return "Escolha a lista e quantos dias depois de entrar.";
+    if (tipo === "coluna" && !g.coluna) return "Escolha o quadro e a coluna.";
     return "";
   }
   /* frase curta para o histórico da pessoa e para a lista de motivos */
@@ -134,11 +152,29 @@
     var m = {
       entrou: "Entrou na automação", enviado: "Recebeu uma mensagem", esperando: "Está esperando", concluida: "Terminou a automação", saiu: "Saiu", parada: "Parou", adiado: "Envio adiado", falhou: "Falhou",
       respondeu: "Respondeu", recusada: "Não entrou", descartado: "Passo descartado (atrasado)", acao: "Ação feita", ignorado: "Passo ignorado", retomada: "Voltou a andar", reenviou: "Recebeu a abertura de novo",
-      etiquetou: "Ganhou etiqueta", "tirou etiqueta": "Perdeu etiqueta", chamou: "Chamou outra automação"
+      etiquetou: "Ganhou etiqueta", email: "Recebeu um e-mail", "tirou etiqueta": "Perdeu etiqueta", chamou: "Chamou outra automação"
     };
     return (m[r] || r || "") + (motivo ? " (" + motivo + ")" : "");
   }
+  var DIAS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+  /* frase do horário próprio da automação: "seg a sex, das 9h às 18h" */
+  function horarioTexto(k) {
+    k = k || {};
+    var temH = k.hora_inicio !== undefined && k.hora_inicio !== null && k.hora_inicio !== "" && k.hora_fim !== undefined && k.hora_fim !== null && k.hora_fim !== "";
+    var ds = Array.isArray(k.dias_semana) ? k.dias_semana.map(Number).filter(function (x) { return x >= 0 && x <= 6; }).sort() : [];
+    if (!temH && (!ds.length || ds.length === 7)) return "";
+    var dt = !ds.length || ds.length === 7 ? "todos os dias" : ds.join() === "1,2,3,4,5" ? "seg a sex" : ds.map(function (x) { return DIAS[x]; }).join(", ");
+    return dt + (temH ? ", das " + n(k.hora_inicio) + "h às " + n(k.hora_fim) + "h" : "");
+  }
+  function validarHorario(k) {
+    k = k || {};
+    var temI = k.hora_inicio !== undefined && k.hora_inicio !== null && k.hora_inicio !== "", temF = k.hora_fim !== undefined && k.hora_fim !== null && k.hora_fim !== "";
+    if (temI !== temF) return "Informe a hora de começo e a de fim (ou deixe as duas vazias).";
+    if (temI && (n(k.hora_inicio) < 0 || n(k.hora_inicio) > 23 || n(k.hora_fim) < 1 || n(k.hora_fim) > 24 || n(k.hora_fim) <= n(k.hora_inicio))) return "O horário vai de 0h a 24h, e o fim precisa ser depois do começo.";
+    if (Array.isArray(k.dias_semana) && !k.dias_semana.length) return "Marque pelo menos um dia da semana.";
+    return "";
+  }
   function taxa(parte, todo) { return n(todo) > 0 ? Math.round(n(parte) / n(todo) * 1000) / 10 : null; }
   raiz.WaAuto = { ETAPAS: ETAPAS, PRIORIDADES: PRIORIDADES, PRODUTOS: PRODUTOS, GATILHOS: GATILHOS, PASSOS: PASSOS, esperaTexto: esperaTexto, passoTexto: passoTexto, resumoAutomacao: resumoAutomacao,
-    gatilhoTexto: gatilhoTexto, validarPasso: validarPasso, validarGatilho: validarGatilho, resultadoTexto: resultadoTexto, taxa: taxa };
+    gatilhoTexto: gatilhoTexto, horarioTexto: horarioTexto, validarHorario: validarHorario, validarPasso: validarPasso, validarGatilho: validarGatilho, resultadoTexto: resultadoTexto, taxa: taxa };
 })(typeof window !== "undefined" ? window : globalThis);

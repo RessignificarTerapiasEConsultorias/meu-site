@@ -3559,8 +3559,8 @@
     const e = await ler(supa().rpc("wa_automacoes_estado"));
     au.pausadas = !!(e && e.pausadas);
     $("auSelo").hidden = !au.pausadas;
-    $("auPausar").textContent = au.pausadas ? "Religar as automações" : "Pausar todas as automações";
-    $("auPausar").classList.toggle("perigo", !au.pausadas);
+    ["auPausar", "auPausar2"].forEach(function (id) { const b = $(id); if (!b) return; b.textContent = au.pausadas ? "Religar as automações" : "Pausar todas as automações"; b.classList.toggle("perigo", !au.pausadas); });
+    if ($("auEstado2")) $("auEstado2").textContent = au.pausadas ? "Pausadas: nada automático é enviado até você religar." : "";
     $("auEstado").textContent = au.pausadas
       ? "Pausadas" + (e.por ? " por " + e.por : "") + (e.pausadas_em ? " em " + horaCurta(e.pausadas_em) : "") + ". Nada automático é enviado até você religar."
       : "Ligadas. " + (Number(e.fluxos_ativos) || 0) + " fluxo(s) ativo(s), " + (Number(e.pessoas_dentro) || 0) + " pessoa(s) dentro agora. Toda mensagem automática passa por um portão único: lista de Não enviar, saída da lista, pausa para sempre, horário, frequência e limite diário.";
@@ -3573,7 +3573,7 @@
     }).catch(function () { $("auMotor").innerHTML = '<li class="vazio">Não consegui carregar as automações.</li>'; });
     $("auMotivos").innerHTML = motivos.length ? "<li><b>Por que algumas mensagens não saíram nos últimos 7 dias</b></li>" + motivos.map(function (m) { return "<li>" + esc(m.motivo) + " <small>· " + Number(m.n) + (Number(m.n) === 1 ? " vez" : " vezes") + "</small></li>"; }).join("") : "";
   }
-  $("auPausar").addEventListener("click", async function () {
+  async function auPausarClique() {
     const pausar = !au.pausadas;
     if (!confirm(pausar ? "Pausar TODAS as automações agora?\n\nNenhuma sequência automática envia até você religar. Campanhas e conversas manuais não mudam." : "Religar as automações?\n\nAs sequências voltam a andar pelas regras normais.")) return;
     try {
@@ -3582,7 +3582,9 @@
       aviso(pausar ? "Automações pausadas. Nada automático será enviado." : "Automações religadas.");
       await auAtualizar();
     } catch (e) { falha(e, e.message); }
-  });
+  }
+  $("auPausar").addEventListener("click", auPausarClique);
+  if ($("auPausar2")) $("auPausar2").addEventListener("click", auPausarClique);
   $("auMotor").addEventListener("click", async function (ev) {
     const b = ev.target.closest("[data-au-motor]"); if (!b) return;
     const ligar = !b.dataset.auAtiva;
@@ -3596,7 +3598,7 @@
   auAtualizar().catch(function () { /* sem login de master ainda: o selo fica escondido */ });
 
   /* ---------- automações (Fase 7): lista, editor, teste, simulação, pessoas dentro e histórico ---------- */
-  const au2 = { lista: [], id: null, passos: [], gatilhoTipo: "etiqueta", g: {}, dentro: 0 };
+  const au2 = { lista: [], id: null, passos: [], gatilhoTipo: "etiqueta", g: {}, dentro: 0, quadros: [], colunas: [], paginas: [], modelos: [] };
   function agendaTexto(c) {
     c = String(c || "").trim(); let m;
     if (c === "* * * * *") return "a cada minuto";
@@ -3712,7 +3714,9 @@
     else if (c.tipo === "etapa" || c.tipo === "etapa_opc") ctl = '<select id="' + id + '">' + aeOpcoes(window.WaAuto.ETAPAS, c.tipo === "etapa" ? "Escolha" : "Qualquer") + "</select>";
     else if (c.tipo === "origem") ctl = '<select id="' + id + '">' + aeOpcoes({ whatsapp: "WhatsApp (escreveu primeiro)", painel: "Painel", site: "Site", anuncio: "Anúncio" }, "Qualquer") + "</select>";
     else if (c.tipo === "produto") ctl = '<select id="' + id + '">' + aeOpcoes(window.WaAuto.PRODUTOS, "Qualquer") + "</select>";
-    else if (c.tipo === "num") ctl = '<input id="' + id + '" type="number" min="1" max="365" value="' + esc(val) + '">';
+    else if (c.tipo === "num") ctl = '<input id="' + id + '" type="number" min="1" max="' + (c.max || 365) + '" value="' + esc(val) + '">';
+    else if (c.tipo === "pagina") ctl = '<select id="' + id + '"><option value="">Qualquer página</option>' + au2.paginas.map(function (pg) { return '<option value="' + esc(pg.id) + '">' + esc(pg.nome || pg.slug || "Página") + (pg.status && pg.status !== "publicada" ? " (" + esc(pg.status) + ")" : "") + "</option>"; }).join("") + "</select>" + (au2.paginas.length ? "" : '<p class="ajuda">Ainda não há página de inscrição. Ela chega com a Fase 9; a automação já fica pronta.</p>');
+    else if (c.tipo === "coluna") ctl = '<select id="' + id + '"><option value="">Escolha</option>' + aeColunasOpcoes(function () { return true; }) + "</select>";
     else if (c.tipo === "datahora") ctl = '<input id="' + id + '" type="datetime-local" value="' + esc(val ? wzLocal(val) : "") + '">';
     else if (c.tipo === "etiqueta") ctl = '<input id="' + id + '" list="auEtiquetas" maxlength="60" value="' + esc(val) + '">';
     else ctl = '<input id="' + id + '" maxlength="120" value="' + esc(val) + '">';
@@ -3721,7 +3725,7 @@
   function desenharGatilhoCampos() {
     const A = window.WaAuto, def = A.GATILHOS[$("aeGatilho").value]; au2.gatilhoTipo = $("aeGatilho").value;
     $("aeGatilhoCampos").innerHTML = def.campos.map(function (c) { return aeCampo(c, au2.g[c.k]); }).join("");
-    def.campos.forEach(function (c) { if (["etapa", "etapa_opc", "origem", "produto"].indexOf(c.tipo) > -1) { const el = $("aeg_" + c.k); if (el) el.value = au2.g[c.k] || ""; } });
+    def.campos.forEach(function (c) { if (["etapa", "etapa_opc", "origem", "produto", "pagina", "coluna"].indexOf(c.tipo) > -1) { const el = $("aeg_" + c.k); if (el) el.value = au2.g[c.k] || ""; } });
   }
   function lerGatilhoEd() {
     const def = window.WaAuto.GATILHOS[$("aeGatilho").value], g = {};
@@ -3733,10 +3737,21 @@
       else v = String(v).trim();
       if (v === "" || (Array.isArray(v) && !v.length)) return;
       g[c.k] = v;
+      if (c.tipo === "pagina" || c.tipo === "coluna") { const op = el.options[el.selectedIndex]; g[c.k + "_nome"] = op ? (op.dataset.nome || op.textContent) : ""; }
     });
     return g;
   }
   $("aeGatilho").addEventListener("change", function () { au2.g = lerGatilhoEd(); au2.g = {}; desenharGatilhoCampos(); });
+  /* colunas de todos os quadros, agrupadas; filtro escolhe quais entram */
+  function aeColunasOpcoes(filtro, atual) {
+    return au2.quadros.map(function (q) {
+      const cols = au2.colunas.filter(function (c) { return c.quadro_id === q.id && filtro(c, q); });
+      if (!cols.length) return "";
+      return '<optgroup label="' + esc(q.nome + (q.principal ? " (funil principal)" : "")) + '">' + cols.map(function (c) {
+        return '<option value="' + esc(c.id) + '" data-nome="' + esc(q.nome + " / " + c.nome) + '"' + (c.id === atual ? " selected" : "") + ">" + esc(c.nome) + "</option>";
+      }).join("") + "</optgroup>";
+    }).join("");
+  }
   function aeFraseGeral() { $("aeResumo").textContent = au2.passos.length ? window.WaAuto.resumoAutomacao(au2.passos) : "Nenhum passo ainda. Adicione abaixo."; }
   function tplOpcoes(atual) { return '<option value="">Sem template (texto livre)</option>' + templates.filter(tplUsavel).map(function (t) { return '<option value="' + esc(t.nome) + '"' + (t.nome === atual ? " selected" : "") + ">" + esc(t.nome) + " (" + esc(ROT_CAT[t.categoria] || "") + ")</option>"; }).join(""); }
   function aeAutoOpcoes(atual) { return '<option value="">Escolha</option>' + au2.lista.filter(function (x) { return x.id !== au2.id; }).map(function (x) { return '<option value="' + x.id + '"' + (x.id === atual ? " selected" : "") + ">" + esc(x.nome) + "</option>"; }).join(""); }
@@ -3781,7 +3796,19 @@
     else if (p.tipo === "esperar") corpo = '<div class="grade g3">' + campo("Dias", num("dias", c.dias, 365)) + campo("Horas", num("horas", c.horas, 999)) + campo("Minutos", num("minutos", c.minutos, 9999)) + campo("Ou esperar até a hora (0 a 23)", num("ate_hora", c.ate_hora, 23)) + "</div>" +
       chk("dias_uteis", "Só contar dias úteis (sábado e domingo passam para segunda)", c.dias_uteis) + chk("ate_resposta", "Parar de esperar se a pessoa responder", c.ate_resposta) + (c.ate_resposta ? campo("Se a pessoa responder durante a espera", sel("se_responder", { seguir: "Seguir para o próximo passo na hora", parar: "Parar a sequência" }, c.se_responder || "seguir")) : "");
     else if (p.tipo === "etiquetar") corpo = '<div class="grade g2">' + campo("Etiqueta", inp("etiqueta", c.etiqueta, 'list="auEtiquetas" maxlength="60"')) + "</div>" + chk("remover", "Tirar a etiqueta (em vez de colocar)", c.remover);
-    else if (p.tipo === "mover_funil") corpo = '<div class="grade g2">' + campo("Mover para a etapa", sel("etapa", A.ETAPAS, c.etapa)) + "</div><p class=\"au-frase\">Quem já é cliente nunca é rebaixado.</p>";
+    else if (p.tipo === "mover_funil") {
+      const atual = c.coluna ? "coluna:" + c.coluna : "etapa:" + (c.etapa || "");
+      const extras = aeColunasOpcoes(function (col, q) { return !q.principal || !col.etapa_ligada; }).replace(/value="([^"]+)"/g, 'value="coluna:$1"');
+      let ops = '<optgroup label="Funil principal (etapa)">' + Object.keys(A.ETAPAS).map(function (k) { return '<option value="etapa:' + k + '">' + esc(A.ETAPAS[k]) + "</option>"; }).join("") + "</optgroup>" + extras;
+      ops = ops.replace('value="' + atual + '"', 'value="' + atual + '" selected');
+      corpo = '<div class="grade g2">' + campo("Mover para", "<select" + I + ' data-k="destino">' + ops + "</select>") + "</div><p class=\"au-frase\">No funil principal, quem já é cliente nunca é rebaixado. Nos outros quadros, o cartão é criado se a pessoa ainda não estiver lá.</p>";
+    }
+    else if (p.tipo === "enviar_email") {
+      const mods = '<option value="">Escrever o e-mail aqui</option>' + au2.modelos.map(function (m) { return '<option value="' + esc(m.id) + '"' + (m.id === c.modelo_id ? " selected" : "") + ">" + esc(m.nome) + " (" + (m.tipo === "transacional" ? "transacional" : "marketing") + ")</option>"; }).join("");
+      corpo = '<div class="grade g2">' + campo("Modelo de e-mail", "<select" + I + ' data-k="modelo_id">' + mods + "</select>") + (c.modelo_id ? "" : campo("Tipo", sel("tipo", { marketing: "Marketing (só quem autorizou e-mail)", transacional: "Transacional (sobre um pedido ou cadastro)" }, c.tipo || "marketing"))) + "</div>" +
+        (c.modelo_id ? "" : '<div class="grade g2">' + campo("Assunto ({primeiro_nome}, {nome})", inp("assunto", c.assunto, 'maxlength="150"')) + "</div>" + campo("Texto do e-mail (**negrito**, [texto](https://link), [[Botão|https://link]])", '<textarea rows="5"' + I + ' data-k="corpo" maxlength="20000">' + esc(c.corpo || "") + "</textarea>")) +
+        '<p class="au-frase">Vai só para quem tem e-mail na ficha. Marketing só para quem autorizou e não saiu da lista. Respeita o horário, o limite diário e o rodapé configurados na aba E-mail. Sem e-mail, o passo é pulado e a sequência segue.</p>';
+    }
     else if (p.tipo === "prioridade") corpo = '<div class="grade g2">' + campo("Prioridade", sel("valor", A.PRIORIDADES, c.valor)) + "</div>";
     else if (p.tipo === "pontuacao") corpo = '<div class="grade g2">' + campo("Somar à pontuação (de -50 a 50)", '<input type="number"' + I + ' data-k="ajuste" min="-50" max="50" value="' + esc(c.ajuste) + '">') + "</div>";
     else if (p.tipo === "avisar") corpo = '<div class="grade g2">' + campo("O que você precisa fazer", inp("motivo", c.motivo, 'maxlength="200"')) + "</div><p class=\"au-frase\">A conversa aparece em Não respondidas e em Pediu atendimento.</p>";
@@ -3790,7 +3817,7 @@
     else if (p.tipo === "chamar_automacao") corpo = '<div class="grade g2">' + campo("Automação chamada", "<select" + I + ' data-k="automacao">' + aeAutoOpcoes(c.automacao) + "</select>") + "</div>";
     else if (p.tipo === "sms") corpo = '<p class="ajuda">O envio de SMS chega em uma fase futura. Por enquanto este passo é pulado.</p>';
     const pr = aePrev(p), custo = aeCustoTexto(p);
-    return '<div class="au-passo" data-passo="' + i + '"><div class="au-passo-topo"><b>' + (i + 1) + ". " + esc(def.icone) + " " + esc(def.rotulo) + '</b><span><button type="button" class="btn peq contorno" data-pa="subir"' + I + (i === 0 ? " disabled" : "") + '>Subir</button> <button type="button" class="btn peq contorno" data-pa="descer"' + I + (i === au2.passos.length - 1 ? " disabled" : "") + '>Descer</button> <button type="button" class="btn peq perigo" data-pa="remover"' + I + ">Tirar</button></span></div>" +
+    return '<div class="au-passo" data-passo="' + i + '"><div class="au-passo-topo"><b><span class="au-alca" draggable="true" data-alca="' + i + '" title="Arraste para mudar a ordem" aria-hidden="true">⋮⋮</span>' + (i + 1) + ". " + esc(def.icone) + " " + esc(def.rotulo) + '</b><span><button type="button" class="btn peq contorno" data-pa="subir"' + I + (i === 0 ? " disabled" : "") + '>Subir</button> <button type="button" class="btn peq contorno" data-pa="descer"' + I + (i === au2.passos.length - 1 ? " disabled" : "") + '>Descer</button> <button type="button" class="btn peq perigo" data-pa="remover"' + I + ">Tirar</button></span></div>" +
       '<p class="au-frase" data-frase="' + i + '">' + esc(A.passoTexto(p)) + "</p>" + corpo + ((p.tipo === "enviar_texto" || p.tipo === "perguntar_botoes") ? '<div class="au-prev"><label>Como a pessoa vê (exemplo)</label><div class="wa-prev" data-prev="' + i + '">' + esc(pr || "Escreva a mensagem para ver a prévia.") + "</div></div>" : "") + (p.tipo === "enviar_texto" ? '<p class="ajuda" data-custo="' + i + '">' + esc(custo) + "</p>" : "") + "</div>";
   }
   function desenharPassos() { $("aePassos").innerHTML = au2.passos.map(aeCard).join(""); aeFraseGeral(); }
@@ -3800,6 +3827,12 @@
     let m;
     if ((m = /^botao([0-2])$/.exec(k))) { c.botoes = c.botoes || ["", ""]; while (c.botoes.length < 3) c.botoes.push(""); c.botoes[Number(m[1])] = v; }
     else if ((m = /^ramo([0-2])_(texto|etiqueta|dias|encerrar)$/.exec(k))) { c.ramos = c.ramos || []; while (c.ramos.length < 3) c.ramos.push({}); const r = c.ramos[Number(m[1])] = c.ramos[Number(m[1])] || {}; if (m[2] === "dias") r.esperar_dias = v === "" ? 0 : v; else r[m[2]] = v; }
+    else if (k === "destino") {
+      const op = el.options[el.selectedIndex];
+      if (/^coluna:/.test(v)) { c.coluna = v.slice(7); c.coluna_nome = op ? (op.dataset.nome || op.textContent) : ""; delete c.etapa; }
+      else { c.etapa = v.replace(/^etapa:/, ""); delete c.coluna; delete c.coluna_nome; }
+    }
+    else if (k === "modelo_id") { c.modelo_id = v; const m = au2.modelos.filter(function (x) { return x.id === v; })[0]; if (m) c.modelo_nome = m.nome; else delete c.modelo_nome; }
     else if (v === "" && ["ate_hora", "dias", "horas", "minutos"].indexOf(k) > -1) delete c[k];
     else c[k] = v;
     const fr = $("aePassos").querySelector('[data-frase="' + i + '"]'); if (fr) fr.textContent = window.WaAuto.passoTexto(p);
@@ -3808,7 +3841,18 @@
     aeFraseGeral();
   }
   $("aePassos").addEventListener("input", function (ev) { if (ev.target.matches("input:not([type=checkbox]), textarea")) aeAplicar(ev.target); });
-  $("aePassos").addEventListener("change", function (ev) { if (ev.target.matches("input[type=checkbox], select")) { aeAplicar(ev.target); if (ev.target.dataset.k === "ate_resposta") desenharPassos(); } });
+  $("aePassos").addEventListener("change", function (ev) { if (ev.target.matches("input[type=checkbox], select")) { aeAplicar(ev.target); if (ev.target.dataset.k === "ate_resposta" || ev.target.dataset.k === "modelo_id") desenharPassos(); } });
+  /* arrastar pela alça ⋮⋮ para mudar a ordem (Subir e Descer continuam valendo) */
+  let aeArrasto = null;
+  $("aePassos").addEventListener("dragstart", function (ev) { const h = ev.target.closest && ev.target.closest("[data-alca]"); if (!h) return; aeArrasto = Number(h.dataset.alca); try { ev.dataTransfer.setData("text/plain", String(aeArrasto)); ev.dataTransfer.effectAllowed = "move"; } catch (e) {} const cd = h.closest(".au-passo"); if (cd) cd.classList.add("au-arrastando"); });
+  $("aePassos").addEventListener("dragover", function (ev) { if (aeArrasto === null) return; const cd = ev.target.closest(".au-passo"); if (!cd) return; ev.preventDefault(); $("aePassos").querySelectorAll(".au-alvo").forEach(function (x) { if (x !== cd) x.classList.remove("au-alvo"); }); cd.classList.add("au-alvo"); });
+  $("aePassos").addEventListener("drop", function (ev) {
+    if (aeArrasto === null) return; const cd = ev.target.closest(".au-passo"); ev.preventDefault();
+    const de = aeArrasto, para = cd ? Number(cd.dataset.passo) : de; aeArrasto = null;
+    if (de !== para && au2.passos[de]) au2.passos.splice(para, 0, au2.passos.splice(de, 1)[0]);
+    desenharPassos();
+  });
+  $("aePassos").addEventListener("dragend", function () { aeArrasto = null; $("aePassos").querySelectorAll(".au-alvo,.au-arrastando").forEach(function (x) { x.classList.remove("au-alvo", "au-arrastando"); }); });
   $("aePassos").addEventListener("click", function (ev) {
     const b = ev.target.closest("[data-pa]"); if (!b) return; const i = Number(b.dataset.i), a = b.dataset.pa;
     if (a === "remover") au2.passos.splice(i, 1);
@@ -3827,6 +3871,16 @@
     const A = window.WaAuto;
     await Promise.all([carregarTemplates().catch(function () {}), contatos.length ? Promise.resolve() : carregarContatos().catch(function () {})]);
     if (!au2.lista.length) { try { au2.lista = (await ler(supa().rpc("wa_automacoes_painel"))) || []; } catch (e) {} }
+    const tenta = async function (q) { try { return (await ler(q)) || []; } catch (e) { return []; } };
+    const extra = await Promise.all([
+      tenta(supa().from("wa_quadros").select("id,nome,principal,ordem,arquivado").eq("arquivado", false).order("ordem")),
+      tenta(supa().from("wa_colunas").select("id,quadro_id,nome,ordem,etapa_ligada").order("ordem")),
+      tenta(supa().from("crm_inscricao_paginas").select("id,nome,slug,status").order("criado_em")),
+      tenta(supa().from("crm_email_modelos").select("id,nome,tipo,arquivado").eq("arquivado", false).order("nome"))]);
+    au2.quadros = extra[0]; au2.colunas = extra[1]; au2.paginas = extra[2]; au2.modelos = extra[3];
+    const origens = Array.from(new Set(["whatsapp", "painel", "site", "inscricao", "anuncio"].concat(contatos.map(function (c) { return c.origem; }).filter(Boolean))));
+    const ROT_ORIG = { whatsapp: "WhatsApp (escreveu primeiro)", painel: "Cadastrado ou importado no painel", site: "Site", inscricao: "Página de inscrição", anuncio: "Anúncio" };
+    $("aeCOrigem").innerHTML = '<option value="">Qualquer origem</option>' + origens.map(function (o) { return '<option value="' + esc(o) + '">' + esc(ROT_ORIG[o] || o) + "</option>"; }).join("");
     const ets = Array.from(new Set(contatos.reduce(function (a, c) { return a.concat(c.etiquetas || []); }, []))).sort();
     $("auEtiquetas").innerHTML = ets.map(function (e) { return '<option value="' + esc(e) + '">'; }).join("");
     $("aeGatilho").innerHTML = aeOpcoes(Object.keys(A.GATILHOS).reduce(function (o, k) { o[k] = A.GATILHOS[k].rotulo; return o; }, {}));
@@ -3839,6 +3893,10 @@
     $("aeNome").value = a.nome || ""; $("aeDesc").value = a.descricao || ""; $("aeGatilho").value = a.gatilho_tipo; au2.g = a.gatilho || {};
     desenharGatilhoCampos();
     $("aeCEtiq").value = k.tem_etiqueta || ""; $("aeCNao").value = k.nao_tem_etiqueta || ""; $("aeCEtapa").value = k.etapa || ""; $("aeCAceite").checked = !!k.aceite_marketing; $("aeCNaoComprou").checked = !!k.nao_comprou; $("aeCParar").checked = !!k.parar_ao_responder;
+    $("aeCOrigem").value = k.origem || ""; $("aeCAtend").checked = id ? !!k.sair_atendimento : true;
+    $("aeCHoraIni").value = k.hora_inicio === undefined || k.hora_inicio === null ? "" : k.hora_inicio; $("aeCHoraFim").value = k.hora_fim === undefined || k.hora_fim === null ? "" : k.hora_fim;
+    $("aeCDias").querySelectorAll("input").forEach(function (x) { x.checked = !Array.isArray(k.dias_semana) || k.dias_semana.map(Number).indexOf(Number(x.value)) > -1; });
+    aeHorarioFrase();
     $("aeModo").value = a.modo_entrada || "reentrar"; $("aeReentrar").value = a.reentrar_dias || 0; $("aeReentrarBox").hidden = $("aeModo").value === "uma_vez"; $("aeLimite").value = a.limite_dia || 0; $("aeLink").value = a.link || "";
     au2.passos = d ? d.passos.map(function (p) {
       const cf = JSON.parse(JSON.stringify(p.config || {}));
@@ -3855,7 +3913,9 @@
     const tipo = $("aeGatilho").value, g = lerGatilhoEd(), eg = A.validarGatilho(tipo, g); if (eg) return mostrar(eg);
     for (let i = 0; i < au2.passos.length; i++) { const ep = A.validarPasso(au2.passos[i]); if (ep) return mostrar("Passo " + (i + 1) + ": " + ep); }
     const dados = { nome: nome, descricao: $("aeDesc").value.trim(), gatilho_tipo: tipo, gatilho: g, modo_entrada: $("aeModo").value, reentrar_dias: Number($("aeReentrar").value) || 0, limite_dia: Number($("aeLimite").value) || 0, link: $("aeLink").value.trim(),
-      condicoes: { tem_etiqueta: $("aeCEtiq").value.trim() || undefined, nao_tem_etiqueta: $("aeCNao").value.trim() || undefined, etapa: $("aeCEtapa").value || undefined, aceite_marketing: $("aeCAceite").checked || undefined, nao_comprou: $("aeCNaoComprou").checked || undefined, parar_ao_responder: $("aeCParar").checked || undefined } };
+      condicoes: Object.assign({ tem_etiqueta: $("aeCEtiq").value.trim() || undefined, nao_tem_etiqueta: $("aeCNao").value.trim() || undefined, etapa: $("aeCEtapa").value || undefined, aceite_marketing: $("aeCAceite").checked || undefined, nao_comprou: $("aeCNaoComprou").checked || undefined, parar_ao_responder: $("aeCParar").checked || undefined,
+        origem: $("aeCOrigem").value || undefined, sair_atendimento: $("aeCAtend").checked || undefined }, aeLerHorario()) };
+    const eh = A.validarHorario(dados.condicoes); if (eh) return mostrar(eh);
     try {
       const r = await ler(supa().rpc("wa_automacao_salvar", { p_id: au2.id, p_dados: dados, p_passos: au2.passos.map(function (p) { return { tipo: p.tipo, config: aeLimpaConfig(p) }; }) }));
       if (!r || !r.ok) return mostrar((r && r.erro) || "Não consegui salvar.");
@@ -3863,6 +3923,16 @@
       await telaAutomacoes();
     } catch (e) { falha(e, e.message); }
   });
+
+  /* horário próprio da automação (condições) */
+  function aeLerHorario() {
+    const i = $("aeCHoraIni").value, f = $("aeCHoraFim").value;
+    const dias = Array.from($("aeCDias").querySelectorAll("input:checked")).map(function (x) { return Number(x.value); });
+    return { hora_inicio: i === "" ? undefined : Number(i), hora_fim: f === "" ? undefined : Number(f), dias_semana: dias.length === 7 ? undefined : dias };
+  }
+  function aeHorarioFrase() { const t = window.WaAuto.horarioTexto(aeLerHorario()); $("aeHorarioFrase").textContent = t ? "Envia só " + t + " (horário de Brasília)." : "Sem horário próprio: vale o horário geral de envio do CRM."; }
+  ["aeCHoraIni", "aeCHoraFim"].forEach(function (id) { $(id).addEventListener("input", aeHorarioFrase); });
+  $("aeCDias").addEventListener("change", aeHorarioFrase);
 
   /* antes de salvar: tira botões vazios do fim e guarda só os ramos dos botões que existem */
   function aeLimpaConfig(p) {
