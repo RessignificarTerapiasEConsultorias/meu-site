@@ -467,5 +467,62 @@
     finally { em.ocupado = false; $("emEEnviar").disabled = false; }
   });
 
+  /* ---------- importar e-mails de uma planilha (item 8.1): conferir antes, gravar depois ---------- */
+  const imp = { itens: null, leitura: null, conferido: null, chave: "" };
+  const ROT_IMP = [
+    ["vinculados", "vão ser ligados a contatos que já existem"], ["novos", "viram contatos novos"], ["autorizados", "já tinham este e-mail e passam a ter autorização"],
+    ["ja_tinha", "já estavam assim no CRM (nada muda)"], ["conflitos", "o contato já tem outro e-mail: não troco (confira na ficha)"], ["em_outro", "o e-mail já é de outro contato: não duplico"],
+    ["sem_contato", "não estão no CRM"], ["invalidos", "e-mail com erro: ficam de fora"], ["repetidos", "repetidos na planilha: contam uma vez"],
+    ["saiu_sem_autorizar", "pediram para sair dos e-mails: entram sem autorização"]];
+  function impOpcoes() { return { aut: $("emImpAut").checked, criar: $("emImpCriar").checked, origem: $("emImpOrigem").value.trim() || ($("emImpArq").files[0] ? $("emImpArq").files[0].name : "planilha") }; }
+  function impLimpar() { imp.conferido = null; $("emImpGravar").hidden = true; }
+  ["emImpAut", "emImpCriar", "emImpOrigem"].forEach(function (id) { $(id).addEventListener("change", function () { if (imp.conferido) { impLimpar(); $("emImpRes").innerHTML = '<p class="ajuda">Você mudou uma opção: confira de novo.</p>'; } }); });
+  $("emImpArq").addEventListener("change", function () { imp.itens = null; impLimpar(); $("emImpRes").innerHTML = ""; });
+  function impDesenhar(r, gravado) {
+    const n = r.numeros || {}, ex = r.exemplos || {}, o = impOpcoes();
+    const linhas = ROT_IMP.filter(function (x) { return n[x[0]]; }).map(function (x) {
+      let rot = x[1];
+      if (x[0] === "sem_contato") rot = o.criar ? "não estão no CRM e não têm WhatsApp na planilha: ficam de fora" : "não estão no CRM: ficam de fora (marque \"Criar contato\" para incluir quem tem WhatsApp)";
+      const lista = (ex[x[0]] || []).map(function (e) { return esc(e.email) + (e.nome ? " (" + esc(e.nome) + ")" : "") + (e.atual ? " · já tem " + esc(e.atual) : ""); });
+      return "<li><b>" + Number(n[x[0]]) + "</b> " + esc(rot) + (lista.length ? '<br><small class="vazio">' + lista.join(" · ") + (Number(n[x[0]]) > lista.length ? " …" : "") + "</small>" : "") + "</li>";
+    }).join("");
+    const L = imp.leitura || {};
+    const cab = '<p class="ajuda">' + (gravado ? "<b>Gravado.</b> " : "") + "Linhas lidas: " + (L.lidas || 0) + (L.semEmail ? " (" + L.semEmail + " sem e-mail)" : "") + ". Colunas achadas: e-mail" + (L.colunas && L.colunas.fone > -1 ? ", WhatsApp" : "") + (L.colunas && L.colunas.nome > -1 ? ", nome" : "") + ". " +
+      (o.aut ? "Quem entrar fica <b>autorizado para marketing</b> (origem: " + esc(o.origem) + ")." : "Quem entrar fica <b>só transacional</b>.") + "</p>";
+    $("emImpRes").innerHTML = cab + '<ul class="em-lista">' + (linhas || '<li class="vazio">Nada para importar.</li>') + "</ul>";
+  }
+  $("emImpConferir").addEventListener("click", async function () {
+    const f = $("emImpArq").files[0]; if (!f) return aviso("Escolha a planilha.", true);
+    const b = this; b.disabled = true; b.textContent = "Conferindo...";
+    try {
+      const W = window.WaLista; if (!W || !W.processarEmails) throw new Error("Leitor de planilhas indisponível. Recarregue a página.");
+      const leitura = W.processarEmails(await W.linhasDoArquivo(f), { ddd: $("emImpDdd").value.trim() });
+      if (leitura.erro) { $("emImpRes").innerHTML = '<p class="aviso">' + esc(leitura.erro) + "</p>"; impLimpar(); return; }
+      if (leitura.itens.length > 5000) throw new Error("A planilha tem " + leitura.itens.length + " e-mails. Importe no máximo 5000 por vez (divida o arquivo).");
+      imp.itens = leitura.itens; imp.leitura = leitura;
+      const o = impOpcoes();
+      const r = await rpc("crm_email_importar", { p_itens: imp.itens, p_autorizou: o.aut, p_origem: o.origem, p_criar: o.criar, p_gravar: false });
+      if (!r || !r.ok) throw new Error((r && r.erro) || "Não consegui conferir.");
+      imp.conferido = r; impDesenhar(r, false);
+      const muda = ["vinculados", "novos", "autorizados"].reduce(function (s, k) { return s + Number((r.numeros || {})[k] || 0); }, 0);
+      $("emImpGravar").hidden = !muda; $("emImpGravar").textContent = "Gravar " + muda + (muda === 1 ? " e-mail" : " e-mails");
+    } catch (e) { falha(e, e.message); impLimpar(); }
+    finally { b.disabled = false; b.textContent = "Conferir a planilha"; }
+  });
+  $("emImpGravar").addEventListener("click", async function () {
+    if (!imp.conferido || !imp.itens) return;
+    const o = impOpcoes(), n = imp.conferido.numeros || {};
+    if (!confirm("Gravar agora?\n\n" + (n.vinculados || 0) + " ligados a contatos existentes, " + (n.novos || 0) + " contatos novos, " + (n.autorizados || 0) + " passam a ter autorização.\n\n" +
+      (o.aut ? "Eles ficam AUTORIZADOS para e-mail de marketing. Confirme que estas pessoas deram essa autorização." : "Eles ficam como só transacional (sem e-mail de novidades)."))) return;
+    const b = this; b.disabled = true;
+    try {
+      const r = await rpc("crm_email_importar", { p_itens: imp.itens, p_autorizou: o.aut, p_origem: o.origem, p_criar: o.criar, p_gravar: true });
+      if (!r || !r.ok) throw new Error((r && r.erro) || "Não consegui gravar.");
+      impDesenhar(r, true); impLimpar(); imp.itens = null; $("emImpArq").value = "";
+      aviso("E-mails importados."); P.recarregarVisao().catch(function () {});
+    } catch (e) { falha(e, e.message); }
+    finally { b.disabled = false; }
+  });
+
   window.WaEmailTela = { visao: visao, enviarPara: enviarPara, enviarPedido: enviarPedido };
 })();

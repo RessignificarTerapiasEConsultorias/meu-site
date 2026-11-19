@@ -683,6 +683,21 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
           <p class="ajuda">O e-mail tem a sua própria autorização, separada da do WhatsApp. Quem pede para sair não recebe mais novidades.</p>
           <div class="vd-indic" id="emIndic" style="margin-top:12px"><p class="vazio">Carregando...</p></div>
           <div class="vd-bloco" style="margin-top:12px"><h3 class="cp-tit">Saúde dos envios (30 dias)</h3><p id="emSaude" class="ajuda">Carregando...</p></div>
+          <div class="vd-bloco" id="emImpBox" style="margin-top:12px"><h3 class="cp-tit">Importar e-mails de uma planilha</h3>
+            <p class="ajuda">Excel, CSV ou TXT. O CRM acha sozinho as colunas de e-mail, WhatsApp e nome. Cada e-mail é ligado ao contato pelo WhatsApp (ou pelo próprio e-mail). O e-mail que a pessoa já tem nunca é trocado. Nada é gravado antes de você ver a conferência.</p>
+            <div class="em-cfg">
+              <div><label for="emImpArq">Planilha</label><input id="emImpArq" type="file" accept=".xlsx,.xls,.xlsm,.ods,.csv,.txt" style="max-width:100%;min-width:0;width:100%"></div>
+              <div><label for="emImpOrigem">De onde veio esta lista</label><input id="emImpOrigem" maxlength="60" placeholder="ex.: inscritos da aula de dezembro"></div>
+              <div><label for="emImpDdd">DDD para números sem DDD <span class="vazio">(opcional)</span></label><input id="emImpDdd" inputmode="numeric" maxlength="2" placeholder="81" style="max-width:90px"></div>
+            </div>
+            <div class="checks" style="margin-top:8px">
+              <label><input type="checkbox" id="emImpAut"> Estas pessoas autorizaram receber e-mails de novidades (marketing)</label>
+              <label><input type="checkbox" id="emImpCriar"> Criar contato para quem ainda não está no CRM (só quem tem WhatsApp na planilha)</label>
+            </div>
+            <p class="ajuda">Sem a autorização marcada, o e-mail fica como <b>só transacional</b> (pedido, cadastro). Quem já pediu para sair dos e-mails nunca é autorizado de novo por uma planilha.</p>
+            <div class="acoes"><button class="btn peq" type="button" id="emImpConferir">Conferir a planilha</button><button class="btn peq" type="button" id="emImpGravar" hidden>Gravar</button></div>
+            <div id="emImpRes" aria-live="polite"></div>
+          </div>
           <div class="vd-bloco" id="emLojaBox" style="margin-top:12px" hidden><h3 class="cp-tit">E-mails de quem comprou</h3><p class="ajuda" id="emLojaTxt"></p><div class="acoes"><button class="btn peq" type="button" id="emLojaAplicar">Guardar como só transacional</button></div></div>
         <div class="vd-bloco" id="emDupBox" style="margin-top:12px" hidden><h3 class="cp-tit">Mesmo e-mail em mais de um contato</h3><p class="ajuda">O CRM não junta pessoas sozinho. Confira se é a mesma pessoa cadastrada duas vezes. Um envio conta uma vez por endereço.</p><ul class="wa-fn-ativ" id="emDup" style="overflow-wrap:anywhere"></ul></div>
         </div>
@@ -1241,15 +1256,15 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
-<script src="js/whatsapp-tpl.js?v=20261119c"></script>
-<script src="js/whatsapp-lista.js?v=20261119c"></script>
-<script src="js/whatsapp-video.js?v=20261119c"></script>
-<script src="js/whatsapp-camp.js?v=20261119c"></script>
-<script src="js/whatsapp-funil.js?v=20261119c"></script>
-<script src="js/whatsapp-vendas.js?v=20261119c"></script>
-<script src="js/whatsapp-email.js?v=20261119c"></script>
-<script src="js/whatsapp-auto.js?v=20261119c"></script>
-<script src="js/whatsapp.js?v=20261119c"></script>
-<script src="js/whatsapp-email-tela.js?v=20261119c"></script>
+<script src="js/whatsapp-tpl.js?v=20261119d"></script>
+<script src="js/whatsapp-lista.js?v=20261119d"></script>
+<script src="js/whatsapp-video.js?v=20261119d"></script>
+<script src="js/whatsapp-camp.js?v=20261119d"></script>
+<script src="js/whatsapp-funil.js?v=20261119d"></script>
+<script src="js/whatsapp-vendas.js?v=20261119d"></script>
+<script src="js/whatsapp-email.js?v=20261119d"></script>
+<script src="js/whatsapp-auto.js?v=20261119d"></script>
+<script src="js/whatsapp.js?v=20261119d"></script>
+<script src="js/whatsapp-email-tela.js?v=20261119d"></script>
 </body>
 </html>

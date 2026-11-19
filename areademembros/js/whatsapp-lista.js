@@ -205,6 +205,38 @@
     };
   }
 
+  /* ---------- e-mails (Fase 8): acha as colunas de e-mail, WhatsApp e nome ---------- */
+  const RE_EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/;
+  function emailDaCelula(v) { const m = RE_EMAIL.exec(textoDaCelula(v)); return m ? m[0].toLowerCase() : ""; }
+  /* linhas: matriz da planilha. Devolve { itens:[{email,nome,fone}], lidas, semEmail, colunas:{email,fone,nome}, cabecalho } */
+  function processarEmails(linhas, opcoes) {
+    opcoes = opcoes || {};
+    const rows = (linhas || []).filter(function (l) { return Array.isArray(l) && l.some(function (c) { return textoDaCelula(c); }); });
+    const largura = rows.reduce(function (m, l) { return Math.max(m, l.length); }, 0);
+    const conta = function (fn) { const out = []; for (let j = 0; j < largura; j++) out.push(rows.reduce(function (n, l) { return n + (fn(l[j]) ? 1 : 0); }, 0)); return out; };
+    const nEmail = conta(function (c) { return !!emailDaCelula(c); });
+    let colEmail = -1; nEmail.forEach(function (n, j) { if (n > 0 && (colEmail < 0 || n > nEmail[colEmail])) colEmail = j; });
+    if (colEmail < 0) return { itens: [], lidas: rows.length, semEmail: rows.length, colunas: {}, cabecalho: false, erro: "Não achei nenhuma coluna com e-mail nesta planilha." };
+    const cab = rows.length && !emailDaCelula(rows[0][colEmail]) && rows[0].some(function (c) { return temLetra(textoDaCelula(c)); }) ? rows[0].map(function (c) { return semAcentoMin(textoDaCelula(c)); }) : null;
+    const corpo = cab ? rows.slice(1) : rows;
+    const nFone = conta(function (c) { return qtdDigitos(textoDaCelula(c)) >= 8 && primeiroFoneValido(textoDaCelula(c), opcoes.ddd).ok; });
+    let colFone = -1; nFone.forEach(function (n, j) { if (j !== colEmail && n > 0 && (colFone < 0 || n > nFone[colFone])) colFone = j; });
+    if (cab) cab.forEach(function (h, j) { if (j !== colEmail && /(whats|celular|telefone|fone|contato)/.test(h) && nFone[j] > 0) colFone = j; });
+    let colNome = -1;
+    if (cab) cab.forEach(function (h, j) { if (colNome < 0 && j !== colEmail && j !== colFone && /(^|\s)(nome|name|cliente|aluno|paciente)/.test(h)) colNome = j; });
+    if (colNome < 0) { const nNome = conta(function (c) { return qtdLetras(textoDaCelula(c)) >= 3 && !emailDaCelula(c) && qtdDigitos(textoDaCelula(c)) < 4; }); nNome.forEach(function (n, j) { if (j !== colEmail && j !== colFone && n > 0 && (colNome < 0 || n > nNome[colNome])) colNome = j; }); }
+    const itens = []; let semEmail = 0;
+    corpo.forEach(function (l) {
+      const bruto = textoDaCelula(l[colEmail]);
+      if (!bruto) { semEmail++; return; }
+      const email = emailDaCelula(bruto) || bruto.slice(0, 120);
+      const f = colFone > -1 ? primeiroFoneValido(textoDaCelula(l[colFone]), opcoes.ddd) : { ok: false };
+      itens.push({ email: email, nome: colNome > -1 ? limparNome(l[colNome]) : "", fone: f.ok ? f.fone : "" });
+    });
+    return { itens: itens, lidas: corpo.length, semEmail: semEmail, colunas: { email: colEmail, fone: colFone, nome: colNome }, cabecalho: !!cab };
+  }
+  function semAcentoMin(t) { return String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+
   /* ---------- leitura de arquivos (só no navegador) ---------- */
   const URL_XLSX = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
   const URL_PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
@@ -275,6 +307,6 @@
     throw new Error("Formato não aceito (\"." + ext + "\"). Envie Excel (.xlsx, .xls), CSV ou PDF.");
   }
 
-  raiz.WaLista = { analisarFone: analisarFone, processarLinhas: processarLinhas, chaveFone: chaveFone, juntarResultados: juntarResultados, limparNome: limparNome, linhasDoArquivo: linhasDoArquivo };
+  raiz.WaLista = { processarEmails: processarEmails, analisarFone: analisarFone, processarLinhas: processarLinhas, chaveFone: chaveFone, juntarResultados: juntarResultados, limparNome: limparNome, linhasDoArquivo: linhasDoArquivo };
   if (typeof module !== "undefined" && module.exports) module.exports = raiz.WaLista;
 })(typeof window !== "undefined" ? window : globalThis);
