@@ -24,7 +24,7 @@
   /* o que cada passo faz */
   var PASSOS = {
     enviar_texto: { rotulo: "Enviar mensagem", icone: "✉", padrao: { texto: "", incluir_link: false, fora_janela: "parar", tipo_envio: "seguimento" } },
-    perguntar_botoes: { rotulo: "Perguntar com botões", icone: "?", padrao: { texto: "", botoes: ["Sim", "Não"], sim: { texto: "", etiqueta: "" }, nao: { texto: "" } } },
+    perguntar_botoes: { rotulo: "Perguntar com botões", icone: "?", padrao: { texto: "", botoes: ["Sim", "Não"], ramos: [{ texto: "", etiqueta: "", encerrar: true }, { texto: "", etiqueta: "", encerrar: false }] } },
     esperar: { rotulo: "Esperar", icone: "⏱", padrao: { dias: 1, horas: 0, minutos: 0 } },
     etiquetar: { rotulo: "Etiqueta", icone: "🏷", padrao: { etiqueta: "", remover: false } },
     mover_funil: { rotulo: "Mover no funil", icone: "↦", padrao: { etapa: "interessado" } },
@@ -100,8 +100,11 @@
     if (t === "enviar_texto" && !String(c.texto || "").trim() && !c.template_nome) return "Escreva o texto da mensagem ou escolha um template.";
     if (t === "perguntar_botoes") {
       if (!String(c.texto || "").trim()) return "Escreva a pergunta.";
-      if (!(c.botoes || []).length || (c.botoes || []).some(function (b) { return !String(b || "").trim(); })) return "Escreva o texto dos dois botões.";
-      if ((c.botoes || []).some(function (b) { return String(b).length > 20; })) return "Cada botão aceita até 20 letras.";
+      var bs = (c.botoes || []).map(function (b) { return String(b || "").trim(); });
+      while (bs.length && !bs[bs.length - 1]) bs.pop();
+      if (bs.length < 2 || bs.some(function (b) { return !b; })) return "Escreva o texto de pelo menos dois botões (sem deixar um vazio no meio).";
+      if (bs.some(function (b) { return b.length > 20; })) return "Cada botão aceita até 20 letras.";
+      if (new Set(bs.map(function (b) { return b.toLowerCase(); })).size !== bs.length) return "Os botões precisam ter textos diferentes.";
     }
     if (t === "esperar") {
       var vazio = !n(c.dias) && !n(c.horas) && !n(c.minutos) && (c.ate_hora === undefined || c.ate_hora === null || c.ate_hora === "");

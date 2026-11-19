@@ -3719,9 +3719,16 @@
     if (p.tipo === "enviar_texto") corpo = '<div class="grade g2">' + campo("Texto da mensagem ({primeiro_nome}, {nome}, {link})", '<textarea rows="3"' + I + ' data-k="texto" maxlength="1000">' + esc(c.texto || "") + "</textarea>") +
       campo("Template (para quando passar de 24 h)", "<select" + I + ' data-k="template_nome">' + tplOpcoes(c.template_nome) + "</select>") + campo("Se passar de 24 h e não houver template", sel("fora_janela", { parar: "Parar a automação", esperar_resposta: "Esperar a pessoa escrever" }, c.fora_janela || "parar")) +
       campo("Etiqueta ao enviar (opcional)", inp("etiqueta", c.etiqueta, 'list="auEtiquetas"')) + "</div>" + chk("incluir_link", "Colocar o link no fim da mensagem", c.incluir_link);
-    else if (p.tipo === "perguntar_botoes") corpo = '<div class="grade g2">' + campo("Pergunta", '<textarea rows="2"' + I + ' data-k="texto" maxlength="1000">' + esc(c.texto || "") + "</textarea>") +
-      campo("Botão 1 (até 20 letras)", inp("botao0", (c.botoes || [])[0], 'maxlength="20"')) + campo("Botão 2 (até 20 letras)", inp("botao1", (c.botoes || [])[1], 'maxlength="20"')) +
-      campo("Se tocar no botão 1: responder", inp("sim_texto", (c.sim || {}).texto)) + campo("Se tocar no botão 1: etiqueta", inp("sim_etiqueta", (c.sim || {}).etiqueta, 'list="auEtiquetas"')) + campo("Se tocar no botão 2: responder", inp("nao_texto", (c.nao || {}).texto)) + "</div>";
+    else if (p.tipo === "perguntar_botoes") {
+      const bots = c.botoes || [], ramos = c.ramos || [];
+      corpo = '<div>' + campo("Pergunta", '<textarea rows="2"' + I + ' data-k="texto" maxlength="1000">' + esc(c.texto || "") + "</textarea>") + "</div>";
+      for (let b = 0; b < 3; b++) {
+        const r = ramos[b] || {};
+        corpo += '<div class="grade g2" style="margin-top:8px">' + campo("Botão " + (b + 1) + (b === 2 ? " (opcional, até 20 letras)" : " (até 20 letras)"), inp("botao" + b, bots[b], 'maxlength="20"')) +
+          campo("Se tocar no botão " + (b + 1) + ": responder", inp("ramo" + b + "_texto", r.texto, 'maxlength="500"')) + campo("Se tocar: colocar a etiqueta", inp("ramo" + b + "_etiqueta", r.etiqueta, 'list="auEtiquetas" maxlength="60"')) +
+          campo("Se tocar: esperar quantos dias antes do próximo passo", num("ramo" + b + "_dias", r.esperar_dias, 365)) + "</div>" + chk("ramo" + b + "_encerrar", "Se tocar no botão " + (b + 1) + ", encerrar a sequência", r.encerrar);
+      }
+    }
     else if (p.tipo === "esperar") corpo = '<div class="grade g3">' + campo("Dias", num("dias", c.dias, 365)) + campo("Horas", num("horas", c.horas, 999)) + campo("Minutos", num("minutos", c.minutos, 9999)) + campo("Ou esperar até a hora (0 a 23)", num("ate_hora", c.ate_hora, 23)) + "</div>" +
       chk("dias_uteis", "Só contar dias úteis (sábado e domingo passam para segunda)", c.dias_uteis) + chk("ate_resposta", "Parar de esperar se a pessoa responder", c.ate_resposta) + (c.ate_resposta ? campo("Se a pessoa responder durante a espera", sel("se_responder", { seguir: "Seguir para o próximo passo na hora", parar: "Parar a sequência" }, c.se_responder || "seguir")) : "");
     else if (p.tipo === "etiquetar") corpo = '<div class="grade g2">' + campo("Etiqueta", inp("etiqueta", c.etiqueta, 'list="auEtiquetas" maxlength="60"')) + "</div>" + chk("remover", "Tirar a etiqueta (em vez de colocar)", c.remover);
@@ -3741,9 +3748,9 @@
   function aeAplicar(el) {
     const i = Number(el.dataset.i), k = el.dataset.k, p = au2.passos[i]; if (!p || !k) return;
     const c = p.config = p.config || {}, v = el.type === "checkbox" ? el.checked : el.type === "number" ? (el.value === "" ? "" : Number(el.value)) : el.value;
-    if (k === "botao0" || k === "botao1") { c.botoes = c.botoes || ["", ""]; c.botoes[k === "botao0" ? 0 : 1] = v; }
-    else if (k === "sim_texto" || k === "sim_etiqueta") { c.sim = c.sim || {}; c.sim[k === "sim_texto" ? "texto" : "etiqueta"] = v; }
-    else if (k === "nao_texto") { c.nao = c.nao || {}; c.nao.texto = v; }
+    let m;
+    if ((m = /^botao([0-2])$/.exec(k))) { c.botoes = c.botoes || ["", ""]; while (c.botoes.length < 3) c.botoes.push(""); c.botoes[Number(m[1])] = v; }
+    else if ((m = /^ramo([0-2])_(texto|etiqueta|dias|encerrar)$/.exec(k))) { c.ramos = c.ramos || []; while (c.ramos.length < 3) c.ramos.push({}); const r = c.ramos[Number(m[1])] = c.ramos[Number(m[1])] || {}; if (m[2] === "dias") r.esperar_dias = v === "" ? 0 : v; else r[m[2]] = v; }
     else if (v === "" && ["ate_hora", "dias", "horas", "minutos"].indexOf(k) > -1) delete c[k];
     else c[k] = v;
     const fr = $("aePassos").querySelector('[data-frase="' + i + '"]'); if (fr) fr.textContent = window.WaAuto.passoTexto(p);
@@ -3784,7 +3791,11 @@
     desenharGatilhoCampos();
     $("aeCEtiq").value = k.tem_etiqueta || ""; $("aeCNao").value = k.nao_tem_etiqueta || ""; $("aeCEtapa").value = k.etapa || ""; $("aeCAceite").checked = !!k.aceite_marketing; $("aeCNaoComprou").checked = !!k.nao_comprou; $("aeCParar").checked = !!k.parar_ao_responder;
     $("aeModo").value = a.modo_entrada || "reentrar"; $("aeReentrar").value = a.reentrar_dias || 0; $("aeReentrarBox").hidden = $("aeModo").value === "uma_vez"; $("aeLimite").value = a.limite_dia || 0; $("aeLink").value = a.link || "";
-    au2.passos = d ? d.passos.map(function (p) { return { tipo: p.tipo, config: p.config || {} }; }) : []; au2.dentro = d ? Number(d.dentro) : 0;
+    au2.passos = d ? d.passos.map(function (p) {
+      const cf = JSON.parse(JSON.stringify(p.config || {}));
+      if (p.tipo === "perguntar_botoes" && !Array.isArray(cf.ramos)) { cf.ramos = [{ texto: (cf.sim || {}).texto || "", etiqueta: (cf.sim || {}).etiqueta || "", encerrar: true }, { texto: (cf.nao || {}).texto || "", etiqueta: "", encerrar: false }]; delete cf.sim; delete cf.nao; }
+      return { tipo: p.tipo, config: cf };
+    }) : []; au2.dentro = d ? Number(d.dentro) : 0;
     desenharPassos();
     const er = $("aeErro"); er.hidden = !au2.dentro; er.textContent = au2.dentro ? au2.dentro + " pessoa(s) estão dentro desta automação. Dá para mudar nome, gatilho e condições, mas os passos só podem mudar quando ninguém estiver dentro (tire as pessoas em Pessoas)." : "";
     if (!$("jAutomacao").open) $("jAutomacao").showModal();
@@ -3797,13 +3808,23 @@
     const dados = { nome: nome, descricao: $("aeDesc").value.trim(), gatilho_tipo: tipo, gatilho: g, modo_entrada: $("aeModo").value, reentrar_dias: Number($("aeReentrar").value) || 0, limite_dia: Number($("aeLimite").value) || 0, link: $("aeLink").value.trim(),
       condicoes: { tem_etiqueta: $("aeCEtiq").value.trim() || undefined, nao_tem_etiqueta: $("aeCNao").value.trim() || undefined, etapa: $("aeCEtapa").value || undefined, aceite_marketing: $("aeCAceite").checked || undefined, nao_comprou: $("aeCNaoComprou").checked || undefined, parar_ao_responder: $("aeCParar").checked || undefined } };
     try {
-      const r = await ler(supa().rpc("wa_automacao_salvar", { p_id: au2.id, p_dados: dados, p_passos: au2.passos.map(function (p) { return { tipo: p.tipo, config: p.config || {} }; }) }));
+      const r = await ler(supa().rpc("wa_automacao_salvar", { p_id: au2.id, p_dados: dados, p_passos: au2.passos.map(function (p) { return { tipo: p.tipo, config: aeLimpaConfig(p) }; }) }));
       if (!r || !r.ok) return mostrar((r && r.erro) || "Não consegui salvar.");
       $("jAutomacao").close(); aviso("Automação salva. Ela nasce desligada: use Simular e Testar no meu número antes de ligar."); au2.id = null;
       await telaAutomacoes();
     } catch (e) { falha(e, e.message); }
   });
 
+  /* antes de salvar: tira botões vazios do fim e guarda só os ramos dos botões que existem */
+  function aeLimpaConfig(p) {
+    const c = JSON.parse(JSON.stringify(p.config || {}));
+    if (p.tipo === "perguntar_botoes") {
+      const bs = (c.botoes || []).map(function (b) { return String(b || "").trim(); }); while (bs.length && !bs[bs.length - 1]) bs.pop();
+      c.botoes = bs; c.ramos = (c.ramos || []).slice(0, bs.length).map(function (r) { r = r || {}; const o = { encerrar: !!r.encerrar }; if (String(r.texto || "").trim()) o.texto = String(r.texto).trim(); if (String(r.etiqueta || "").trim()) o.etiqueta = String(r.etiqueta).trim(); if (Number(r.esperar_dias) > 0) o.esperar_dias = Number(r.esperar_dias); return o; });
+      while (c.ramos.length < bs.length) c.ramos.push({ encerrar: false });
+    }
+    return c;
+  }
   /* histórico de automações na ficha da pessoa */
   async function autFicha(id) {
     const cx = $("fcAutoBox"); if (!cx) return;
