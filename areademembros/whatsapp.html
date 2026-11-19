@@ -223,6 +223,16 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 .f.rapido .wz-etapa h3{display:none}
 .wz-modo-rapido .wz-passos,.wz-modo-rapido .wz-resumo{display:none}
 @media (max-width:600px){.wz-passos button{padding:5px 8px;font-size:12px}}
+/* automações (Fase 7) */
+dialog#jAutomacao,dialog#jAutPessoas{max-width:900px;width:calc(100% - 16px);max-height:92vh;overflow-y:auto}
+.au-passo{border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px 12px;margin-top:8px}
+.au-passo-topo{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.au-passo-topo b{overflow-wrap:anywhere}
+.au-passo .grade{margin-top:8px}
+.au-passo textarea{width:100%}
+.au-frase{font-size:13px;color:var(--muted);margin:2px 0 0;overflow-wrap:anywhere}
+.au-prev{margin-top:8px}
+.au-sim li{margin:3px 0}
 /* vendas (Fase 6) */
 .vd-blocos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .vd-bloco{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
@@ -301,6 +311,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
       <button class="aba" type="button" data-aba="templates" aria-selected="false">Templates<span class="ponto" id="tpPonto" title="Há novidade nos templates" hidden></span></button>
       <button class="aba" type="button" data-aba="robo" aria-selected="false">Robô</button>
       <button class="aba" type="button" data-aba="fluxos" aria-selected="false">Fluxos</button>
+      <button class="aba" type="button" data-aba="automacoes" aria-selected="false">Automações</button>
       <button class="aba" type="button" data-aba="email" aria-selected="false">E-mail</button>
       <button class="aba" type="button" data-aba="config" aria-selected="false">Configuração</button>
     </div>
@@ -599,6 +610,20 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
     </section>
 
     <!-- ===== FLUXOS ===== -->
+    <section data-painel="automacoes" hidden>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>Automações</h2><button class="btn peq" type="button" id="auNova">Nova automação</button><button class="btn peq contorno" type="button" id="auAtualizar2">Atualizar</button></div>
+        <p class="ajuda">Uma automação é: <b>quando acontece X</b>, faça Y, espere Z... Toda mensagem automática passa antes pelas travas do CRM: lista de Não enviar, saída da lista, pausa para sempre, horário, frequência e limite diário. O botão de emergência fica no topo da aba Fluxos e o selo vermelho aparece em todas as abas quando ele está ligado.</p>
+        <div class="tabela-wrap" style="margin-top:12px"><table class="t"><thead><tr><th>Automação</th><th>Quando começa</th><th>Passos</th><th>Dentro</th><th>Enviadas</th><th>Responderam</th><th>Compraram</th><th>Saíram</th><th>Falhas</th><th></th></tr></thead>
+          <tbody id="auLista2"><tr><td colspan="10" class="vazio">Carregando...</td></tr></tbody></table></div>
+      </div>
+      <div class="cartao">
+        <h2>Tudo que roda sozinho (somente leitura)</h2>
+        <p class="ajuda">Rotinas do site e do CRM que funcionam sem você apertar nada. Aqui você só olha.</p>
+        <div class="tabela-wrap"><table class="t"><thead><tr><th>Rotina</th><th>Quando roda</th><th>Situação</th></tr></thead><tbody id="auRotinas"><tr><td colspan="3" class="vazio">Carregando...</td></tr></tbody></table></div>
+      </div>
+    </section>
+
     <section data-painel="email" hidden>
       <div class="cartao">
         <div class="empresa-titulo"><h2>E-mail</h2><button class="btn peq contorno" type="button" id="emAtualizar">Atualizar</button></div>
@@ -866,6 +891,52 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
   <div class="acoes"><button class="btn auto" type="button" id="fgConfirmar">Confirmar</button><button class="btn auto contorno" type="button" data-fechar="jFunilGanho">Cancelar</button></div>
 </dialog>
 
+<dialog class="janela janela-larga" id="jAutomacao" aria-labelledby="aeTitulo">
+  <h2 id="aeTitulo">Nova automação</h2>
+  <div class="f">
+    <div class="grade g2">
+      <div><label for="aeNome">Nome</label><input id="aeNome" maxlength="80" placeholder="Boas-vindas da turma"></div>
+      <div><label for="aeDesc">Descrição <span class="vazio">(opcional)</span></label><input id="aeDesc" maxlength="300"></div>
+    </div>
+    <h3 class="cp-tit" style="margin-top:14px">Quando começa</h3>
+    <select id="aeGatilho" aria-label="Quando a automação começa"></select>
+    <div class="grade g2" id="aeGatilhoCampos" style="margin-top:8px"></div>
+    <h3 class="cp-tit" style="margin-top:14px">Quem pode entrar</h3>
+    <div class="grade g2">
+      <div><label for="aeCEtiq">Só quem tem a etiqueta <span class="vazio">(opcional)</span></label><input id="aeCEtiq" list="auEtiquetas" maxlength="60"></div>
+      <div><label for="aeCNao">Não pode ter a etiqueta <span class="vazio">(opcional)</span></label><input id="aeCNao" list="auEtiquetas" maxlength="60"></div>
+      <div><label for="aeCEtapa">Só quem está na etapa <span class="vazio">(opcional)</span></label><select id="aeCEtapa"><option value="">Qualquer</option><option value="novo">Novo</option><option value="em_conversa">Em conversa</option><option value="interessado">Interessado</option><option value="proposta">Proposta</option><option value="cliente">Cliente</option><option value="perdido">Perdido</option></select></div>
+      <div><label for="aeModo">Quantas vezes a mesma pessoa pode entrar</label><select id="aeModo"><option value="reentrar">Mais de uma vez</option><option value="uma_vez">Uma vez só</option></select></div>
+      <div id="aeReentrarBox"><label for="aeReentrar">Só volta depois de quantos dias <span class="vazio">(0 = pode voltar já)</span></label><input id="aeReentrar" type="number" min="0" max="365" value="0"></div>
+      <div><label for="aeLimite">Limite de pessoas por dia <span class="vazio">(0 = sem limite)</span></label><input id="aeLimite" type="number" min="0" max="5000" value="0"></div>
+      <div><label for="aeLink">Link usado nas mensagens <span class="vazio">(use {link} no texto)</span></label><input id="aeLink" type="url" maxlength="300" placeholder="https://..."></div>
+    </div>
+    <div class="checks" style="margin-top:8px"><label><input type="checkbox" id="aeCAceite"> Só quem autorizou receber mensagens</label>
+      <label><input type="checkbox" id="aeCNaoComprou"> Só quem ainda não comprou</label>
+      <label><input type="checkbox" id="aeCParar" checked> Parar a sequência se a pessoa responder</label></div>
+    <h3 class="cp-tit" style="margin-top:14px">Passos</h3>
+    <p class="ajuda" id="aeResumo"></p>
+    <div id="aePassos"></div>
+    <div class="acoes" style="margin-top:8px"><select id="aeAddTipo" aria-label="Tipo do novo passo"></select><button class="btn peq" type="button" id="aeAddBtn">Adicionar passo</button></div>
+    <datalist id="auEtiquetas"></datalist>
+    <div class="wa-fn-aviso" id="aeErro" hidden role="alert"></div>
+  </div>
+  <div class="acoes"><button class="btn auto" type="button" id="aeSalvar">Salvar</button><button class="btn auto contorno" type="button" data-fechar="jAutomacao">Cancelar</button></div>
+</dialog>
+
+<dialog class="janela janela-larga" id="jAutPessoas" aria-labelledby="apTitulo">
+  <h2 id="apTitulo">Pessoas dentro</h2>
+  <p class="ajuda">Quem está na automação agora. Tirar uma pessoa impede que ela receba o próximo passo.</p>
+  <div class="tabela-wrap" style="max-height:60vh"><table class="t"><thead><tr><th>Pessoa</th><th>Passo</th><th>Próximo horário</th><th>Situação</th><th></th></tr></thead><tbody id="apLista"></tbody></table></div>
+  <div class="acoes"><button class="btn auto contorno" type="button" data-fechar="jAutPessoas">Fechar</button></div>
+</dialog>
+
+<dialog class="janela" id="jAutInfo" aria-labelledby="aiTitulo">
+  <h2 id="aiTitulo"></h2>
+  <div id="aiCorpo"></div>
+  <div class="acoes"><button class="btn auto contorno" type="button" data-fechar="jAutInfo">Fechar</button></div>
+</dialog>
+
 <dialog class="janela janela-larga" id="jVendaDetalhe" aria-labelledby="vdDetTitulo">
   <h2 id="vdDetTitulo">Pedido</h2>
   <div id="vdDetBody"><p class="vazio">Carregando...</p></div>
@@ -954,6 +1025,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 <script src="js/whatsapp-funil.js"></script>
 <script src="js/whatsapp-vendas.js"></script>
 <script src="js/whatsapp-email.js"></script>
+<script src="js/whatsapp-auto.js"></script>
 <script src="js/whatsapp.js"></script>
 </body>
 </html>

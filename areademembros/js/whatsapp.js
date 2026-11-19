@@ -1864,6 +1864,7 @@
     if (id !== conversaId || !d) return;
     fichaDados = d; desenharFichaDados();
     emFicha(id).catch(function () { /* o bloco de e-mail não pode travar a ficha */ });
+    autFicha(id).catch(function () { /* o histórico de automações não pode travar a ficha */ });
   }
   function desenharFicha() {
     const c = conversaCont, f = $("cvFicha");
@@ -1875,6 +1876,7 @@
       '<div><label for="fcNome">Nome</label><input id="fcNome" maxlength="80" value="' + esc(c.nome || "") + '"></div>' +
       '<div id="fcBloqueio"></div>' +
       '<div id="fcEmailBox" data-de=""></div>' +
+      '<div id="fcAutoBox"></div>' +
       '<div class="wa-fc-2"><div><label for="fcEtapa">Etapa</label><select id="fcEtapa">' + opc(ETAPAS, c.etapa) + '</select></div><div><label for="fcPrio">Prioridade</label><select id="fcPrio">' + opc(PRIORIDADES, c.prioridade) + "</select></div></div>" +
       '<div><label for="fcEt">Etiquetas <span class="vazio">(separe por vírgula)</span></label><input id="fcEt" value="' + esc((c.etiquetas || []).join(", ")) + '"></div>' +
       '<div><label for="fcNotas">Anotações</label><textarea id="fcNotas" rows="3" maxlength="2000">' + esc(c.notas || "") + "</textarea></div></div>" +
@@ -3544,10 +3546,279 @@
   });
   auAtualizar().catch(function () { /* sem login de master ainda: o selo fica escondido */ });
 
+  /* ---------- automações (Fase 7): lista, editor, teste, simulação, pessoas dentro e histórico ---------- */
+  const au2 = { lista: [], id: null, passos: [], gatilhoTipo: "etiqueta", g: {}, dentro: 0 };
+  function agendaTexto(c) {
+    c = String(c || "").trim(); let m;
+    if (c === "* * * * *") return "a cada minuto";
+    if ((m = /^\*\/(\d+) \* \* \* \*$/.exec(c))) return "a cada " + m[1] + " minutos";
+    if ((m = /^(\d+) \* \* \* \*$/.exec(c))) return "de hora em hora (no minuto " + m[1] + ")";
+    if ((m = /^(\d+) (\d+) \* \* \*$/.exec(c))) { const h = (Number(m[2]) + 21) % 24; return "todo dia às " + h + "h" + (Number(m[1]) ? String(Number(m[1])).padStart(2, "0") : "") + " (Brasília)"; }
+    return c;
+  }
+  async function telaAutomacoes() {
+    const r = await Promise.all([ler(supa().rpc("wa_automacoes_painel")), ler(supa().rpc("wa_automacoes_rotinas")).catch(function () { return []; })]);
+    au2.lista = r[0] || [];
+    desenharAutomacoes();
+    $("auRotinas").innerHTML = (r[1] || []).length ? r[1].map(function (x) { return "<tr><td>" + esc(x.nome) + "</td><td>" + esc(agendaTexto(x.agenda)) + '</td><td><span class="selo ' + (x.ativa ? "ok" : "off") + '">' + (x.ativa ? "Ligada" : "Desligada") + "</span></td></tr>"; }).join("") : '<tr><td colspan="3" class="vazio">Sem rotinas para mostrar.</td></tr>';
+  }
+  function desenharAutomacoes() {
+    const A = window.WaAuto, tb = $("auLista2");
+    if (!au2.lista.length) { tb.innerHTML = '<tr><td colspan="10" class="vazio">Nenhuma automação ainda. Toque em "Nova automação".</td></tr>'; return; }
+    tb.innerHTML = au2.lista.map(function (a) {
+      const taxa = A.taxa(a.responderam, a.enviados);
+      const motivos = (a.motivos || []).map(function (m) { return m.motivo + " (" + m.n + ")"; }).join("; ");
+      const apagavel = !a.ativa && !a.origem_fluxo_id;
+      return "<tr><td><b>" + esc(a.nome) + "</b>" + (a.origem_fluxo_id ? ' <span class="selo">cópia de um Fluxo</span>' : "") + "<br><small>" + (a.ativa ? '<span class="selo ok">Ligada</span>' : '<span class="selo off">Desligada</span>') + (a.descricao ? " " + esc(a.descricao) : "") + "</small></td>"
+        + "<td>" + esc(A.gatilhoTexto(a.gatilho_tipo, a.gatilho)) + "</td><td>" + Number(a.passos) + "</td><td>" + Number(a.dentro) + "</td><td>" + Number(a.enviados) + "</td>"
+        + "<td>" + Number(a.responderam) + (taxa !== null ? " <small>(" + taxa + "%)</small>" : "") + "</td><td>" + Number(a.compraram) + "</td><td>" + Number(a.saiu) + "</td>"
+        + '<td title="' + esc(motivos) + '">' + Number(a.falhas) + (motivos ? "<br><small>" + esc(motivos.length > 60 ? motivos.slice(0, 59) + "…" : motivos) + "</small>" : "") + "</td>"
+        + '<td><div class="acoes" style="margin:0"><button class="btn peq' + (a.ativa ? " contorno" : "") + '" data-au2="ligar" data-id="' + a.id + '" data-ativa="' + (a.ativa ? "1" : "") + '">' + (a.ativa ? "Desligar" : "Ligar") + "</button>"
+        + '<button class="btn peq contorno" data-au2="editar" data-id="' + a.id + '">Editar</button><button class="btn peq contorno" data-au2="pessoas" data-id="' + a.id + '">Pessoas</button>'
+        + '<button class="btn peq contorno" data-au2="simular" data-id="' + a.id + '">Simular</button><button class="btn peq contorno" data-au2="testar" data-id="' + a.id + '">Testar no meu número</button>'
+        + (apagavel ? '<button class="btn peq perigo" data-au2="apagar" data-id="' + a.id + '">Apagar</button>' : "") + "</div></td></tr>";
+    }).join("");
+  }
+  $("auAtualizar2").addEventListener("click", function () { telaAutomacoes().catch(function (e) { falha(e); }); });
+  $("auNova").addEventListener("click", function () { abrirEditorAut(null).catch(function (e) { falha(e); }); });
+  function abrirInfo(titulo, html) { $("aiTitulo").textContent = titulo; $("aiCorpo").innerHTML = html; if (!$("jAutInfo").open) $("jAutInfo").showModal(); }
+  async function simularAut(id) {
+    const a = au2.lista.filter(function (x) { return x.id === id; })[0] || {};
+    const s = await ler(supa().rpc("wa_automacao_simular", { p_id: id }));
+    if (!s) return aviso("Não achei esta automação.", true);
+    const linhas = [];
+    if (s.nota) linhas.push("<li>" + esc(s.nota) + "</li>");
+    else {
+      const jaAssim = a.gatilho_tipo === "etiqueta" || a.gatilho_tipo === "etapa";
+      linhas.push("<li><b>" + Number(s.base) + "</b> pessoa(s) combinam com o gatilho hoje.</li>");
+      linhas.push("<li><b>" + Number(s.entrariam) + "</b> passariam pelas travas e entrariam.</li>");
+      const fora = [["ja_dentro", "já estão dentro"], ["saiu", "saíram da lista de mensagens"], ["nao_enviar", "estão numa lista de Não enviar"], ["pausa_eterna", "estão com o robô pausado para sempre"], ["limite_por_pessoa", "já estão no máximo de automações ao mesmo tempo"]];
+      fora.forEach(function (f) { if (Number(s[f[0]])) linhas.push("<li>" + Number(s[f[0]]) + " " + f[1] + ": ficariam de fora.</li>"); });
+      if (Number(s.sem_aceite)) linhas.push("<li>" + Number(s.sem_aceite) + " ainda não autorizaram receber mensagens: o portão só deixa passar o que a regra permite.</li>");
+      if (jaAssim) linhas.push('<li class="vazio">Atenção: quem já está assim hoje NÃO entra ao ligar. A automação reage a quem passar a ficar assim depois.</li>');
+    }
+    linhas.push('<li class="vazio">Nada foi enviado. Esta conta é só uma simulação.</li>');
+    abrirInfo("Simulação: " + (a.nome || ""), '<ul class="au-sim">' + linhas.join("") + "</ul>");
+  }
+  async function testarAut(id) {
+    let fone = ""; try { fone = localStorage.getItem("wa_auto_teste") || ""; } catch (e) {}
+    fone = (prompt("Número do SEU WhatsApp para o teste (com DDD). A mensagem de teste chega nele, com tempos reduzidos (dias viram minutos), e não conta nas estatísticas:", fone) || "").trim();
+    if (!fone) return;
+    const dig = fone.replace(/\D/g, ""), chave = chaveFone(dig.length <= 11 ? "55" + dig : dig);
+    if (!contatos.length) await carregarContatos();
+    const c = contatos.filter(function (x) { return x.telefone && chaveFone(x.telefone) === chave; })[0];
+    if (!c) return aviso("Esse número ainda não está nos seus contatos. Adicione-o na aba Contatos (com autorização) e tente de novo.", true);
+    try { localStorage.setItem("wa_auto_teste", fone); } catch (e) {}
+    const r = await ler(supa().rpc("wa_automacao_testar", { p_id: id, p_contato: c.id }));
+    if (!r || !r.ok) return aviso((r && r.erro) || "Não consegui iniciar o teste.", true);
+    aviso("Teste agendado para " + (c.nome || foneDe(c)) + ". Chega em até 1 minuto. Se o botão de emergência estiver ligado, nada é enviado.");
+    telaAutomacoes().catch(function () {});
+  }
+  async function pessoasAut(id) {
+    const a = au2.lista.filter(function (x) { return x.id === id; })[0] || {};
+    $("apTitulo").textContent = "Pessoas dentro: " + (a.nome || "");
+    const l = await ler(supa().rpc("wa_automacao_pessoas", { p_id: id, p_limite: 200 }));
+    $("apLista").innerHTML = (l || []).length ? l.map(function (p) {
+      return "<tr><td>" + esc(p.nome || (p.username ? "@" + p.username : p.telefone ? foneBR(p.telefone) : "Sem nome")) + (p.teste ? ' <span class="selo">teste</span>' : "") + "</td><td>" + Number(p.passo) + "</td><td>" + (p.proximo_em ? esc(quando(p.proximo_em)) : "—") + "</td><td>" + esc(p.status === "adiada" ? (p.motivo || "Esperando") : (p.motivo || "Andando")) +
+        '</td><td><button class="btn peq perigo" data-ap-tirar="' + esc(p.exec) + '" data-id="' + esc(id) + '">Tirar</button></td></tr>';
+    }).join("") : '<tr><td colspan="5" class="vazio">Ninguém está nesta automação agora.</td></tr>';
+    if (!$("jAutPessoas").open) $("jAutPessoas").showModal();
+  }
+  $("apLista").addEventListener("click", async function (ev) {
+    const b = ev.target.closest("[data-ap-tirar]"); if (!b) return;
+    if (!confirm("Tirar esta pessoa da automação? Ela não recebe mais nenhum passo.")) return;
+    try { const r = await ler(supa().rpc("wa_automacao_tirar", { p_exec: b.dataset.apTirar })); if (!r || !r.ok) throw new Error((r && r.erro) || "Não consegui tirar."); aviso("Pessoa tirada da automação."); await pessoasAut(b.dataset.id); telaAutomacoes().catch(function () {}); }
+    catch (e) { falha(e, e.message); }
+  });
+  $("auLista2").addEventListener("click", async function (ev) {
+    const b = ev.target.closest("[data-au2]"); if (!b) return;
+    const id = b.dataset.id, acao = b.dataset.au2;
+    try {
+      if (acao === "editar") return await abrirEditorAut(id);
+      if (acao === "pessoas") return await pessoasAut(id);
+      if (acao === "simular") return await simularAut(id);
+      if (acao === "testar") return await testarAut(id);
+      if (acao === "apagar") {
+        if (!confirm("Apagar esta automação e o histórico dela? As pessoas que estavam dentro saem.")) return;
+        await ler(supa().from("wa_automacoes").delete().eq("id", id).select("id")); aviso("Automação apagada."); return await telaAutomacoes();
+      }
+      if (acao === "ligar") {
+        const ligar = !b.dataset.ativa, a = au2.lista.filter(function (x) { return x.id === id; })[0] || {};
+        if (ligar && !Number(a.passos)) return aviso("A automação ainda não tem passos. Abra em Editar e adicione.", true);
+        if (!confirm(ligar ? "Ligar \"" + a.nome + "\"?\n\nElas passam a valer na hora" + (a.origem_fluxo_id ? " (e o Fluxo antigo correspondente é desligado)" : "") + ". Use Simular antes se quiser ver quantas pessoas entrariam." : "Desligar \"" + a.nome + "\"?\n\nQuem está dentro fica esperando até você ligar de novo.")) return;
+        const r = await ler(supa().rpc(ligar ? "wa_automacao_assumir" : "wa_automacao_devolver", { p_automacao: id }));
+        if (!r || !r.ok) throw new Error((r && r.erro) || "Não consegui trocar.");
+        aviso(ligar ? "Automação ligada." : "Automação desligada."); await telaAutomacoes(); auAtualizar().catch(function () {});
+      }
+    } catch (e) { falha(e, e.message); }
+  });
+
+  /* editor */
+  function aeOpcoes(obj, vazio) { return (vazio ? '<option value="">' + vazio + "</option>" : "") + Object.keys(obj).map(function (k) { return '<option value="' + k + '">' + esc(obj[k]) + "</option>"; }).join(""); }
+  function aeCampo(c, v) {
+    const id = "aeg_" + c.k, val = v === undefined || v === null ? (c.padrao !== undefined ? c.padrao : "") : v;
+    let ctl;
+    if (c.tipo === "linhas") ctl = '<textarea id="' + id + '" rows="3" maxlength="600">' + esc((Array.isArray(val) ? val : []).join("\n")) + "</textarea>";
+    else if (c.tipo === "modo") ctl = '<select id="' + id + '"><option value="exata"' + (val !== "contem" ? " selected" : "") + '>A frase inteira igual</option><option value="contem"' + (val === "contem" ? " selected" : "") + ">A frase aparece no meio da mensagem</option></select>";
+    else if (c.tipo === "etapa" || c.tipo === "etapa_opc") ctl = '<select id="' + id + '">' + aeOpcoes(window.WaAuto.ETAPAS, c.tipo === "etapa" ? "Escolha" : "Qualquer") + "</select>";
+    else if (c.tipo === "origem") ctl = '<select id="' + id + '">' + aeOpcoes({ whatsapp: "WhatsApp (escreveu primeiro)", painel: "Painel", site: "Site", anuncio: "Anúncio" }, "Qualquer") + "</select>";
+    else if (c.tipo === "produto") ctl = '<select id="' + id + '">' + aeOpcoes(window.WaAuto.PRODUTOS, "Qualquer") + "</select>";
+    else if (c.tipo === "num") ctl = '<input id="' + id + '" type="number" min="1" max="365" value="' + esc(val) + '">';
+    else if (c.tipo === "datahora") ctl = '<input id="' + id + '" type="datetime-local" value="' + esc(val ? wzLocal(val) : "") + '">';
+    else if (c.tipo === "etiqueta") ctl = '<input id="' + id + '" list="auEtiquetas" maxlength="60" value="' + esc(val) + '">';
+    else ctl = '<input id="' + id + '" maxlength="120" value="' + esc(val) + '">';
+    return '<div><label for="' + id + '">' + esc(c.rotulo) + "</label>" + ctl + "</div>";
+  }
+  function desenharGatilhoCampos() {
+    const A = window.WaAuto, def = A.GATILHOS[$("aeGatilho").value]; au2.gatilhoTipo = $("aeGatilho").value;
+    $("aeGatilhoCampos").innerHTML = def.campos.map(function (c) { return aeCampo(c, au2.g[c.k]); }).join("");
+    def.campos.forEach(function (c) { if (["etapa", "etapa_opc", "origem", "produto"].indexOf(c.tipo) > -1) { const el = $("aeg_" + c.k); if (el) el.value = au2.g[c.k] || ""; } });
+  }
+  function lerGatilhoEd() {
+    const def = window.WaAuto.GATILHOS[$("aeGatilho").value], g = {};
+    def.campos.forEach(function (c) {
+      const el = $("aeg_" + c.k); if (!el) return; let v = el.value;
+      if (c.tipo === "linhas") v = v.split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
+      else if (c.tipo === "num") v = Number(v) || 0;
+      else if (c.tipo === "datahora") v = v ? new Date(v).toISOString() : "";
+      else v = String(v).trim();
+      if (v === "" || (Array.isArray(v) && !v.length)) return;
+      g[c.k] = v;
+    });
+    return g;
+  }
+  $("aeGatilho").addEventListener("change", function () { au2.g = lerGatilhoEd(); au2.g = {}; desenharGatilhoCampos(); });
+  function aeFraseGeral() { $("aeResumo").textContent = au2.passos.length ? window.WaAuto.resumoAutomacao(au2.passos) : "Nenhum passo ainda. Adicione abaixo."; }
+  function tplOpcoes(atual) { return '<option value="">Sem template (texto livre)</option>' + templates.filter(tplUsavel).map(function (t) { return '<option value="' + esc(t.nome) + '"' + (t.nome === atual ? " selected" : "") + ">" + esc(t.nome) + " (" + esc(ROT_CAT[t.categoria] || "") + ")</option>"; }).join(""); }
+  function aeAutoOpcoes(atual) { return '<option value="">Escolha</option>' + au2.lista.filter(function (x) { return x.id !== au2.id; }).map(function (x) { return '<option value="' + x.id + '"' + (x.id === atual ? " selected" : "") + ">" + esc(x.nome) + "</option>"; }).join(""); }
+  function aePrev(p) {
+    const c = p.config || {}, link = $("aeLink").value.trim();
+    if (p.tipo === "enviar_texto" || p.tipo === "perguntar_botoes") {
+      let t = String(c.texto || "").replace(/\{primeiro_nome\}/gi, "Maria").replace(/\{nome\}/gi, "Maria Silva").replace(/\{link\}/gi, link || "(link)");
+      if (p.tipo === "enviar_texto" && c.incluir_link && link && !/\{link\}/i.test(String(c.texto || ""))) t += "\n" + link;
+      if (c.template_nome) { const tp = templates.filter(function (x) { return x.nome === c.template_nome; })[0]; const b = tp && (tp.componentes || []).filter(function (x) { return String(x.type).toUpperCase() === "BODY"; })[0]; t = b ? String(b.text || "").replace(/\{\{1\}\}/g, "Maria") : t; }
+      return t + (p.tipo === "perguntar_botoes" ? "\n[ " + (c.botoes || []).join(" ]  [ ") + " ]" : "");
+    }
+    return "";
+  }
+  function aeCustoTexto(p) {
+    const c = p.config || {}; if (p.tipo !== "enviar_texto") return "";
+    if (!c.template_nome) return "Texto livre: sem custo, mas só sai dentro de 24 h depois da última mensagem da pessoa.";
+    const tp = templates.filter(function (x) { return x.nome === c.template_nome; })[0]; if (!tp) return "";
+    const preco = tp.categoria === "MARKETING" ? Number(cfg.preco_marketing) : tp.categoria === "UTILITY" ? Number(cfg.preco_utilidade) : 0;
+    return (ROT_CAT[tp.categoria] || "") + ": cerca de " + BR.format(preco || 0) + " por pessoa que receber fora das 24 h.";
+  }
+  function aeCard(p, i) {
+    const A = window.WaAuto, def = A.PASSOS[p.tipo] || { rotulo: p.tipo, icone: "•" }, c = p.config || {}, I = ' data-i="' + i + '"';
+    const campo = function (rot, ctl) { return "<div><label>" + esc(rot) + "</label>" + ctl + "</div>"; };
+    const inp = function (k, v, extra) { return '<input' + I + ' data-k="' + k + '" value="' + esc(v === undefined || v === null ? "" : v) + '" ' + (extra || "") + ">"; };
+    const num = function (k, v, mx) { return '<input type="number"' + I + ' data-k="' + k + '" min="0" max="' + (mx || 999) + '" value="' + esc(v === undefined || v === null ? "" : v) + '">'; };
+    const chk = function (k, rot, v) { return '<label class="wa-fn-chk"><input type="checkbox"' + I + ' data-k="' + k + '"' + (v ? " checked" : "") + "> " + esc(rot) + "</label>"; };
+    const sel = function (k, ops, v) { return "<select" + I + ' data-k="' + k + '">' + Object.keys(ops).map(function (o) { return '<option value="' + o + '"' + (String(v) === o ? " selected" : "") + ">" + esc(ops[o]) + "</option>"; }).join("") + "</select>"; };
+    let corpo = "";
+    if (p.tipo === "enviar_texto") corpo = '<div class="grade g2">' + campo("Texto da mensagem ({primeiro_nome}, {nome}, {link})", '<textarea rows="3"' + I + ' data-k="texto" maxlength="1000">' + esc(c.texto || "") + "</textarea>") +
+      campo("Template (para quando passar de 24 h)", "<select" + I + ' data-k="template_nome">' + tplOpcoes(c.template_nome) + "</select>") + campo("Se passar de 24 h e não houver template", sel("fora_janela", { parar: "Parar a automação", esperar_resposta: "Esperar a pessoa escrever" }, c.fora_janela || "parar")) +
+      campo("Etiqueta ao enviar (opcional)", inp("etiqueta", c.etiqueta, 'list="auEtiquetas"')) + "</div>" + chk("incluir_link", "Colocar o link no fim da mensagem", c.incluir_link);
+    else if (p.tipo === "perguntar_botoes") corpo = '<div class="grade g2">' + campo("Pergunta", '<textarea rows="2"' + I + ' data-k="texto" maxlength="1000">' + esc(c.texto || "") + "</textarea>") +
+      campo("Botão 1 (até 20 letras)", inp("botao0", (c.botoes || [])[0], 'maxlength="20"')) + campo("Botão 2 (até 20 letras)", inp("botao1", (c.botoes || [])[1], 'maxlength="20"')) +
+      campo("Se tocar no botão 1: responder", inp("sim_texto", (c.sim || {}).texto)) + campo("Se tocar no botão 1: etiqueta", inp("sim_etiqueta", (c.sim || {}).etiqueta, 'list="auEtiquetas"')) + campo("Se tocar no botão 2: responder", inp("nao_texto", (c.nao || {}).texto)) + "</div>";
+    else if (p.tipo === "esperar") corpo = '<div class="grade g3">' + campo("Dias", num("dias", c.dias, 365)) + campo("Horas", num("horas", c.horas, 999)) + campo("Minutos", num("minutos", c.minutos, 9999)) + campo("Ou esperar até a hora (0 a 23)", num("ate_hora", c.ate_hora, 23)) + "</div>" +
+      chk("dias_uteis", "Só contar dias úteis (sábado e domingo passam para segunda)", c.dias_uteis) + chk("ate_resposta", "Parar de esperar se a pessoa responder", c.ate_resposta) + (c.ate_resposta ? campo("Se a pessoa responder durante a espera", sel("se_responder", { seguir: "Seguir para o próximo passo na hora", parar: "Parar a sequência" }, c.se_responder || "seguir")) : "");
+    else if (p.tipo === "etiquetar") corpo = '<div class="grade g2">' + campo("Etiqueta", inp("etiqueta", c.etiqueta, 'list="auEtiquetas" maxlength="60"')) + "</div>" + chk("remover", "Tirar a etiqueta (em vez de colocar)", c.remover);
+    else if (p.tipo === "mover_funil") corpo = '<div class="grade g2">' + campo("Mover para a etapa", sel("etapa", A.ETAPAS, c.etapa)) + "</div><p class=\"au-frase\">Quem já é cliente nunca é rebaixado.</p>";
+    else if (p.tipo === "prioridade") corpo = '<div class="grade g2">' + campo("Prioridade", sel("valor", A.PRIORIDADES, c.valor)) + "</div>";
+    else if (p.tipo === "pontuacao") corpo = '<div class="grade g2">' + campo("Somar à pontuação (de -50 a 50)", '<input type="number"' + I + ' data-k="ajuste" min="-50" max="50" value="' + esc(c.ajuste) + '">') + "</div>";
+    else if (p.tipo === "avisar") corpo = '<div class="grade g2">' + campo("O que você precisa fazer", inp("motivo", c.motivo, 'maxlength="200"')) + "</div><p class=\"au-frase\">A conversa aparece em Não respondidas e em Pediu atendimento.</p>";
+    else if (p.tipo === "pausar_robo") corpo = '<div class="grade g2">' + campo("Pausar o robô por quantas horas", num("horas", c.horas, 720)) + "</div>";
+    else if (p.tipo === "parar") corpo = '<div class="grade g2">' + campo("Parar", sel("escopo", { esta: "só esta automação", todas: "todas as automações desta pessoa" }, c.escopo || "esta")) + campo("Motivo (aparece no histórico)", inp("motivo", c.motivo, 'maxlength="160"')) + "</div>";
+    else if (p.tipo === "chamar_automacao") corpo = '<div class="grade g2">' + campo("Automação chamada", "<select" + I + ' data-k="automacao">' + aeAutoOpcoes(c.automacao) + "</select>") + "</div>";
+    else if (p.tipo === "sms") corpo = '<p class="ajuda">O envio de SMS chega em uma fase futura. Por enquanto este passo é pulado.</p>';
+    const pr = aePrev(p), custo = aeCustoTexto(p);
+    return '<div class="au-passo" data-passo="' + i + '"><div class="au-passo-topo"><b>' + (i + 1) + ". " + esc(def.icone) + " " + esc(def.rotulo) + '</b><span><button type="button" class="btn peq contorno" data-pa="subir"' + I + (i === 0 ? " disabled" : "") + '>Subir</button> <button type="button" class="btn peq contorno" data-pa="descer"' + I + (i === au2.passos.length - 1 ? " disabled" : "") + '>Descer</button> <button type="button" class="btn peq perigo" data-pa="remover"' + I + ">Tirar</button></span></div>" +
+      '<p class="au-frase" data-frase="' + i + '">' + esc(A.passoTexto(p)) + "</p>" + corpo + ((p.tipo === "enviar_texto" || p.tipo === "perguntar_botoes") ? '<div class="au-prev"><label>Como a pessoa vê (exemplo)</label><div class="wa-prev" data-prev="' + i + '">' + esc(pr || "Escreva a mensagem para ver a prévia.") + "</div></div>" : "") + (p.tipo === "enviar_texto" ? '<p class="ajuda" data-custo="' + i + '">' + esc(custo) + "</p>" : "") + "</div>";
+  }
+  function desenharPassos() { $("aePassos").innerHTML = au2.passos.map(aeCard).join(""); aeFraseGeral(); }
+  function aeAplicar(el) {
+    const i = Number(el.dataset.i), k = el.dataset.k, p = au2.passos[i]; if (!p || !k) return;
+    const c = p.config = p.config || {}, v = el.type === "checkbox" ? el.checked : el.type === "number" ? (el.value === "" ? "" : Number(el.value)) : el.value;
+    if (k === "botao0" || k === "botao1") { c.botoes = c.botoes || ["", ""]; c.botoes[k === "botao0" ? 0 : 1] = v; }
+    else if (k === "sim_texto" || k === "sim_etiqueta") { c.sim = c.sim || {}; c.sim[k === "sim_texto" ? "texto" : "etiqueta"] = v; }
+    else if (k === "nao_texto") { c.nao = c.nao || {}; c.nao.texto = v; }
+    else if (v === "" && ["ate_hora", "dias", "horas", "minutos"].indexOf(k) > -1) delete c[k];
+    else c[k] = v;
+    const fr = $("aePassos").querySelector('[data-frase="' + i + '"]'); if (fr) fr.textContent = window.WaAuto.passoTexto(p);
+    const pv = $("aePassos").querySelector('[data-prev="' + i + '"]'); if (pv) pv.textContent = aePrev(p) || "Escreva a mensagem para ver a prévia.";
+    const cu = $("aePassos").querySelector('[data-custo="' + i + '"]'); if (cu) cu.textContent = aeCustoTexto(p);
+    aeFraseGeral();
+  }
+  $("aePassos").addEventListener("input", function (ev) { if (ev.target.matches("input:not([type=checkbox]), textarea")) aeAplicar(ev.target); });
+  $("aePassos").addEventListener("change", function (ev) { if (ev.target.matches("input[type=checkbox], select")) { aeAplicar(ev.target); if (ev.target.dataset.k === "ate_resposta") desenharPassos(); } });
+  $("aePassos").addEventListener("click", function (ev) {
+    const b = ev.target.closest("[data-pa]"); if (!b) return; const i = Number(b.dataset.i), a = b.dataset.pa;
+    if (a === "remover") au2.passos.splice(i, 1);
+    else if (a === "subir" && i > 0) au2.passos.splice(i - 1, 0, au2.passos.splice(i, 1)[0]);
+    else if (a === "descer" && i < au2.passos.length - 1) au2.passos.splice(i + 1, 0, au2.passos.splice(i, 1)[0]);
+    desenharPassos();
+  });
+  $("aeAddBtn").addEventListener("click", function () {
+    const t = $("aeAddTipo").value, def = window.WaAuto.PASSOS[t]; if (!def) return;
+    au2.passos.push({ tipo: t, config: JSON.parse(JSON.stringify(def.padrao)) }); desenharPassos();
+    const cards = $("aePassos").querySelectorAll(".au-passo"); if (cards.length) cards[cards.length - 1].scrollIntoView({ block: "nearest" });
+  });
+  $("aeModo").addEventListener("change", function () { $("aeReentrarBox").hidden = $("aeModo").value === "uma_vez"; });
+  $("aeLink").addEventListener("input", function () { desenharPassos(); });
+  async function abrirEditorAut(id) {
+    const A = window.WaAuto;
+    await Promise.all([carregarTemplates().catch(function () {}), contatos.length ? Promise.resolve() : carregarContatos().catch(function () {})]);
+    if (!au2.lista.length) { try { au2.lista = (await ler(supa().rpc("wa_automacoes_painel"))) || []; } catch (e) {} }
+    const ets = Array.from(new Set(contatos.reduce(function (a, c) { return a.concat(c.etiquetas || []); }, []))).sort();
+    $("auEtiquetas").innerHTML = ets.map(function (e) { return '<option value="' + esc(e) + '">'; }).join("");
+    $("aeGatilho").innerHTML = aeOpcoes(Object.keys(A.GATILHOS).reduce(function (o, k) { o[k] = A.GATILHOS[k].rotulo; return o; }, {}));
+    $("aeAddTipo").innerHTML = Object.keys(A.PASSOS).map(function (k) { return '<option value="' + k + '"' + (A.PASSOS[k].emBreve ? " disabled" : "") + ">" + esc(A.PASSOS[k].rotulo) + "</option>"; }).join("");
+    let d = null; au2.id = id || null; au2.dentro = 0;
+    if (id) { d = await ler(supa().rpc("wa_automacao_detalhe", { p_id: id })); if (!d) return aviso("Não achei esta automação.", true); }
+    const a = d ? d.automacao : { nome: "", descricao: "", gatilho_tipo: "etiqueta", gatilho: {}, condicoes: { parar_ao_responder: true }, modo_entrada: "reentrar", reentrar_dias: 0, limite_dia: 0, link: "" };
+    const k = a.condicoes || {};
+    $("aeTitulo").textContent = id ? "Editar automação" : "Nova automação";
+    $("aeNome").value = a.nome || ""; $("aeDesc").value = a.descricao || ""; $("aeGatilho").value = a.gatilho_tipo; au2.g = a.gatilho || {};
+    desenharGatilhoCampos();
+    $("aeCEtiq").value = k.tem_etiqueta || ""; $("aeCNao").value = k.nao_tem_etiqueta || ""; $("aeCEtapa").value = k.etapa || ""; $("aeCAceite").checked = !!k.aceite_marketing; $("aeCNaoComprou").checked = !!k.nao_comprou; $("aeCParar").checked = !!k.parar_ao_responder;
+    $("aeModo").value = a.modo_entrada || "reentrar"; $("aeReentrar").value = a.reentrar_dias || 0; $("aeReentrarBox").hidden = $("aeModo").value === "uma_vez"; $("aeLimite").value = a.limite_dia || 0; $("aeLink").value = a.link || "";
+    au2.passos = d ? d.passos.map(function (p) { return { tipo: p.tipo, config: p.config || {} }; }) : []; au2.dentro = d ? Number(d.dentro) : 0;
+    desenharPassos();
+    const er = $("aeErro"); er.hidden = !au2.dentro; er.textContent = au2.dentro ? au2.dentro + " pessoa(s) estão dentro desta automação. Dá para mudar nome, gatilho e condições, mas os passos só podem mudar quando ninguém estiver dentro (tire as pessoas em Pessoas)." : "";
+    if (!$("jAutomacao").open) $("jAutomacao").showModal();
+  }
+  $("aeSalvar").addEventListener("click", async function () {
+    const A = window.WaAuto, er = $("aeErro"), mostrar = function (t) { er.hidden = false; er.textContent = t; er.scrollIntoView({ block: "nearest" }); };
+    const nome = $("aeNome").value.trim(); if (!nome) return mostrar("Dê um nome à automação.");
+    const tipo = $("aeGatilho").value, g = lerGatilhoEd(), eg = A.validarGatilho(tipo, g); if (eg) return mostrar(eg);
+    for (let i = 0; i < au2.passos.length; i++) { const ep = A.validarPasso(au2.passos[i]); if (ep) return mostrar("Passo " + (i + 1) + ": " + ep); }
+    const dados = { nome: nome, descricao: $("aeDesc").value.trim(), gatilho_tipo: tipo, gatilho: g, modo_entrada: $("aeModo").value, reentrar_dias: Number($("aeReentrar").value) || 0, limite_dia: Number($("aeLimite").value) || 0, link: $("aeLink").value.trim(),
+      condicoes: { tem_etiqueta: $("aeCEtiq").value.trim() || undefined, nao_tem_etiqueta: $("aeCNao").value.trim() || undefined, etapa: $("aeCEtapa").value || undefined, aceite_marketing: $("aeCAceite").checked || undefined, nao_comprou: $("aeCNaoComprou").checked || undefined, parar_ao_responder: $("aeCParar").checked || undefined } };
+    try {
+      const r = await ler(supa().rpc("wa_automacao_salvar", { p_id: au2.id, p_dados: dados, p_passos: au2.passos.map(function (p) { return { tipo: p.tipo, config: p.config || {} }; }) }));
+      if (!r || !r.ok) return mostrar((r && r.erro) || "Não consegui salvar.");
+      $("jAutomacao").close(); aviso("Automação salva. Ela nasce desligada: use Simular e Testar no meu número antes de ligar."); au2.id = null;
+      await telaAutomacoes();
+    } catch (e) { falha(e, e.message); }
+  });
+
+  /* histórico de automações na ficha da pessoa */
+  async function autFicha(id) {
+    const cx = $("fcAutoBox"); if (!cx) return;
+    const h = await ler(supa().rpc("wa_automacao_historico", { p_contato: id }));
+    const agora = $("fcAutoBox"); if (!agora || id !== conversaId) return;
+    if (!h || !h.length) { agora.innerHTML = ""; return; }
+    agora.innerHTML = '<div class="wa-fc-bloco"><label>Automações</label><ul class="wa-fn-ativ">' + h.slice(0, 8).map(function (x) {
+      return "<li><b>" + esc(x.automacao) + "</b>: " + esc(window.WaAuto.resultadoTexto(x.resultado, x.motivo)) + "<br><small>" + esc(horaCurta(x.quando)) + (x.passo ? " · passo " + Number(x.passo) : "") + "</small></li>";
+    }).join("") + "</ul></div>";
+  }
+
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
     abaAtual = nome;
-    const f = { conversas: telaConversas, funil: telaFunil, vendas: telaVendas, email: telaEmail, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, fluxos: function () { auAtualizar().catch(function () {}); return telaFluxos(); }, config: telaConfig }[nome];
+    const f = { conversas: telaConversas, funil: telaFunil, vendas: telaVendas, email: telaEmail, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, automacoes: telaAutomacoes, fluxos: function () { auAtualizar().catch(function () {}); return telaFluxos(); }, config: telaConfig }[nome];
     f().catch(function (e) { falha(e); });
   });
   setInterval(function () {
