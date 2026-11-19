@@ -126,11 +126,22 @@
   });
 
   /* monta os campos {{1}}, {{2}}... de um template; devolve função que lê os valores */
+  /* variáveis do template: caixa que cresce com o texto. O WhatsApp não aceita quebra de linha dentro de uma variável, então Enter vira espaço. */
+  function varLinhas(v) { return Math.min(12, Math.max(1, Math.ceil(String(v || "").length / 34))); }
+  function varAjustar(el) { if (!el) return; el.style.height = "auto"; if (el.scrollHeight) el.style.height = el.scrollHeight + 2 + "px"; else el.rows = varLinhas(el.value); }
+  function varAjustarTodas(caixa) { Array.prototype.forEach.call(caixa.querySelectorAll("textarea[data-var]"), varAjustar); }
+  document.addEventListener("input", function (ev) {
+    const el = ev.target; if (!el.matches || !el.matches("textarea[data-var]")) return;
+    if (/[\r\n\t]/.test(el.value)) { const p = el.selectionStart; el.value = el.value.replace(/[\r\n\t]+/g, " "); try { el.setSelectionRange(p, p); } catch (e) {} }
+    varAjustar(el);
+  });
+  document.addEventListener("keydown", function (ev) { if (ev.key === "Enter" && ev.target.matches && ev.target.matches("textarea[data-var]")) ev.preventDefault(); });
   function montarVars(caixa, t, valores) {
     const n = t ? Number(t.qtd_variaveis) || 0 : 0;
     let html = "";
     for (let i = 1; i <= n; i++) {
-      html += '<div class="wa-linha-var"><b>{{' + i + '}}</b><input data-var="' + i + '" maxlength="120" value="' + esc((valores && valores[i - 1]) || (i === 1 ? "{primeiro_nome}" : "")) + '" placeholder="' + (i === 1 ? "{primeiro_nome} vira o nome da pessoa" : "texto igual para todos") + '"></div>';
+      const vi = (valores && valores[i - 1]) || (i === 1 ? "{primeiro_nome}" : "");
+      html += '<div class="wa-linha-var"><b>{{' + i + '}}</b><textarea data-var="' + i + '" maxlength="1000" rows="' + varLinhas(vi) + '" placeholder="' + (i === 1 ? "{primeiro_nome} vira o nome da pessoa" : "texto igual para todos") + '">' + esc(vi) + "</textarea></div>";
     }
     const mid = t && ["IMAGE", "VIDEO", "DOCUMENT"].indexOf(String(t.cabecalho_tipo || "").toUpperCase()) > -1;
     if (mid) {
@@ -142,7 +153,7 @@
     caixa.innerHTML = html || '<p class="vazio">Este template não tem variáveis.</p>';
     return function () {
       return {
-        vars: Array.prototype.slice.call(caixa.querySelectorAll("input[data-var]")).map(function (i) { return i.value.trim(); }),
+        vars: Array.prototype.slice.call(caixa.querySelectorAll("[data-var]")).map(function (i) { return i.value.replace(/\s+/g, " ").trim(); }),
         midia: (caixa.querySelector("input[data-midia]") || {}).value || ""
       };
     };
@@ -2082,7 +2093,13 @@
     const t = tplSelecionado();
     lerVarsDp = montarVars($("dpVars"), t, []);
     $("dpMidiaBox").hidden = true;
-    const prev = function () { $("dpPrev").textContent = t ? preencherPrev(t, lerVarsDp().vars) : "Escolha um template."; };
+    const prev = function () {
+      const txt = t ? preencherPrev(t, lerVarsDp().vars) : "";
+      $("dpPrev").textContent = t ? txt : "Escolha um template.";
+      const n = txt.length, el = $("dpTamanho");
+      el.textContent = !t ? "" : n > 1024 ? "A mensagem tem " + n + " letras (no exemplo com o nome \"Maria\"). O WhatsApp aceita até 1.024: encurte o texto da variável, senão o envio é recusado." : n > 900 ? n + " de 1.024 letras (no exemplo). Nomes longos podem passar do limite: deixe uma folga." : n + " de 1.024 letras.";
+      el.style.color = n > 1024 ? "#B3261E" : "";
+    };
     $("dpVars").oninput = prev; prev(); resumoDisparo(); agendarConferencia();
   }
   $("dpTemplate").addEventListener("change", trocarTemplateDp);
@@ -2357,7 +2374,7 @@
     trocarTemplateDp();
     if (Array.prototype.some.call($("dpEtiqueta").options, function (o) { return o.value === (d.filtro_etiqueta || ""); })) $("dpEtiqueta").value = d.filtro_etiqueta || "";
     $("dpQuando").value = d.agendado_para && new Date(d.agendado_para).getTime() > Date.now() ? wzLocal(d.agendado_para) : "";
-    (d.variaveis || []).forEach(function (v, i) { const el = $("dpVars").querySelector('[data-var="' + (i + 1) + '"]'); if (el) el.value = v; });
+    (d.variaveis || []).forEach(function (v, i) { const el = $("dpVars").querySelector('[data-var="' + (i + 1) + '"]'); if (el) { el.value = v; varAjustar(el); } });
     const m = $("dpVars").querySelector("[data-midia]"); if (m && d.cabecalho_midia) m.value = d.cabecalho_midia;
     $("dpVars").dispatchEvent(new Event("input", { bubbles: true }));
     wz.draftId = d.id; dpOrigem = null;
@@ -2514,7 +2531,7 @@
     $("dpNome").value = WaCamp.nomeCopia(c.nome); $("dpTemplate").value = chave; $("dpQuando").value = "";
     if (Array.prototype.some.call($("dpEtiqueta").options, function (o) { return o.value === (c.publico || ""); })) $("dpEtiqueta").value = c.publico || "";
     trocarTemplateDp();
-    (c.variaveis || []).forEach(function (v, i) { const el = $("dpVars").querySelector('[data-var="' + (i + 1) + '"]'); if (el) el.value = v; });
+    (c.variaveis || []).forEach(function (v, i) { const el = $("dpVars").querySelector('[data-var="' + (i + 1) + '"]'); if (el) { el.value = v; varAjustar(el); } });
     const m = $("dpVars").querySelector("[data-midia]"); if (m && c.midia) m.value = c.midia;
     $("dpVars").dispatchEvent(new Event("input", { bubbles: true }));
     dpOrigem = { id: c.id };

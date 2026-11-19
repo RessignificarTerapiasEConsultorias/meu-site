@@ -121,6 +121,8 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 .wa-barra{height:10px;background:#EFE7D6;border-radius:999px;overflow:hidden;min-width:140px}
 .wa-barra i{display:block;height:100%;background:var(--gold)}
 .wa-linha-var{display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;margin-bottom:8px}
+.wa-linha-var textarea{width:100%;min-height:44px;resize:vertical;line-height:1.4;overflow:hidden;font:inherit}
+@media (max-width:600px){.wa-linha-var{grid-template-columns:1fr;gap:4px}.wa-linha-var b{font-size:.85rem}}
 @media (max-width:1180px){
 .wa-conv.com-ficha{grid-template-columns:300px minmax(0,1fr)}
 .wa-ficha{position:fixed;top:0;right:0;bottom:0;width:min(360px,100%);max-height:none;z-index:40;border-radius:0;border:0;box-shadow:-12px 0 40px rgba(6,20,42,.35)}
@@ -503,7 +505,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
           <div class="wz-etapa" data-etapa="4"><h3 class="cp-tit">4. Variáveis e arquivo</h3>
             <div id="dpVars"></div>
             <div id="dpMidiaBox" style="margin-top:10px" hidden><label for="dpMidia">Link do arquivo do cabeçalho (https://...)</label><input id="dpMidia" type="url" placeholder="https://..."></div>
-            <div style="margin-top:14px"><label>Como vai chegar (exemplo)</label><div class="wa-prev" id="dpPrev">Escolha um template.</div></div></div>
+            <div style="margin-top:14px"><label>Como vai chegar (exemplo)</label><div class="wa-prev" id="dpPrev">Escolha um template.</div><p class="ajuda" id="dpTamanho" aria-live="polite"></p></div></div>
           <div class="wz-etapa" data-etapa="5"><h3 class="cp-tit">5. Quando enviar</h3>
             <div><label for="dpQuando">Data e hora <span class="vazio">(vazio = agora; horário de Brasília)</span></label><input id="dpQuando" type="datetime-local"></div>
             <p class="ajuda" id="wzPrevisao" style="margin-top:10px"></p></div>
