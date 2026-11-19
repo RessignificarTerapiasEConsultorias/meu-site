@@ -3108,6 +3108,7 @@
     } catch (e) { falha(e, e.message); }
   });
   $("fcAbrir").addEventListener("click", function () { const k = fnAcharCartao(fn.cartaoAberto); $("jFunilCartao").close(); if (k) fnAbrirPessoa(k.contato_id); });
+  $("fcEnviarEmail").addEventListener("click", function () { const k = fnAcharCartao(fn.cartaoAberto); if (k && window.WaEmailTela) { $("jFunilCartao").close(); window.WaEmailTela.enviarPara({ contato_id: k.contato_id }); } });
   function fnColunaDoTipo(tipo) { return fn.colunas.filter(function (c) { return c.tipo === tipo; })[0] || null; }
   $("fcGanho").addEventListener("click", function () { const c = fnColunaDoTipo("ganho"); if (!c) return aviso("Este quadro não tem uma coluna de ganho.", true); const id = fn.cartaoAberto; $("jFunilCartao").close(); fnMoverCartao(id, c.id, 0, {}); });
   $("fcPerdido").addEventListener("click", function () { const c = fnColunaDoTipo("perdido"); if (!c) return aviso("Este quadro não tem uma coluna de perdido.", true); const id = fn.cartaoAberto; $("jFunilCartao").close(); fnMoverCartao(id, c.id, 0, {}); });
@@ -3339,6 +3340,7 @@
       return '<li><div><b>' + esc(x.nome || "(sem nome)") + "</b> · " + esc(x.produto) + " · " + esc(vdReais(x.valor_centavos)) + " · " + esc(WV.tempoTexto(min)) + "</div>"
         + '<div class="acoes" style="margin:6px 0 0"><button class="btn peq contorno" type="button" data-vd-copiar="' + esc(texto) + '">Copiar resposta</button>'
         + (x.contato_id ? '<button class="btn peq" type="button" data-vd-conversa="' + esc(x.id) + '">Conversa</button>' : '<span class="vd-aviso">Sem contato no CRM</span>')
+        + (x.email ? '<button class="btn peq contorno" type="button" data-vd-email="' + esc(x.id) + '">E-mail de recuperação</button>' : "")
         + "</div></li>";
     }).join("") : '<li class="vazio">Ninguém pediu e deixou de pagar nos últimos dias.</li>';
   }
@@ -3424,6 +3426,7 @@
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, function () { aviso("Não consegui copiar. Copie o texto manualmente: " + txt, true); });
       else aviso("Copie manualmente: " + txt);
     } else if (b.dataset.vdConversa) vdAbrirConversa(b.dataset.vdConversa).catch(function (e) { falha(e); });
+    else if (b.dataset.vdEmail && window.WaEmailTela) window.WaEmailTela.enviarPedido(vdPedidoPorId(b.dataset.vdEmail));
   });
   setInterval(function () { if (!document.hidden && abaAtual === "vendas") telaVendas().catch(function () {}); }, 60000);
 
@@ -3446,7 +3449,11 @@
       + '<p class="vazio"><b>' + esc(WE.rotuloSituacao(d.situacao)) + "</b>" + (extra ? " · " + esc(extra) : "") + "</p>"
       + (dup.length ? '<p class="vd-aviso">Mesmo e-mail em outro contato: ' + dup.map(function (o) { return esc(o.nome); }).join(", ") + ". Confira se é a mesma pessoa.</p>" : "")
       + (d.sugestao_loja ? '<p class="vazio">No pedido da loja: ' + esc(d.sugestao_loja) + ' <button type="button" class="btn peq contorno" id="fcEmailUsarLoja" data-email="' + esc(d.sugestao_loja) + '">Usar este</button></p>' : "")
-      + '<div class="acoes" style="margin:6px 0 0"><button type="button" class="btn peq contorno" id="fcEmailSalvar">Salvar e-mail</button></div></div>';
+      + '<div class="acoes" style="margin:6px 0 0"><button type="button" class="btn peq contorno" id="fcEmailSalvar">Salvar e-mail</button>'
+      + (d.email ? '<button type="button" class="btn peq contorno" id="fcEmailEnviar">Enviar e-mail</button>' : "") + "</div>"
+      + ((d.historico || []).length ? '<ol class="em-hist" id="fcEmailHist">' + d.historico.map(function (h) {
+          return "<li>" + esc(h.assunto || "(sem assunto)") + " · <b>" + esc(WE.rotuloEnvio(h.status)) + "</b>" + (h.clicou_em ? " · clicou" : "") + " · " + esc(horaCurta(h.criado_em)) + (h.detalhe ? "<br>" + esc(h.detalhe) : "") + "</li>";
+        }).join("") + "</ol>" : "") + "</div>";
   }
   $("cvFicha").addEventListener("input", function (ev) {
     if (!ev.target || ev.target.id !== "fcEmail") return;
@@ -3454,6 +3461,7 @@
   });
   $("cvFicha").addEventListener("click", async function (ev) {
     const t = ev.target;
+    if (t.closest && t.closest("#fcEmailEnviar")) { if (window.WaEmailTela) window.WaEmailTela.enviarPara({ contato_id: conversaId }); return; }
     if (t.closest && t.closest("#fcEmailUsarLoja")) { $("fcEmail").value = t.closest("#fcEmailUsarLoja").dataset.email; $("fcEmailAceite").checked = false; return; }
     if (!(t.closest && t.closest("#fcEmailSalvar"))) return;
     const id = conversaId, WE = window.WaEmail, bruto = $("fcEmail").value, v = WE.normalizar(bruto);
@@ -3484,7 +3492,13 @@
     $("emDup").innerHTML = dup.map(function (x) { return "<li>" + esc(x.email) + " <small>· " + Number(x.contatos) + " contatos</small></li>"; }).join("");
     const s = p.lista_saidas || [];
     $("emSaidas").innerHTML = s.length ? s.map(function (x) { return "<tr><td>" + esc(x.email) + "</td><td>" + esc(WE.rotuloMotivo(x.motivo)) + "</td><td>" + esc(horaCurta(x.saiu_em)) + "</td></tr>"; }).join("") : '<tr><td colspan="3" class="vazio">Ninguém pediu para sair.</td></tr>';
+    if (window.WaEmailTela) window.WaEmailTela.visao(p);
   }
+  /* utilidades do painel para o módulo da tela de e-mail (whatsapp-email-tela.js), que carrega depois deste arquivo */
+  window.WaPainel = { $: $, esc: esc, ler: ler, supa: supa, aviso: aviso, falha: falha, horaCurta: horaCurta, dataBR: dataBR, etapas: ETAPAS,
+    etiquetas: function () { return Array.from(new Set(contatos.reduce(function (a, c) { return a.concat(c.etiquetas || []); }, []))).sort(); },
+    recarregarEmailDaFicha: function () { if (conversaId) emFicha(conversaId, true).catch(function () {}); },
+    recarregarVisao: function () { return telaEmail(); } };
   $("emAtualizar").addEventListener("click", function () { telaEmail().catch(function (e) { falha(e, "Não consegui atualizar."); }); });
   $("emLojaAplicar").addEventListener("click", async function () {
     if (!confirm("Guardar na ficha o e-mail de quem comprou?\n\nIsso não autoriza marketing: esses e-mails ficam só para assuntos do pedido.")) return;

@@ -37,7 +37,10 @@
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
-  var token = new URLSearchParams(location.search).get("t") || "";
+  var parametros = new URLSearchParams(location.search);
+  var token = parametros.get("t") || "";
+  var envio = parametros.get("e") || "";   /* de qual e-mail veio o clique (só para a estatística da campanha) */
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(envio)) envio = "";
   var mostra = function (texto, classe) { var r = $("resultado"); r.textContent = texto; r.className = classe || ""; };
   if (!token) { $("sair").hidden = true; $("texto").textContent = "Este link está incompleto. Abra o link de sair que veio no e-mail, ou responda ao e-mail pedindo para sair."; return; }
   var cliente;
@@ -45,7 +48,9 @@
   catch (e) { mostra("Não consegui carregar a página. Tente de novo em instantes.", "erro"); return; }
   function chamar(funcao, botao, certo) {
     botao.disabled = true; mostra("Um instante...");
-    cliente.rpc(funcao, { p_token: token }).then(function (r) {
+    var dados = { p_token: token };
+    if (funcao === "crm_email_sair" && envio) dados.p_envio = envio;
+    cliente.rpc(funcao, dados).then(function (r) {
       botao.disabled = false;
       var d = r && r.data;
       if (!r || r.error || !d || d.ok !== true) { mostra((d && d.erro) || "Não consegui concluir. Responda ao e-mail pedindo para sair que retiramos você.", "erro"); return; }
