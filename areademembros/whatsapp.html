@@ -233,6 +233,9 @@ dialog#jAutomacao,dialog#jAutPessoas{max-width:900px;width:calc(100% - 16px);max
 .au-passo.au-arrastando{opacity:.45}
 .au-passo.au-alvo{outline:2px dashed var(--accent,#0B4A8F);outline-offset:2px}
 .au-alca{font-weight:700;color:var(--muted,#667);margin-right:4px;user-select:none}
+.wa-etapa-filtro{display:inline-flex;align-items:center;gap:6px;font-size:.85rem}
+.wa-etapa-filtro select{padding:4px 8px;border-radius:999px;max-width:220px}
+.wa-etapa-filtro.ativo select{border-color:var(--accent,#0B4A8F);font-weight:600}
 .au-dias{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px}
 .au-passo textarea{width:100%}
 .au-frase{font-size:13px;color:var(--muted);margin:2px 0 0;overflow-wrap:anywhere}
@@ -365,7 +368,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
             <button type="button" class="wa-chip" data-filtro="pediu" aria-pressed="false">Pediu atendimento<b id="cvNPediu"></b></button>
           </div>
           <div class="wa-filtros" id="cvFiltros2" role="group" aria-label="Filtros para follow-up (podem ser combinados com os de cima)">
-            <button type="button" class="wa-chip" data-extra="interessado" aria-pressed="false" title="Contatos que você marcou na etapa Interessado">Interessados<b id="cvNInteressados"></b></button>
+            <label class="wa-etapa-filtro"><span>Etapa</span><select id="cvEtapa" aria-label="Filtrar conversas pela etapa do funil"><option value="">Todas as etapas</option><option value="novo">Novo</option><option value="em_conversa">Em conversa</option><option value="interessado">Interessado</option><option value="proposta">Proposta</option><option value="cliente">Cliente (fechou)</option><option value="perdido">Perdido</option></select></label>
             <button type="button" class="wa-chip" data-extra="alta" aria-pressed="false" title="Prioridade alta ou urgente">Prioridade alta<b id="cvNAlta"></b></button>
           </div>
           <div class="checks" style="margin:0 0 8px"><label class="wa-fn-chk"><input type="checkbox" id="cvAutoLida"> Ao abrir uma conversa, tirar de Não respondidas</label></div>

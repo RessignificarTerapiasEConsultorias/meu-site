@@ -642,14 +642,14 @@
   /* ---------- contatos ---------- */
   async function carregarContatos() {
     contatos = await buscarTudo(function () {
-      return supa().from("wa_contatos").select("id,nome,telefone,username,etiquetas,optin,optout,ultima_msg_em,notas,perfil_id,origem").order("criado_em").order("id");
+      return supa().from("wa_contatos").select("id,nome,telefone,username,etiquetas,optin,optout,ultima_msg_em,notas,perfil_id,origem,etapa").order("criado_em").order("id");
     });
     const ets = Array.from(new Set(contatos.reduce(function (a, c) { return a.concat(c.etiquetas || []); }, []))).sort();
     const listas = ets.filter(function (e) { return e.indexOf(LISTA) === 0; }), outras = ets.filter(function (e) { return e.indexOf(LISTA) !== 0; });
     const grupo = function (rot, arr, nome) { return arr.length ? '<optgroup label="' + rot + '">' + arr.map(function (e) { return '<option value="' + esc(e) + '">' + esc(nome(e)) + "</option>"; }).join("") + "</optgroup>" : ""; };
     ["ctFiltroEt", "dpEtiqueta"].forEach(function (id) {
       const sel = $(id), v = sel.value, primeiro = sel.options[0].outerHTML;
-      sel.innerHTML = primeiro + grupo("Listas", listas, function (e) { return e.slice(LISTA.length); }) + grupo("Etiquetas", outras, function (e) { return e; });
+      sel.innerHTML = primeiro + (id === "dpEtiqueta" ? dpGrupoEtapas() : "") + grupo("Listas", listas, function (e) { return e.slice(LISTA.length); }) + grupo("Etiquetas", outras, function (e) { return e; });
       sel.value = v;
     });
     const origens = Array.from(new Set(contatos.map(function (c) { return c.origem || "__nenhuma"; }))).sort();
@@ -1134,7 +1134,8 @@
   const CAMPOS_MSG = "id,direcao,tipo,texto,status,erro,origem,template_nome,criado_em,midia_url,midia_tipo,midia_caminho,midia_mime,midia_nome,midia_id,reacao,wamid,corrige_msg";
   let filtroCv = "todas";
   let msgsAtuais = [];
-  const extraCv = { interessado: false, alta: false };
+  const extraCv = { etapa: "", alta: false };
+  const ROT_ETAPA = { novo: "Novo", em_conversa: "Em conversa", interessado: "Interessado", proposta: "Proposta", cliente: "Cliente (fechou)", perdido: "Perdido" };
   let listaCv = [];
   const busca = { termo: "", seq: 0, timer: null, contatos: [], mensagens: [], pronta: false };
   let fichaAberta = window.matchMedia("(min-width:1181px)").matches;
@@ -1182,7 +1183,7 @@
     else if (filtroCv === "nao_lidas") q = q.gt("nao_lidas", 0);
     else if (filtroCv === "lidas") q = q.eq("nao_lidas", 0);
     else if (filtroCv === "pediu") q = q.eq("precisa_humano", true);
-    if (extraCv.interessado) q = q.eq("etapa", "interessado");
+    if (extraCv.etapa) q = q.eq("etapa", extraCv.etapa);
     if (extraCv.alta) q = q.in("prioridade", ["alta", "urgente"]);
     const r = await Promise.all([ler(q), contagemCv()]);
     listaCv = r[0];
@@ -1206,12 +1207,15 @@
   async function contarExtrasCv() {
     try {
       const f = function () { return supa().from("wa_contatos").select("id", { count: "exact", head: true }).not("ultima_msg_em", "is", null); };
-      const r = await Promise.all([f().eq("etapa", "interessado"), f().in("prioridade", ["alta", "urgente"])]);
-      $("cvNInteressados").textContent = r[0] && r[0].count ? r[0].count : ""; $("cvNAlta").textContent = r[1] && r[1].count ? r[1].count : "";
+      const ks = Object.keys(ROT_ETAPA);
+      const r = await Promise.all([f().in("prioridade", ["alta", "urgente"])].concat(ks.map(function (k) { return f().eq("etapa", k); })));
+      $("cvNAlta").textContent = r[0] && r[0].count ? r[0].count : "";
+      const sel = $("cvEtapa");
+      ks.forEach(function (k, i) { const op = sel.querySelector('option[value="' + k + '"]'); const n = r[i + 1] && r[i + 1].count; if (op) op.textContent = ROT_ETAPA[k] + (n ? " (" + n + ")" : " (0)"); });
     } catch (e) {}
   }
   function passaFiltro(c) {
-    if (extraCv.interessado && c.etapa !== undefined && c.etapa !== "interessado") return false;
+    if (extraCv.etapa && c.etapa !== undefined && c.etapa !== extraCv.etapa) return false;
     if (extraCv.alta && c.prioridade !== undefined && c.prioridade !== "alta" && c.prioridade !== "urgente") return false;
     if (filtroCv === "nao_lidas") return c.nao_lidas > 0;
     if (filtroCv === "lidas") return !c.nao_lidas;
@@ -1262,7 +1266,7 @@
       return;
     }
     const vazio = { todas: "Nenhuma conversa ainda. Quando alguém escrever para o número do CRM, aparece aqui.", nao_lidas: "Nenhuma conversa com mensagem não lida.", sem_resposta: "Nenhuma conversa esperando a sua resposta. Tudo em dia!", lidas: "Nenhuma conversa lida.", pediu: "Ninguém está esperando atendimento." }[filtroCv];
-    const vazioX = (extraCv.interessado || extraCv.alta) ? "Nenhuma conversa com esses filtros." : vazio;
+    const vazioX = (extraCv.etapa || extraCv.alta) ? "Nenhuma conversa com esses filtros." : vazio;
     caixa.innerHTML = listaCv.length ? listaCv.map(itemCv).join("") : '<p class="vazio">' + vazioX + "</p>";
   }
   function buscar() {
@@ -1320,6 +1324,12 @@
     b.setAttribute("aria-pressed", extraCv[b.dataset.extra] ? "true" : "false");
     carregarLista().catch(falha);
   });
+  $("cvEtapa").addEventListener("change", function () {
+    extraCv.etapa = this.value; this.parentNode.classList.toggle("ativo", !!this.value);
+    try { localStorage.setItem("wa_cv_etapa", this.value); } catch (e) {}
+    carregarLista().catch(falha);
+  });
+  try { const ev0 = localStorage.getItem("wa_cv_etapa"); if (ev0 && ROT_ETAPA[ev0]) { extraCv.etapa = ev0; $("cvEtapa").value = ev0; $("cvEtapa").parentNode.classList.add("ativo"); } } catch (e) {}
 
   /* ----- mensagens ----- */
   /* o que a pessoa manda fica numa pasta protegida: cada arquivo abre com um link que vale 1 hora */
@@ -4016,6 +4026,42 @@
       ultimaAssinatura = ""; await atualizarConversa(true); carregarLista().catch(function () {});
     } catch (e) { botao.disabled = false; botao.textContent = "Enviar correção"; erro(e.message || String(e)); }
   });
+
+  /* ---------- disparo para todas as pessoas de uma etapa do funil ----------
+     Quem está na etapa agora vira uma lista ("Etapa Interessado dia/hora"): a conferência e todas as travas do disparo usam essa lista como qualquer outra. */
+  const ETAPA_DP = "__etapa:";
+  function dpGrupoEtapas() {
+    const ks = ["novo", "em_conversa", "interessado", "proposta", "cliente", "perdido"], rot = { novo: "Novo", em_conversa: "Em conversa", interessado: "Interessado", proposta: "Proposta", cliente: "Cliente (fechou)", perdido: "Perdido" };
+    return '<optgroup label="Etapa do funil (todos que estão nela agora)">' + ks.map(function (k) {
+      const n = contatos.filter(function (c) { return c.etapa === k && c.optin && !c.optout; }).length;
+      return '<option value="' + ETAPA_DP + k + '">' + esc(rot[k]) + " (" + n + (n === 1 ? " pode receber" : " podem receber") + ")</option>";
+    }).join("") + "</optgroup>";
+  }
+  let dpPublicoAnterior = "";
+  $("dpEtiqueta").addEventListener("focus", function () { if (this.value.indexOf(ETAPA_DP) !== 0) dpPublicoAnterior = this.value; });
+  $("dpEtiqueta").addEventListener("change", async function (ev) {
+    const sel = this, v = sel.value;
+    if (v.indexOf(ETAPA_DP) !== 0) { dpPublicoAnterior = v; return; }
+    ev.stopImmediatePropagation();                       // não confere o público "etapa" cru: espera a lista ficar pronta
+    const etapa = v.slice(ETAPA_DP.length), rot = sel.options[sel.selectedIndex].textContent.replace(/ \(.*$/, "");
+    const volta = function () { sel.value = dpPublicoAnterior; sel.dispatchEvent(new Event("change")); };
+    try {
+      const pessoas = await buscarTudo(function () { return supa().from("wa_contatos").select("id,optin,optout").eq("etapa", etapa).order("id"); });
+      const ids = pessoas.map(function (c) { return c.id; }), aptas = pessoas.filter(function (c) { return c.optin && !c.optout; }).length;
+      if (!ids.length) { aviso("Ninguém está na etapa " + rot + " agora.", true); return volta(); }
+      if (!confirm("Enviar para quem está na etapa " + rot + "?\n\n" + ids.length + (ids.length === 1 ? " pessoa está" : " pessoas estão") + " nela agora (" + aptas + " com autorização para receber).\n\nO CRM monta uma lista com essas pessoas. Quem entrar na etapa depois não entra neste disparo. As travas de sempre continuam valendo (Não enviar, saída da lista, limite diário).")) return volta();
+      const d = new Date(Date.now() - 3 * 3600e3), p2 = function (n) { return String(n).padStart(2, "0"); };
+      const nome = LISTA + "Etapa " + rot + " " + p2(d.getUTCDate()) + "/" + p2(d.getUTCMonth() + 1) + " " + p2(d.getUTCHours()) + "h" + p2(d.getUTCMinutes()) + " (" + ids.length + (ids.length === 1 ? " pessoa)" : " pessoas)");
+      for (let i = 0; i < ids.length; i += 500) {
+        const r = await ler(supa().rpc("wa_contatos_etiquetar", { p_ids: ids.slice(i, i + 500), p_adicionar: [nome], p_remover: [] }));
+        if (!r || !r.ok) throw new Error((r && r.erro) || "Não consegui montar a lista.");
+      }
+      await carregarContatos();
+      sel.value = nome; dpPublicoAnterior = nome; dpOrigem = null;
+      sel.dispatchEvent(new Event("change"));
+      aviso("Pronto: o disparo vai para quem está em " + rot + ". A lista \"" + nome.slice(LISTA.length) + "\" ficou salva em Contatos.");
+    } catch (e) { falha(e, e.message); volta(); }
+  }, true);
 
   /* ---------- disparo só para pessoas escolhidas (uma ou várias) ---------- */
   const dq = { sel: new Set(), recebeu: null };
