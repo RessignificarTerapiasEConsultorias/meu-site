@@ -1863,6 +1863,7 @@
     const d = await ler(supa().rpc("wa_contato_ficha", { p_id: id }));
     if (id !== conversaId || !d) return;
     fichaDados = d; desenharFichaDados();
+    emFicha(id).catch(function () { /* o bloco de e-mail não pode travar a ficha */ });
   }
   function desenharFicha() {
     const c = conversaCont, f = $("cvFicha");
@@ -1873,6 +1874,7 @@
       '<div class="f wa-fc-form">' +
       '<div><label for="fcNome">Nome</label><input id="fcNome" maxlength="80" value="' + esc(c.nome || "") + '"></div>' +
       '<div id="fcBloqueio"></div>' +
+      '<div id="fcEmailBox" data-de=""></div>' +
       '<div class="wa-fc-2"><div><label for="fcEtapa">Etapa</label><select id="fcEtapa">' + opc(ETAPAS, c.etapa) + '</select></div><div><label for="fcPrio">Prioridade</label><select id="fcPrio">' + opc(PRIORIDADES, c.prioridade) + "</select></div></div>" +
       '<div><label for="fcEt">Etiquetas <span class="vazio">(separe por vírgula)</span></label><input id="fcEt" value="' + esc((c.etiquetas || []).join(", ")) + '"></div>' +
       '<div><label for="fcNotas">Anotações</label><textarea id="fcNotas" rows="3" maxlength="2000">' + esc(c.notas || "") + "</textarea></div></div>" +
@@ -3423,6 +3425,83 @@
   });
   setInterval(function () { if (!document.hidden && abaAtual === "vendas") telaVendas().catch(function () {}); }, 60000);
 
+  /* ---------- e-mail (Fase 8, itens 8.1 e 8.2): e-mail e autorização na ficha, visão e saídas ---------- */
+  async function emFicha(id, forcar) {
+    const cx = $("fcEmailBox"); if (!cx) return;
+    if (!forcar && cx.dataset.de === id) return;
+    const d = await ler(supa().rpc("crm_email_do_contato", { p_contato: id }));
+    const agora = $("fcEmailBox"); if (!agora || id !== conversaId || !d) return;
+    const WE = window.WaEmail, dup = d.duplicados || [];
+    let extra = "";
+    if (d.situacao === "aceitou") extra = "Autorizou em " + dataBR(d.optin_em) + (d.optin_origem ? " (" + d.optin_origem + ")" : "") + ".";
+    else if (d.situacao === "saiu") extra = "Pediu para sair em " + dataBR(d.saiu_em) + " (" + WE.rotuloMotivo(d.saiu_motivo) + "). Não recebe marketing.";
+    else if (d.situacao === "invalido") extra = "O endereço deu erro de entrega" + (d.invalido_motivo ? " (" + d.invalido_motivo + ")" : "") + ". Corrija para voltar a enviar.";
+    else if (d.situacao === "so_transacional") extra = "Só recebe e-mail sobre o que pediu (recibo, acesso). Marketing, só com autorização.";
+    agora.dataset.de = id;
+    agora.innerHTML = '<div class="wa-fc-bloco" style="overflow-wrap:anywhere"><label for="fcEmail">E-mail</label><input id="fcEmail" type="email" maxlength="254" autocomplete="off" value="' + esc(d.email || "") + '">'
+      + '<p class="vazio" id="fcEmailAviso"></p>'
+      + '<label class="wa-fn-chk"><input type="checkbox" id="fcEmailAceite"' + (d.optin ? " checked" : "") + (d.saiu ? " disabled" : "") + "> Autorizou receber e-mail (novidades)</label>"
+      + '<p class="vazio"><b>' + esc(WE.rotuloSituacao(d.situacao)) + "</b>" + (extra ? " · " + esc(extra) : "") + "</p>"
+      + (dup.length ? '<p class="vd-aviso">Mesmo e-mail em outro contato: ' + dup.map(function (o) { return esc(o.nome); }).join(", ") + ". Confira se é a mesma pessoa.</p>" : "")
+      + (d.sugestao_loja ? '<p class="vazio">No pedido da loja: ' + esc(d.sugestao_loja) + ' <button type="button" class="btn peq contorno" id="fcEmailUsarLoja" data-email="' + esc(d.sugestao_loja) + '">Usar este</button></p>' : "")
+      + '<div class="acoes" style="margin:6px 0 0"><button type="button" class="btn peq contorno" id="fcEmailSalvar">Salvar e-mail</button></div></div>';
+  }
+  $("cvFicha").addEventListener("input", function (ev) {
+    if (!ev.target || ev.target.id !== "fcEmail") return;
+    const av = $("fcEmailAviso"); if (av) av.textContent = window.WaEmail.avisos(ev.target.value).join(" ");
+  });
+  $("cvFicha").addEventListener("click", async function (ev) {
+    const t = ev.target;
+    if (t.closest && t.closest("#fcEmailUsarLoja")) { $("fcEmail").value = t.closest("#fcEmailUsarLoja").dataset.email; $("fcEmailAceite").checked = false; return; }
+    if (!(t.closest && t.closest("#fcEmailSalvar"))) return;
+    const id = conversaId, WE = window.WaEmail, bruto = $("fcEmail").value, v = WE.normalizar(bruto);
+    if (v && !WE.valido(v)) return aviso("Este e-mail não parece válido. Confira se falta alguma letra ou o @.", true);
+    try {
+      const r = await ler(supa().rpc("crm_email_salvar", { p_contato: id, p_email: v || "", p_optin: !!v && $("fcEmailAceite").checked, p_origem: "painel" }));
+      if (!r || r.ok === false) return aviso((r && r.erro) || "Não consegui salvar o e-mail.", true);
+      aviso(v ? "E-mail salvo." + ((r.duplicados || []).length ? " Atenção: outro contato usa este mesmo e-mail." : "") : "E-mail removido.");
+      await emFicha(id, true); carregarFicha().catch(function () {});
+    } catch (e) { falha(e, "Não consegui salvar o e-mail."); }
+  });
+  async function telaEmail() {
+    const p = await ler(supa().rpc("crm_email_painel")), WE = window.WaEmail;
+    const card = function (titulo, valor, sub) { return '<div class="vd-card"><small>' + esc(titulo) + "</small><b>" + esc(String(valor)) + "</b>" + (sub ? "<small>" + esc(sub) + "</small>" : "") + "</div>"; };
+    $("emIndic").innerHTML = [
+      card("Pessoas com e-mail", p.com_email, "de " + p.contatos + " no CRM"),
+      card("Autorizaram e-mail", p.aceitaram, "podem receber novidades"),
+      card("Só transacional", p.so_transacional, "sem autorização de marketing"),
+      card("Saíram", p.saidas, "não recebem marketing"),
+      card("Endereços com erro", p.invalidos, "não são tentados de novo"),
+      card("Uso de hoje", WE.usoTexto(p.usados_hoje, p.limite_dia), "no mês: " + WE.usoTexto(p.usados_mes, p.limite_mes))
+    ].join("") + '<p class="ajuda" style="grid-column:1/-1;overflow-wrap:anywhere">Remetente: ' + esc(p.remetente || "") + "</p>";
+    const sug = Number(p.sugestoes_loja) || 0;
+    $("emLojaBox").hidden = !sug;
+    $("emLojaTxt").textContent = sug + (sug === 1 ? " pessoa comprou" : " pessoas compraram") + " na loja e o e-mail do pedido ainda não está na ficha. Guardar aqui não autoriza marketing: fica só para assuntos do pedido.";
+    const dup = p.duplicados || [];
+    $("emDupBox").hidden = !dup.length;
+    $("emDup").innerHTML = dup.map(function (x) { return "<li>" + esc(x.email) + " <small>· " + Number(x.contatos) + " contatos</small></li>"; }).join("");
+    const s = p.lista_saidas || [];
+    $("emSaidas").innerHTML = s.length ? s.map(function (x) { return "<tr><td>" + esc(x.email) + "</td><td>" + esc(WE.rotuloMotivo(x.motivo)) + "</td><td>" + esc(horaCurta(x.saiu_em)) + "</td></tr>"; }).join("") : '<tr><td colspan="3" class="vazio">Ninguém pediu para sair.</td></tr>';
+  }
+  $("emAtualizar").addEventListener("click", function () { telaEmail().catch(function (e) { falha(e, "Não consegui atualizar."); }); });
+  $("emLojaAplicar").addEventListener("click", async function () {
+    if (!confirm("Guardar na ficha o e-mail de quem comprou?\n\nIsso não autoriza marketing: esses e-mails ficam só para assuntos do pedido.")) return;
+    try {
+      const r = await ler(supa().rpc("crm_email_aplicar_sugestoes"));
+      aviso((Number(r && r.aplicados) || 0) + " e-mail(s) guardado(s) como só transacional."); await telaEmail();
+    } catch (e) { falha(e, "Não consegui guardar os e-mails."); }
+  });
+  $("emSairBtn").addEventListener("click", async function () {
+    const WE = window.WaEmail, v = WE.normalizar($("emSairEmail").value);
+    if (!WE.valido(v)) return aviso("Digite um e-mail válido.", true);
+    if (!confirm("Registrar que " + v + " pediu para sair?\n\nEssa pessoa deixa de receber e-mail de marketing. Só ela pode voltar, pelo link do e-mail.")) return;
+    try {
+      const r = await ler(supa().rpc("crm_email_sair_manual", { p_email: v, p_motivo: $("emSairMotivo").value }));
+      if (!r || r.ok === false) return aviso((r && r.erro) || "Não consegui registrar.", true);
+      $("emSairEmail").value = ""; aviso("Saída registrada."); await telaEmail();
+    } catch (e) { falha(e, "Não consegui registrar a saída."); }
+  });
+
   /* ---------- automações: botão de emergência e motivos de bloqueio (Fase 7, item 7.1) ---------- */
   const au = { pausadas: false };
   async function auAtualizar() {
@@ -3468,7 +3547,7 @@
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
     abaAtual = nome;
-    const f = { conversas: telaConversas, funil: telaFunil, vendas: telaVendas, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, fluxos: function () { auAtualizar().catch(function () {}); return telaFluxos(); }, config: telaConfig }[nome];
+    const f = { conversas: telaConversas, funil: telaFunil, vendas: telaVendas, email: telaEmail, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, fluxos: function () { auAtualizar().catch(function () {}); return telaFluxos(); }, config: telaConfig }[nome];
     f().catch(function (e) { falha(e); });
   });
   setInterval(function () {

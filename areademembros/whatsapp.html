@@ -301,6 +301,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
       <button class="aba" type="button" data-aba="templates" aria-selected="false">Templates<span class="ponto" id="tpPonto" title="Há novidade nos templates" hidden></span></button>
       <button class="aba" type="button" data-aba="robo" aria-selected="false">Robô</button>
       <button class="aba" type="button" data-aba="fluxos" aria-selected="false">Fluxos</button>
+      <button class="aba" type="button" data-aba="email" aria-selected="false">E-mail</button>
       <button class="aba" type="button" data-aba="config" aria-selected="false">Configuração</button>
     </div>
 
@@ -598,6 +599,21 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
     </section>
 
     <!-- ===== FLUXOS ===== -->
+    <section data-painel="email" hidden>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>E-mail</h2><button class="btn peq contorno" type="button" id="emAtualizar">Atualizar</button></div>
+        <p class="ajuda" style="margin-top:8px">Nesta etapa o CRM guarda o e-mail de cada pessoa, a autorização e quem pediu para sair. <b>O envio de e-mails (modelos e campanhas) ainda não está ligado.</b> A autorização de e-mail é separada da do WhatsApp.</p>
+        <div class="vd-indic" id="emIndic" style="margin-top:12px"><p class="vazio">Carregando...</p></div>
+        <div class="vd-bloco" id="emLojaBox" style="margin-top:12px" hidden><h3 class="cp-tit">E-mails de quem comprou</h3><p class="ajuda" id="emLojaTxt"></p><div class="acoes"><button class="btn peq" type="button" id="emLojaAplicar">Guardar como só transacional</button></div></div>
+        <div class="vd-bloco" id="emDupBox" style="margin-top:12px" hidden><h3 class="cp-tit">Mesmo e-mail em mais de um contato</h3><p class="ajuda">O CRM não junta pessoas sozinho. Confira se é a mesma pessoa cadastrada duas vezes. Um envio conta uma vez por endereço.</p><ul class="wa-fn-ativ" id="emDup" style="overflow-wrap:anywhere"></ul></div>
+        <div class="vd-bloco" style="margin-top:12px"><h3 class="cp-tit">Quem saiu dos e-mails</h3>
+          <p class="ajuda">Quem está aqui não recebe e-mail de marketing. Só a própria pessoa pode voltar, pelo link do e-mail.</p>
+          <div class="wa-fn-filtros"><input id="emSairEmail" type="email" placeholder="e-mail de quem pediu para sair" aria-label="E-mail de quem pediu para sair" maxlength="254"><select id="emSairMotivo" aria-label="Motivo"><option value="respondeu_sair">Respondeu pedindo para sair</option><option value="removido_pelo_dono">Retirado por você</option></select><button class="btn peq" type="button" id="emSairBtn">Registrar saída</button></div>
+          <div class="tabela-wrap" style="margin-top:10px"><table class="tabela"><thead><tr><th>E-mail</th><th>Motivo</th><th>Quando</th></tr></thead><tbody id="emSaidas"><tr><td colspan="3" class="vazio">Carregando...</td></tr></tbody></table></div>
+        </div>
+      </div>
+    </section>
+
     <section data-painel="fluxos" hidden>
       <div class="cartao" id="auCartao">
         <div class="empresa-titulo"><h2>Segurança das automações</h2><button class="btn peq perigo" type="button" id="auPausar">Pausar todas as automações</button></div>
@@ -937,6 +953,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 <script src="js/whatsapp-camp.js"></script>
 <script src="js/whatsapp-funil.js"></script>
 <script src="js/whatsapp-vendas.js"></script>
+<script src="js/whatsapp-email.js"></script>
 <script src="js/whatsapp.js"></script>
 </body>
 </html>
