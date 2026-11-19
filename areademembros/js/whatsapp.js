@@ -1131,8 +1131,9 @@
   const PAUSAS = [[30, "30 min"], [60, "1 h"], [120, "2 h"], [240, "4 h"], [480, "8 h"], [720, "12 h"], [1440, "24 h"], [0, "Para sempre (sem disparos)"]];
   const SEM_PRAZO = "9999-12-31T00:00:00Z";
   const CAMPOS_LISTA = "id,nome,telefone,username,ultima_msg_em,ultima_msg_texto,nao_lidas,precisa_humano,optout,ultima_entrada_em,prioridade,etapa,robo_pausado_ate,sem_resposta,sem_resposta_desde";
-  const CAMPOS_MSG = "id,direcao,tipo,texto,status,erro,origem,template_nome,criado_em,midia_url,midia_tipo,midia_caminho,midia_mime,midia_nome,midia_id,reacao";
+  const CAMPOS_MSG = "id,direcao,tipo,texto,status,erro,origem,template_nome,criado_em,midia_url,midia_tipo,midia_caminho,midia_mime,midia_nome,midia_id,reacao,wamid,corrige_msg";
   let filtroCv = "todas";
+  let msgsAtuais = [];
   const extraCv = { interessado: false, alta: false };
   let listaCv = [];
   const busca = { termo: "", seq: 0, timer: null, contatos: [], mensagens: [], pronta: false };
@@ -1348,9 +1349,13 @@
     return d.toLocaleDateString("pt-BR", d.getFullYear() === hoje.getFullYear() ? { day: "2-digit", month: "long" } : { day: "2-digit", month: "long", year: "numeric" });
   }
   function desenharMensagens(msgs) {
+    msgsAtuais = msgs;
     const caixa = $("cvMsgs"); if (!caixa) return;
     const noFim = caixa.scrollHeight - caixa.scrollTop - caixa.clientHeight < 80;
     let dia = "", h = "";
+    const corrigidas = {}, porId = {};
+    msgs.forEach(function (m) { porId[m.id] = m; if (m.corrige_msg) corrigidas[m.corrige_msg] = true; });
+    const podeCorrigir = conversaCont && janelaMs(conversaCont) > 0;
     msgs.forEach(function (m) {
       const d = new Date(m.criado_em), chave = d.toDateString();
       if (chave !== dia) { dia = chave; h += '<div class="wa-dia"><span>' + esc(diaRotulo(d)) + "</span></div>"; }
@@ -1369,11 +1374,14 @@
         texto = texto.replace(/^\[(imagem|vídeo|áudio|figurinha)\]\s*/, "");
         if (m.midia_tipo === "document" && m.midia_nome && /^\[documento\]/.test(texto)) texto = "";
       }
-      h += '<div class="wa-msg ' + cls + (ancora && ancora === m.id ? " wa-achou" : "") + '" data-msg-id="' + m.id + '">' +
+      const orig = m.corrige_msg ? porId[m.corrige_msg] : null;
+      const cita = m.corrige_msg ? '<div class="wa-cita">↩ Correção da mensagem enviada' + (orig ? ": " + esc(String(orig.texto || "").replace(/^\[(imagem|vídeo|áudio|documento)\]\s*/, "").slice(0, 80) || "(arquivo)") : "") + "</div>" : "";
+      const botaoCorrigir = m.direcao === "saida" && m.wamid && m.status !== "falhou" && podeCorrigir && m.tipo !== "system" ? '<button type="button" class="wa-corrigir" data-corrigir="' + m.id + '" title="Enviar uma nova mensagem respondendo a esta, com o texto corrigido">Corrigir</button>' : "";
+      h += '<div class="wa-msg ' + cls + (ancora && ancora === m.id ? " wa-achou" : "") + '" data-msg-id="' + m.id + '">' + cita +
         (midia ? '<div class="wa-midia">' + midia + "</div>" : "") +
         (texto ? '<div class="texto">' + textoHtml(texto) + "</div>" : "") +
         (m.template_nome ? '<div class="meta">template ' + esc(m.template_nome) + "</div>" : "") +
-        '<div class="meta"><span>' + esc(d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })) + "</span>" + (quem ? "<span>" + quem + "</span>" : "") + "<span>" + iconeStatus(m) + "</span></div>" +
+        '<div class="meta"><span>' + esc(d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })) + "</span>" + (quem ? "<span>" + quem + "</span>" : "") + "<span>" + iconeStatus(m) + "</span>" + (corrigidas[m.id] ? '<span class="wa-tag-corr">corrigida abaixo</span>' : "") + botaoCorrigir + "</div>" +
         (m.direcao === "saida" && m.status === "falhou" && m.erro ? '<div class="erro">' + esc(m.erro) + "</div>" : "") +
         (m.reacao ? '<span class="wa-reacao" title="Reação da pessoa">' + esc(m.reacao) + "</span>" : "") + "</div>";
     });
@@ -3849,6 +3857,68 @@
       return "<li><b>" + esc(x.automacao) + "</b>: " + esc(window.WaAuto.resultadoTexto(x.resultado, x.motivo)) + "<br><small>" + esc(horaCurta(x.quando)) + (x.passo ? " · passo " + Number(x.passo) : "") + "</small></li>";
     }).join("") + "</ul></div>";
   }
+
+  /* ---------- corrigir uma mensagem enviada: nova mensagem respondendo à original (a API oficial não edita) ---------- */
+  const cr = { msg: null, arquivo: null };
+  function crMidiaEscolha() { const r = document.querySelector('input[name="crMidia"]:checked'); return r ? r.value : "manter"; }
+  function crAtualizar() {
+    const m = cr.msg; if (!m) return;
+    const temMidia = !!m.midia_url && ["image", "video", "audio", "document"].indexOf(m.midia_tipo) > -1;
+    const esc2 = crMidiaEscolha(), audio = (esc2 === "manter" && m.midia_tipo === "audio") || (esc2 === "trocar" && cr.arquivo && cr.arquivo.tipo === "audio");
+    $("crTrocarBox").hidden = esc2 !== "trocar"; $("crTexto").disabled = !!audio;
+    $("crTextoRot").textContent = (esc2 === "nenhum" || !temMidia) ? "Texto corrigido" : "Legenda corrigida (o texto que vai junto com o arquivo)";
+    $("crTexto").maxLength = esc2 === "nenhum" || !temMidia ? 4096 : 1024;
+    $("crConta").textContent = audio ? "Áudio não leva texto." : $("crTexto").value.length + " de " + $("crTexto").maxLength + " letras";
+  }
+  function abrirCorrigir(id) {
+    const m = msgsAtuais.filter(function (x) { return x.id === id; })[0]; if (!m) return;
+    cr.msg = m; cr.arquivo = null; $("crArquivo").value = ""; $("crArquivoInfo").textContent = ""; $("crAviso").hidden = true;
+    const temMidia = !!m.midia_url && ["image", "video", "audio", "document"].indexOf(m.midia_tipo) > -1;
+    let texto = String(m.texto || ""); if (temMidia) texto = texto.replace(/^\[(imagem|vídeo|áudio|documento)\]\s*/, "");
+    $("crOriginal").innerHTML = (temMidia ? '<div class="wa-midia">' + prevMidia(m.midia_url, m.midia_tipo, m.midia_nome) + "</div>" : "") + (texto ? "<div>" + textoHtml(texto) + "</div>" : "");
+    $("crMidiaBox").hidden = !temMidia;
+    const rot = { video: "o mesmo vídeo", image: "a mesma foto", audio: "o mesmo áudio", document: "o mesmo PDF" }[m.midia_tipo] || "o mesmo arquivo";
+    $("crManterTxt").textContent = "Manter " + rot + " (só muda o texto)";
+    document.querySelector('input[name="crMidia"][value="manter"]').checked = true;
+    $("crTexto").value = texto; $("crTexto").disabled = false;
+    crAtualizar();
+    if (!$("jCorrigir").open) $("jCorrigir").showModal();
+    $("crTexto").focus();
+  }
+  document.addEventListener("click", function (ev) { const b = ev.target.closest("[data-corrigir]"); if (b) abrirCorrigir(b.dataset.corrigir); });
+  $("jCorrigir").addEventListener("change", function (ev) { if (ev.target.name === "crMidia" || ev.target.id === "crArquivo") crAtualizar(); });
+  $("crTexto").addEventListener("input", crAtualizar);
+  $("crArquivo").addEventListener("change", function () {
+    cr.arquivo = null; const f = this.files[0]; if (!f) { $("crArquivoInfo").textContent = ""; return crAtualizar(); }
+    $("crArquivoInfo").textContent = "Arquivo escolhido: " + f.name + " (será preparado ao enviar)";
+    cr.arquivo = { file: f, tipo: tipoDoArquivo(mimeDoArquivo(f)) || "" }; crAtualizar();
+  });
+  $("crEnviar").addEventListener("click", async function () {
+    const m = cr.msg; if (!m) return;
+    const erro = function (t) { $("crAviso").hidden = false; $("crAviso").textContent = t; };
+    const botao = $("crEnviar"); if (botao.disabled) return;
+    const escolha = $("crMidiaBox").hidden ? "nenhum" : crMidiaEscolha(), texto = $("crTexto").value.trim();
+    const corpo = { mensagem_id: m.id, texto: $("crTexto").disabled ? "" : texto };
+    if (escolha === "manter") corpo.manter_midia = true;
+    if (escolha === "nenhum" && !texto) return erro("Escreva o texto corrigido.");
+    if (escolha === "manter" && !texto && m.midia_tipo !== "audio") { if (!confirm("Mandar o arquivo sem texto nenhum?")) return; }
+    botao.disabled = true; botao.textContent = "Enviando...";
+    try {
+      if (escolha === "trocar") {
+        if (!cr.arquivo) { botao.disabled = false; botao.textContent = "Enviar correção"; return erro("Escolha o novo arquivo."); }
+        botao.textContent = "Preparando o arquivo...";
+        const up = await subirMidia(cr.arquivo.file, null);
+        corpo.midia = { url: up.url, tipo: up.tipo, nome: up.nome }; botao.textContent = "Enviando...";
+      }
+      const { data, error } = await supa().functions.invoke("whatsapp-corrigir", { body: corpo });
+      let r = data;
+      if (error) { r = { ok: false, erro: "Não consegui falar com o servidor. Nada foi enviado." }; try { const j = await error.context.json(); if (j && j.erro) r = j; } catch (e) { /* mensagem padrão */ } }
+      if (!r || !r.ok) { botao.disabled = false; botao.textContent = "Enviar correção"; erro((r && r.erro) || "Não enviou."); if (r && r.precisa_template) atualizarConversa(true).catch(function () {}); return; }
+      $("jCorrigir").close(); cr.msg = null; aviso("Correção enviada. Ela aparece respondendo à mensagem original.");
+      botao.disabled = false; botao.textContent = "Enviar correção";
+      ultimaAssinatura = ""; await atualizarConversa(true); carregarLista().catch(function () {});
+    } catch (e) { botao.disabled = false; botao.textContent = "Enviar correção"; erro(e.message || String(e)); }
+  });
 
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {

@@ -254,6 +254,11 @@ dialog#jAutomacao,dialog#jAutPessoas{max-width:900px;width:calc(100% - 16px);max
 .em-lista li.feito{color:#1F6B3A}
 .em-hist{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--muted)}
 @media (max-width:900px){.em-ed{grid-template-columns:1fr}}
+/* corrigir mensagem enviada */
+.wa-corrigir{font:600 12px var(--sans);background:none;border:0;color:var(--navy);text-decoration:underline;cursor:pointer;padding:0 4px}
+.wa-tag-corr{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;background:#F1ECE0;color:#5C6470;margin-left:4px}
+.wa-cita{border-left:3px solid #B8862B;background:rgba(184,134,43,.10);border-radius:6px;padding:3px 8px;margin-bottom:6px;font-size:12.5px;color:#5C6470;overflow-wrap:anywhere}
+dialog#jCorrigir{max-width:560px;width:calc(100% - 16px);max-height:92vh;overflow-y:auto}
 /* vendas (Fase 6) */
 .vd-blocos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .vd-bloco{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
@@ -1093,6 +1098,25 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
   <h2 id="aiTitulo"></h2>
   <div id="aiCorpo"></div>
   <div class="acoes"><button class="btn auto contorno" type="button" data-fechar="jAutInfo">Fechar</button></div>
+</dialog>
+
+<dialog class="janela" id="jCorrigir" aria-labelledby="crTitulo">
+  <h2 id="crTitulo">Corrigir mensagem</h2>
+  <p class="ajuda">O WhatsApp oficial não deixa mudar uma mensagem que já saiu. Por isso o CRM envia uma <b>nova mensagem respondendo à original</b> (ela aparece citada), já com o texto corrigido. A pessoa recebe as duas e a original continua no celular dela.</p>
+  <label>Mensagem original</label>
+  <div class="wa-prev" id="crOriginal"></div>
+  <div id="crMidiaBox" style="margin-top:10px" hidden>
+    <label>Arquivo da correção</label>
+    <div class="checks" style="flex-direction:column;align-items:flex-start;gap:4px">
+      <label><input type="radio" name="crMidia" value="manter" checked> <span id="crManterTxt">Manter o mesmo arquivo</span></label>
+      <label><input type="radio" name="crMidia" value="trocar"> Trocar por outro arquivo</label>
+      <label><input type="radio" name="crMidia" value="nenhum"> Mandar só o texto (sem arquivo)</label>
+    </div>
+    <div id="crTrocarBox" hidden style="margin-top:6px"><input type="file" id="crArquivo" accept="video/*,image/*,audio/*,application/pdf"><p class="ajuda" id="crArquivoInfo"></p></div>
+  </div>
+  <div class="f" style="margin-top:10px"><label for="crTexto" id="crTextoRot">Texto corrigido</label><textarea id="crTexto" rows="5" maxlength="4096"></textarea><small class="vazio" id="crConta"></small></div>
+  <div class="wa-fn-aviso" id="crAviso" hidden role="alert"></div>
+  <div class="acoes"><button class="btn auto" type="button" id="crEnviar">Enviar correção</button><button class="btn auto contorno" type="button" data-fechar="jCorrigir">Cancelar</button></div>
 </dialog>
 
 <dialog class="janela janela-larga" id="jVendaDetalhe" aria-labelledby="vdDetTitulo">
