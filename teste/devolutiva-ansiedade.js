@@ -569,7 +569,7 @@ function anExportar(){
 }
 
 /* "Gerar apresentação": o mesmo gerador do Teste de Travas, com as 6 áreas da ansiedade */
-const AN_APRES_VOC = { pct:true, teste:'Teste de Ansiedade', item:'área', itens:'áreas',
+const AN_APRES_VOC = { pct:true, teste:'Teste de Ansiedade', obs:'O Teste de Ansiedade é uma ferramenta de autoconhecimento e acompanhamento. Não é diagnóstico e não substitui avaliação médica ou psicológica.', item:'área', itens:'áreas',
   capaTit:'como a ansiedade está aparecendo na sua vida e o plano para ela perder força.', capaSub:'Plano de acompanhamento a partir do seu Teste de Ansiedade.',
   mapaTit:'O peso da ansiedade em cada área', caminhoTit:'Como vamos tirar o peso da ansiedade',
   fase1:'Começamos pela área que mais pesa hoje, para você sentir alívio logo nas primeiras semanas. Como trabalhamos: ', fase2:'Depois, cuidamos das outras áreas que ainda pesam, para o alívio se sustentar. Como trabalhamos: ',

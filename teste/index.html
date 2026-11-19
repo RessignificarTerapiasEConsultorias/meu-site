@@ -4613,7 +4613,7 @@ function montarSlides(d){
   slide('ouro', `${ey('Com toda a honestidade')}<h2 style="font-size:64px">Isso não é mágica. É processo.</h2>
     <div style="margin-bottom:22px"><span class="chip-d">Presença</span><span class="chip-d">Prática</span><span class="chip-d">Constância</span><span class="chip-d">Acompanhamento</span></div>
     <div class="frase" style="margin-top:0;font-size:27px">O resultado vem de fazer o trabalho, etapa por etapa, com você decidindo a cada passo.</div>
-    <div class="nota-p" style="color:var(--bg);opacity:.75;margin-top:26px;max-width:900px">O teste de travas mentais é uma ferramenta de autoconhecimento e não substitui diagnóstico nem acompanhamento profissional. Não há promessa de resultado: o processo é individual.</div>`);
+    <div class="nota-p" style="color:var(--bg);opacity:.75;margin-top:26px;max-width:900px">${esc(VOC.obs || (VOC.teste === VOC_PADRAO.teste ? 'O teste de travas mentais' : 'O ' + VOC.teste) + ' é uma ferramenta de autoconhecimento e não substitui diagnóstico nem acompanhamento profissional.')} Não há promessa de resultado: o processo é individual.</div>`);
 
   /* 15 · objeção (opcional) */
   if(d.objecao && OBJECOES[d.objecao]){
@@ -4686,7 +4686,7 @@ function montarSlides(d){
   slide('', `<div class="bola" style="width:520px;height:520px;right:-120px;top:-100px"></div>${ey('Próximos passos')}<h2>Como seguimos</h2>
     <div style="max-width:880px"><div class="passo"><b>1</b><span>${dec ? 'Conversa a dois: você e quem decide com você revisam esta proposta e tiram dúvidas comigo.' : 'Você revisa esta proposta e tira as dúvidas comigo.'}</span></div>
     <div class="passo"><b>2</b><span>Combinamos a forma de pagamento e o dia e o horário da primeira sessão.</span></div>
-    <div class="passo"><b>3</b><span>Começamos pelo seu mapa: ${esc(p1.nome)} é a primeira trava a trabalhar.</span></div></div>
+    <div class="passo"><b>3</b><span>Começamos pelo seu mapa: ${esc(p1.nome)} ${VOC.item === VOC_PADRAO.item ? 'é a primeira trava a trabalhar' : 'é o primeiro ponto a trabalhar'}.</span></div></div>
     <div style="margin-top:30px">${Tp.zap ? `<a class="cta" href="${wa}" target="_blank" rel="noopener">Falar com ${esc(Tp.prim)} no WhatsApp</a>` : ''}${Tp.insta ? `<span class="nota-p" style="margin-left:18px">@${esc(Tp.insta)}</span>` : ''}</div>`);
 
   return S;
