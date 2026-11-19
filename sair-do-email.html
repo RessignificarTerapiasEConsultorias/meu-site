@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Sair dos e-mails · Ressignificar</title>
+<style>
+  :root{--azul:#12233F;--ouro:#B8862B;--texto:#22262E;--fundo:#F6F3EC}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--fundo);color:var(--texto);line-height:1.5}
+  main{max-width:480px;margin:0 auto;padding:32px 20px}
+  .cx{background:#fff;border:1px solid #E3DCCB;border-radius:14px;padding:22px}
+  h1{font-size:1.3rem;margin:0 0 8px;color:var(--azul)}
+  p{margin:8px 0}
+  button{font:inherit;cursor:pointer;border-radius:10px;padding:12px 16px;width:100%;margin-top:10px;border:1px solid var(--azul);background:var(--azul);color:#fff}
+  button.leve{background:#fff;color:var(--azul)}
+  button[disabled]{opacity:.6;cursor:default}
+  .ok{color:#1F6B3A}.erro{color:#B3261E}
+  small{color:#5C6470}
+</style>
+</head>
+<body>
+<main>
+  <div class="cx">
+    <h1 id="titulo">Sair dos e-mails da Ressignificar</h1>
+    <p id="texto">Toque no botão para não receber mais nossos e-mails de novidades.</p>
+    <button type="button" id="sair">Não quero mais receber</button>
+    <button type="button" id="voltar" class="leve" hidden>Mudei de ideia: quero voltar a receber</button>
+    <p id="resultado" role="status" aria-live="polite"></p>
+    <p><small>E-mails sobre um pedido seu (recibo, acesso) continuam chegando quando necessários.</small></p>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="areademembros/js/config.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var parametros = new URLSearchParams(location.search);
+  var token = parametros.get("t") || "";
+  var envio = parametros.get("e") || "";   /* de qual e-mail veio o clique (só para a estatística da campanha) */
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(envio)) envio = "";
+  var mostra = function (texto, classe) { var r = $("resultado"); r.textContent = texto; r.className = classe || ""; };
+  if (!token) { $("sair").hidden = true; $("texto").textContent = "Este link está incompleto. Abra o link de sair que veio no e-mail, ou responda ao e-mail pedindo para sair."; return; }
+  var cliente;
+  try { cliente = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } }); }
+  catch (e) { mostra("Não consegui carregar a página. Tente de novo em instantes.", "erro"); return; }
+  function chamar(funcao, botao, certo) {
+    botao.disabled = true; mostra("Um instante...");
+    var dados = { p_token: token };
+    if (funcao === "crm_email_sair" && envio) dados.p_envio = envio;
+    cliente.rpc(funcao, dados).then(function (r) {
+      botao.disabled = false;
+      var d = r && r.data;
+      if (!r || r.error || !d || d.ok !== true) { mostra((d && d.erro) || "Não consegui concluir. Responda ao e-mail pedindo para sair que retiramos você.", "erro"); return; }
+      certo(d);
+    }, function () { botao.disabled = false; mostra("Sem conexão. Tente de novo.", "erro"); });
+  }
+  $("sair").addEventListener("click", function () {
+    chamar("crm_email_sair", $("sair"), function (d) {
+      $("sair").hidden = true; $("voltar").hidden = false;
+      $("titulo").textContent = "Pronto, você saiu";
+      $("texto").textContent = "O endereço " + (d.email || "") + " não recebe mais nossos e-mails de novidades.";
+      mostra("Saída registrada.", "ok");
+    });
+  });
+  $("voltar").addEventListener("click", function () {
+    chamar("crm_email_voltar", $("voltar"), function (d) {
+      $("voltar").hidden = true; $("sair").hidden = false;
+      $("titulo").textContent = "Você voltou a receber";
+      $("texto").textContent = "O endereço " + (d.email || "") + " voltou a receber nossos e-mails.";
+      mostra("Tudo certo.", "ok");
+    });
+  });
+})();
+</script>
+</body>
+</html>

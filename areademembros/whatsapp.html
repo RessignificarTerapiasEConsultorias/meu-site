@@ -223,6 +223,45 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 .f.rapido .wz-etapa h3{display:none}
 .wz-modo-rapido .wz-passos,.wz-modo-rapido .wz-resumo{display:none}
 @media (max-width:600px){.wz-passos button{padding:5px 8px;font-size:12px}}
+/* automações (Fase 7) */
+dialog#jAutomacao,dialog#jAutPessoas{max-width:900px;width:calc(100% - 16px);max-height:92vh;overflow-y:auto}
+.au-passo{border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px 12px;margin-top:8px}
+.au-passo-topo{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.au-passo-topo b{overflow-wrap:anywhere}
+.au-passo .grade{margin-top:8px}
+.au-passo textarea{width:100%}
+.au-frase{font-size:13px;color:var(--muted);margin:2px 0 0;overflow-wrap:anywhere}
+.au-prev{margin-top:8px}
+.au-sim li{margin:3px 0}
+/* e-mail (Fase 8) */
+.em-sub{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.em-sub .wa-chip b{margin-left:5px;background:#B3261E;color:#fff;border-radius:999px;padding:0 6px;font-size:11px}
+.em-sub .wa-chip b:empty{display:none}
+.em-ed{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.em-ed textarea{width:100%;font-family:inherit}
+.em-barra{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.em-prev{border:1px solid var(--line);border-radius:10px;background:#F4EFE5;overflow:auto;max-height:70vh}
+.em-prev iframe{display:block;width:100%;height:520px;border:0;background:#F4EFE5}
+.em-prev.cel iframe{width:390px;max-width:100%;margin:0 auto}
+.em-avisos{margin:8px 0;padding:0 0 0 18px;font-size:13px;color:#8A6100}
+.em-avisos:empty{display:none}
+.em-avisos li.ok{color:#1F6B3A;list-style:none;margin-left:-18px}
+.em-cfg{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.em-linha{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.em-linha input{flex:1;min-width:0}
+.em-lista{margin:6px 0;padding-left:20px;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.em-lista li{margin:6px 0}
+.em-lista li.feito{color:#1F6B3A}
+.em-hist{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--muted)}
+@media (max-width:900px){.em-ed{grid-template-columns:1fr}}
+/* corrigir mensagem enviada */
+.wa-corrigir{font:600 12px var(--sans);background:none;border:0;color:var(--navy);text-decoration:underline;cursor:pointer;padding:0 4px}
+.wa-tag-corr{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;background:#F1ECE0;color:#5C6470;margin-left:4px}
+.wa-cita{border-left:3px solid #B8862B;background:rgba(184,134,43,.10);border-radius:6px;padding:3px 8px;margin-bottom:6px;font-size:12.5px;color:#5C6470;overflow-wrap:anywhere}
+dialog#jCorrigir{max-width:560px;width:calc(100% - 16px);max-height:92vh;overflow-y:auto}
+dialog#jDpPessoas{max-width:820px;width:calc(100% - 16px);max-height:94vh;overflow-y:auto}
+#dqLista tr.dq-off{opacity:.55}
+.wa-sr-barra{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0 0;padding:8px 10px;border-radius:10px;background:#FFF6DC;border:1px solid #E9D59A;font-size:13.5px}
 /* vendas (Fase 6) */
 .vd-blocos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .vd-bloco{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
@@ -301,6 +340,8 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
       <button class="aba" type="button" data-aba="templates" aria-selected="false">Templates<span class="ponto" id="tpPonto" title="Há novidade nos templates" hidden></span></button>
       <button class="aba" type="button" data-aba="robo" aria-selected="false">Robô</button>
       <button class="aba" type="button" data-aba="fluxos" aria-selected="false">Fluxos</button>
+      <button class="aba" type="button" data-aba="automacoes" aria-selected="false">Automações</button>
+      <button class="aba" type="button" data-aba="email" aria-selected="false">E-mail</button>
       <button class="aba" type="button" data-aba="config" aria-selected="false">Configuração</button>
     </div>
 
@@ -320,7 +361,8 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
             <button type="button" class="wa-chip" data-extra="interessado" aria-pressed="false" title="Contatos que você marcou na etapa Interessado">Interessados<b id="cvNInteressados"></b></button>
             <button type="button" class="wa-chip" data-extra="alta" aria-pressed="false" title="Prioridade alta ou urgente">Prioridade alta<b id="cvNAlta"></b></button>
           </div>
-          <div class="acoes" id="cvSemRespAcoes" hidden style="margin:0 0 8px"><small class="vazio">Mais antigas primeiro. Só a sua resposta pelo painel tira a conversa daqui (o robô não conta).</small><button type="button" class="btn peq contorno" id="cvLimparSemResp">Marcar todas como respondidas</button></div>
+          <div class="checks" style="margin:0 0 8px"><label class="wa-fn-chk"><input type="checkbox" id="cvAutoLida"> Ao abrir uma conversa, tirar de Não respondidas</label></div>
+        <div class="acoes" id="cvSemRespAcoes" hidden style="margin:0 0 8px"><small class="vazio">Mais antigas primeiro. Só a sua resposta pelo painel tira a conversa daqui (o robô não conta).</small><button type="button" class="btn peq contorno" id="cvLimparFechadas" title="Tira de Não respondidas as conversas em que a janela de 24 h já fechou (só dá para mandar template)">Tirar as de janela fechada<b id="cvNFechadas"></b></button><button type="button" class="btn peq contorno" id="cvLimparSemResp">Marcar todas como respondidas</button></div>
           <div class="wa-lista" id="cvLista"><p class="vazio">Carregando...</p></div>
         </aside>
         <div id="cvThread"><div class="cartao"><p class="vazio">Escolha uma conversa ao lado.</p></div></div>
@@ -443,7 +485,8 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
             <div><label for="dpTemplate">Template aprovado</label><select id="dpTemplate"></select></div>
             <p class="ajuda" id="wzTplInfo"></p></div>
           <div class="wz-etapa" data-etapa="3"><h3 class="cp-tit">3. Público</h3>
-            <div><label for="dpEtiqueta">Para quem</label><select id="dpEtiqueta"><option value="">Todos que autorizaram</option></select></div>
+            <div><label for="dpEtiqueta">Para quem</label><select id="dpEtiqueta"><option value="">Todos que autorizaram</option></select>
+              <div class="acoes" style="margin:6px 0 0"><button class="btn peq contorno" type="button" id="dpEscolher">Escolher pessoas (uma ou várias)</button><small class="vazio">Dispara só para quem você marcar.</small></div></div>
             <p class="ajuda" id="dpResumo" style="margin-top:12px"></p>
             <p class="ajuda" id="wzPublico"></p>
             <div class="checks" id="dpExcluirBox" style="margin-top:8px" hidden><label><input type="checkbox" id="dpExcluirRecentes"> <span id="dpExcluirTxt">Não enviar para quem recebeu marketing nos últimos dias</span></label></div></div>
@@ -598,6 +641,96 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
     </section>
 
     <!-- ===== FLUXOS ===== -->
+    <section data-painel="automacoes" hidden>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>Automações</h2><button class="btn peq" type="button" id="auNova">Nova automação</button><button class="btn peq contorno" type="button" id="auAtualizar2">Atualizar</button></div>
+        <p class="ajuda">Uma automação é: <b>quando acontece X</b>, faça Y, espere Z... Toda mensagem automática passa antes pelas travas do CRM: lista de Não enviar, saída da lista, pausa para sempre, horário, frequência e limite diário. O botão de emergência fica no topo da aba Fluxos e o selo vermelho aparece em todas as abas quando ele está ligado.</p>
+        <div class="tabela-wrap" style="margin-top:12px"><table class="t"><thead><tr><th>Automação</th><th>Quando começa</th><th>Passos</th><th>Dentro</th><th>Enviadas</th><th>Responderam</th><th>Compraram</th><th>Saíram</th><th>Falhas</th><th></th></tr></thead>
+          <tbody id="auLista2"><tr><td colspan="10" class="vazio">Carregando...</td></tr></tbody></table></div>
+      </div>
+      <div class="cartao">
+        <h2>Tudo que roda sozinho (somente leitura)</h2>
+        <p class="ajuda">Rotinas do site e do CRM que funcionam sem você apertar nada. Aqui você só olha.</p>
+        <div class="tabela-wrap"><table class="t"><thead><tr><th>Rotina</th><th>Quando roda</th><th>Situação</th></tr></thead><tbody id="auRotinas"><tr><td colspan="3" class="vazio">Carregando...</td></tr></tbody></table></div>
+      </div>
+    </section>
+
+    <section data-painel="email" hidden>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>E-mail</h2><button class="btn peq contorno" type="button" id="emAtualizar">Atualizar</button></div>
+        <div class="em-sub" id="emSub" role="group" aria-label="Partes da aba E-mail">
+          <button type="button" class="wa-chip" data-em-sub="visao" aria-pressed="true">Visão</button>
+          <button type="button" class="wa-chip" data-em-sub="modelos" aria-pressed="false">Modelos</button>
+          <button type="button" class="wa-chip" data-em-sub="campanhas" aria-pressed="false">Campanhas</button>
+          <button type="button" class="wa-chip" data-em-sub="saidas" aria-pressed="false">Saídas</button>
+          <button type="button" class="wa-chip" data-em-sub="config" aria-pressed="false">Configuração<b id="emNPend"></b></button>
+        </div>
+        <div class="aviso" id="emPend" hidden></div>
+        <div data-em-painel="visao">
+          <p class="ajuda">O e-mail tem a sua própria autorização, separada da do WhatsApp. Quem pede para sair não recebe mais novidades.</p>
+          <div class="vd-indic" id="emIndic" style="margin-top:12px"><p class="vazio">Carregando...</p></div>
+          <div class="vd-bloco" style="margin-top:12px"><h3 class="cp-tit">Saúde dos envios (30 dias)</h3><p id="emSaude" class="ajuda">Carregando...</p></div>
+          <div class="vd-bloco" id="emLojaBox" style="margin-top:12px" hidden><h3 class="cp-tit">E-mails de quem comprou</h3><p class="ajuda" id="emLojaTxt"></p><div class="acoes"><button class="btn peq" type="button" id="emLojaAplicar">Guardar como só transacional</button></div></div>
+        <div class="vd-bloco" id="emDupBox" style="margin-top:12px" hidden><h3 class="cp-tit">Mesmo e-mail em mais de um contato</h3><p class="ajuda">O CRM não junta pessoas sozinho. Confira se é a mesma pessoa cadastrada duas vezes. Um envio conta uma vez por endereço.</p><ul class="wa-fn-ativ" id="emDup" style="overflow-wrap:anywhere"></ul></div>
+        </div>
+        <div data-em-painel="modelos" hidden>
+          <div class="acoes" style="margin-top:0"><button class="btn peq" type="button" id="emModNovo">Novo modelo</button><label class="wa-fn-chk"><input type="checkbox" id="emModArq"> Mostrar arquivados</label></div>
+          <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Modelo</th><th>Tipo</th><th>Assunto</th><th>Atualizado</th><th></th></tr></thead><tbody id="emModLista"><tr><td colspan="5" class="vazio">Carregando...</td></tr></tbody></table></div>
+        </div>
+        <div data-em-painel="campanhas" hidden>
+          <div class="acoes" style="margin-top:0"><button class="btn peq" type="button" id="emCampNova">Nova campanha</button><span class="vazio" id="emCampTeto"></span></div>
+          <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Campanha</th><th>Para quem</th><th>Situação</th><th>Enviados</th><th>Entregues</th><th>Voltaram</th><th>Cliques</th><th></th></tr></thead><tbody id="emCampLista"><tr><td colspan="8" class="vazio">Carregando...</td></tr></tbody></table></div>
+        </div>
+        <div data-em-painel="saidas" hidden>
+          <div class="vd-bloco"><h3 class="cp-tit">Quem saiu dos e-mails</h3>
+          <p class="ajuda">Quem está aqui não recebe e-mail de marketing. Só a própria pessoa pode voltar, pelo link do e-mail.</p>
+          <div class="wa-fn-filtros"><input id="emSairEmail" type="email" placeholder="e-mail de quem pediu para sair" aria-label="E-mail de quem pediu para sair" maxlength="254"><select id="emSairMotivo" aria-label="Motivo"><option value="respondeu_sair">Respondeu pedindo para sair</option><option value="removido_pelo_dono">Retirado por você</option></select><button class="btn peq" type="button" id="emSairBtn">Registrar saída</button></div>
+          <div class="tabela-wrap" style="margin-top:10px"><table class="tabela"><thead><tr><th>E-mail</th><th>Motivo</th><th>Quando</th></tr></thead><tbody id="emSaidas"><tr><td colspan="3" class="vazio">Carregando...</td></tr></tbody></table></div>
+        </div>
+        </div>
+        <div data-em-painel="config" hidden>
+          <div class="vd-bloco"><h3 class="cp-tit">O que falta para enviar campanhas</h3><ul class="em-lista" id="emCfgPend"><li class="vazio">Carregando...</li></ul></div>
+          <div class="vd-bloco" style="margin-top:12px"><h3 class="cp-tit">Quem envia</h3>
+            <div class="em-cfg">
+              <div><label for="emCfgNome">Nome que aparece</label><input id="emCfgNome" maxlength="60"></div>
+              <div><label for="emCfgLocal">Endereço</label><div class="em-linha"><input id="emCfgLocal" maxlength="40" style="max-width:150px"><span class="vazio">@ressignificarterapiaseconsultorias.com</span></div></div>
+              <div><label for="emCfgResp">As respostas vão para</label><input id="emCfgResp" type="email" maxlength="254" placeholder="se vazio, vão para o endereço acima"></div>
+            </div>
+          </div>
+          <div class="vd-bloco" style="margin-top:12px"><h3 class="cp-tit">Rodapé dos e-mails de novidades</h3>
+            <p class="ajuda">Todo e-mail de novidades leva a identificação da empresa, o motivo de a pessoa receber e o link para sair. Isso não pode ser tirado.</p>
+            <div class="f"><label for="emCfgRodape">Nome e endereço de contato da empresa</label><textarea id="emCfgRodape" rows="2" maxlength="400" placeholder="Ex.: Ressignificar Terapias & Consultorias · Jaboatão dos Guararapes/PE"></textarea></div>
+            <div class="f"><label for="emCfgMotivo">Por que a pessoa recebe</label><input id="emCfgMotivo" maxlength="300"></div>
+          </div>
+          <div class="vd-bloco" style="margin-top:12px"><h3 class="cp-tit">Limites e cuidados</h3>
+            <div class="em-cfg">
+              <div><label for="emCfgDia">Limite por dia</label><input id="emCfgDia" type="number" min="1"></div>
+              <div><label for="emCfgMes">Limite por mês</label><input id="emCfgMes" type="number" min="1"></div>
+              <div><label for="emCfgAquec">Começo do aquecimento (por dia)</label><input id="emCfgAquec" type="number" min="1"></div>
+              <div><label for="emCfgBounce">Pausar se voltarem mais de (%)</label><input id="emCfgBounce" type="number" min="0.5" step="0.1"></div>
+              <div><label for="emCfgRecl">Pausar se reclamarem mais de (%)</label><input id="emCfgRecl" type="number" min="0.01" step="0.01"></div>
+              <div><label for="emCfgHi">Enviar das (hora)</label><div class="em-linha"><input id="emCfgHi" type="number" min="0" max="23" style="max-width:80px"><span class="vazio">até</span><input id="emCfgHf" type="number" min="1" max="24" style="max-width:80px" aria-label="Hora final"></div></div>
+            </div>
+            <p class="ajuda">O plano gratuito do Resend permite 100 e-mails por dia e 3.000 por mês, somando os e-mails que o site já envia. Só aumente aqui se mudar de plano lá.</p>
+          </div>
+          <div class="acoes"><button class="btn peq" type="button" id="emCfgSalvar">Salvar configuração</button></div>
+          <div class="vd-bloco" style="margin-top:12px"><h3 class="cp-tit">Avisos do Resend (webhook)</h3>
+            <p class="ajuda">É assim que o CRM fica sabendo quando um e-mail foi entregue, voltou, foi marcado como spam ou teve um clique. Sem isso, campanhas ficam bloqueadas.</p>
+            <ol class="em-lista">
+              <li>No painel do Resend, abra <b>Webhooks</b> e crie um novo com este endereço:<div class="em-linha"><input id="emCfgUrl" readonly aria-label="Endereço do webhook"><button class="btn peq contorno" type="button" id="emCfgUrlCopiar">Copiar</button></div></li>
+              <li>Marque os eventos de e-mail: sent, delivered, delivery_delayed, bounced, complained, clicked, failed e suppressed.</li>
+              <li>Copie o segredo que o Resend mostrar (começa com <b>whsec_</b>) e cole aqui. Ele vai direto para o banco e não aparece mais na tela.<div class="em-linha"><input id="emCfgSegredo" type="password" autocomplete="off" maxlength="220" placeholder="whsec_..." aria-label="Segredo do webhook"><button class="btn peq" type="button" id="emCfgSegredoSalvar">Guardar segredo</button></div></li>
+              <li>Envie um e-mail de teste (aba Modelos). Quando o primeiro aviso chegar, o webhook fica confirmado.</li>
+            </ol>
+            <p class="ajuda" id="emCfgWebhook"></p>
+          </div>
+          <div class="vd-bloco" style="margin-top:12px"><h3 class="cp-tit">Cliques e aberturas</h3>
+            <p class="ajuda">Para ver quem clicou, ligue o rastreamento de cliques no painel do Resend (na página do domínio). O CRM mostra os cliques assim que os avisos chegarem. Abertura não é mostrada: Apple Mail e Gmail abrem os e-mails sozinhos, e o número engana. Se ligar o rastreamento, revise a Política de Privacidade para citar isso.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section data-painel="fluxos" hidden>
       <div class="cartao" id="auCartao">
         <div class="empresa-titulo"><h2>Segurança das automações</h2><button class="btn peq perigo" type="button" id="auPausar">Pausar todas as automações</button></div>
@@ -799,6 +932,82 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
   <div class="acoes"><button class="btn auto" type="button" id="tsEnviar" disabled>Enviar teste</button><button class="btn auto contorno" type="button" data-fechar="jTeste">Fechar</button></div>
 </dialog>
 
+<dialog class="janela janela-larga" id="jEmailModelo" aria-labelledby="emMTitulo">
+  <h2 id="emMTitulo">Modelo de e-mail</h2>
+  <div class="em-ed">
+    <div>
+      <div class="grade g2">
+        <div><label for="emMNome">Nome do modelo</label><input id="emMNome" maxlength="80"></div>
+        <div><label for="emMTipo">Tipo</label><select id="emMTipo"><option value="marketing">Marketing (novidades): só para quem autorizou</option><option value="transacional">Transacional: sobre um pedido ou cadastro</option></select></div>
+      </div>
+      <div class="f"><label for="emMAssunto">Assunto <span class="vazio" id="emMConta"></span></label><input id="emMAssunto" maxlength="150"></div>
+      <div class="f"><label for="emMPre">Texto que aparece ao lado do assunto <span class="vazio">(opcional)</span></label><input id="emMPre" maxlength="150"></div>
+      <div class="f"><label for="emMCorpo">Texto do e-mail</label>
+        <div class="em-barra" id="emMBarra">
+          <button type="button" class="btn peq contorno" data-em-ins="negrito"><b>Negrito</b></button><button type="button" class="btn peq contorno" data-em-ins="italico"><i>Itálico</i></button>
+          <button type="button" class="btn peq contorno" data-em-ins="link">Link</button><button type="button" class="btn peq contorno" data-em-ins="botao">Botão</button>
+          <button type="button" class="btn peq contorno" data-em-ins="imagem">Imagem</button><button type="button" class="btn peq contorno" data-em-ins="nome">Primeiro nome</button>
+        </div>
+        <textarea id="emMCorpo" rows="12" maxlength="20000"></textarea>
+      </div>
+      <p class="ajuda">Deixe uma linha em branco entre os parágrafos. Botão: <code>[[Texto|https://link]]</code> numa linha só. Imagem: <code>![descrição](https://link-da-imagem)</code>. O rodapé com a saída entra sozinho.</p>
+      <ul class="em-avisos" id="emMAvisos"></ul>
+    </div>
+    <div>
+      <div class="em-barra"><button type="button" class="wa-chip" id="emMPrevDesk" aria-pressed="true">Computador</button><button type="button" class="wa-chip" id="emMPrevCel" aria-pressed="false">Celular</button><span class="vazio" id="emMPrevAssunto"></span></div>
+      <div class="em-prev" id="emMPrevBox"><iframe id="emMPrev" title="Prévia do e-mail" sandbox=""></iframe></div>
+    </div>
+  </div>
+  <div class="acoes"><button class="btn auto" type="button" id="emMSalvar">Salvar modelo</button><button class="btn auto contorno" type="button" id="emMTeste">Enviar teste para o meu e-mail</button><button class="btn auto contorno" type="button" id="emMRestaurar" hidden>Voltar à versão anterior</button><button class="btn auto contorno" type="button" data-fechar="jEmailModelo">Fechar</button></div>
+</dialog>
+
+<dialog class="janela" id="jEmailCampanha" aria-labelledby="emCTitulo">
+  <h2 id="emCTitulo">Nova campanha de e-mail</h2>
+  <div class="grade g2">
+    <div><label for="emCNome">Nome da campanha</label><input id="emCNome" maxlength="80" placeholder="Ex.: Convite da turma de dezembro"></div>
+    <div><label for="emCModelo">Modelo</label><select id="emCModelo"></select></div>
+    <div><label for="emCPublico">Para quem</label><select id="emCPublico"></select></div>
+    <div id="emCValorBox" hidden><label for="emCValor" id="emCValorRot">Etiqueta</label><input id="emCValor" list="emCValorLista" maxlength="60"><datalist id="emCValorLista"></datalist><select id="emCEtapa" hidden aria-label="Etapa"></select></div>
+    <div><label for="emCQuando">Quando enviar <span class="vazio">(vazio = agora)</span></label><input id="emCQuando" type="datetime-local"></div>
+  </div>
+  <div class="acoes"><button class="btn auto contorno" type="button" id="emCConferir">Conferir quem vai receber</button></div>
+  <div id="emCResumo"></div>
+  <div class="acoes"><button class="btn auto" type="button" id="emCIniciar" disabled>Enviar</button><button class="btn auto contorno" type="button" data-fechar="jEmailCampanha">Fechar</button></div>
+</dialog>
+
+<dialog class="janela janela-larga" id="jEmailPainel" aria-labelledby="emPTitulo">
+  <h2 id="emPTitulo">Campanha</h2>
+  <p class="ajuda" id="emPInfo"></p>
+  <div class="vd-indic" id="emPNumeros"></div>
+  <p class="ajuda" id="emPConfere"></p>
+  <div class="acoes"><button class="btn peq contorno" type="button" id="emPPausar" hidden>Pausar</button><button class="btn peq" type="button" id="emPRetomar" hidden>Continuar</button><button class="btn peq contorno perigo" type="button" id="emPCancelar" hidden>Cancelar campanha</button></div>
+  <div class="wa-fn-filtros">
+    <select id="emPFiltro" aria-label="Mostrar"><option value="todos">Todas as pessoas</option><option value="entregues">Entregues</option><option value="clicou">Clicaram</option><option value="bounce">Voltaram</option><option value="reclamou">Marcaram como spam</option><option value="sairam">Saíram por esta campanha</option><option value="pulados">Ficaram de fora</option><option value="falhas">Falharam</option><option value="pendentes">Na fila</option></select>
+    <input id="emPBusca" type="search" placeholder="Buscar por nome ou e-mail" aria-label="Buscar pessoa">
+    <button class="btn peq contorno" type="button" id="emPExportar">Exportar planilha</button>
+  </div>
+  <div class="tabela-wrap" style="margin-top:10px"><table class="tabela"><thead><tr><th>Pessoa</th><th>Situação</th><th>Detalhe</th><th>Clique</th></tr></thead><tbody id="emPPessoas"></tbody></table></div>
+  <div class="acoes"><button class="btn auto contorno" type="button" data-fechar="jEmailPainel">Fechar</button></div>
+</dialog>
+
+<dialog class="janela janela-larga" id="jEmailEnviar" aria-labelledby="emETitulo">
+  <h2 id="emETitulo">Enviar e-mail</h2>
+  <p class="ajuda" id="emEPara"></p>
+  <div class="em-ed">
+    <div>
+      <div class="f"><label for="emEModelo">O que enviar</label><select id="emEModelo"></select></div>
+      <div id="emELivre">
+        <div class="f"><label for="emETipo">Tipo</label><select id="emETipo"><option value="marketing">Novidades (precisa de autorização)</option><option value="transacional">Sobre um pedido, cadastro ou atendimento desta pessoa</option></select></div>
+        <div class="f"><label for="emEAssunto">Assunto</label><input id="emEAssunto" maxlength="150"></div>
+        <div class="f"><label for="emECorpo">Texto</label><textarea id="emECorpo" rows="8" maxlength="20000"></textarea></div>
+      </div>
+      <p class="vd-aviso" id="emEAviso"></p>
+    </div>
+    <div><div class="em-prev"><iframe id="emEPrev" title="Prévia do e-mail" sandbox=""></iframe></div></div>
+  </div>
+  <div class="acoes"><button class="btn auto" type="button" id="emEEnviar">Enviar e-mail</button><button class="btn auto contorno" type="button" data-fechar="jEmailEnviar">Fechar</button></div>
+</dialog>
+
 <dialog class="janela" id="jFunilCartao" aria-labelledby="fcTitulo">
   <h2 id="fcTitulo">Pessoa no funil</h2>
   <p class="ajuda" id="fcInfo"></p>
@@ -810,7 +1019,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
     <div><label for="fcPrio">Prioridade</label><select id="fcPrio"><option value="">Usar a do contato</option><option value="baixa">Baixa</option><option value="normal">Normal</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></div>
   </div>
   <div class="f"><label for="fcNotas">Anotações</label><textarea id="fcNotas" rows="3" maxlength="2000"></textarea></div>
-  <div class="acoes"><button class="btn auto" type="button" id="fcSalvar">Salvar</button><button class="btn auto contorno" type="button" id="fcAbrir">Abrir conversa</button><button class="btn auto contorno" type="button" id="fcGanho">Marcar como ganho</button><button class="btn auto contorno" type="button" id="fcPerdido">Marcar como perdido</button><button class="btn auto contorno" type="button" id="fcReabrir" hidden>Reabrir</button></div>
+  <div class="acoes"><button class="btn auto" type="button" id="fcSalvar">Salvar</button><button class="btn auto contorno" type="button" id="fcAbrir">Abrir conversa</button><button class="btn auto contorno" type="button" id="fcEnviarEmail">Enviar e-mail</button><button class="btn auto contorno" type="button" id="fcGanho">Marcar como ganho</button><button class="btn auto contorno" type="button" id="fcPerdido">Marcar como perdido</button><button class="btn auto contorno" type="button" id="fcReabrir" hidden>Reabrir</button></div>
   <h3 class="cp-tit" style="margin-top:14px">Histórico</h3>
   <ol class="wa-fn-ativ" id="fcHist"></ol>
   <div class="acoes"><button class="btn auto contorno" type="button" data-fechar="jFunilCartao">Fechar</button></div>
@@ -848,6 +1057,84 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
   <p class="ajuda">Confirme o valor final. Ele aparece no funil e no histórico da pessoa.</p>
   <div class="f"><label for="fgValor">Valor final (R$)</label><input id="fgValor" type="number" min="0" step="0.01"></div>
   <div class="acoes"><button class="btn auto" type="button" id="fgConfirmar">Confirmar</button><button class="btn auto contorno" type="button" data-fechar="jFunilGanho">Cancelar</button></div>
+</dialog>
+
+<dialog class="janela janela-larga" id="jAutomacao" aria-labelledby="aeTitulo">
+  <h2 id="aeTitulo">Nova automação</h2>
+  <div class="f">
+    <div class="grade g2">
+      <div><label for="aeNome">Nome</label><input id="aeNome" maxlength="80" placeholder="Boas-vindas da turma"></div>
+      <div><label for="aeDesc">Descrição <span class="vazio">(opcional)</span></label><input id="aeDesc" maxlength="300"></div>
+    </div>
+    <h3 class="cp-tit" style="margin-top:14px">Quando começa</h3>
+    <select id="aeGatilho" aria-label="Quando a automação começa"></select>
+    <div class="grade g2" id="aeGatilhoCampos" style="margin-top:8px"></div>
+    <h3 class="cp-tit" style="margin-top:14px">Quem pode entrar</h3>
+    <div class="grade g2">
+      <div><label for="aeCEtiq">Só quem tem a etiqueta <span class="vazio">(opcional)</span></label><input id="aeCEtiq" list="auEtiquetas" maxlength="60"></div>
+      <div><label for="aeCNao">Não pode ter a etiqueta <span class="vazio">(opcional)</span></label><input id="aeCNao" list="auEtiquetas" maxlength="60"></div>
+      <div><label for="aeCEtapa">Só quem está na etapa <span class="vazio">(opcional)</span></label><select id="aeCEtapa"><option value="">Qualquer</option><option value="novo">Novo</option><option value="em_conversa">Em conversa</option><option value="interessado">Interessado</option><option value="proposta">Proposta</option><option value="cliente">Cliente</option><option value="perdido">Perdido</option></select></div>
+      <div><label for="aeModo">Quantas vezes a mesma pessoa pode entrar</label><select id="aeModo"><option value="reentrar">Mais de uma vez</option><option value="uma_vez">Uma vez só</option></select></div>
+      <div id="aeReentrarBox"><label for="aeReentrar">Só volta depois de quantos dias <span class="vazio">(0 = pode voltar já)</span></label><input id="aeReentrar" type="number" min="0" max="365" value="0"></div>
+      <div><label for="aeLimite">Limite de pessoas por dia <span class="vazio">(0 = sem limite)</span></label><input id="aeLimite" type="number" min="0" max="5000" value="0"></div>
+      <div><label for="aeLink">Link usado nas mensagens <span class="vazio">(use {link} no texto)</span></label><input id="aeLink" type="url" maxlength="300" placeholder="https://..."></div>
+    </div>
+    <div class="checks" style="margin-top:8px"><label><input type="checkbox" id="aeCAceite"> Só quem autorizou receber mensagens</label>
+      <label><input type="checkbox" id="aeCNaoComprou"> Só quem ainda não comprou</label>
+      <label><input type="checkbox" id="aeCParar" checked> Parar a sequência se a pessoa responder</label></div>
+    <h3 class="cp-tit" style="margin-top:14px">Passos</h3>
+    <p class="ajuda" id="aeResumo"></p>
+    <div id="aePassos"></div>
+    <div class="acoes" style="margin-top:8px"><select id="aeAddTipo" aria-label="Tipo do novo passo"></select><button class="btn peq" type="button" id="aeAddBtn">Adicionar passo</button></div>
+    <datalist id="auEtiquetas"></datalist>
+    <div class="wa-fn-aviso" id="aeErro" hidden role="alert"></div>
+  </div>
+  <div class="acoes"><button class="btn auto" type="button" id="aeSalvar">Salvar</button><button class="btn auto contorno" type="button" data-fechar="jAutomacao">Cancelar</button></div>
+</dialog>
+
+<dialog class="janela janela-larga" id="jAutPessoas" aria-labelledby="apTitulo">
+  <h2 id="apTitulo">Pessoas dentro</h2>
+  <p class="ajuda">Quem está na automação agora. Tirar uma pessoa impede que ela receba o próximo passo.</p>
+  <div class="tabela-wrap" style="max-height:60vh"><table class="t"><thead><tr><th>Pessoa</th><th>Passo</th><th>Próximo horário</th><th>Situação</th><th></th></tr></thead><tbody id="apLista"></tbody></table></div>
+  <div class="acoes"><button class="btn auto contorno" type="button" data-fechar="jAutPessoas">Fechar</button></div>
+</dialog>
+
+<dialog class="janela" id="jAutInfo" aria-labelledby="aiTitulo">
+  <h2 id="aiTitulo"></h2>
+  <div id="aiCorpo"></div>
+  <div class="acoes"><button class="btn auto contorno" type="button" data-fechar="jAutInfo">Fechar</button></div>
+</dialog>
+
+<dialog class="janela" id="jCorrigir" aria-labelledby="crTitulo">
+  <h2 id="crTitulo">Corrigir mensagem</h2>
+  <p class="ajuda">O WhatsApp oficial não deixa mudar uma mensagem que já saiu. Por isso o CRM envia uma <b>nova mensagem respondendo à original</b> (ela aparece citada), já com o texto corrigido. A pessoa recebe as duas e a original continua no celular dela.</p>
+  <label>Mensagem original</label>
+  <div class="wa-prev" id="crOriginal"></div>
+  <div id="crMidiaBox" style="margin-top:10px" hidden>
+    <label>Arquivo da correção</label>
+    <div class="checks" style="flex-direction:column;align-items:flex-start;gap:4px">
+      <label><input type="radio" name="crMidia" value="manter" checked> <span id="crManterTxt">Manter o mesmo arquivo</span></label>
+      <label><input type="radio" name="crMidia" value="trocar"> Trocar por outro arquivo</label>
+      <label><input type="radio" name="crMidia" value="nenhum"> Mandar só o texto (sem arquivo)</label>
+    </div>
+    <div id="crTrocarBox" hidden style="margin-top:6px"><input type="file" id="crArquivo" accept="video/*,image/*,audio/*,application/pdf"><p class="ajuda" id="crArquivoInfo"></p></div>
+  </div>
+  <div class="f" style="margin-top:10px"><label for="crTexto" id="crTextoRot">Texto corrigido</label><textarea id="crTexto" rows="5" maxlength="4096"></textarea><small class="vazio" id="crConta"></small></div>
+  <div class="wa-fn-aviso" id="crAviso" hidden role="alert"></div>
+  <div class="acoes"><button class="btn auto" type="button" id="crEnviar">Enviar correção</button><button class="btn auto contorno" type="button" data-fechar="jCorrigir">Cancelar</button></div>
+</dialog>
+
+<dialog class="janela janela-larga" id="jDpPessoas" aria-labelledby="dqTitulo">
+  <h2 id="dqTitulo">Escolher pessoas para o disparo</h2>
+  <p class="ajuda">Marque uma ou mais pessoas. O disparo vai <b>só para elas</b>. Quem saiu da lista ou não autorizou aparece apagado e não pode ser marcado (o CRM não envia para essas pessoas).</p>
+  <div class="wa-fn-filtros">
+    <input id="dqBusca" type="search" placeholder="Buscar por nome ou número" aria-label="Buscar pessoa" maxlength="80">
+    <select id="dqFiltro" aria-label="Quais pessoas mostrar"><option value="todos">Todas as pessoas</option><option value="receberam">Já receberam um disparo</option><option value="listas">Estão em alguma lista</option></select>
+  </div>
+  <div class="acoes" style="margin:8px 0;align-items:center"><label class="wa-fn-chk"><input type="checkbox" id="dqTodos"> Marcar todas as que aparecem</label><span class="vazio" id="dqConta"></span></div>
+  <div class="tabela-wrap" style="max-height:52vh"><table class="t"><thead><tr><th style="width:44px"></th><th>Nome</th><th>WhatsApp</th><th>Situação</th></tr></thead><tbody id="dqLista"><tr><td colspan="4" class="vazio">Carregando...</td></tr></tbody></table></div>
+  <div class="wa-fn-aviso" id="dqAviso" hidden role="alert"></div>
+  <div class="acoes"><button class="btn auto" type="button" id="dqUsar">Usar estas pessoas</button><button class="btn auto contorno" type="button" data-fechar="jDpPessoas">Cancelar</button></div>
 </dialog>
 
 <dialog class="janela janela-larga" id="jVendaDetalhe" aria-labelledby="vdDetTitulo">
@@ -937,6 +1224,9 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 <script src="js/whatsapp-camp.js"></script>
 <script src="js/whatsapp-funil.js"></script>
 <script src="js/whatsapp-vendas.js"></script>
+<script src="js/whatsapp-email.js"></script>
+<script src="js/whatsapp-auto.js"></script>
 <script src="js/whatsapp.js"></script>
+<script src="js/whatsapp-email-tela.js"></script>
 </body>
 </html>

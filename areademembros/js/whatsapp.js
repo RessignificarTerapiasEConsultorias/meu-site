@@ -1131,8 +1131,9 @@
   const PAUSAS = [[30, "30 min"], [60, "1 h"], [120, "2 h"], [240, "4 h"], [480, "8 h"], [720, "12 h"], [1440, "24 h"], [0, "Para sempre (sem disparos)"]];
   const SEM_PRAZO = "9999-12-31T00:00:00Z";
   const CAMPOS_LISTA = "id,nome,telefone,username,ultima_msg_em,ultima_msg_texto,nao_lidas,precisa_humano,optout,ultima_entrada_em,prioridade,etapa,robo_pausado_ate,sem_resposta,sem_resposta_desde";
-  const CAMPOS_MSG = "id,direcao,tipo,texto,status,erro,origem,template_nome,criado_em,midia_url,midia_tipo,midia_caminho,midia_mime,midia_nome,midia_id,reacao";
+  const CAMPOS_MSG = "id,direcao,tipo,texto,status,erro,origem,template_nome,criado_em,midia_url,midia_tipo,midia_caminho,midia_mime,midia_nome,midia_id,reacao,wamid,corrige_msg";
   let filtroCv = "todas";
+  let msgsAtuais = [];
   const extraCv = { interessado: false, alta: false };
   let listaCv = [];
   const busca = { termo: "", seq: 0, timer: null, contatos: [], mensagens: [], pronta: false };
@@ -1196,6 +1197,8 @@
     $("cvNPediu").textContent = n.pediu ? n.pediu : "";
     $("cvNSemResp").textContent = n.sem_resposta ? n.sem_resposta : "";
     $("cvSemRespAcoes").hidden = filtroCv !== "sem_resposta" || !listaCv.length;
+    const nFechadas = listaCv.filter(function (c) { return c.sem_resposta && janelaMs(c) <= 0; }).length;
+    $("cvNFechadas").textContent = nFechadas ? nFechadas : ""; $("cvLimparFechadas").disabled = !nFechadas;
     contarExtrasCv();
     document.title = (n.msgs_nao_lidas ? "(" + n.msgs_nao_lidas + ") " : "") + "WhatsApp | Ressignificar";
     desenharLista();
@@ -1280,8 +1283,21 @@
   $("cvLista").addEventListener("click", function (ev) {
     const b = ev.target.closest("[data-cv]"); if (!b) return;
     conversaId = b.dataset.cv; ancora = b.dataset.msg || null;
-    abrirConversa();
+    const idAberto = conversaId;
+    abrirConversa().then(function () {
+      if ($("cvAutoLida").checked && conversaCont && conversaCont.id === idAberto && conversaCont.sem_resposta) salvarContato({ sem_resposta: false, sem_resposta_desde: null }, "Tirei esta conversa de Não respondidas.");
+    });
   });
+  $("cvLimparFechadas").addEventListener("click", async function () {
+    const ids = listaCv.filter(function (c) { return c.sem_resposta && janelaMs(c) <= 0; }).map(function (c) { return c.id; });
+    if (!ids.length || !confirm("Tirar " + ids.length + (ids.length === 1 ? " conversa" : " conversas") + " de Não respondidas?\n\nSão as que a janela de 24 h já fechou (só dá para mandar template). Se a pessoa escrever de novo, a conversa volta para a lista.")) return;
+    try {
+      for (let i = 0; i < ids.length; i += 100) await ler(supa().from("wa_contatos").update({ sem_resposta: false, sem_resposta_desde: null }).in("id", ids.slice(i, i + 100)).select("id"));
+      aviso(ids.length + (ids.length === 1 ? " conversa saiu" : " conversas saíram") + " de Não respondidas."); await carregarLista();
+    } catch (e) { falha(e); }
+  });
+  (function () { let v = false; try { v = localStorage.getItem("wa_auto_lida") === "1"; } catch (e) {} $("cvAutoLida").checked = v; })();
+  $("cvAutoLida").addEventListener("change", function () { try { localStorage.setItem("wa_auto_lida", this.checked ? "1" : "0"); } catch (e) {} aviso(this.checked ? "Pronto: ao abrir uma conversa, ela sai de Não respondidas." : "Desligado: a conversa só sai de Não respondidas quando você responde ou marca."); });
   $("cvLimparSemResp").addEventListener("click", async function () {
     const n = listaCv.length;
     if (!n || !confirm("Marcar " + n + (n === 1 ? " conversa" : " conversas") + " como respondidas?\n\nElas saem de Não respondidas. Se a pessoa escrever de novo, a conversa volta para a lista.")) return;
@@ -1348,9 +1364,13 @@
     return d.toLocaleDateString("pt-BR", d.getFullYear() === hoje.getFullYear() ? { day: "2-digit", month: "long" } : { day: "2-digit", month: "long", year: "numeric" });
   }
   function desenharMensagens(msgs) {
+    msgsAtuais = msgs;
     const caixa = $("cvMsgs"); if (!caixa) return;
     const noFim = caixa.scrollHeight - caixa.scrollTop - caixa.clientHeight < 80;
     let dia = "", h = "";
+    const corrigidas = {}, porId = {};
+    msgs.forEach(function (m) { porId[m.id] = m; if (m.corrige_msg) corrigidas[m.corrige_msg] = true; });
+    const podeCorrigir = conversaCont && janelaMs(conversaCont) > 0;
     msgs.forEach(function (m) {
       const d = new Date(m.criado_em), chave = d.toDateString();
       if (chave !== dia) { dia = chave; h += '<div class="wa-dia"><span>' + esc(diaRotulo(d)) + "</span></div>"; }
@@ -1369,11 +1389,14 @@
         texto = texto.replace(/^\[(imagem|vídeo|áudio|figurinha)\]\s*/, "");
         if (m.midia_tipo === "document" && m.midia_nome && /^\[documento\]/.test(texto)) texto = "";
       }
-      h += '<div class="wa-msg ' + cls + (ancora && ancora === m.id ? " wa-achou" : "") + '" data-msg-id="' + m.id + '">' +
+      const orig = m.corrige_msg ? porId[m.corrige_msg] : null;
+      const cita = m.corrige_msg ? '<div class="wa-cita">↩ Correção da mensagem enviada' + (orig ? ": " + esc(String(orig.texto || "").replace(/^\[(imagem|vídeo|áudio|documento)\]\s*/, "").slice(0, 80) || "(arquivo)") : "") + "</div>" : "";
+      const botaoCorrigir = m.direcao === "saida" && m.wamid && m.status !== "falhou" && podeCorrigir && m.tipo !== "system" ? '<button type="button" class="wa-corrigir" data-corrigir="' + m.id + '" title="Enviar uma nova mensagem respondendo a esta, com o texto corrigido">Corrigir</button>' : "";
+      h += '<div class="wa-msg ' + cls + (ancora && ancora === m.id ? " wa-achou" : "") + '" data-msg-id="' + m.id + '">' + cita +
         (midia ? '<div class="wa-midia">' + midia + "</div>" : "") +
         (texto ? '<div class="texto">' + textoHtml(texto) + "</div>" : "") +
         (m.template_nome ? '<div class="meta">template ' + esc(m.template_nome) + "</div>" : "") +
-        '<div class="meta"><span>' + esc(d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })) + "</span>" + (quem ? "<span>" + quem + "</span>" : "") + "<span>" + iconeStatus(m) + "</span></div>" +
+        '<div class="meta"><span>' + esc(d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })) + "</span>" + (quem ? "<span>" + quem + "</span>" : "") + "<span>" + iconeStatus(m) + "</span>" + (corrigidas[m.id] ? '<span class="wa-tag-corr">corrigida abaixo</span>' : "") + botaoCorrigir + "</div>" +
         (m.direcao === "saida" && m.status === "falhou" && m.erro ? '<div class="erro">' + esc(m.erro) + "</div>" : "") +
         (m.reacao ? '<span class="wa-reacao" title="Reação da pessoa">' + esc(m.reacao) + "</span>" : "") + "</div>";
     });
@@ -1396,7 +1419,8 @@
       (pausado(c) ? '<button type="button" class="btn peq" id="cvRoboVoltar">Voltar a responder</button>' : "") +
       (c.precisa_humano ? '<span class="selo off">Pediu atendimento</span>' : "") +
       (c.sem_resposta && c.sem_resposta_desde ? '<span class="selo pendente" title="A pessoa escreveu e você ainda não respondeu">Esperando sua resposta ' + esc(haEspera(c.sem_resposta_desde)) + "</span>" : "") +
-      (c.precisa_humano || c.sem_resposta ? '<button type="button" class="btn peq contorno" id="cvAtendido" title="Tira a conversa de Não respondidas e de Pediu atendimento sem mandar mensagem">' + (c.precisa_humano ? "Marcar como atendido" : "Não precisa responder") + "</button>" : "") + "</div>";
+      (c.precisa_humano || c.sem_resposta ? '<button type="button" class="btn peq contorno" id="cvAtendido" title="Tira a conversa de Não respondidas e de Pediu atendimento sem mandar mensagem">' + (c.precisa_humano ? "Marcar como atendido" : "Não precisa responder") + "</button>" : "") + "</div>" +
+      (c.sem_resposta ? '<div class="wa-sr-barra"><span>Esta conversa está em <b>Não respondidas</b>.' + (jm <= 0 ? " A janela de 24 h já fechou: só dá para mandar template." : "") + '</span><button type="button" class="btn peq" id="cvJaVi" title="Tira só de Não respondidas. Se a pessoa escrever de novo, ela volta.">Já vi, não precisa responder</button></div>' : "");
   }
   function atualizarTopo() { const t = $("cvTopo"); if (t && conversaCont) t.innerHTML = topoHtml(conversaCont); }
   async function salvarContato(campos, msg) {
@@ -1863,6 +1887,8 @@
     const d = await ler(supa().rpc("wa_contato_ficha", { p_id: id }));
     if (id !== conversaId || !d) return;
     fichaDados = d; desenharFichaDados();
+    emFicha(id).catch(function () { /* o bloco de e-mail não pode travar a ficha */ });
+    autFicha(id).catch(function () { /* o histórico de automações não pode travar a ficha */ });
   }
   function desenharFicha() {
     const c = conversaCont, f = $("cvFicha");
@@ -1873,6 +1899,8 @@
       '<div class="f wa-fc-form">' +
       '<div><label for="fcNome">Nome</label><input id="fcNome" maxlength="80" value="' + esc(c.nome || "") + '"></div>' +
       '<div id="fcBloqueio"></div>' +
+      '<div id="fcEmailBox" data-de=""></div>' +
+      '<div id="fcAutoBox"></div>' +
       '<div class="wa-fc-2"><div><label for="fcEtapa">Etapa</label><select id="fcEtapa">' + opc(ETAPAS, c.etapa) + '</select></div><div><label for="fcPrio">Prioridade</label><select id="fcPrio">' + opc(PRIORIDADES, c.prioridade) + "</select></div></div>" +
       '<div><label for="fcEt">Etiquetas <span class="vazio">(separe por vírgula)</span></label><input id="fcEt" value="' + esc((c.etiquetas || []).join(", ")) + '"></div>' +
       '<div><label for="fcNotas">Anotações</label><textarea id="fcNotas" rows="3" maxlength="2000">' + esc(c.notas || "") + "</textarea></div></div>" +
@@ -1961,6 +1989,7 @@
       inserirNoCursor($("cvTexto"), preencherResposta(r ? r.texto : "Oi, {primeiro_nome}! Não consegui abrir a sua mensagem por aqui. Pode me mandar de novo por texto, foto, áudio ou PDF?"));
       return;
     }
+    if (t.closest("#cvJaVi")) return salvarContato({ sem_resposta: false, sem_resposta_desde: null }, "Tirei esta conversa de Não respondidas.");
     if (t.closest("#cvAtendido")) return salvarContato({ precisa_humano: false, sem_resposta: false, sem_resposta_desde: null }, "Marcado como atendido.");
     if (t.closest("#cvFichaBtn")) { fichaAberta = !fichaAberta; mostrarFicha(); return; }
     if (t.closest("#cvTemplate")) return abrirEnvioTemplate(conversaCont);
@@ -3104,6 +3133,7 @@
     } catch (e) { falha(e, e.message); }
   });
   $("fcAbrir").addEventListener("click", function () { const k = fnAcharCartao(fn.cartaoAberto); $("jFunilCartao").close(); if (k) fnAbrirPessoa(k.contato_id); });
+  $("fcEnviarEmail").addEventListener("click", function () { const k = fnAcharCartao(fn.cartaoAberto); if (k && window.WaEmailTela) { $("jFunilCartao").close(); window.WaEmailTela.enviarPara({ contato_id: k.contato_id }); } });
   function fnColunaDoTipo(tipo) { return fn.colunas.filter(function (c) { return c.tipo === tipo; })[0] || null; }
   $("fcGanho").addEventListener("click", function () { const c = fnColunaDoTipo("ganho"); if (!c) return aviso("Este quadro não tem uma coluna de ganho.", true); const id = fn.cartaoAberto; $("jFunilCartao").close(); fnMoverCartao(id, c.id, 0, {}); });
   $("fcPerdido").addEventListener("click", function () { const c = fnColunaDoTipo("perdido"); if (!c) return aviso("Este quadro não tem uma coluna de perdido.", true); const id = fn.cartaoAberto; $("jFunilCartao").close(); fnMoverCartao(id, c.id, 0, {}); });
@@ -3335,6 +3365,7 @@
       return '<li><div><b>' + esc(x.nome || "(sem nome)") + "</b> · " + esc(x.produto) + " · " + esc(vdReais(x.valor_centavos)) + " · " + esc(WV.tempoTexto(min)) + "</div>"
         + '<div class="acoes" style="margin:6px 0 0"><button class="btn peq contorno" type="button" data-vd-copiar="' + esc(texto) + '">Copiar resposta</button>'
         + (x.contato_id ? '<button class="btn peq" type="button" data-vd-conversa="' + esc(x.id) + '">Conversa</button>' : '<span class="vd-aviso">Sem contato no CRM</span>')
+        + (x.email ? '<button class="btn peq contorno" type="button" data-vd-email="' + esc(x.id) + '">E-mail de recuperação</button>' : "")
         + "</div></li>";
     }).join("") : '<li class="vazio">Ninguém pediu e deixou de pagar nos últimos dias.</li>';
   }
@@ -3420,8 +3451,97 @@
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, function () { aviso("Não consegui copiar. Copie o texto manualmente: " + txt, true); });
       else aviso("Copie manualmente: " + txt);
     } else if (b.dataset.vdConversa) vdAbrirConversa(b.dataset.vdConversa).catch(function (e) { falha(e); });
+    else if (b.dataset.vdEmail && window.WaEmailTela) window.WaEmailTela.enviarPedido(vdPedidoPorId(b.dataset.vdEmail));
   });
   setInterval(function () { if (!document.hidden && abaAtual === "vendas") telaVendas().catch(function () {}); }, 60000);
+
+  /* ---------- e-mail (Fase 8, itens 8.1 e 8.2): e-mail e autorização na ficha, visão e saídas ---------- */
+  async function emFicha(id, forcar) {
+    const cx = $("fcEmailBox"); if (!cx) return;
+    if (!forcar && cx.dataset.de === id) return;
+    const d = await ler(supa().rpc("crm_email_do_contato", { p_contato: id }));
+    const agora = $("fcEmailBox"); if (!agora || id !== conversaId || !d) return;
+    const WE = window.WaEmail, dup = d.duplicados || [];
+    let extra = "";
+    if (d.situacao === "aceitou") extra = "Autorizou em " + dataBR(d.optin_em) + (d.optin_origem ? " (" + d.optin_origem + ")" : "") + ".";
+    else if (d.situacao === "saiu") extra = "Pediu para sair em " + dataBR(d.saiu_em) + " (" + WE.rotuloMotivo(d.saiu_motivo) + "). Não recebe marketing.";
+    else if (d.situacao === "invalido") extra = "O endereço deu erro de entrega" + (d.invalido_motivo ? " (" + d.invalido_motivo + ")" : "") + ". Corrija para voltar a enviar.";
+    else if (d.situacao === "so_transacional") extra = "Só recebe e-mail sobre o que pediu (recibo, acesso). Marketing, só com autorização.";
+    agora.dataset.de = id;
+    agora.innerHTML = '<div class="wa-fc-bloco" style="overflow-wrap:anywhere"><label for="fcEmail">E-mail</label><input id="fcEmail" type="email" maxlength="254" autocomplete="off" value="' + esc(d.email || "") + '">'
+      + '<p class="vazio" id="fcEmailAviso"></p>'
+      + '<label class="wa-fn-chk"><input type="checkbox" id="fcEmailAceite"' + (d.optin ? " checked" : "") + (d.saiu ? " disabled" : "") + "> Autorizou receber e-mail (novidades)</label>"
+      + '<p class="vazio"><b>' + esc(WE.rotuloSituacao(d.situacao)) + "</b>" + (extra ? " · " + esc(extra) : "") + "</p>"
+      + (dup.length ? '<p class="vd-aviso">Mesmo e-mail em outro contato: ' + dup.map(function (o) { return esc(o.nome); }).join(", ") + ". Confira se é a mesma pessoa.</p>" : "")
+      + (d.sugestao_loja ? '<p class="vazio">No pedido da loja: ' + esc(d.sugestao_loja) + ' <button type="button" class="btn peq contorno" id="fcEmailUsarLoja" data-email="' + esc(d.sugestao_loja) + '">Usar este</button></p>' : "")
+      + '<div class="acoes" style="margin:6px 0 0"><button type="button" class="btn peq contorno" id="fcEmailSalvar">Salvar e-mail</button>'
+      + (d.email ? '<button type="button" class="btn peq contorno" id="fcEmailEnviar">Enviar e-mail</button>' : "") + "</div>"
+      + ((d.historico || []).length ? '<ol class="em-hist" id="fcEmailHist">' + d.historico.map(function (h) {
+          return "<li>" + esc(h.assunto || "(sem assunto)") + " · <b>" + esc(WE.rotuloEnvio(h.status)) + "</b>" + (h.clicou_em ? " · clicou" : "") + " · " + esc(horaCurta(h.criado_em)) + (h.detalhe ? "<br>" + esc(h.detalhe) : "") + "</li>";
+        }).join("") + "</ol>" : "") + "</div>";
+  }
+  $("cvFicha").addEventListener("input", function (ev) {
+    if (!ev.target || ev.target.id !== "fcEmail") return;
+    const av = $("fcEmailAviso"); if (av) av.textContent = window.WaEmail.avisos(ev.target.value).join(" ");
+  });
+  $("cvFicha").addEventListener("click", async function (ev) {
+    const t = ev.target;
+    if (t.closest && t.closest("#fcEmailEnviar")) { if (window.WaEmailTela) window.WaEmailTela.enviarPara({ contato_id: conversaId }); return; }
+    if (t.closest && t.closest("#fcEmailUsarLoja")) { $("fcEmail").value = t.closest("#fcEmailUsarLoja").dataset.email; $("fcEmailAceite").checked = false; return; }
+    if (!(t.closest && t.closest("#fcEmailSalvar"))) return;
+    const id = conversaId, WE = window.WaEmail, bruto = $("fcEmail").value, v = WE.normalizar(bruto);
+    if (v && !WE.valido(v)) return aviso("Este e-mail não parece válido. Confira se falta alguma letra ou o @.", true);
+    try {
+      const r = await ler(supa().rpc("crm_email_salvar", { p_contato: id, p_email: v || "", p_optin: !!v && $("fcEmailAceite").checked, p_origem: "painel" }));
+      if (!r || r.ok === false) return aviso((r && r.erro) || "Não consegui salvar o e-mail.", true);
+      aviso(v ? "E-mail salvo." + ((r.duplicados || []).length ? " Atenção: outro contato usa este mesmo e-mail." : "") : "E-mail removido.");
+      await emFicha(id, true); carregarFicha().catch(function () {});
+    } catch (e) { falha(e, "Não consegui salvar o e-mail."); }
+  });
+  async function telaEmail() {
+    const p = await ler(supa().rpc("crm_email_painel")), WE = window.WaEmail;
+    const card = function (titulo, valor, sub) { return '<div class="vd-card"><small>' + esc(titulo) + "</small><b>" + esc(String(valor)) + "</b>" + (sub ? "<small>" + esc(sub) + "</small>" : "") + "</div>"; };
+    $("emIndic").innerHTML = [
+      card("Pessoas com e-mail", p.com_email, "de " + p.contatos + " no CRM"),
+      card("Autorizaram e-mail", p.aceitaram, "podem receber novidades"),
+      card("Só transacional", p.so_transacional, "sem autorização de marketing"),
+      card("Saíram", p.saidas, "não recebem marketing"),
+      card("Endereços com erro", p.invalidos, "não são tentados de novo"),
+      card("Uso de hoje", WE.usoTexto(p.usados_hoje, p.limite_dia), "no mês: " + WE.usoTexto(p.usados_mes, p.limite_mes))
+    ].join("") + '<p class="ajuda" style="grid-column:1/-1;overflow-wrap:anywhere">Remetente: ' + esc(p.remetente || "") + "</p>";
+    const sug = Number(p.sugestoes_loja) || 0;
+    $("emLojaBox").hidden = !sug;
+    $("emLojaTxt").textContent = sug + (sug === 1 ? " pessoa comprou" : " pessoas compraram") + " na loja e o e-mail do pedido ainda não está na ficha. Guardar aqui não autoriza marketing: fica só para assuntos do pedido.";
+    const dup = p.duplicados || [];
+    $("emDupBox").hidden = !dup.length;
+    $("emDup").innerHTML = dup.map(function (x) { return "<li>" + esc(x.email) + " <small>· " + Number(x.contatos) + " contatos</small></li>"; }).join("");
+    const s = p.lista_saidas || [];
+    $("emSaidas").innerHTML = s.length ? s.map(function (x) { return "<tr><td>" + esc(x.email) + "</td><td>" + esc(WE.rotuloMotivo(x.motivo)) + "</td><td>" + esc(horaCurta(x.saiu_em)) + "</td></tr>"; }).join("") : '<tr><td colspan="3" class="vazio">Ninguém pediu para sair.</td></tr>';
+    if (window.WaEmailTela) window.WaEmailTela.visao(p);
+  }
+  /* utilidades do painel para o módulo da tela de e-mail (whatsapp-email-tela.js), que carrega depois deste arquivo */
+  window.WaPainel = { $: $, esc: esc, ler: ler, supa: supa, aviso: aviso, falha: falha, horaCurta: horaCurta, dataBR: dataBR, etapas: ETAPAS,
+    etiquetas: function () { return Array.from(new Set(contatos.reduce(function (a, c) { return a.concat(c.etiquetas || []); }, []))).sort(); },
+    recarregarEmailDaFicha: function () { if (conversaId) emFicha(conversaId, true).catch(function () {}); },
+    recarregarVisao: function () { return telaEmail(); } };
+  $("emAtualizar").addEventListener("click", function () { telaEmail().catch(function (e) { falha(e, "Não consegui atualizar."); }); });
+  $("emLojaAplicar").addEventListener("click", async function () {
+    if (!confirm("Guardar na ficha o e-mail de quem comprou?\n\nIsso não autoriza marketing: esses e-mails ficam só para assuntos do pedido.")) return;
+    try {
+      const r = await ler(supa().rpc("crm_email_aplicar_sugestoes"));
+      aviso((Number(r && r.aplicados) || 0) + " e-mail(s) guardado(s) como só transacional."); await telaEmail();
+    } catch (e) { falha(e, "Não consegui guardar os e-mails."); }
+  });
+  $("emSairBtn").addEventListener("click", async function () {
+    const WE = window.WaEmail, v = WE.normalizar($("emSairEmail").value);
+    if (!WE.valido(v)) return aviso("Digite um e-mail válido.", true);
+    if (!confirm("Registrar que " + v + " pediu para sair?\n\nEssa pessoa deixa de receber e-mail de marketing. Só ela pode voltar, pelo link do e-mail.")) return;
+    try {
+      const r = await ler(supa().rpc("crm_email_sair_manual", { p_email: v, p_motivo: $("emSairMotivo").value }));
+      if (!r || r.ok === false) return aviso((r && r.erro) || "Não consegui registrar.", true);
+      $("emSairEmail").value = ""; aviso("Saída registrada."); await telaEmail();
+    } catch (e) { falha(e, "Não consegui registrar a saída."); }
+  });
 
   /* ---------- automações: botão de emergência e motivos de bloqueio (Fase 7, item 7.1) ---------- */
   const au = { pausadas: false };
@@ -3465,10 +3585,425 @@
   });
   auAtualizar().catch(function () { /* sem login de master ainda: o selo fica escondido */ });
 
+  /* ---------- automações (Fase 7): lista, editor, teste, simulação, pessoas dentro e histórico ---------- */
+  const au2 = { lista: [], id: null, passos: [], gatilhoTipo: "etiqueta", g: {}, dentro: 0 };
+  function agendaTexto(c) {
+    c = String(c || "").trim(); let m;
+    if (c === "* * * * *") return "a cada minuto";
+    if ((m = /^\*\/(\d+) \* \* \* \*$/.exec(c))) return "a cada " + m[1] + " minutos";
+    if ((m = /^(\d+) \* \* \* \*$/.exec(c))) return "de hora em hora (no minuto " + m[1] + ")";
+    if ((m = /^(\d+) (\d+) \* \* \*$/.exec(c))) { const h = (Number(m[2]) + 21) % 24; return "todo dia às " + h + "h" + (Number(m[1]) ? String(Number(m[1])).padStart(2, "0") : "") + " (Brasília)"; }
+    return c;
+  }
+  async function telaAutomacoes() {
+    const r = await Promise.all([ler(supa().rpc("wa_automacoes_painel")), ler(supa().rpc("wa_automacoes_rotinas")).catch(function () { return []; })]);
+    au2.lista = r[0] || [];
+    desenharAutomacoes();
+    $("auRotinas").innerHTML = (r[1] || []).length ? r[1].map(function (x) { return "<tr><td>" + esc(x.nome) + "</td><td>" + esc(agendaTexto(x.agenda)) + '</td><td><span class="selo ' + (x.ativa ? "ok" : "off") + '">' + (x.ativa ? "Ligada" : "Desligada") + "</span></td></tr>"; }).join("") : '<tr><td colspan="3" class="vazio">Sem rotinas para mostrar.</td></tr>';
+  }
+  function desenharAutomacoes() {
+    const A = window.WaAuto, tb = $("auLista2");
+    if (!au2.lista.length) { tb.innerHTML = '<tr><td colspan="10" class="vazio">Nenhuma automação ainda. Toque em "Nova automação".</td></tr>'; return; }
+    tb.innerHTML = au2.lista.map(function (a) {
+      const taxa = A.taxa(a.responderam, a.enviados);
+      const motivos = (a.motivos || []).map(function (m) { return m.motivo + " (" + m.n + ")"; }).join("; ");
+      const apagavel = !a.ativa && !a.origem_fluxo_id;
+      return "<tr><td><b>" + esc(a.nome) + "</b>" + (a.origem_fluxo_id ? ' <span class="selo">cópia de um Fluxo</span>' : "") + "<br><small>" + (a.ativa ? '<span class="selo ok">Ligada</span>' : '<span class="selo off">Desligada</span>') + (a.descricao ? " " + esc(a.descricao) : "") + "</small></td>"
+        + "<td>" + esc(A.gatilhoTexto(a.gatilho_tipo, a.gatilho)) + "</td><td>" + Number(a.passos) + "</td><td>" + Number(a.dentro) + "</td><td>" + Number(a.enviados) + "</td>"
+        + "<td>" + Number(a.responderam) + (taxa !== null ? " <small>(" + taxa + "%)</small>" : "") + "</td><td>" + Number(a.compraram) + "</td><td>" + Number(a.saiu) + "</td>"
+        + '<td title="' + esc(motivos) + '">' + Number(a.falhas) + (motivos ? "<br><small>" + esc(motivos.length > 60 ? motivos.slice(0, 59) + "…" : motivos) + "</small>" : "") + "</td>"
+        + '<td><div class="acoes" style="margin:0"><button class="btn peq' + (a.ativa ? " contorno" : "") + '" data-au2="ligar" data-id="' + a.id + '" data-ativa="' + (a.ativa ? "1" : "") + '">' + (a.ativa ? "Desligar" : "Ligar") + "</button>"
+        + '<button class="btn peq contorno" data-au2="editar" data-id="' + a.id + '">Editar</button><button class="btn peq contorno" data-au2="pessoas" data-id="' + a.id + '">Pessoas</button>'
+        + '<button class="btn peq contorno" data-au2="simular" data-id="' + a.id + '">Simular</button><button class="btn peq contorno" data-au2="testar" data-id="' + a.id + '">Testar no meu número</button>'
+        + (apagavel ? '<button class="btn peq perigo" data-au2="apagar" data-id="' + a.id + '">Apagar</button>' : "") + "</div></td></tr>";
+    }).join("");
+  }
+  $("auAtualizar2").addEventListener("click", function () { telaAutomacoes().catch(function (e) { falha(e); }); });
+  $("auNova").addEventListener("click", function () { abrirEditorAut(null).catch(function (e) { falha(e); }); });
+  function abrirInfo(titulo, html) { $("aiTitulo").textContent = titulo; $("aiCorpo").innerHTML = html; if (!$("jAutInfo").open) $("jAutInfo").showModal(); }
+  async function simularAut(id) {
+    const a = au2.lista.filter(function (x) { return x.id === id; })[0] || {};
+    const s = await ler(supa().rpc("wa_automacao_simular", { p_id: id }));
+    if (!s) return aviso("Não achei esta automação.", true);
+    const linhas = [];
+    if (s.nota) linhas.push("<li>" + esc(s.nota) + "</li>");
+    else {
+      const jaAssim = a.gatilho_tipo === "etiqueta" || a.gatilho_tipo === "etapa";
+      linhas.push("<li><b>" + Number(s.base) + "</b> pessoa(s) combinam com o gatilho hoje.</li>");
+      linhas.push("<li><b>" + Number(s.entrariam) + "</b> passariam pelas travas e entrariam.</li>");
+      const fora = [["ja_dentro", "já estão dentro"], ["saiu", "saíram da lista de mensagens"], ["nao_enviar", "estão numa lista de Não enviar"], ["pausa_eterna", "estão com o robô pausado para sempre"], ["limite_por_pessoa", "já estão no máximo de automações ao mesmo tempo"]];
+      fora.forEach(function (f) { if (Number(s[f[0]])) linhas.push("<li>" + Number(s[f[0]]) + " " + f[1] + ": ficariam de fora.</li>"); });
+      if (Number(s.sem_aceite)) linhas.push("<li>" + Number(s.sem_aceite) + " ainda não autorizaram receber mensagens: o portão só deixa passar o que a regra permite.</li>");
+      if (jaAssim) linhas.push('<li class="vazio">Atenção: quem já está assim hoje NÃO entra ao ligar. A automação reage a quem passar a ficar assim depois.</li>');
+    }
+    linhas.push('<li class="vazio">Nada foi enviado. Esta conta é só uma simulação.</li>');
+    abrirInfo("Simulação: " + (a.nome || ""), '<ul class="au-sim">' + linhas.join("") + "</ul>");
+  }
+  async function testarAut(id) {
+    let fone = ""; try { fone = localStorage.getItem("wa_auto_teste") || ""; } catch (e) {}
+    fone = (prompt("Número do SEU WhatsApp para o teste (com DDD). A mensagem de teste chega nele, com tempos reduzidos (dias viram minutos), e não conta nas estatísticas:", fone) || "").trim();
+    if (!fone) return;
+    const dig = fone.replace(/\D/g, ""), chave = chaveFone(dig.length <= 11 ? "55" + dig : dig);
+    if (!contatos.length) await carregarContatos();
+    const c = contatos.filter(function (x) { return x.telefone && chaveFone(x.telefone) === chave; })[0];
+    if (!c) return aviso("Esse número ainda não está nos seus contatos. Adicione-o na aba Contatos (com autorização) e tente de novo.", true);
+    try { localStorage.setItem("wa_auto_teste", fone); } catch (e) {}
+    const r = await ler(supa().rpc("wa_automacao_testar", { p_id: id, p_contato: c.id }));
+    if (!r || !r.ok) return aviso((r && r.erro) || "Não consegui iniciar o teste.", true);
+    aviso("Teste agendado para " + (c.nome || foneDe(c)) + ". Chega em até 1 minuto. Se o botão de emergência estiver ligado, nada é enviado.");
+    telaAutomacoes().catch(function () {});
+  }
+  async function pessoasAut(id) {
+    const a = au2.lista.filter(function (x) { return x.id === id; })[0] || {};
+    $("apTitulo").textContent = "Pessoas dentro: " + (a.nome || "");
+    const l = await ler(supa().rpc("wa_automacao_pessoas", { p_id: id, p_limite: 200 }));
+    $("apLista").innerHTML = (l || []).length ? l.map(function (p) {
+      return "<tr><td>" + esc(p.nome || (p.username ? "@" + p.username : p.telefone ? foneBR(p.telefone) : "Sem nome")) + (p.teste ? ' <span class="selo">teste</span>' : "") + "</td><td>" + Number(p.passo) + "</td><td>" + (p.proximo_em ? esc(quando(p.proximo_em)) : "—") + "</td><td>" + esc(p.status === "adiada" ? (p.motivo || "Esperando") : (p.motivo || "Andando")) +
+        '</td><td><button class="btn peq perigo" data-ap-tirar="' + esc(p.exec) + '" data-id="' + esc(id) + '">Tirar</button></td></tr>';
+    }).join("") : '<tr><td colspan="5" class="vazio">Ninguém está nesta automação agora.</td></tr>';
+    if (!$("jAutPessoas").open) $("jAutPessoas").showModal();
+  }
+  $("apLista").addEventListener("click", async function (ev) {
+    const b = ev.target.closest("[data-ap-tirar]"); if (!b) return;
+    if (!confirm("Tirar esta pessoa da automação? Ela não recebe mais nenhum passo.")) return;
+    try { const r = await ler(supa().rpc("wa_automacao_tirar", { p_exec: b.dataset.apTirar })); if (!r || !r.ok) throw new Error((r && r.erro) || "Não consegui tirar."); aviso("Pessoa tirada da automação."); await pessoasAut(b.dataset.id); telaAutomacoes().catch(function () {}); }
+    catch (e) { falha(e, e.message); }
+  });
+  $("auLista2").addEventListener("click", async function (ev) {
+    const b = ev.target.closest("[data-au2]"); if (!b) return;
+    const id = b.dataset.id, acao = b.dataset.au2;
+    try {
+      if (acao === "editar") return await abrirEditorAut(id);
+      if (acao === "pessoas") return await pessoasAut(id);
+      if (acao === "simular") return await simularAut(id);
+      if (acao === "testar") return await testarAut(id);
+      if (acao === "apagar") {
+        if (!confirm("Apagar esta automação e o histórico dela? As pessoas que estavam dentro saem.")) return;
+        await ler(supa().from("wa_automacoes").delete().eq("id", id).select("id")); aviso("Automação apagada."); return await telaAutomacoes();
+      }
+      if (acao === "ligar") {
+        const ligar = !b.dataset.ativa, a = au2.lista.filter(function (x) { return x.id === id; })[0] || {};
+        if (ligar && !Number(a.passos)) return aviso("A automação ainda não tem passos. Abra em Editar e adicione.", true);
+        if (!confirm(ligar ? "Ligar \"" + a.nome + "\"?\n\nElas passam a valer na hora" + (a.origem_fluxo_id ? " (e o Fluxo antigo correspondente é desligado)" : "") + ". Use Simular antes se quiser ver quantas pessoas entrariam." : "Desligar \"" + a.nome + "\"?\n\nQuem está dentro fica esperando até você ligar de novo.")) return;
+        const r = await ler(supa().rpc(ligar ? "wa_automacao_assumir" : "wa_automacao_devolver", { p_automacao: id }));
+        if (!r || !r.ok) throw new Error((r && r.erro) || "Não consegui trocar.");
+        aviso(ligar ? "Automação ligada." : "Automação desligada."); await telaAutomacoes(); auAtualizar().catch(function () {});
+      }
+    } catch (e) { falha(e, e.message); }
+  });
+
+  /* editor */
+  function aeOpcoes(obj, vazio) { return (vazio ? '<option value="">' + vazio + "</option>" : "") + Object.keys(obj).map(function (k) { return '<option value="' + k + '">' + esc(obj[k]) + "</option>"; }).join(""); }
+  function aeCampo(c, v) {
+    const id = "aeg_" + c.k, val = v === undefined || v === null ? (c.padrao !== undefined ? c.padrao : "") : v;
+    let ctl;
+    if (c.tipo === "linhas") ctl = '<textarea id="' + id + '" rows="3" maxlength="600">' + esc((Array.isArray(val) ? val : []).join("\n")) + "</textarea>";
+    else if (c.tipo === "modo") ctl = '<select id="' + id + '"><option value="exata"' + (val !== "contem" ? " selected" : "") + '>A frase inteira igual</option><option value="contem"' + (val === "contem" ? " selected" : "") + ">A frase aparece no meio da mensagem</option></select>";
+    else if (c.tipo === "etapa" || c.tipo === "etapa_opc") ctl = '<select id="' + id + '">' + aeOpcoes(window.WaAuto.ETAPAS, c.tipo === "etapa" ? "Escolha" : "Qualquer") + "</select>";
+    else if (c.tipo === "origem") ctl = '<select id="' + id + '">' + aeOpcoes({ whatsapp: "WhatsApp (escreveu primeiro)", painel: "Painel", site: "Site", anuncio: "Anúncio" }, "Qualquer") + "</select>";
+    else if (c.tipo === "produto") ctl = '<select id="' + id + '">' + aeOpcoes(window.WaAuto.PRODUTOS, "Qualquer") + "</select>";
+    else if (c.tipo === "num") ctl = '<input id="' + id + '" type="number" min="1" max="365" value="' + esc(val) + '">';
+    else if (c.tipo === "datahora") ctl = '<input id="' + id + '" type="datetime-local" value="' + esc(val ? wzLocal(val) : "") + '">';
+    else if (c.tipo === "etiqueta") ctl = '<input id="' + id + '" list="auEtiquetas" maxlength="60" value="' + esc(val) + '">';
+    else ctl = '<input id="' + id + '" maxlength="120" value="' + esc(val) + '">';
+    return '<div><label for="' + id + '">' + esc(c.rotulo) + "</label>" + ctl + "</div>";
+  }
+  function desenharGatilhoCampos() {
+    const A = window.WaAuto, def = A.GATILHOS[$("aeGatilho").value]; au2.gatilhoTipo = $("aeGatilho").value;
+    $("aeGatilhoCampos").innerHTML = def.campos.map(function (c) { return aeCampo(c, au2.g[c.k]); }).join("");
+    def.campos.forEach(function (c) { if (["etapa", "etapa_opc", "origem", "produto"].indexOf(c.tipo) > -1) { const el = $("aeg_" + c.k); if (el) el.value = au2.g[c.k] || ""; } });
+  }
+  function lerGatilhoEd() {
+    const def = window.WaAuto.GATILHOS[$("aeGatilho").value], g = {};
+    def.campos.forEach(function (c) {
+      const el = $("aeg_" + c.k); if (!el) return; let v = el.value;
+      if (c.tipo === "linhas") v = v.split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
+      else if (c.tipo === "num") v = Number(v) || 0;
+      else if (c.tipo === "datahora") v = v ? new Date(v).toISOString() : "";
+      else v = String(v).trim();
+      if (v === "" || (Array.isArray(v) && !v.length)) return;
+      g[c.k] = v;
+    });
+    return g;
+  }
+  $("aeGatilho").addEventListener("change", function () { au2.g = lerGatilhoEd(); au2.g = {}; desenharGatilhoCampos(); });
+  function aeFraseGeral() { $("aeResumo").textContent = au2.passos.length ? window.WaAuto.resumoAutomacao(au2.passos) : "Nenhum passo ainda. Adicione abaixo."; }
+  function tplOpcoes(atual) { return '<option value="">Sem template (texto livre)</option>' + templates.filter(tplUsavel).map(function (t) { return '<option value="' + esc(t.nome) + '"' + (t.nome === atual ? " selected" : "") + ">" + esc(t.nome) + " (" + esc(ROT_CAT[t.categoria] || "") + ")</option>"; }).join(""); }
+  function aeAutoOpcoes(atual) { return '<option value="">Escolha</option>' + au2.lista.filter(function (x) { return x.id !== au2.id; }).map(function (x) { return '<option value="' + x.id + '"' + (x.id === atual ? " selected" : "") + ">" + esc(x.nome) + "</option>"; }).join(""); }
+  function aePrev(p) {
+    const c = p.config || {}, link = $("aeLink").value.trim();
+    if (p.tipo === "enviar_texto" || p.tipo === "perguntar_botoes") {
+      let t = String(c.texto || "").replace(/\{primeiro_nome\}/gi, "Maria").replace(/\{nome\}/gi, "Maria Silva").replace(/\{link\}/gi, link || "(link)");
+      if (p.tipo === "enviar_texto" && c.incluir_link && link && !/\{link\}/i.test(String(c.texto || ""))) t += "\n" + link;
+      if (c.template_nome) { const tp = templates.filter(function (x) { return x.nome === c.template_nome; })[0]; const b = tp && (tp.componentes || []).filter(function (x) { return String(x.type).toUpperCase() === "BODY"; })[0]; t = b ? String(b.text || "").replace(/\{\{1\}\}/g, "Maria") : t; }
+      return t + (p.tipo === "perguntar_botoes" ? "\n[ " + (c.botoes || []).join(" ]  [ ") + " ]" : "");
+    }
+    return "";
+  }
+  function aeCustoTexto(p) {
+    const c = p.config || {}; if (p.tipo !== "enviar_texto") return "";
+    if (!c.template_nome) return "Texto livre: sem custo, mas só sai dentro de 24 h depois da última mensagem da pessoa.";
+    const tp = templates.filter(function (x) { return x.nome === c.template_nome; })[0]; if (!tp) return "";
+    const preco = tp.categoria === "MARKETING" ? Number(cfg.preco_marketing) : tp.categoria === "UTILITY" ? Number(cfg.preco_utilidade) : 0;
+    return (ROT_CAT[tp.categoria] || "") + ": cerca de " + BR.format(preco || 0) + " por pessoa que receber fora das 24 h.";
+  }
+  function aeCard(p, i) {
+    const A = window.WaAuto, def = A.PASSOS[p.tipo] || { rotulo: p.tipo, icone: "•" }, c = p.config || {}, I = ' data-i="' + i + '"';
+    const campo = function (rot, ctl) { return "<div><label>" + esc(rot) + "</label>" + ctl + "</div>"; };
+    const inp = function (k, v, extra) { return '<input' + I + ' data-k="' + k + '" value="' + esc(v === undefined || v === null ? "" : v) + '" ' + (extra || "") + ">"; };
+    const num = function (k, v, mx) { return '<input type="number"' + I + ' data-k="' + k + '" min="0" max="' + (mx || 999) + '" value="' + esc(v === undefined || v === null ? "" : v) + '">'; };
+    const chk = function (k, rot, v) { return '<label class="wa-fn-chk"><input type="checkbox"' + I + ' data-k="' + k + '"' + (v ? " checked" : "") + "> " + esc(rot) + "</label>"; };
+    const sel = function (k, ops, v) { return "<select" + I + ' data-k="' + k + '">' + Object.keys(ops).map(function (o) { return '<option value="' + o + '"' + (String(v) === o ? " selected" : "") + ">" + esc(ops[o]) + "</option>"; }).join("") + "</select>"; };
+    let corpo = "";
+    if (p.tipo === "enviar_texto") corpo = '<div class="grade g2">' + campo("Texto da mensagem ({primeiro_nome}, {nome}, {link})", '<textarea rows="3"' + I + ' data-k="texto" maxlength="1000">' + esc(c.texto || "") + "</textarea>") +
+      campo("Template (para quando passar de 24 h)", "<select" + I + ' data-k="template_nome">' + tplOpcoes(c.template_nome) + "</select>") + campo("Se passar de 24 h e não houver template", sel("fora_janela", { parar: "Parar a automação", esperar_resposta: "Esperar a pessoa escrever" }, c.fora_janela || "parar")) +
+      campo("Etiqueta ao enviar (opcional)", inp("etiqueta", c.etiqueta, 'list="auEtiquetas"')) + "</div>" + chk("incluir_link", "Colocar o link no fim da mensagem", c.incluir_link);
+    else if (p.tipo === "perguntar_botoes") {
+      const bots = c.botoes || [], ramos = c.ramos || [];
+      corpo = '<div>' + campo("Pergunta", '<textarea rows="2"' + I + ' data-k="texto" maxlength="1000">' + esc(c.texto || "") + "</textarea>") + "</div>";
+      for (let b = 0; b < 3; b++) {
+        const r = ramos[b] || {};
+        corpo += '<div class="grade g2" style="margin-top:8px">' + campo("Botão " + (b + 1) + (b === 2 ? " (opcional, até 20 letras)" : " (até 20 letras)"), inp("botao" + b, bots[b], 'maxlength="20"')) +
+          campo("Se tocar no botão " + (b + 1) + ": responder", inp("ramo" + b + "_texto", r.texto, 'maxlength="500"')) + campo("Se tocar: colocar a etiqueta", inp("ramo" + b + "_etiqueta", r.etiqueta, 'list="auEtiquetas" maxlength="60"')) +
+          campo("Se tocar: esperar quantos dias antes do próximo passo", num("ramo" + b + "_dias", r.esperar_dias, 365)) + "</div>" + chk("ramo" + b + "_encerrar", "Se tocar no botão " + (b + 1) + ", encerrar a sequência", r.encerrar);
+      }
+    }
+    else if (p.tipo === "esperar") corpo = '<div class="grade g3">' + campo("Dias", num("dias", c.dias, 365)) + campo("Horas", num("horas", c.horas, 999)) + campo("Minutos", num("minutos", c.minutos, 9999)) + campo("Ou esperar até a hora (0 a 23)", num("ate_hora", c.ate_hora, 23)) + "</div>" +
+      chk("dias_uteis", "Só contar dias úteis (sábado e domingo passam para segunda)", c.dias_uteis) + chk("ate_resposta", "Parar de esperar se a pessoa responder", c.ate_resposta) + (c.ate_resposta ? campo("Se a pessoa responder durante a espera", sel("se_responder", { seguir: "Seguir para o próximo passo na hora", parar: "Parar a sequência" }, c.se_responder || "seguir")) : "");
+    else if (p.tipo === "etiquetar") corpo = '<div class="grade g2">' + campo("Etiqueta", inp("etiqueta", c.etiqueta, 'list="auEtiquetas" maxlength="60"')) + "</div>" + chk("remover", "Tirar a etiqueta (em vez de colocar)", c.remover);
+    else if (p.tipo === "mover_funil") corpo = '<div class="grade g2">' + campo("Mover para a etapa", sel("etapa", A.ETAPAS, c.etapa)) + "</div><p class=\"au-frase\">Quem já é cliente nunca é rebaixado.</p>";
+    else if (p.tipo === "prioridade") corpo = '<div class="grade g2">' + campo("Prioridade", sel("valor", A.PRIORIDADES, c.valor)) + "</div>";
+    else if (p.tipo === "pontuacao") corpo = '<div class="grade g2">' + campo("Somar à pontuação (de -50 a 50)", '<input type="number"' + I + ' data-k="ajuste" min="-50" max="50" value="' + esc(c.ajuste) + '">') + "</div>";
+    else if (p.tipo === "avisar") corpo = '<div class="grade g2">' + campo("O que você precisa fazer", inp("motivo", c.motivo, 'maxlength="200"')) + "</div><p class=\"au-frase\">A conversa aparece em Não respondidas e em Pediu atendimento.</p>";
+    else if (p.tipo === "pausar_robo") corpo = '<div class="grade g2">' + campo("Pausar o robô por quantas horas", num("horas", c.horas, 720)) + "</div>";
+    else if (p.tipo === "parar") corpo = '<div class="grade g2">' + campo("Parar", sel("escopo", { esta: "só esta automação", todas: "todas as automações desta pessoa" }, c.escopo || "esta")) + campo("Motivo (aparece no histórico)", inp("motivo", c.motivo, 'maxlength="160"')) + "</div>";
+    else if (p.tipo === "chamar_automacao") corpo = '<div class="grade g2">' + campo("Automação chamada", "<select" + I + ' data-k="automacao">' + aeAutoOpcoes(c.automacao) + "</select>") + "</div>";
+    else if (p.tipo === "sms") corpo = '<p class="ajuda">O envio de SMS chega em uma fase futura. Por enquanto este passo é pulado.</p>';
+    const pr = aePrev(p), custo = aeCustoTexto(p);
+    return '<div class="au-passo" data-passo="' + i + '"><div class="au-passo-topo"><b>' + (i + 1) + ". " + esc(def.icone) + " " + esc(def.rotulo) + '</b><span><button type="button" class="btn peq contorno" data-pa="subir"' + I + (i === 0 ? " disabled" : "") + '>Subir</button> <button type="button" class="btn peq contorno" data-pa="descer"' + I + (i === au2.passos.length - 1 ? " disabled" : "") + '>Descer</button> <button type="button" class="btn peq perigo" data-pa="remover"' + I + ">Tirar</button></span></div>" +
+      '<p class="au-frase" data-frase="' + i + '">' + esc(A.passoTexto(p)) + "</p>" + corpo + ((p.tipo === "enviar_texto" || p.tipo === "perguntar_botoes") ? '<div class="au-prev"><label>Como a pessoa vê (exemplo)</label><div class="wa-prev" data-prev="' + i + '">' + esc(pr || "Escreva a mensagem para ver a prévia.") + "</div></div>" : "") + (p.tipo === "enviar_texto" ? '<p class="ajuda" data-custo="' + i + '">' + esc(custo) + "</p>" : "") + "</div>";
+  }
+  function desenharPassos() { $("aePassos").innerHTML = au2.passos.map(aeCard).join(""); aeFraseGeral(); }
+  function aeAplicar(el) {
+    const i = Number(el.dataset.i), k = el.dataset.k, p = au2.passos[i]; if (!p || !k) return;
+    const c = p.config = p.config || {}, v = el.type === "checkbox" ? el.checked : el.type === "number" ? (el.value === "" ? "" : Number(el.value)) : el.value;
+    let m;
+    if ((m = /^botao([0-2])$/.exec(k))) { c.botoes = c.botoes || ["", ""]; while (c.botoes.length < 3) c.botoes.push(""); c.botoes[Number(m[1])] = v; }
+    else if ((m = /^ramo([0-2])_(texto|etiqueta|dias|encerrar)$/.exec(k))) { c.ramos = c.ramos || []; while (c.ramos.length < 3) c.ramos.push({}); const r = c.ramos[Number(m[1])] = c.ramos[Number(m[1])] || {}; if (m[2] === "dias") r.esperar_dias = v === "" ? 0 : v; else r[m[2]] = v; }
+    else if (v === "" && ["ate_hora", "dias", "horas", "minutos"].indexOf(k) > -1) delete c[k];
+    else c[k] = v;
+    const fr = $("aePassos").querySelector('[data-frase="' + i + '"]'); if (fr) fr.textContent = window.WaAuto.passoTexto(p);
+    const pv = $("aePassos").querySelector('[data-prev="' + i + '"]'); if (pv) pv.textContent = aePrev(p) || "Escreva a mensagem para ver a prévia.";
+    const cu = $("aePassos").querySelector('[data-custo="' + i + '"]'); if (cu) cu.textContent = aeCustoTexto(p);
+    aeFraseGeral();
+  }
+  $("aePassos").addEventListener("input", function (ev) { if (ev.target.matches("input:not([type=checkbox]), textarea")) aeAplicar(ev.target); });
+  $("aePassos").addEventListener("change", function (ev) { if (ev.target.matches("input[type=checkbox], select")) { aeAplicar(ev.target); if (ev.target.dataset.k === "ate_resposta") desenharPassos(); } });
+  $("aePassos").addEventListener("click", function (ev) {
+    const b = ev.target.closest("[data-pa]"); if (!b) return; const i = Number(b.dataset.i), a = b.dataset.pa;
+    if (a === "remover") au2.passos.splice(i, 1);
+    else if (a === "subir" && i > 0) au2.passos.splice(i - 1, 0, au2.passos.splice(i, 1)[0]);
+    else if (a === "descer" && i < au2.passos.length - 1) au2.passos.splice(i + 1, 0, au2.passos.splice(i, 1)[0]);
+    desenharPassos();
+  });
+  $("aeAddBtn").addEventListener("click", function () {
+    const t = $("aeAddTipo").value, def = window.WaAuto.PASSOS[t]; if (!def) return;
+    au2.passos.push({ tipo: t, config: JSON.parse(JSON.stringify(def.padrao)) }); desenharPassos();
+    const cards = $("aePassos").querySelectorAll(".au-passo"); if (cards.length) cards[cards.length - 1].scrollIntoView({ block: "nearest" });
+  });
+  $("aeModo").addEventListener("change", function () { $("aeReentrarBox").hidden = $("aeModo").value === "uma_vez"; });
+  $("aeLink").addEventListener("input", function () { desenharPassos(); });
+  async function abrirEditorAut(id) {
+    const A = window.WaAuto;
+    await Promise.all([carregarTemplates().catch(function () {}), contatos.length ? Promise.resolve() : carregarContatos().catch(function () {})]);
+    if (!au2.lista.length) { try { au2.lista = (await ler(supa().rpc("wa_automacoes_painel"))) || []; } catch (e) {} }
+    const ets = Array.from(new Set(contatos.reduce(function (a, c) { return a.concat(c.etiquetas || []); }, []))).sort();
+    $("auEtiquetas").innerHTML = ets.map(function (e) { return '<option value="' + esc(e) + '">'; }).join("");
+    $("aeGatilho").innerHTML = aeOpcoes(Object.keys(A.GATILHOS).reduce(function (o, k) { o[k] = A.GATILHOS[k].rotulo; return o; }, {}));
+    $("aeAddTipo").innerHTML = Object.keys(A.PASSOS).map(function (k) { return '<option value="' + k + '"' + (A.PASSOS[k].emBreve ? " disabled" : "") + ">" + esc(A.PASSOS[k].rotulo) + "</option>"; }).join("");
+    let d = null; au2.id = id || null; au2.dentro = 0;
+    if (id) { d = await ler(supa().rpc("wa_automacao_detalhe", { p_id: id })); if (!d) return aviso("Não achei esta automação.", true); }
+    const a = d ? d.automacao : { nome: "", descricao: "", gatilho_tipo: "etiqueta", gatilho: {}, condicoes: { parar_ao_responder: true }, modo_entrada: "reentrar", reentrar_dias: 0, limite_dia: 0, link: "" };
+    const k = a.condicoes || {};
+    $("aeTitulo").textContent = id ? "Editar automação" : "Nova automação";
+    $("aeNome").value = a.nome || ""; $("aeDesc").value = a.descricao || ""; $("aeGatilho").value = a.gatilho_tipo; au2.g = a.gatilho || {};
+    desenharGatilhoCampos();
+    $("aeCEtiq").value = k.tem_etiqueta || ""; $("aeCNao").value = k.nao_tem_etiqueta || ""; $("aeCEtapa").value = k.etapa || ""; $("aeCAceite").checked = !!k.aceite_marketing; $("aeCNaoComprou").checked = !!k.nao_comprou; $("aeCParar").checked = !!k.parar_ao_responder;
+    $("aeModo").value = a.modo_entrada || "reentrar"; $("aeReentrar").value = a.reentrar_dias || 0; $("aeReentrarBox").hidden = $("aeModo").value === "uma_vez"; $("aeLimite").value = a.limite_dia || 0; $("aeLink").value = a.link || "";
+    au2.passos = d ? d.passos.map(function (p) {
+      const cf = JSON.parse(JSON.stringify(p.config || {}));
+      if (p.tipo === "perguntar_botoes" && !Array.isArray(cf.ramos)) { cf.ramos = [{ texto: (cf.sim || {}).texto || "", etiqueta: (cf.sim || {}).etiqueta || "", encerrar: true }, { texto: (cf.nao || {}).texto || "", etiqueta: "", encerrar: false }]; delete cf.sim; delete cf.nao; }
+      return { tipo: p.tipo, config: cf };
+    }) : []; au2.dentro = d ? Number(d.dentro) : 0;
+    desenharPassos();
+    const er = $("aeErro"); er.hidden = !au2.dentro; er.textContent = au2.dentro ? au2.dentro + " pessoa(s) estão dentro desta automação. Dá para mudar nome, gatilho e condições, mas os passos só podem mudar quando ninguém estiver dentro (tire as pessoas em Pessoas)." : "";
+    if (!$("jAutomacao").open) $("jAutomacao").showModal();
+  }
+  $("aeSalvar").addEventListener("click", async function () {
+    const A = window.WaAuto, er = $("aeErro"), mostrar = function (t) { er.hidden = false; er.textContent = t; er.scrollIntoView({ block: "nearest" }); };
+    const nome = $("aeNome").value.trim(); if (!nome) return mostrar("Dê um nome à automação.");
+    const tipo = $("aeGatilho").value, g = lerGatilhoEd(), eg = A.validarGatilho(tipo, g); if (eg) return mostrar(eg);
+    for (let i = 0; i < au2.passos.length; i++) { const ep = A.validarPasso(au2.passos[i]); if (ep) return mostrar("Passo " + (i + 1) + ": " + ep); }
+    const dados = { nome: nome, descricao: $("aeDesc").value.trim(), gatilho_tipo: tipo, gatilho: g, modo_entrada: $("aeModo").value, reentrar_dias: Number($("aeReentrar").value) || 0, limite_dia: Number($("aeLimite").value) || 0, link: $("aeLink").value.trim(),
+      condicoes: { tem_etiqueta: $("aeCEtiq").value.trim() || undefined, nao_tem_etiqueta: $("aeCNao").value.trim() || undefined, etapa: $("aeCEtapa").value || undefined, aceite_marketing: $("aeCAceite").checked || undefined, nao_comprou: $("aeCNaoComprou").checked || undefined, parar_ao_responder: $("aeCParar").checked || undefined } };
+    try {
+      const r = await ler(supa().rpc("wa_automacao_salvar", { p_id: au2.id, p_dados: dados, p_passos: au2.passos.map(function (p) { return { tipo: p.tipo, config: aeLimpaConfig(p) }; }) }));
+      if (!r || !r.ok) return mostrar((r && r.erro) || "Não consegui salvar.");
+      $("jAutomacao").close(); aviso("Automação salva. Ela nasce desligada: use Simular e Testar no meu número antes de ligar."); au2.id = null;
+      await telaAutomacoes();
+    } catch (e) { falha(e, e.message); }
+  });
+
+  /* antes de salvar: tira botões vazios do fim e guarda só os ramos dos botões que existem */
+  function aeLimpaConfig(p) {
+    const c = JSON.parse(JSON.stringify(p.config || {}));
+    if (p.tipo === "perguntar_botoes") {
+      const bs = (c.botoes || []).map(function (b) { return String(b || "").trim(); }); while (bs.length && !bs[bs.length - 1]) bs.pop();
+      c.botoes = bs; c.ramos = (c.ramos || []).slice(0, bs.length).map(function (r) { r = r || {}; const o = { encerrar: !!r.encerrar }; if (String(r.texto || "").trim()) o.texto = String(r.texto).trim(); if (String(r.etiqueta || "").trim()) o.etiqueta = String(r.etiqueta).trim(); if (Number(r.esperar_dias) > 0) o.esperar_dias = Number(r.esperar_dias); return o; });
+      while (c.ramos.length < bs.length) c.ramos.push({ encerrar: false });
+    }
+    return c;
+  }
+  /* histórico de automações na ficha da pessoa */
+  async function autFicha(id) {
+    const cx = $("fcAutoBox"); if (!cx) return;
+    const h = await ler(supa().rpc("wa_automacao_historico", { p_contato: id }));
+    const agora = $("fcAutoBox"); if (!agora || id !== conversaId) return;
+    if (!h || !h.length) { agora.innerHTML = ""; return; }
+    agora.innerHTML = '<div class="wa-fc-bloco"><label>Automações</label><ul class="wa-fn-ativ">' + h.slice(0, 8).map(function (x) {
+      return "<li><b>" + esc(x.automacao) + "</b>: " + esc(window.WaAuto.resultadoTexto(x.resultado, x.motivo)) + "<br><small>" + esc(horaCurta(x.quando)) + (x.passo ? " · passo " + Number(x.passo) : "") + "</small></li>";
+    }).join("") + "</ul></div>";
+  }
+
+  /* ---------- corrigir uma mensagem enviada: nova mensagem respondendo à original (a API oficial não edita) ---------- */
+  const cr = { msg: null, arquivo: null };
+  function crMidiaEscolha() { const r = document.querySelector('input[name="crMidia"]:checked'); return r ? r.value : "manter"; }
+  function crAtualizar() {
+    const m = cr.msg; if (!m) return;
+    const temMidia = !!m.midia_url && ["image", "video", "audio", "document"].indexOf(m.midia_tipo) > -1;
+    const esc2 = crMidiaEscolha(), audio = (esc2 === "manter" && m.midia_tipo === "audio") || (esc2 === "trocar" && cr.arquivo && cr.arquivo.tipo === "audio");
+    $("crTrocarBox").hidden = esc2 !== "trocar"; $("crTexto").disabled = !!audio;
+    $("crTextoRot").textContent = (esc2 === "nenhum" || !temMidia) ? "Texto corrigido" : "Legenda corrigida (o texto que vai junto com o arquivo)";
+    $("crTexto").maxLength = esc2 === "nenhum" || !temMidia ? 4096 : 1024;
+    $("crConta").textContent = audio ? "Áudio não leva texto." : $("crTexto").value.length + " de " + $("crTexto").maxLength + " letras";
+  }
+  function abrirCorrigir(id) {
+    const m = msgsAtuais.filter(function (x) { return x.id === id; })[0]; if (!m) return;
+    cr.msg = m; cr.arquivo = null; $("crArquivo").value = ""; $("crArquivoInfo").textContent = ""; $("crAviso").hidden = true;
+    const temMidia = !!m.midia_url && ["image", "video", "audio", "document"].indexOf(m.midia_tipo) > -1;
+    let texto = String(m.texto || ""); if (temMidia) texto = texto.replace(/^\[(imagem|vídeo|áudio|documento)\]\s*/, "");
+    $("crOriginal").innerHTML = (temMidia ? '<div class="wa-midia">' + prevMidia(m.midia_url, m.midia_tipo, m.midia_nome) + "</div>" : "") + (texto ? "<div>" + textoHtml(texto) + "</div>" : "");
+    $("crMidiaBox").hidden = !temMidia;
+    const rot = { video: "o mesmo vídeo", image: "a mesma foto", audio: "o mesmo áudio", document: "o mesmo PDF" }[m.midia_tipo] || "o mesmo arquivo";
+    $("crManterTxt").textContent = "Manter " + rot + " (só muda o texto)";
+    document.querySelector('input[name="crMidia"][value="manter"]').checked = true;
+    $("crTexto").value = texto; $("crTexto").disabled = false;
+    crAtualizar();
+    if (!$("jCorrigir").open) $("jCorrigir").showModal();
+    $("crTexto").focus();
+  }
+  document.addEventListener("click", function (ev) { const b = ev.target.closest("[data-corrigir]"); if (b) abrirCorrigir(b.dataset.corrigir); });
+  $("jCorrigir").addEventListener("change", function (ev) { if (ev.target.name === "crMidia" || ev.target.id === "crArquivo") crAtualizar(); });
+  $("crTexto").addEventListener("input", crAtualizar);
+  $("crArquivo").addEventListener("change", function () {
+    cr.arquivo = null; const f = this.files[0]; if (!f) { $("crArquivoInfo").textContent = ""; return crAtualizar(); }
+    $("crArquivoInfo").textContent = "Arquivo escolhido: " + f.name + " (será preparado ao enviar)";
+    cr.arquivo = { file: f, tipo: tipoDoArquivo(mimeDoArquivo(f)) || "" }; crAtualizar();
+  });
+  $("crEnviar").addEventListener("click", async function () {
+    const m = cr.msg; if (!m) return;
+    const erro = function (t) { $("crAviso").hidden = false; $("crAviso").textContent = t; };
+    const botao = $("crEnviar"); if (botao.disabled) return;
+    const escolha = $("crMidiaBox").hidden ? "nenhum" : crMidiaEscolha(), texto = $("crTexto").value.trim();
+    const corpo = { mensagem_id: m.id, texto: $("crTexto").disabled ? "" : texto };
+    if (escolha === "manter") corpo.manter_midia = true;
+    if (escolha === "nenhum" && !texto) return erro("Escreva o texto corrigido.");
+    if (escolha === "manter" && !texto && m.midia_tipo !== "audio") { if (!confirm("Mandar o arquivo sem texto nenhum?")) return; }
+    botao.disabled = true; botao.textContent = "Enviando...";
+    try {
+      if (escolha === "trocar") {
+        if (!cr.arquivo) { botao.disabled = false; botao.textContent = "Enviar correção"; return erro("Escolha o novo arquivo."); }
+        botao.textContent = "Preparando o arquivo...";
+        const up = await subirMidia(cr.arquivo.file, null);
+        corpo.midia = { url: up.url, tipo: up.tipo, nome: up.nome }; botao.textContent = "Enviando...";
+      }
+      const { data, error } = await supa().functions.invoke("whatsapp-corrigir", { body: corpo });
+      let r = data;
+      if (error) { r = { ok: false, erro: "Não consegui falar com o servidor. Nada foi enviado." }; try { const j = await error.context.json(); if (j && j.erro) r = j; } catch (e) { /* mensagem padrão */ } }
+      if (!r || !r.ok) { botao.disabled = false; botao.textContent = "Enviar correção"; erro((r && r.erro) || "Não enviou."); if (r && r.precisa_template) atualizarConversa(true).catch(function () {}); return; }
+      $("jCorrigir").close(); cr.msg = null; aviso("Correção enviada. Ela aparece respondendo à mensagem original.");
+      botao.disabled = false; botao.textContent = "Enviar correção";
+      ultimaAssinatura = ""; await atualizarConversa(true); carregarLista().catch(function () {});
+    } catch (e) { botao.disabled = false; botao.textContent = "Enviar correção"; erro(e.message || String(e)); }
+  });
+
+  /* ---------- disparo só para pessoas escolhidas (uma ou várias) ---------- */
+  const dq = { sel: new Set(), recebeu: null };
+  async function carregarReceberam() {
+    try {
+      const l = await buscarTudo(function () { return supa().from("wa_disparo_itens").select("contato_id").in("status", ["enviado", "entregue", "lido"]).order("id"); });
+      dq.recebeu = new Set(l.map(function (x) { return x.contato_id; }));
+    } catch (e) { dq.recebeu = new Set(); }
+  }
+  function dqBloqueada(c) { return c.optout ? "Saiu da lista (não recebe)" : !c.optin ? "Sem autorização (não recebe)" : ""; }
+  function dqFiltradas() {
+    const b = semAcento($("dqBusca").value.trim().toLowerCase()), bd = b.replace(/\D/g, ""), f = $("dqFiltro").value;
+    return contatos.filter(function (c) {
+      if (!c.telefone && !c.username) return false;
+      if (b && !(semAcento(String(c.nome || "").toLowerCase()).indexOf(b) > -1 || (bd && String(c.telefone || "").indexOf(bd) > -1) || String(c.username || "").toLowerCase().indexOf(b.replace(/^@/, "")) > -1)) return false;
+      if (f === "receberam" && !(dq.recebeu && dq.recebeu.has(c.id))) return false;
+      if (f === "listas" && !(c.etiquetas || []).some(function (e) { return e.indexOf(LISTA) === 0; })) return false;
+      return true;
+    });
+  }
+  function dqDesenhar() {
+    const lista = dqFiltradas(), tb = $("dqLista");
+    tb.innerHTML = lista.length ? lista.slice(0, 400).map(function (c) {
+      const bloq = dqBloqueada(c), listas = (c.etiquetas || []).filter(function (e) { return e.indexOf(LISTA) === 0; }).map(function (e) { return e.slice(LISTA.length); });
+      return '<tr class="' + (bloq ? "dq-off" : "") + '"><td><input type="checkbox" data-dq="' + c.id + '"' + (dq.sel.has(c.id) ? " checked" : "") + (bloq ? " disabled" : "") + ' aria-label="Escolher ' + esc(c.nome || "pessoa") + '"></td><td>' + esc(c.nome || "(sem nome)") + "</td><td>" + esc(foneDe(c)) + "</td><td>" +
+        (bloq ? '<span class="selo off">' + esc(bloq) + "</span>" : '<span class="selo ok">Pode receber</span>') + (dq.recebeu && dq.recebeu.has(c.id) ? ' <span class="selo">já recebeu disparo</span>' : "") + (listas.length ? " <small>" + esc(listas.slice(0, 2).join(", ")) + (listas.length > 2 ? " +" + (listas.length - 2) : "") + "</small>" : "") + "</td></tr>";
+    }).join("") + (lista.length > 400 ? '<tr><td colspan="4" class="vazio">Mostrando 400 de ' + lista.length + ". Use a busca. \"Marcar todas\" marca as " + lista.filter(function (c) { return !dqBloqueada(c); }).length + " que podem receber.</td></tr>" : "") : '<tr><td colspan="4" class="vazio">Ninguém com esse filtro.</td></tr>';
+    const aptas = lista.filter(function (c) { return !dqBloqueada(c); });
+    $("dqTodos").checked = aptas.length > 0 && aptas.every(function (c) { return dq.sel.has(c.id); });
+    $("dqTodos").indeterminate = !$("dqTodos").checked && aptas.some(function (c) { return dq.sel.has(c.id); });
+    $("dqConta").textContent = dq.sel.size + (dq.sel.size === 1 ? " pessoa escolhida" : " pessoas escolhidas");
+    $("dqUsar").disabled = !dq.sel.size;
+  }
+  async function abrirEscolherPessoas() {
+    if (!contatos.length) await carregarContatos();
+    if (!dq.recebeu) await carregarReceberam();
+    dq.sel.clear(); $("dqBusca").value = ""; $("dqFiltro").value = "todos"; $("dqAviso").hidden = true;
+    dqDesenhar(); if (!$("jDpPessoas").open) $("jDpPessoas").showModal(); $("dqBusca").focus();
+  }
+  $("dpEscolher").addEventListener("click", function () { abrirEscolherPessoas().catch(function (e) { falha(e); }); });
+  $("dqBusca").addEventListener("input", dqDesenhar); $("dqFiltro").addEventListener("change", dqDesenhar);
+  $("dqTodos").addEventListener("change", function () {
+    dqFiltradas().filter(function (c) { return !dqBloqueada(c); }).forEach(function (c) { if ($("dqTodos").checked) dq.sel.add(c.id); else dq.sel.delete(c.id); });
+    dqDesenhar();
+  });
+  $("dqLista").addEventListener("change", function (ev) { const cb = ev.target.closest("[data-dq]"); if (!cb) return; if (cb.checked) dq.sel.add(cb.dataset.dq); else dq.sel.delete(cb.dataset.dq); dqDesenhar(); });
+  /* as pessoas escolhidas viram uma lista ("Seleção dia/hora"): o disparo, a conferência e todas as travas usam essa lista como qualquer outra */
+  $("dqUsar").addEventListener("click", async function () {
+    const ids = Array.from(dq.sel); if (!ids.length) return;
+    const b = $("dqUsar"); b.disabled = true; b.textContent = "Montando a lista...";
+    try {
+      const d = new Date(Date.now() - 3 * 3600e3), p2 = function (n) { return String(n).padStart(2, "0"); };
+      const nome = LISTA + "Seleção " + p2(d.getUTCDate()) + "/" + p2(d.getUTCMonth() + 1) + " " + p2(d.getUTCHours()) + "h" + p2(d.getUTCMinutes()) + " (" + ids.length + (ids.length === 1 ? " pessoa)" : " pessoas)");
+      const r = await ler(supa().rpc("wa_contatos_etiquetar", { p_ids: ids, p_adicionar: [nome], p_remover: [] }));
+      if (!r || !r.ok) throw new Error((r && r.erro) || "Não consegui montar a lista.");
+      await carregarContatos();
+      $("dpEtiqueta").value = nome;
+      $("jDpPessoas").close(); dpOrigem = null;
+      resumoDisparo(); agendarConferencia(); if (typeof wzAtualizar === "function") wzAtualizar();
+      aviso("Pronto: o disparo vai só para " + (ids.length === 1 ? "esta pessoa" : "estas " + ids.length + " pessoas") + ". A lista \"" + nome.slice(LISTA.length) + "\" ficou salva em Contatos.");
+    } catch (e) { $("dqAviso").hidden = false; $("dqAviso").textContent = e.message || String(e); }
+    finally { b.disabled = !dq.sel.size; b.textContent = "Usar estas pessoas"; }
+  });
+
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
     abaAtual = nome;
-    const f = { conversas: telaConversas, funil: telaFunil, vendas: telaVendas, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, fluxos: function () { auAtualizar().catch(function () {}); return telaFluxos(); }, config: telaConfig }[nome];
+    const f = { conversas: telaConversas, funil: telaFunil, vendas: telaVendas, email: telaEmail, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, automacoes: telaAutomacoes, fluxos: function () { auAtualizar().catch(function () {}); return telaFluxos(); }, config: telaConfig }[nome];
     f().catch(function (e) { falha(e); });
   });
   setInterval(function () {
