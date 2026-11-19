@@ -197,3 +197,5 @@ footer a{color:#DCE3F1}
 .depo-cap{margin-top:12px;text-align:center}
 .depo-cap b{display:block;font:700 17px/1.2 var(--serif);color:var(--navy)}
 .depo-cap span{color:var(--muted);font-size:14.5px}
+.lv.horizontal{width:100%;max-width:620px}
+.depo-grade{align-items:flex-start}
