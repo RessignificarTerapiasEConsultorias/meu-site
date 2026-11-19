@@ -3355,12 +3355,17 @@
       card("Receita paga", vdReais(p.receita_centavos), seta(p.receita_centavos, ant.receita_centavos)),
       card("Pedidos pagos", String(p.pedidos_pagos), seta(p.pedidos_pagos, ant.pedidos_pagos)),
       card("Ticket médio", p.ticket_centavos ? vdReais(p.ticket_centavos) : "—"),
-      card("Conversão", p.conversao_pct === null ? "—" : p.conversao_pct + "%", "<small>" + p.pedidos_pagos + " de " + p.iniciados + " que começaram</small>"),
+      card("Conversão no site", p.conversao_pct === null ? "—" : p.conversao_pct + "%", "<small>" + (p.pedidos_pagos_site != null ? p.pedidos_pagos_site : p.pedidos_pagos) + " de " + p.iniciados + " que começaram no site</small>"),
       card("Abandonados", String(p.abandonos), "<small>começaram e não pagaram (30 min)</small>"),
       card("Tempo até pagar", p.mediana_horas_pagar === null ? "—" : p.mediana_horas_pagar + " h", "<small>mediana</small>")
     ].join("") + (p.testes_ignorados ? '<p class="ajuda vd-aviso" style="grid-column:1/-1">' + p.testes_ignorados + (p.testes_ignorados === 1 ? " pedido de teste ignorado" : " pedidos de teste ignorados") + " neste mês.</p>" : "");
-    const nomes = { travas: "Teste de Travas Mentais", tracos: "Teste de Traços de Caráter" };
+    const nomes = { travas: "Teste de Travas Mentais", tracos: "Teste de Traços de Caráter", cognitivo: "Teste Cognitivo", outro_teste: "Outros testes" };
     $("vdProdutos").innerHTML = "<b>Por produto</b>" + ((p.por_produto || []).map(function (x) { return "<div><span>" + esc(nomes[x.produto_chave] || x.nome || x.produto_chave) + "</span><span>" + x.qtd + " · " + vdReais(x.receita) + "</span></div>"; }).join("") || '<p class="vazio">Sem vendas neste mês.</p>');
+    const rotOrig = { site: "Loja do site", financeiro: "Lançadas no financeiro" };
+    $("vdOrigens").innerHTML = "<b>Por origem</b>" + ((p.por_origem || []).map(function (x) { return "<div><span>" + esc(rotOrig[x.origem] || x.origem) + "</span><span>" + x.qtd + " · " + vdReais(x.receita) + "</span></div>"; }).join("") || '<p class="vazio">Sem vendas neste mês.</p>');
+    const fin = p.financeiro_itens || [];
+    $("vdFinBox").hidden = !fin.length; $("vdFinN").textContent = fin.length ? "(" + fin.length + ")" : "";
+    $("vdFin").innerHTML = fin.map(function (x) { return "<div><span>" + esc(String(x.dia || "").split("-").reverse().join("/")) + " · " + esc(x.pessoa || "") + " · " + esc(x.produto || "") + "</span><span>" + vdReais(x.valor_centavos) + "</span></div>"; }).join("");
     $("vdFormas").innerHTML = "<b>Por forma de pagamento</b>" + ((p.por_forma || []).map(function (x) { return "<div><span>" + esc(WV.rotuloForma(x.forma)) + "</span><span>" + x.qtd + " · " + vdReais(x.receita) + "</span></div>"; }).join("") || '<p class="vazio">Sem vendas neste mês.</p>');
   }
   function vdDesenharAband(lista) {

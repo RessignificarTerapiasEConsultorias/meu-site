@@ -401,12 +401,12 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
     <section data-painel="vendas" hidden>
       <div class="cartao">
         <div class="empresa-titulo"><h2>Vendas</h2><select id="vdMes" aria-label="Mês"></select><button class="btn peq contorno" type="button" id="vdAtualizar">Atualizar</button></div>
-        <p class="ajuda" style="margin-top:8px">Vendas da loja do site (pedidos pagos pela InfinitePay). Pedidos de teste de R$ 1,00 ficam fora dos números.</p>
+        <p class="ajuda" style="margin-top:8px">Vendas dos testes: as pagas na loja do site (InfinitePay) <b>mais</b> as lançadas no seu financeiro (Teste de Travas, Teste Cognitivo, Traços de Caráter). Uma venda do site que também está no financeiro conta uma vez só. Pedidos de teste de R$ 1,00 ficam fora.</p>
         <div class="vd-blocos" style="margin-top:12px">
           <div class="vd-bloco" id="vdMetaBox"><h3 class="cp-tit">Meta do mês</h3><div id="vdMeta"></div>
             <div class="vd-meta-form"><label for="vdMetaValor">Definir meta do mês (R$)</label><div class="acoes" style="margin:0"><input id="vdMetaValor" type="number" min="1" step="1" placeholder="10000"><button class="btn peq" type="button" id="vdMetaSalvar">Salvar meta</button></div></div></div>
           <div class="vd-bloco"><h3 class="cp-tit">Indicadores</h3><div class="vd-indic" id="vdIndic"><p class="vazio">Carregando...</p></div>
-            <div class="vd-lista-mini" id="vdProdutos"></div><div class="vd-lista-mini" id="vdFormas"></div></div>
+            <div class="vd-lista-mini" id="vdOrigens"></div><div class="vd-lista-mini" id="vdProdutos"></div><div class="vd-lista-mini" id="vdFormas"></div><details class="vd-lista-mini" id="vdFinBox" hidden><summary><b>Vendas que vieram do financeiro</b> <span id="vdFinN"></span></summary><div id="vdFin"></div></details></div>
         </div>
         <div class="vd-bloco" style="margin-top:12px"><h3 class="cp-tit">Pediram e não pagaram</h3><p class="ajuda">Começaram a compra há mais de 30 min e não pagaram. A resposta pronta fala só do pedido.</p><ol class="wa-fn-ativ" id="vdAband"><li class="vazio">Carregando...</li></ol></div>
         <div class="vd-bloco" style="margin-top:12px">
