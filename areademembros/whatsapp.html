@@ -259,6 +259,8 @@ dialog#jAutomacao,dialog#jAutPessoas{max-width:900px;width:calc(100% - 16px);max
 .wa-tag-corr{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;background:#F1ECE0;color:#5C6470;margin-left:4px}
 .wa-cita{border-left:3px solid #B8862B;background:rgba(184,134,43,.10);border-radius:6px;padding:3px 8px;margin-bottom:6px;font-size:12.5px;color:#5C6470;overflow-wrap:anywhere}
 dialog#jCorrigir{max-width:560px;width:calc(100% - 16px);max-height:92vh;overflow-y:auto}
+dialog#jDpPessoas{max-width:820px;width:calc(100% - 16px);max-height:94vh;overflow-y:auto}
+#dqLista tr.dq-off{opacity:.55}
 /* vendas (Fase 6) */
 .vd-blocos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .vd-bloco{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
@@ -481,7 +483,8 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
             <div><label for="dpTemplate">Template aprovado</label><select id="dpTemplate"></select></div>
             <p class="ajuda" id="wzTplInfo"></p></div>
           <div class="wz-etapa" data-etapa="3"><h3 class="cp-tit">3. Público</h3>
-            <div><label for="dpEtiqueta">Para quem</label><select id="dpEtiqueta"><option value="">Todos que autorizaram</option></select></div>
+            <div><label for="dpEtiqueta">Para quem</label><select id="dpEtiqueta"><option value="">Todos que autorizaram</option></select>
+              <div class="acoes" style="margin:6px 0 0"><button class="btn peq contorno" type="button" id="dpEscolher">Escolher pessoas (uma ou várias)</button><small class="vazio">Dispara só para quem você marcar.</small></div></div>
             <p class="ajuda" id="dpResumo" style="margin-top:12px"></p>
             <p class="ajuda" id="wzPublico"></p>
             <div class="checks" id="dpExcluirBox" style="margin-top:8px" hidden><label><input type="checkbox" id="dpExcluirRecentes"> <span id="dpExcluirTxt">Não enviar para quem recebeu marketing nos últimos dias</span></label></div></div>
@@ -1117,6 +1120,19 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
   <div class="f" style="margin-top:10px"><label for="crTexto" id="crTextoRot">Texto corrigido</label><textarea id="crTexto" rows="5" maxlength="4096"></textarea><small class="vazio" id="crConta"></small></div>
   <div class="wa-fn-aviso" id="crAviso" hidden role="alert"></div>
   <div class="acoes"><button class="btn auto" type="button" id="crEnviar">Enviar correção</button><button class="btn auto contorno" type="button" data-fechar="jCorrigir">Cancelar</button></div>
+</dialog>
+
+<dialog class="janela janela-larga" id="jDpPessoas" aria-labelledby="dqTitulo">
+  <h2 id="dqTitulo">Escolher pessoas para o disparo</h2>
+  <p class="ajuda">Marque uma ou mais pessoas. O disparo vai <b>só para elas</b>. Quem saiu da lista ou não autorizou aparece apagado e não pode ser marcado (o CRM não envia para essas pessoas).</p>
+  <div class="wa-fn-filtros">
+    <input id="dqBusca" type="search" placeholder="Buscar por nome ou número" aria-label="Buscar pessoa" maxlength="80">
+    <select id="dqFiltro" aria-label="Quais pessoas mostrar"><option value="todos">Todas as pessoas</option><option value="receberam">Já receberam um disparo</option><option value="listas">Estão em alguma lista</option></select>
+  </div>
+  <div class="acoes" style="margin:8px 0;align-items:center"><label class="wa-fn-chk"><input type="checkbox" id="dqTodos"> Marcar todas as que aparecem</label><span class="vazio" id="dqConta"></span></div>
+  <div class="tabela-wrap" style="max-height:52vh"><table class="t"><thead><tr><th style="width:44px"></th><th>Nome</th><th>WhatsApp</th><th>Situação</th></tr></thead><tbody id="dqLista"><tr><td colspan="4" class="vazio">Carregando...</td></tr></tbody></table></div>
+  <div class="wa-fn-aviso" id="dqAviso" hidden role="alert"></div>
+  <div class="acoes"><button class="btn auto" type="button" id="dqUsar">Usar estas pessoas</button><button class="btn auto contorno" type="button" data-fechar="jDpPessoas">Cancelar</button></div>
 </dialog>
 
 <dialog class="janela janela-larga" id="jVendaDetalhe" aria-labelledby="vdDetTitulo">

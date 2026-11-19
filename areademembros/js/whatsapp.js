@@ -3920,6 +3920,69 @@
     } catch (e) { botao.disabled = false; botao.textContent = "Enviar correção"; erro(e.message || String(e)); }
   });
 
+  /* ---------- disparo só para pessoas escolhidas (uma ou várias) ---------- */
+  const dq = { sel: new Set(), recebeu: null };
+  async function carregarReceberam() {
+    try {
+      const l = await buscarTudo(function () { return supa().from("wa_disparo_itens").select("contato_id").in("status", ["enviado", "entregue", "lido"]).order("id"); });
+      dq.recebeu = new Set(l.map(function (x) { return x.contato_id; }));
+    } catch (e) { dq.recebeu = new Set(); }
+  }
+  function dqBloqueada(c) { return c.optout ? "Saiu da lista (não recebe)" : !c.optin ? "Sem autorização (não recebe)" : ""; }
+  function dqFiltradas() {
+    const b = semAcento($("dqBusca").value.trim().toLowerCase()), bd = b.replace(/\D/g, ""), f = $("dqFiltro").value;
+    return contatos.filter(function (c) {
+      if (!c.telefone && !c.username) return false;
+      if (b && !(semAcento(String(c.nome || "").toLowerCase()).indexOf(b) > -1 || (bd && String(c.telefone || "").indexOf(bd) > -1) || String(c.username || "").toLowerCase().indexOf(b.replace(/^@/, "")) > -1)) return false;
+      if (f === "receberam" && !(dq.recebeu && dq.recebeu.has(c.id))) return false;
+      if (f === "listas" && !(c.etiquetas || []).some(function (e) { return e.indexOf(LISTA) === 0; })) return false;
+      return true;
+    });
+  }
+  function dqDesenhar() {
+    const lista = dqFiltradas(), tb = $("dqLista");
+    tb.innerHTML = lista.length ? lista.slice(0, 400).map(function (c) {
+      const bloq = dqBloqueada(c), listas = (c.etiquetas || []).filter(function (e) { return e.indexOf(LISTA) === 0; }).map(function (e) { return e.slice(LISTA.length); });
+      return '<tr class="' + (bloq ? "dq-off" : "") + '"><td><input type="checkbox" data-dq="' + c.id + '"' + (dq.sel.has(c.id) ? " checked" : "") + (bloq ? " disabled" : "") + ' aria-label="Escolher ' + esc(c.nome || "pessoa") + '"></td><td>' + esc(c.nome || "(sem nome)") + "</td><td>" + esc(foneDe(c)) + "</td><td>" +
+        (bloq ? '<span class="selo off">' + esc(bloq) + "</span>" : '<span class="selo ok">Pode receber</span>') + (dq.recebeu && dq.recebeu.has(c.id) ? ' <span class="selo">já recebeu disparo</span>' : "") + (listas.length ? " <small>" + esc(listas.slice(0, 2).join(", ")) + (listas.length > 2 ? " +" + (listas.length - 2) : "") + "</small>" : "") + "</td></tr>";
+    }).join("") + (lista.length > 400 ? '<tr><td colspan="4" class="vazio">Mostrando 400 de ' + lista.length + ". Use a busca. \"Marcar todas\" marca as " + lista.filter(function (c) { return !dqBloqueada(c); }).length + " que podem receber.</td></tr>" : "") : '<tr><td colspan="4" class="vazio">Ninguém com esse filtro.</td></tr>';
+    const aptas = lista.filter(function (c) { return !dqBloqueada(c); });
+    $("dqTodos").checked = aptas.length > 0 && aptas.every(function (c) { return dq.sel.has(c.id); });
+    $("dqTodos").indeterminate = !$("dqTodos").checked && aptas.some(function (c) { return dq.sel.has(c.id); });
+    $("dqConta").textContent = dq.sel.size + (dq.sel.size === 1 ? " pessoa escolhida" : " pessoas escolhidas");
+    $("dqUsar").disabled = !dq.sel.size;
+  }
+  async function abrirEscolherPessoas() {
+    if (!contatos.length) await carregarContatos();
+    if (!dq.recebeu) await carregarReceberam();
+    dq.sel.clear(); $("dqBusca").value = ""; $("dqFiltro").value = "todos"; $("dqAviso").hidden = true;
+    dqDesenhar(); if (!$("jDpPessoas").open) $("jDpPessoas").showModal(); $("dqBusca").focus();
+  }
+  $("dpEscolher").addEventListener("click", function () { abrirEscolherPessoas().catch(function (e) { falha(e); }); });
+  $("dqBusca").addEventListener("input", dqDesenhar); $("dqFiltro").addEventListener("change", dqDesenhar);
+  $("dqTodos").addEventListener("change", function () {
+    dqFiltradas().filter(function (c) { return !dqBloqueada(c); }).forEach(function (c) { if ($("dqTodos").checked) dq.sel.add(c.id); else dq.sel.delete(c.id); });
+    dqDesenhar();
+  });
+  $("dqLista").addEventListener("change", function (ev) { const cb = ev.target.closest("[data-dq]"); if (!cb) return; if (cb.checked) dq.sel.add(cb.dataset.dq); else dq.sel.delete(cb.dataset.dq); dqDesenhar(); });
+  /* as pessoas escolhidas viram uma lista ("Seleção dia/hora"): o disparo, a conferência e todas as travas usam essa lista como qualquer outra */
+  $("dqUsar").addEventListener("click", async function () {
+    const ids = Array.from(dq.sel); if (!ids.length) return;
+    const b = $("dqUsar"); b.disabled = true; b.textContent = "Montando a lista...";
+    try {
+      const d = new Date(Date.now() - 3 * 3600e3), p2 = function (n) { return String(n).padStart(2, "0"); };
+      const nome = LISTA + "Seleção " + p2(d.getUTCDate()) + "/" + p2(d.getUTCMonth() + 1) + " " + p2(d.getUTCHours()) + "h" + p2(d.getUTCMinutes()) + " (" + ids.length + (ids.length === 1 ? " pessoa)" : " pessoas)");
+      const r = await ler(supa().rpc("wa_contatos_etiquetar", { p_ids: ids, p_adicionar: [nome], p_remover: [] }));
+      if (!r || !r.ok) throw new Error((r && r.erro) || "Não consegui montar a lista.");
+      await carregarContatos();
+      $("dpEtiqueta").value = nome;
+      $("jDpPessoas").close(); dpOrigem = null;
+      resumoDisparo(); agendarConferencia(); if (typeof wzAtualizar === "function") wzAtualizar();
+      aviso("Pronto: o disparo vai só para " + (ids.length === 1 ? "esta pessoa" : "estas " + ids.length + " pessoas") + ". A lista \"" + nome.slice(LISTA.length) + "\" ficou salva em Contatos.");
+    } catch (e) { $("dqAviso").hidden = false; $("dqAviso").textContent = e.message || String(e); }
+    finally { b.disabled = !dq.sel.size; b.textContent = "Usar estas pessoas"; }
+  });
+
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
     abaAtual = nome;
