@@ -261,6 +261,7 @@ dialog#jAutomacao,dialog#jAutPessoas{max-width:900px;width:calc(100% - 16px);max
 dialog#jCorrigir{max-width:560px;width:calc(100% - 16px);max-height:92vh;overflow-y:auto}
 dialog#jDpPessoas{max-width:820px;width:calc(100% - 16px);max-height:94vh;overflow-y:auto}
 #dqLista tr.dq-off{opacity:.55}
+.wa-sr-barra{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0 0;padding:8px 10px;border-radius:10px;background:#FFF6DC;border:1px solid #E9D59A;font-size:13.5px}
 /* vendas (Fase 6) */
 .vd-blocos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .vd-bloco{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
@@ -360,7 +361,8 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
             <button type="button" class="wa-chip" data-extra="interessado" aria-pressed="false" title="Contatos que você marcou na etapa Interessado">Interessados<b id="cvNInteressados"></b></button>
             <button type="button" class="wa-chip" data-extra="alta" aria-pressed="false" title="Prioridade alta ou urgente">Prioridade alta<b id="cvNAlta"></b></button>
           </div>
-          <div class="acoes" id="cvSemRespAcoes" hidden style="margin:0 0 8px"><small class="vazio">Mais antigas primeiro. Só a sua resposta pelo painel tira a conversa daqui (o robô não conta).</small><button type="button" class="btn peq contorno" id="cvLimparSemResp">Marcar todas como respondidas</button></div>
+          <div class="checks" style="margin:0 0 8px"><label class="wa-fn-chk"><input type="checkbox" id="cvAutoLida"> Ao abrir uma conversa, tirar de Não respondidas</label></div>
+        <div class="acoes" id="cvSemRespAcoes" hidden style="margin:0 0 8px"><small class="vazio">Mais antigas primeiro. Só a sua resposta pelo painel tira a conversa daqui (o robô não conta).</small><button type="button" class="btn peq contorno" id="cvLimparFechadas" title="Tira de Não respondidas as conversas em que a janela de 24 h já fechou (só dá para mandar template)">Tirar as de janela fechada<b id="cvNFechadas"></b></button><button type="button" class="btn peq contorno" id="cvLimparSemResp">Marcar todas como respondidas</button></div>
           <div class="wa-lista" id="cvLista"><p class="vazio">Carregando...</p></div>
         </aside>
         <div id="cvThread"><div class="cartao"><p class="vazio">Escolha uma conversa ao lado.</p></div></div>

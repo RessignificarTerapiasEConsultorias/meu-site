@@ -1197,6 +1197,8 @@
     $("cvNPediu").textContent = n.pediu ? n.pediu : "";
     $("cvNSemResp").textContent = n.sem_resposta ? n.sem_resposta : "";
     $("cvSemRespAcoes").hidden = filtroCv !== "sem_resposta" || !listaCv.length;
+    const nFechadas = listaCv.filter(function (c) { return c.sem_resposta && janelaMs(c) <= 0; }).length;
+    $("cvNFechadas").textContent = nFechadas ? nFechadas : ""; $("cvLimparFechadas").disabled = !nFechadas;
     contarExtrasCv();
     document.title = (n.msgs_nao_lidas ? "(" + n.msgs_nao_lidas + ") " : "") + "WhatsApp | Ressignificar";
     desenharLista();
@@ -1281,8 +1283,21 @@
   $("cvLista").addEventListener("click", function (ev) {
     const b = ev.target.closest("[data-cv]"); if (!b) return;
     conversaId = b.dataset.cv; ancora = b.dataset.msg || null;
-    abrirConversa();
+    const idAberto = conversaId;
+    abrirConversa().then(function () {
+      if ($("cvAutoLida").checked && conversaCont && conversaCont.id === idAberto && conversaCont.sem_resposta) salvarContato({ sem_resposta: false, sem_resposta_desde: null }, "Tirei esta conversa de Não respondidas.");
+    });
   });
+  $("cvLimparFechadas").addEventListener("click", async function () {
+    const ids = listaCv.filter(function (c) { return c.sem_resposta && janelaMs(c) <= 0; }).map(function (c) { return c.id; });
+    if (!ids.length || !confirm("Tirar " + ids.length + (ids.length === 1 ? " conversa" : " conversas") + " de Não respondidas?\n\nSão as que a janela de 24 h já fechou (só dá para mandar template). Se a pessoa escrever de novo, a conversa volta para a lista.")) return;
+    try {
+      for (let i = 0; i < ids.length; i += 100) await ler(supa().from("wa_contatos").update({ sem_resposta: false, sem_resposta_desde: null }).in("id", ids.slice(i, i + 100)).select("id"));
+      aviso(ids.length + (ids.length === 1 ? " conversa saiu" : " conversas saíram") + " de Não respondidas."); await carregarLista();
+    } catch (e) { falha(e); }
+  });
+  (function () { let v = false; try { v = localStorage.getItem("wa_auto_lida") === "1"; } catch (e) {} $("cvAutoLida").checked = v; })();
+  $("cvAutoLida").addEventListener("change", function () { try { localStorage.setItem("wa_auto_lida", this.checked ? "1" : "0"); } catch (e) {} aviso(this.checked ? "Pronto: ao abrir uma conversa, ela sai de Não respondidas." : "Desligado: a conversa só sai de Não respondidas quando você responde ou marca."); });
   $("cvLimparSemResp").addEventListener("click", async function () {
     const n = listaCv.length;
     if (!n || !confirm("Marcar " + n + (n === 1 ? " conversa" : " conversas") + " como respondidas?\n\nElas saem de Não respondidas. Se a pessoa escrever de novo, a conversa volta para a lista.")) return;
@@ -1404,7 +1419,8 @@
       (pausado(c) ? '<button type="button" class="btn peq" id="cvRoboVoltar">Voltar a responder</button>' : "") +
       (c.precisa_humano ? '<span class="selo off">Pediu atendimento</span>' : "") +
       (c.sem_resposta && c.sem_resposta_desde ? '<span class="selo pendente" title="A pessoa escreveu e você ainda não respondeu">Esperando sua resposta ' + esc(haEspera(c.sem_resposta_desde)) + "</span>" : "") +
-      (c.precisa_humano || c.sem_resposta ? '<button type="button" class="btn peq contorno" id="cvAtendido" title="Tira a conversa de Não respondidas e de Pediu atendimento sem mandar mensagem">' + (c.precisa_humano ? "Marcar como atendido" : "Não precisa responder") + "</button>" : "") + "</div>";
+      (c.precisa_humano || c.sem_resposta ? '<button type="button" class="btn peq contorno" id="cvAtendido" title="Tira a conversa de Não respondidas e de Pediu atendimento sem mandar mensagem">' + (c.precisa_humano ? "Marcar como atendido" : "Não precisa responder") + "</button>" : "") + "</div>" +
+      (c.sem_resposta ? '<div class="wa-sr-barra"><span>Esta conversa está em <b>Não respondidas</b>.' + (jm <= 0 ? " A janela de 24 h já fechou: só dá para mandar template." : "") + '</span><button type="button" class="btn peq" id="cvJaVi" title="Tira só de Não respondidas. Se a pessoa escrever de novo, ela volta.">Já vi, não precisa responder</button></div>' : "");
   }
   function atualizarTopo() { const t = $("cvTopo"); if (t && conversaCont) t.innerHTML = topoHtml(conversaCont); }
   async function salvarContato(campos, msg) {
@@ -1973,6 +1989,7 @@
       inserirNoCursor($("cvTexto"), preencherResposta(r ? r.texto : "Oi, {primeiro_nome}! Não consegui abrir a sua mensagem por aqui. Pode me mandar de novo por texto, foto, áudio ou PDF?"));
       return;
     }
+    if (t.closest("#cvJaVi")) return salvarContato({ sem_resposta: false, sem_resposta_desde: null }, "Tirei esta conversa de Não respondidas.");
     if (t.closest("#cvAtendido")) return salvarContato({ precisa_humano: false, sem_resposta: false, sem_resposta_desde: null }, "Marcado como atendido.");
     if (t.closest("#cvFichaBtn")) { fichaAberta = !fichaAberta; mostrarFicha(); return; }
     if (t.closest("#cvTemplate")) return abrirEnvioTemplate(conversaCont);
