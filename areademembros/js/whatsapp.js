@@ -1457,6 +1457,7 @@
       '<button type="button" id="cvEmojiBtn" title="Emoji" aria-label="Abrir emojis">😊</button>' +
       '<button type="button" id="cvFotoBtn" title="Enviar foto" aria-label="Enviar foto">📷</button>' +
       '<button type="button" id="cvAnexo" title="Anexar vídeo, áudio ou PDF" aria-label="Anexar arquivo">📎</button>' +
+      '<button type="button" id="cvGravar" title="Gravar um áudio agora" aria-label="Gravar áudio">🎙</button>' +
       '<button type="button" id="cvProntosBtn" title="Arquivos prontos (vídeos já compactados)" aria-label="Arquivos prontos">📚</button>' +
       '<button type="button" id="cvRapBtn" title="Respostas prontas" aria-label="Respostas prontas">/</button>' +
       '<span class="vazio wa-dica">Digite / para respostas prontas · Ctrl + Enter envia · cole ou arraste uma foto</span>' +
@@ -1466,6 +1467,7 @@
   async function abrirConversa() {
     try {
       const id = conversaId;
+      if (gv.rec && gv.rec.state !== "inactive" && gv.conversa && gv.conversa !== id) gvDescartarSeAberta();
       limiteMsgs = 150;
       const c = await ler(supa().from("wa_contatos").select("*").eq("id", id).single());
       let msgs = await msgsDaConversa();
@@ -1487,6 +1489,7 @@
     } catch (e) { falha(e); }
   }
   function fecharConversa() {
+    gvDescartarSeAberta();
     conversaId = null; conversaCont = null; fichaDados = null; descartarAnexo();
     $("cvThread").innerHTML = '<div class="cartao"><p class="vazio">Escolha uma conversa ao lado.</p></div>';
     mostrarFicha();
@@ -1522,6 +1525,7 @@
     $("cvEmojiBtn").addEventListener("click", alternarEmojis);
     $("cvFotoBtn").addEventListener("click", function () { $("cvFoto").click(); });
     $("cvAnexo").addEventListener("click", function () { $("cvArquivo").click(); });
+    $("cvGravar").addEventListener("click", function () { gravarAudio().catch(function (e) { aviso(e && e.message ? e.message : String(e), true); }); });
     $("cvProntosBtn").addEventListener("click", function () { abrirProntos("conversa"); });
     $("cvRapBtn").addEventListener("click", function () { if (rap.aberta) return fecharPops(); rap.ini = -1; abrirRapidas(""); tx.focus(); });
     $("cvFoto").addEventListener("change", function () { const f = this.files[0]; this.value = ""; if (f) anexar(f); });
@@ -1573,6 +1577,7 @@
     p.innerHTML = (tipo === "image" ? '<img alt="" src="' + esc(anexo.url) + '">' : '<span class="wa-arq">' + { video: "🎬", audio: "🎤", document: "📄" }[tipo] + "</span>") +
       '<span class="wa-anexo-txt"><b>' + esc(anexo.nome) + "</b><small>" + ROT_TIPO[tipo] + " · " + tamanhoTxt(anexo.bytes) + (extra || "") + (tipo === "audio" ? " · áudio vai sem legenda" : "") +
       '</small></span><button type="button" class="wa-x" id="cvAnexoTirar" aria-label="Tirar o anexo">×</button>';
+    if (tipo === "audio") p.insertAdjacentHTML("beforeend", '<audio controls preload="metadata" src="' + esc(anexo.url) + '" style="max-width:220px;margin-left:8px"></audio>');
     p.hidden = false;
     $("cvAnexoTirar").addEventListener("click", descartarAnexo);
     $("cvTexto").placeholder = tipo === "audio" ? "Escreva sua resposta..." : "Legenda (opcional)...";
@@ -3999,6 +4004,85 @@
     } catch (e) { $("dqAviso").hidden = false; $("dqAviso").textContent = e.message || String(e); }
     finally { b.disabled = !dq.sel.size; b.textContent = "Usar estas pessoas"; }
   });
+
+  /* ---------- gravar um áudio na hora (celular ou computador) ----------
+     O navegador grava em webm ou mp4; o WhatsApp oficial só aceita MP3, M4A, AAC, AMR ou OGG. Por isso a gravação é convertida para MP3 aqui mesmo, antes de enviar. */
+  const gv = { rec: null, stream: null, partes: [], t0: 0, timer: null, cancelar: false };
+  const GV_MAX_S = 300;
+  function gvTempo(s) { return Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0"); }
+  function gvLimpar() {
+    clearInterval(gv.timer); gv.timer = null;
+    if (gv.stream) { gv.stream.getTracks().forEach(function (t) { t.stop(); }); gv.stream = null; }
+    gv.rec = null; gv.partes = [];
+    const b = $("cvGravar"); if (b) { b.classList.remove("gravando"); b.title = "Gravar um áudio agora"; }
+    const e = $("cvEnviar"); if (e) e.disabled = false;
+  }
+  function carregarLame() {
+    if (window.lamejs) return Promise.resolve();
+    return new Promise(function (ok, erro) {
+      const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"; s.async = true;
+      s.onload = function () { window.lamejs ? ok() : erro(new Error("Não consegui preparar o conversor de áudio.")); };
+      s.onerror = function () { erro(new Error("Não consegui carregar o conversor de áudio. Confira a internet e tente de novo.")); };
+      document.head.appendChild(s);
+    });
+  }
+  async function decodificar(blob) {
+    const Ctx = window.AudioContext || window.webkitAudioContext, ctx = new Ctx(), ab = await blob.arrayBuffer();
+    try { return await new Promise(function (ok, erro) { const p = ctx.decodeAudioData(ab, ok, erro); if (p && p.then) p.then(ok, erro); }); }
+    catch (e) { throw new Error("Não consegui ler a gravação. Tente gravar de novo."); }
+    finally { try { ctx.close(); } catch (e) { /* nada */ } }
+  }
+  async function gravacaoParaMp3(blob) {
+    await carregarLame();
+    const buf = await decodificar(blob);
+    if (!buf || buf.duration < 0.8) throw new Error("A gravação ficou muito curta. Grave de novo.");
+    const TAXA = 24000, off = new OfflineAudioContext(1, Math.ceil(buf.duration * TAXA), TAXA), src = off.createBufferSource();
+    src.buffer = buf; src.connect(off.destination); src.start();
+    const pcm = (await off.startRendering()).getChannelData(0), n = pcm.length, int16 = new Int16Array(n);
+    for (let i = 0; i < n; i++) { const v = Math.max(-1, Math.min(1, pcm[i])); int16[i] = v < 0 ? v * 0x8000 : v * 0x7fff; }
+    const enc = new window.lamejs.Mp3Encoder(1, TAXA, 48), partes = [];
+    for (let i = 0; i < n; i += 1152) { const c = enc.encodeBuffer(int16.subarray(i, i + 1152)); if (c.length) partes.push(new Uint8Array(c)); }
+    const fim = enc.flush(); if (fim.length) partes.push(new Uint8Array(fim));
+    return new Blob(partes, { type: "audio/mpeg" });
+  }
+  async function gravarAudio() {
+    if (gv.rec) return;   // já gravando: os botões da barra cuidam
+    if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !window.MediaRecorder) return aviso("Este navegador não grava áudio. Use o Chrome, o Safari mais novo ou o celular, ou anexe um arquivo de áudio.", true);
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+    catch (e) { return aviso("Não consegui usar o microfone. Libere o microfone para este site no navegador e tente de novo.", true); }
+    const tipos = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"], mime = tipos.filter(function (t) { return window.MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t); })[0];
+    let rec; try { rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream); } catch (e) { stream.getTracks().forEach(function (t) { t.stop(); }); return aviso("Este navegador não conseguiu começar a gravar.", true); }
+    descartarAnexo();
+    gv.conversa = conversaId; gv.stream = stream; gv.rec = rec; gv.partes = []; gv.cancelar = false; gv.t0 = Date.now();
+    rec.ondataavailable = function (ev) { if (ev.data && ev.data.size) gv.partes.push(ev.data); };
+    rec.onstop = async function () {
+      const partes = gv.partes.slice(), cancelou = gv.cancelar, tipoReal = rec.mimeType || mime || "audio/webm";
+      gvLimpar();
+      const p = $("cvAnexoPrev"); if (!p) return;
+      if (cancelou) { p.hidden = true; p.innerHTML = ""; return; }
+      p.innerHTML = '<span class="wa-anexo-txt"><b>Preparando o áudio...</b><small>Convertendo para o formato do WhatsApp</small></span>'; p.hidden = false;
+      try {
+        const mp3 = await gravacaoParaMp3(new Blob(partes, { type: tipoReal }));
+        const d = new Date(Date.now() - 3 * 3600e3), p2 = function (n) { return String(n).padStart(2, "0"); };
+        await anexar(new File([mp3], "audio-" + d.getUTCFullYear() + "-" + p2(d.getUTCMonth() + 1) + "-" + p2(d.getUTCDate()) + "-" + p2(d.getUTCHours()) + "h" + p2(d.getUTCMinutes()) + ".mp3", { type: "audio/mpeg" }));
+        if (!anexo) { p.hidden = true; p.innerHTML = ""; }
+      } catch (e) { p.hidden = true; p.innerHTML = ""; aviso(e.message || String(e), true); }
+    };
+    const barra = $("cvAnexoPrev"), e = $("cvEnviar"); if (e) e.disabled = true;
+    $("cvGravar").classList.add("gravando"); $("cvGravar").title = "Gravando...";
+    barra.innerHTML = '<span class="wa-rec"><i class="wa-rec-bola"></i><b id="cvGvTempo">0:00</b><small>gravando (até ' + gvTempo(GV_MAX_S) + ')</small></span><span class="acoes" style="margin:0;flex:1;justify-content:flex-end"><button type="button" class="btn peq" id="cvGvParar">Parar e ouvir</button><button type="button" class="btn peq contorno" id="cvGvCancelar">Cancelar</button></span>';
+    barra.hidden = false;
+    $("cvGvParar").addEventListener("click", function () { if (gv.rec && gv.rec.state !== "inactive") gv.rec.stop(); });
+    $("cvGvCancelar").addEventListener("click", function () { gv.cancelar = true; if (gv.rec && gv.rec.state !== "inactive") gv.rec.stop(); });
+    rec.start(1000);
+    gv.timer = setInterval(function () {
+      const s = (Date.now() - gv.t0) / 1000, el = $("cvGvTempo"); if (el) el.textContent = gvTempo(s);
+      if (s >= GV_MAX_S && gv.rec && gv.rec.state !== "inactive") gv.rec.stop();
+    }, 250);
+  }
+  /* se trocar de conversa ou sair com o microfone ligado, desliga e descarta */
+    function gvDescartarSeAberta() { if (gv.rec && gv.rec.state !== "inactive") { gv.cancelar = true; gv.rec.stop(); } else gvLimpar(); }
 
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
