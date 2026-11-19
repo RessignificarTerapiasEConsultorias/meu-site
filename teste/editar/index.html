@@ -93,6 +93,7 @@
 </section>
 </main>
 <footer style="padding-bottom:30px"><div class="w"><p><b>Ressignificar Terapias &amp; Consultorias</b> · <a href="../../politica-de-privacidade.html">Política de Privacidade</a></p></div></footer>
+<script src="../ddi.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../../teste-de-travas/foto-moldura.js?v=202611120250"></script>
 <script>
@@ -119,8 +120,8 @@
     var a = e.target.closest && e.target.closest("[data-wa]"); if (!a) return;
     e.preventDefault(); window.open("https://wa.me/" + ZAP + "?text=" + encodeURIComponent(a.getAttribute("data-wa") + ($("#lEmail").value || "")), "_blank", "noopener");
   });
-  function zapFormatado(d) { d = String(d || "").replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, ""); return d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d; }
-  $("#fZap").addEventListener("input", function () { var d = this.value.replace(/\D/g, "").slice(0, 11); this.value = zapFormatado(d); });
+  function zapFormatado(d) { if (String(d || "").trim().charAt(0) === "+") return String(d).trim(); d = String(d || "").replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, ""); return d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d; }
+  $("#fZap").addEventListener("input", function () { if (window.ddiEstrangeiro && window.ddiEstrangeiro(this)) return; var d = this.value.replace(/\D/g, "").slice(0, 11); this.value = zapFormatado(d); });
   document.querySelectorAll("[data-conta]").forEach(function (d) {
     var c = document.getElementById(d.getAttribute("data-conta")), max = +c.getAttribute("maxlength");
     function at() { var n = c.value.length; d.textContent = n + " de " + max + " letras" + (n >= max ? " (limite)" : ""); }

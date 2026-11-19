@@ -473,6 +473,7 @@ function ligarCidade(campo, c){
 }
 
 function formatarZap(v){
+  if(String(v||'').trim().charAt(0) === '+') return String(v).trim();   /* outro país: o número fica como foi digitado */
   const d = String(v||'').replace(/\D/g,'').replace(/^55(?=\d{10,11}$)/,'').slice(0,11);
   if(d.length <= 2) return d.length ? '(' + d : '';
   if(d.length <= 7) return `(${d.slice(0,2)}) ${d.slice(2)}`;
@@ -481,6 +482,7 @@ function formatarZap(v){
 function erroZap(v){
   const d = String(v||'').replace(/\D/g,'');
   if(!d) return 'Responda esta pergunta para continuar.';
+  if(String(v||'').trim().charAt(0) === '+') return d.length >= 9 && d.length <= 15 ? '' : 'Número incompleto. Confira o código do país e o número.';
   if(d.length < 11) return 'Número incompleto. Digite o DDD e os 9 dígitos do celular, ex.: (98) 98888-7777.';
   if(!DDDS.includes(+d.slice(0,2))) return 'Esse DDD não existe. Confira os dois primeiros números.';
   if(d[2] !== '9') return 'Número de celular começa com 9 depois do DDD, ex.: (98) 98888-7777.';
@@ -1091,7 +1093,7 @@ function mensagemCodigo(c){
 }
 function linkZap(c, numero){
   let n = String(numero||'').replace(/\D/g,'');
-  if(n && !n.startsWith('55')) n = '55' + n;
+  if(String(numero||'').trim().charAt(0) !== '+' && n && !n.startsWith('55')) n = '55' + n;
   return `https://wa.me/${n}?text=${encodeURIComponent(mensagemCodigo(c))}`;
 }
 async function copiar(texto, btn){
@@ -1160,7 +1162,7 @@ async function abrirDetalhe(id){
       <div><h1 style="margin-bottom:4px">${esc(reg.nome||'Sem nome')}</h1>
         <div class="meta">${esc(T.nome)}<br>${dataBR(reg.data)} • código ${esc(reg.codigo)}${reg.whatsapp?' • WhatsApp '+esc(reg.whatsapp):''}</div></div>
       <div class="nao-imprimir" style="display:flex;gap:8px;flex-wrap:wrap">
-        ${reg.whatsapp?`<a class="btn zap peq" target="_blank" rel="noopener" href="https://wa.me/${('55'+String(reg.whatsapp).replace(/\D/g,'')).replace(/^5555/,'55')}">Abrir WhatsApp</a>`:''}
+        ${reg.whatsapp?`<a class="btn zap peq" target="_blank" rel="noopener" href="https://wa.me/${String(reg.whatsapp).trim().charAt(0)==='+' ? String(reg.whatsapp).replace(/\D/g,'') : ('55'+String(reg.whatsapp).replace(/\D/g,'')).replace(/^5555/,'55')}">Abrir WhatsApp</a>`:''}
         <button class="btn peq" id="btn-imprimir" type="button">Imprimir ou salvar PDF</button>
       </div>
     </div>

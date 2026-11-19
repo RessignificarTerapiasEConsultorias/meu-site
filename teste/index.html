@@ -598,6 +598,7 @@ html.t-erro .t-girar{display:none}
 .ri-grade{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 
 </style>
+<script src="ddi.js"></script>
 <link rel="stylesheet" href="devolutiva-carater.css">
 <script src="devolutiva-carater.js"></script>
 <link rel="stylesheet" href="devolutiva-mpcc.css">
@@ -1471,9 +1472,10 @@ function ler(c,p){ try{ const v = localStorage.getItem(c); return v ? JSON.parse
 function mostrarTela(id){ $$('.tela').forEach(t=>t.classList.remove('ativa')); $(id).classList.add('ativa'); if(typeof urgInicio === 'function') urgInicio(id); window.scrollTo({top:0,behavior:'auto'}); if(typeof compBarra === 'function') compBarra(id); }
 function avisar(id,txt){ const el=$(id); if(!txt){el.classList.remove('ver');el.textContent='';return;} el.textContent=txt; el.classList.add('ver'); }
 function hoje(){ return new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
-function zapNumero(bruto){ let n=String(bruto||'').replace(/\D/g,''); if(!n) return ''; if(n.length<=11) n='55'+n; return n; }
+function zapNumero(bruto){ return window.ddiDigitos ? window.ddiDigitos(bruto) : (function(){ let n=String(bruto||'').replace(/\D/g,''); if(!n) return ''; if(n.length<=11) n='55'+n; return n; })(); }
 function mascaraTelefone(el){
   el.addEventListener('input', e => {
+    if(window.ddiEstrangeiro && window.ddiEstrangeiro(e.target)) return;   /* outro país: sem a máscara do Brasil */
     let v = e.target.value.replace(/\D/g,'').slice(0,11);
     if(v.length>6)      v='('+v.slice(0,2)+') '+v.slice(2,7)+'-'+v.slice(7);
     else if(v.length>2) v='('+v.slice(0,2)+') '+v.slice(2);
@@ -1520,7 +1522,7 @@ const CAMPOS1 = [
   {id:'#campo-nome',      valida:v => v.trim().length>=3,                     erro:'Escreva o seu nome.'},
   {id:'#campo-idade',     valida:v => +v>=10 && +v<=110,                      erro:'Digite uma idade entre 10 e 110.'},
   {id:'#campo-genero',    valida:v => !!v,                                    erro:'Escolha uma opção.'},
-  {id:'#campo-whats',     valida:v => v.replace(/\D/g,'').length>=10,         erro:'Digite o WhatsApp com DDD, com 10 ou 11 números.'},
+  {id:'#campo-whats',     valida:v => v.replace(/\D/g,'').length>=10,         erro:'Digite o WhatsApp com DDD (e escolha o país, se não for do Brasil).'},
   {id:'#campo-email',     valida:ehEmail,                                     erro:'Digite um e-mail válido (precisa ter @ e ponto).'},
   {id:'#campo-profissao', valida:v => v.trim().length>=3,                     erro:'Escreva a sua profissão.'},
   {id:'#campo-renda',     valida:v => !!v,                                    erro:'Escolha uma faixa de renda.'}
@@ -3486,7 +3488,7 @@ function tcTelaEnviar(meu, statusOutro){
     <p class="nota-rodape">A devolutiva do casal só aparece quando os dois terminarem.</p>`);
   tcZapSvg($('#te-zap'));
   const num = $('#tp-zap-num'); mascaraTelefone(num);
-  const atualizarZap = () => { let d = tcDig(num.value); if(d.length === 10 || d.length === 11) d = '55' + d; $('#te-zap').href = 'https://wa.me/' + (d.length >= 12 ? d : '') + '?text=' + encodeURIComponent(msg); };
+  const atualizarZap = () => { let d = window.ddiDigitos ? window.ddiDigitos(num.value) : tcDig(num.value); if(!window.ddiDigitos && (d.length === 10 || d.length === 11)) d = '55' + d; $('#te-zap').href = 'https://wa.me/' + (d.length >= 12 ? d : '') + '?text=' + encodeURIComponent(msg); };
   num.addEventListener('input', atualizarZap); num.addEventListener('change', atualizarZap);
   $('#te-copiar').addEventListener('click', async e => { try{ await navigator.clipboard.writeText(tcLink(tc.codigo)); e.target.textContent = 'Link copiado!'; }catch(err){ e.target.textContent = 'Não consegui copiar'; } setTimeout(() => { e.target.textContent = 'Copiar o link'; }, 2000); });
   const ag = $('#tp-agora'); if(ag) ag.addEventListener('click', () => tcTelaDados(o, nmO));

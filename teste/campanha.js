@@ -282,7 +282,7 @@
         ev.forEach(x => { if(x.e === 'pergunta'){ ultimaP = x.p; return; } if(ultimaP){ resumo.push({ e:'pergunta', p:ultimaP, em:x.em }); ultimaP = 0; } resumo.push(x); });
         if(ultimaP) resumo.push({ e:'pergunta', p:ultimaP });
         const msg = 'Oi, ' + String(s.nome || '').split(' ')[0] + '! Aqui é ' + (prim ? 'a ' + prim : '') + '. Vi que você começou ' + (ehFam(s.codigo) ? 'o ' + ((window.__T && __T.dados && __T.dados.familia && __T.dados.familia.nome) || 'Travas em Família') : 'o Teste de Travas Mentais') + ' e não chegou a terminar. Quer terminar agora? Leva cerca de ' + (ehFam(s.codigo) ? '8' : '7') + ' minutos e eu analiso o seu resultado pessoalmente: ' + link(s.codigo);
-        const zap = String(s.whatsapp || '').replace(/\D/g, ''), zapN = zap.length === 10 || zap.length === 11 ? '55' + zap : zap;
+        const zapN = window.ddiDigitos ? window.ddiDigitos(s.whatsapp) : (function(){ const z = String(s.whatsapp || '').replace(/\D/g, ''); return z.length === 10 || z.length === 11 ? '55' + z : z; })();
         return `<div class="camp-p"><div class="top"><span class="nm">${s.nome ? esc(s.nome) : 'Visitante sem contato'}</span><span class="st ${st[1]}">${esc(st[0])}</span></div>
           <div class="sub">${hora(s.chegou_em)} · ${esc(s.origem || 'origem desconhecida')}${s.aparelho ? ' · ' + esc(s.aparelho) : ''}${s.whatsapp ? ' · ' + esc(s.whatsapp) : ''}${s.exibicao ? ' · ' + esc(s.exibicao) : ''}</div>
           <details><summary>Linha do tempo</summary><ol>${resumo.map(x => `<li>${esc(ROT[x.e] || x.e)}${x.e === 'pergunta' || (x.e === 'saiu' && x.p) ? ' ' + (x.e === 'saiu' ? '(na pergunta ' + x.p + ')' : x.p) : ''}${x.em ? ' · ' + hora(x.em) : ''}</li>`).join('')}</ol></details>

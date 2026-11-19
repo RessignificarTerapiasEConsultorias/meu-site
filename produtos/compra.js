@@ -97,6 +97,7 @@
   $("cEmail").addEventListener("blur", checar);
   $("cZap").addEventListener("blur", checar);
   $("cZap").addEventListener("input", function () {
+    if (window.ddiEstrangeiro && window.ddiEstrangeiro(this)) return;
     var d = this.value.replace(/\D/g, "").slice(0, 11);
     this.value = d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d.length > 2 ? "(" + d.slice(0, 2) + ") " + d.slice(2) : d;
   });

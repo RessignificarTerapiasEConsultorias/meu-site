@@ -507,8 +507,8 @@ function dvTexto(raiz, tudo){
   c.querySelectorAll('h1,h2,h3,h4,p,li,tr,dt,dd,.dv-pico-topo,.dv-assinaturas span').forEach(x => x.insertAdjacentText('afterend', '\n'));
   return c.textContent.replace(/[ \t]+/g, ' ').replace(/ ?\n ?/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 }
-function dvZapNum(t){ let d = String(t || '').replace(/\D/g, ''); if(d.length === 10 || d.length === 11) d = '55' + d; return d.length >= 12 && d.length <= 13 ? d : ''; }
-function dvFone(t){ const d = String(t || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, ''); return d.length >= 10 ? '(' + d.slice(0, 2) + ') ' + d.slice(2, d.length - 4) + '-' + d.slice(-4) : ''; }
+function dvZapNum(t){ let d = String(t || '').replace(/\D/g, ''); if(String(t || '').trim().charAt(0) === '+') return d.length >= 8 && d.length <= 15 ? d : ''; if(d.length === 10 || d.length === 11) d = '55' + d; return d.length >= 12 && d.length <= 13 ? d : ''; }
+function dvFone(t){ if(String(t || '').trim().charAt(0) === '+') return String(t).trim(); const d = String(t || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, ''); return d.length >= 10 ? '(' + d.slice(0, 2) + ') ' + d.slice(2, d.length - 4) + '-' + d.slice(-4) : ''; }
 /* o = { pessoas:[{nome, whatsapp, email, genero, calc}], codigo, data, casal, area (onde está a devolutiva) } */
 function dvAcoes(el, o){
   if(!el) return;

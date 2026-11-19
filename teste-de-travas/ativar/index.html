@@ -162,6 +162,7 @@
   <div class="w"><p><b>Ressignificar Terapias &amp; Consultorias</b> · <a href="../../politica-de-privacidade.html">Política de Privacidade</a></p></div>
 </footer>
 
+<script src="../../teste/ddi.js"></script>
 <script src="../foto-moldura.js?v=202611120250"></script>
 <script>
 (function () {
@@ -193,7 +194,7 @@
     return fetch(FUNCAO, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) })
       .then(function (r) { return r.json().then(function (j) { j.__status = r.status; return j; }); });
   }
-  function zapFormatado(d) { d = String(d || "").replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, ""); return d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d; }
+  function zapFormatado(d) { if (String(d || "").trim().charAt(0) === "+") return String(d).trim(); d = String(d || "").replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, ""); return d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d; }
 
   document.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest("[data-wa]"); if (!a) return;
@@ -327,7 +328,7 @@
     else { p.style.backgroundImage = ""; p.textContent = ($("#fNome").value.trim().charAt(0) || "?").toUpperCase(); }
   }
   $("#fNome").addEventListener("input", atualizaInicial);
-  $("#fZap").addEventListener("input", function () { var d = this.value.replace(/\D/g, "").slice(0, 11); this.value = d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d.length > 2 ? "(" + d.slice(0, 2) + ") " + d.slice(2) : d; });
+  $("#fZap").addEventListener("input", function () { if (window.ddiEstrangeiro && window.ddiEstrangeiro(this)) return; var d = this.value.replace(/\D/g, "").slice(0, 11); this.value = d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d.length > 2 ? "(" + d.slice(0, 2) + ") " + d.slice(2) : d; });
 
   /* foto: reduz no próprio celular antes de enviar (fica leve e rápida para os clientes) */
   $("#fFoto").addEventListener("change", function () {
@@ -352,10 +353,10 @@
     var genero = (document.querySelector('input[name="genero"]:checked') || {}).value || "f";
     var paletaId = (document.querySelector('input[name="paleta"]:checked') || {}).value;
     var paleta = (PALETAS.filter(function (p) { return p.id === paletaId; })[0] || PALETAS[0]).c;
-    var zap = $("#fZap").value.replace(/\D/g, "");
+    var zap = $("#fZap").value.trim();
     if (nome.length < 3) return erro("Escreva o seu nome.", $("#fNome"));
     if (!$("#fTitulo").value.trim()) return erro("Escreva como você se apresenta. Ex.: Terapeuta integrativa.", $("#fTitulo"));
-    if (zap.length < 10) return erro("Confira o WhatsApp, com DDD.", $("#fZap"));
+    if (zap.replace(/\D/g, "").length < 10) return erro("Confira o WhatsApp, com DDD.", $("#fZap"));
     var link = limparLink($("#fLink").value).replace(/[.-]+$/, "");
     if (link.length < 3) return erro("Escolha o final do link do seu teste (pelo menos 3 letras).", $("#fLink"));
     if (!linkOk && /✗/.test($("#linkPrevia").textContent)) return erro("Esse final de link não está disponível. Escolha outro.", $("#fLink"));
