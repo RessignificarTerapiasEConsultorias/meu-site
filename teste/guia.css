@@ -1,0 +1,49 @@
+/* Orientação guiada da Área da terapeuta (Teste de Travas): botão, menu, seta, foco e cartão de passo. */
+#guia-abrir{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:2147482000;display:none;align-items:center;gap:8px;padding:12px 18px;border:0;border-radius:999px;background:#152D2E;color:#fff;font:600 15px/1 system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 10px 26px -8px rgba(13,31,32,.65);cursor:pointer}
+#guia-abrir.ver{display:inline-flex}
+#guia-abrir:hover{background:#4E756D}
+#guia-abrir:focus-visible,.guia-btn:focus-visible,.guia-op:focus-visible,.guia-x:focus-visible{outline:3px solid #FFC93C;outline-offset:2px}
+
+#guia-raiz{position:fixed;inset:0;z-index:2147483000;pointer-events:none;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+#guia-raiz[hidden]{display:none}
+
+/* foco: escurece a página inteira menos o elemento da vez (não bloqueia cliques) */
+#guia-foco{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(13,31,32,.56),0 0 0 3px #FFC93C;pointer-events:none}
+#guia-foco.sem{box-shadow:none;width:0;height:0}
+#guia-foco::after{content:"";position:absolute;inset:-6px;border-radius:16px;border:2px solid rgba(255,201,60,.9);animation:guia-pulso 1.6s ease-out infinite}
+
+/* seta */
+#guia-seta{position:fixed;width:46px;height:46px;pointer-events:none}
+#guia-seta svg{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45));animation:guia-pula .9s ease-in-out infinite}
+#guia-seta.sobe svg{transform:rotate(180deg);animation-name:guia-pula-sobe}
+#guia-seta.sem{display:none}
+
+/* cartão */
+#guia-card,#guia-menu{position:fixed;left:50%;transform:translateX(-50%);width:min(520px,calc(100vw - 24px));box-sizing:border-box;background:#fff;color:#152D2E;border-radius:18px;padding:16px 18px 14px;box-shadow:0 18px 50px -12px rgba(13,31,32,.6);pointer-events:auto;border-top:5px solid #4E756D}
+#guia-card.baixo,#guia-menu{bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+#guia-card.cima{top:calc(12px + env(safe-area-inset-top,0px))}
+.guia-topo{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.guia-passo{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#4E756D}
+.guia-x{width:34px;height:34px;border:0;border-radius:50%;background:#E7EBEA;color:#152D2E;font-size:20px;line-height:1;cursor:pointer}
+.guia-txt{margin:0 0 12px;font-size:16px;line-height:1.5}
+.guia-txt b{color:#0D1F20}
+.guia-acoes{display:flex;flex-wrap:wrap;gap:8px}
+.guia-btn{border:0;border-radius:12px;padding:11px 16px;font:600 15px/1.1 inherit;font-family:inherit;cursor:pointer;background:#4E756D;color:#fff}
+.guia-btn.sec{background:#E4EEEB;color:#152D2E}
+.guia-btn.fraco{background:transparent;color:#55706C;text-decoration:underline;padding-left:6px;padding-right:6px}
+
+/* menu */
+#guia-menu h2,#guia-card p{font-family:inherit;color:#152D2E;letter-spacing:0;text-transform:none}
+#guia-menu h2{margin:2px 0 4px;font-size:20px;font-weight:700}
+#guia-menu p.sub{margin:0 0 12px;font-size:14px;color:#55706C}
+.guia-op{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:1.5px solid #D5DEDB;border-radius:14px;background:#fff;padding:12px 14px;margin-bottom:8px;cursor:pointer;font-family:inherit;color:#152D2E}
+.guia-op:hover{border-color:#4E756D;background:#F3F8F6}
+.guia-op .i{font-size:24px;line-height:1}
+.guia-op b{display:block;font-size:16px}
+.guia-op small{display:block;font-size:13px;color:#55706C;margin-top:2px}
+
+@keyframes guia-pula{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+@keyframes guia-pula-sobe{0%,100%{transform:rotate(180deg) translateY(0)}50%{transform:rotate(180deg) translateY(8px)}}
+@keyframes guia-pulso{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.08)}}
+@media (prefers-reduced-motion:reduce){#guia-seta svg,#guia-foco::after{animation:none}}
+@media print{#guia-abrir,#guia-raiz{display:none!important}}
