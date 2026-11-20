@@ -28,6 +28,8 @@
 .guia-x{width:34px;height:34px;border:0;border-radius:50%;background:#E7EBEA;color:#152D2E;font-size:20px;line-height:1;cursor:pointer}
 .guia-txt{margin:0 0 12px;font-size:16px;line-height:1.5}
 .guia-txt b{color:#0D1F20}
+.guia-req{display:inline-block;background:#B23A2F;color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:6px;vertical-align:1px}
+.guia-erro{display:inline-block;margin-top:6px;color:#B23A2F;font-weight:600}
 .guia-acoes{display:flex;flex-wrap:wrap;gap:8px}
 .guia-btn{border:0;border-radius:12px;padding:11px 16px;font:600 15px/1.1 inherit;font-family:inherit;cursor:pointer;background:#4E756D;color:#fff}
 .guia-btn.sec{background:#E4EEEB;color:#152D2E}

@@ -57,7 +57,7 @@
   var rotuloAdmin = function () { var a = $('#link-admin'); return a ? a.textContent.replace(/\s+/g, ' ').trim() : 'Área da terapeuta'; };
 
   /* ---------- estado ---------- */
-  var S = { tour: null, ack: {}, zap: false, zap2: false, semCodigo: undefined, ultimoId: null, ultimoScroll: 0, aberto: false, frameVisto: null, vista: 'raiz' };
+  var S = { tour: null, ack: {}, zap: false, zap2: false, semCodigo: undefined, ultimoId: null, ultimoScroll: 0, aberto: false, frameVisto: null, vista: 'raiz', aviso: null };
   var guardar = function () { guardaSessao('guia_estado', S.tour ? JSON.stringify({ tour: S.tour, ack: S.ack, zap: S.zap, semCodigo: S.semCodigo }) : null); };
 
   /* quem ainda não tem nenhum código precisa criar um antes de seguir (decidido uma vez e mantido durante o roteiro) */
@@ -191,17 +191,35 @@
   }
 
   /* ---------- orientação DENTRO do gerador de apresentação (campo a campo) ---------- */
+  var numF = function (sel) { var e = $f(sel); return e ? parseFloat(String(e.value).replace(',', '.')) || 0 : 0; };
+  var checadoF = function (sel) { var e = $f(sel); return !!e && e.checked; };
+  /* o gerador só deixa gerar com: (1) quantidade de sessões e (2) valor do contato por WhatsApp, se essa opção estiver marcada */
+  function pendencias() {
+    var out = [], sel = $f('input[name="sess"]:checked');
+    if (!sel || (sel.value === 'x' && !(parseInt(($f('#f-sess-outro') || {}).value, 10) > 0)))
+      out.push({ alvo: sel ? '#f-sess-outro' : '#chips-sessoes', msg: 'quantas sessões terá o pacote' });
+    if (checadoF('#i-whats') && !(numF('#v-whats') > 0))
+      out.push({ alvo: '#v-whats', msg: 'o valor do contato por WhatsApp (ou desmarque essa opção)' });
+    return out;
+  }
   function PASSOS_APRESFORM() {
     var P = function (id, alvo, texto, extra) { return Object.assign({ id: id, dentro: true, manual: true, alvo: alvo, texto: texto }, extra || {}); };
     return [
       { id: 'af-intro', manual: true, centro: true, manualT: 'Vamos',
-        texto: 'Agora você vai receber uma <b>orientação para montar uma apresentação de alta performance</b>: a proposta nasce do resultado da pessoa, usa as palavras dela e mostra com clareza o valor do acompanhamento. Quer que eu te guie, campo a campo?',
+        texto: 'Agora você vai receber uma <b>orientação para montar uma apresentação de alta performance</b>: a proposta nasce do resultado da pessoa, usa as palavras dela e mostra com clareza o valor do acompanhamento. <br><br>Dois itens são <span class="guia-req">OBRIGATÓRIOS</span> para gerar: <b>a quantidade de sessões</b> e <b>o valor do contato por WhatsApp</b>. Eu te aviso quando chegarmos neles. Quer que eu te guie, campo a campo?',
         botoes: [{ t: 'Agora não', fn: function () { encerrar(); } }] },
       P('af-quem', '#ap-quem', 'Aqui está <b>de quem é a apresentação</b>. Vem preenchido com o resultado da pessoa: confira se é ela mesma. Tudo o que aparece (travas, notas e pontos de atenção) vem do teste dela.'),
       P('af-pacote', '#f-pacote', 'Dê um <b>nome curto e claro</b> ao acompanhamento, que fale do resultado que a pessoa quer. Ex.: “Jornada Destrava 12”.'),
       P('af-desc', '#f-desc', '<b>Descreva o acompanhamento</b> com as palavras dela, não as da técnica. Uma ideia por linha: cada linha vira um item na apresentação.'),
-      P('af-sessoes', '#f-freq', 'Defina <b>quantas sessões, a duração e a frequência</b>. Quando o caminho está claro, a pessoa consegue se imaginar nele.'),
-      P('af-incluso', '#i-sess', 'Marque <b>tudo o que o pacote entrega</b> e coloque o valor de cada item. É isso que mostra, na apresentação, o quanto o pacote vale. Item sem valor aparece como “incluso”.'),
+      P('af-sessoes', '#chips-sessoes', '<span class="guia-req">OBRIGATÓRIO</span> Escolha <b>quantas sessões</b> terá o pacote. Sem isso a apresentação não é gerada. Se não for nenhuma das opções, toque em <b>Outro</b> e digite o número.',
+        { exige: function () { var x = pendencias().filter(function (q) { return /sessões/.test(q.msg); }); return !x.length; }, exigeMsg: 'Digite quantas sessões terá o pacote para continuar.',
+          alvo: function () { var sel = $f('input[name="sess"]:checked'); return sel && sel.value === 'x' ? '#f-sess-outro' : '#chips-sessoes'; } }),
+      P('af-freq', '#f-freq', 'Defina <b>a duração e a frequência</b> das sessões. Quando o caminho está claro, a pessoa consegue se imaginar nele.'),
+      P('af-avulsa', '#f-avulsa', 'Quanto vale <b>uma sessão avulsa</b>? Com esse valor o sistema calcula o <b>valor de referência</b> do pacote e mostra quanto a pessoa economiza. É recomendado (se ficar em branco, essa comparação não aparece).'),
+      P('af-whats', '#v-whats', '<span class="guia-req">OBRIGATÓRIO</span> <b>Contato por WhatsApp durante a semana</b> é um trabalho à parte, então ele precisa de um <b>valor</b> (ex.: 150) e, em <b>Como funciona</b>, a explicação (ex.: dias úteis, até 18h). <b>Sem o valor, a apresentação não é gerada.</b> Se você não oferece esse contato, desmarque a opção.',
+        { exige: function () { return !checadoF('#i-whats') || numF('#v-whats') > 0; }, exigeMsg: 'Coloque o valor do contato por WhatsApp, ou toque em “Não ofereço este contato”.',
+          botoes: [{ t: 'Não ofereço este contato', fn: function () { var c = $f('#i-whats'); if (c && c.checked) c.click(); S.ack['af-whats'] = true; guardar(); ultimoHTML = ''; } }] }),
+      P('af-incluso', '#i-testes', 'Marque <b>o que mais o pacote entrega</b> e coloque o valor de cada item (ex.: o valor de cada aplicação do teste). É isso que mostra o quanto o pacote vale. Item sem valor aparece como “incluso” e o sistema pergunta antes de gerar.'),
       P('af-final', '#f-final', 'Digite o <b>valor final do pacote</b> à vista, um número redondo (ex.: 1.500). Logo abaixo você vê a <b>prévia</b> de como ele aparece na apresentação.'),
       P('af-pagto', '#p-pix', 'Marque as <b>formas de pagamento</b> que você aceita. Condições claras tiram a dúvida na hora de decidir.'),
       P('af-validade', '#f-validade', 'Se existir uma <b>data limite</b> para a condição, informe. Só coloque prazo que seja verdadeiro: a pessoa confia em quem cumpre o que diz.'),
@@ -209,8 +227,13 @@
       P('af-voce', '#f-nome', '<b>Sobre você</b>: o seu nome, WhatsApp e como você se apresenta. A pessoa fecha com quem ela confia, então conte também a sua história em poucas linhas.'),
       P('af-ouvi', '#f-ouvi', 'O passo que mais faz diferença: <b>o que você ouviu dela</b>, o que ela quer alcançar e o que mais pesa na decisão. Escreva com as palavras dela: é isso que deixa a apresentação com a cara da pessoa.'),
       P('af-cores', '#paletas', 'Escolha a <b>aparência</b>: as cores da apresentação.'),
-      { id: 'af-gerar', dentro: true, feito: deckAberto, alvo: '#b-gerar',
-        texto: 'Tudo pronto! Toque em <b>Gerar apresentação</b>. Dica: antes, use <b>Salvar como meu padrão</b> para não digitar tudo de novo na próxima vez.' }
+      { id: 'af-gerar', dentro: true, feito: deckAberto,
+        alvo: function () { var f = pendencias(); return f.length ? f[0].alvo : '#b-gerar'; },
+        texto: function () {
+          var f = pendencias();
+          if (f.length) return '<span class="guia-req">FALTA</span> Para gerar, ainda preciso de: <b>' + f.map(function (q) { return q.msg; }).join('</b> e <b>') + '</b>. Preencha aqui e eu sigo.';
+          return '✔ Tudo o que é obrigatório está preenchido. Toque em <b>Gerar apresentação</b>. Se o sistema perguntar sobre itens sem valor ou sobre o valor final, responda como preferir. Dica: antes, use <b>Salvar como meu padrão</b> para não digitar tudo de novo.';
+        } }
     ];
   }
 
@@ -325,6 +348,7 @@
   function desenharCartao(info) {
     var topo = info.p ? 'Passo ' + info.n + ' de ' + info.total : 'Concluído';
     var txt = info.p ? textoDe(info.p) : (FIM[S.tour] || {}).t;
+    if (info.p && info.p.exige && S.aviso === info.p.id && !info.p.exige()) txt += '<br><span class="guia-erro">⚠ ' + info.p.exigeMsg + '</span>';
     var html = '<div class="guia-topo"><span class="guia-passo">' + topo + '</span><button type="button" class="guia-x" data-g="fechar" aria-label="Fechar a orientação">×</button></div>' +
       '<p class="guia-txt">' + txt + '</p><div class="guia-acoes">' + botoesHTML(info) + '</div>';
     if (html !== ultimoHTML) { card.innerHTML = html; ultimoHTML = html; }
@@ -342,6 +366,14 @@
     seta.style.top = (acima ? r.top - pad - 50 : r.bottom + pad + 4) + 'px';
     /* o cartão fica do lado oposto ao elemento, para nunca cobri-lo */
     card.className = (r.top + r.height / 2 > H * 0.55) ? 'cima' : 'baixo';
+    /* cartão alto (ex.: com aviso) cobrindo o campo: rola a página só o necessário para o campo ficar livre */
+    var agora = Date.now();
+    if (agora - (S.ajuste || 0) > 350) {
+      var cr = card.getBoundingClientRect(), dy = 0;
+      if (card.className === 'baixo' && r.bottom + pad + 12 > cr.top) dy = r.bottom + pad + 16 - cr.top;
+      else if (card.className === 'cima' && r.top - pad - 56 < cr.bottom) dy = -(cr.bottom + 60 - (r.top - pad));
+      if (Math.abs(dy) > 4) { S.ajuste = agora; try { (el.ownerDocument.defaultView || window).scrollBy(0, dy); } catch (e) { /* sem rolagem */ } }
+    }
   }
 
   function passarPara(el, id) {
@@ -392,7 +424,10 @@
     card.addEventListener('click', function (e) {
       var b = e.target.closest && e.target.closest('[data-g]'); if (!b) return;
       var g = b.dataset.g, info = S.tour ? passoAtual() : null;
-      if (g === 'proximo' && info && info.p) { S.ack[info.p.id] = true; guardar(); ultimoHTML = ''; }
+      if (g === 'proximo' && info && info.p) {
+        if (info.p.exige && !info.p.exige()) { S.aviso = info.p.id; ultimoHTML = ''; }            // obrigatório ainda não preenchido: não deixa passar
+        else { S.ack[info.p.id] = true; S.aviso = null; guardar(); ultimoHTML = ''; }
+      }
       else if (g === 'extra' && info && info.p) { var x = (info.p.botoes || [])[+b.dataset.i]; if (x) x.fn(); }
       else if (g === 'menu') { encerrar(); abrirMenu(); }
       else if (g === 'seguir') { iniciar((FIM[S.tour] || {}).prox); }
