@@ -1818,11 +1818,11 @@ async function compGerar(){
       <div class="valor">${codigo}</div>
       <div class="para">${nome ? escH(nome) + ' · ' : ''}vale para ${usosMax} ${usosMax === 1 ? 'pessoa' : 'pessoas'} · ${mostrar ? 'a pessoa vê o resultado no final' : 'só você vê o resultado'} · ${urgSel ? 'com cronômetro de 60 s' : 'sem cronômetro de 60 s'}</div>
     </div>
-    <div class="aviso ver" style="margin-top:12px">Coloque <b>este link</b> no seu anúncio, post ou página. Cada pessoa que entrar ocupa uma vaga numerada (${codigo}-1, ${codigo}-2…) e tem 30 minutos para responder. <b>Este link abre no modo campanha</b>: página de chegada curta, nome e WhatsApp logo no início e perguntas sem número. Você acompanha quem chegou e até onde foi na aba <b>Histórico de campanha</b>, aqui na sua área.</div>
-    <div class="linha-item" style="margin-top:10px"><span class="esq"><span class="sub" style="white-space:normal;word-break:break-all">${linkDoTeste(codigo)}</span></span></div>
+    <div class="aviso ver" style="margin-top:12px">Coloque <b>este link</b> no seu anúncio, post ou página. Cada pessoa que entrar ocupa uma vaga numerada (${codigo}-1, ${codigo}-2…) e tem 30 minutos para responder. <b>Este link abre no modo campanha</b>: página de chegada curta, nome e WhatsApp logo no início e perguntas sem número. Você acompanha quem chegou e até onde foi na aba <b>Histórico de campanha</b>, aqui na sua área. Quem entrar por este link também recebe a <b>orientação guiada</b> passo a passo, com seta, para fazer o teste.</div>
+    <div class="linha-item" style="margin-top:10px"><span class="esq"><span class="sub" style="white-space:normal;word-break:break-all">${linkCampanha(codigo)}</span></span></div>
     <button class="btn btn-argila" id="btn-copiar-link-c">Copiar o link da campanha</button>
     <button class="btn btn-contorno" id="btn-copiar-codigo-c">Copiar só o código</button>`;
-  $('#btn-copiar-link-c').addEventListener('click', async e => { try{ await navigator.clipboard.writeText(linkDoTeste(codigo)); e.target.textContent = 'Link copiado!'; }catch(err){ e.target.textContent = 'Não consegui copiar'; } setTimeout(() => { e.target.textContent = 'Copiar o link da campanha'; }, 2000); });
+  $('#btn-copiar-link-c').addEventListener('click', async e => { try{ await navigator.clipboard.writeText(linkCampanha(codigo)); e.target.textContent = 'Link copiado!'; }catch(err){ e.target.textContent = 'Não consegui copiar'; } setTimeout(() => { e.target.textContent = 'Copiar o link da campanha'; }, 2000); });
   $('#btn-copiar-codigo-c').addEventListener('click', async e => { try{ await navigator.clipboard.writeText(codigo); e.target.textContent = 'Copiado!'; }catch(err){ e.target.textContent = 'Não consegui copiar'; } setTimeout(() => { e.target.textContent = 'Copiar só o código'; }, 2000); });
   carregarCodigos();
 }
@@ -1853,7 +1853,7 @@ async function compEncerrar(codigo){
 }
 function compLigarLista(){
   $$('[data-comp-link]').forEach(b => b.addEventListener('click', async () => {
-    try{ await navigator.clipboard.writeText(linkDoTeste(b.dataset.compLink)); b.textContent = 'Copiado!'; }catch(err){ b.textContent = 'Não consegui'; }
+    try{ await navigator.clipboard.writeText(linkCampanha(b.dataset.compLink)); b.textContent = 'Copiado!'; }catch(err){ b.textContent = 'Não consegui'; }
     setTimeout(() => { b.textContent = 'Copiar link'; }, 1800);
   }));
   $$('[data-comp-fim]').forEach(b => b.addEventListener('click', async () => {
@@ -2482,6 +2482,7 @@ $('#cod-qtd').addEventListener('change', ()=>{
   $('#dica-qtd').textContent = varios ? 'Com mais de 1 código, o nome e o WhatsApp não são usados. Você copia cada link para enviar.' : 'Cada código vale para uma pessoa, uma vez só.';
 });
 const linkDoTeste = codigo => linkTeste('travas', codigo);   // site/<terapeuta>/teste-de-travas/?c=CÓDIGO
+const linkCampanha = codigo => linkTeste('travas', codigo, 'guia=paciente');   // link de campanha: quem entra por ele recebe a orientação guiada do paciente
 function mensagemConvite(primeiro, codigo, mostrar){
   return [
     (primeiro ? 'Oi, ' + primeiro + '!' : 'Oi!') + ' Aqui é ' + T_A + '.',

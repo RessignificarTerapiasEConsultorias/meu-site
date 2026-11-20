@@ -6,6 +6,9 @@
    a seta se acerta sozinha. Nunca lê a senha (só conta quantos caracteres foram digitados).
 
    Por enquanto só aparece na página do Mauricio (?t=mauricio) ou com ?guia=1 no endereço.
+   Links de campanha (estratégia de tráfego, "mesmo código") saem com &guia=paciente: quem entra por eles
+   recebe a orientação do paciente automaticamente, em qualquer página de terapeuta. Código individual e
+   página inicial não ganham nada novo.
    O botão fica já na capa, antes do login: a primeira pergunta é "terapeuta ou paciente?".
    Roteiros do terapeuta: entrar, criar código, mandar pelo WhatsApp, gerar a apresentação
    (e, dentro do gerador, uma orientação campo a campo). Roteiro do paciente: fazer o teste.
@@ -15,7 +18,8 @@
   var Q = new URLSearchParams(location.search);
   var SLUG = (Q.get('t') || '').toLowerCase();
   var COM_FLAG = Q.get('guia') === '1';
-  if (SLUG !== 'mauricio' && !COM_FLAG) return;
+  var SO_PACIENTE = Q.get('guia') === 'paciente' && !COM_FLAG;          // veio por um link de campanha: só o roteiro do paciente
+  if (SLUG !== 'mauricio' && !COM_FLAG && !SO_PACIENTE) return;
 
   var guardaSessao = function (k, v) { try { if (v === undefined) return sessionStorage.getItem(k); if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { /* sem armazenamento: segue sem lembrar */ } return null; };
   if (COM_FLAG) guardaSessao('guia_travas', '1');
@@ -50,7 +54,12 @@
     return r;
   };
   var ETAPAS = ['tela-capa', 'tela-orientacao', 'tela-dados1', 'tela-dados2', 'tela-teste', 'tela-resultado', 'tela-obrigada'];
-  var etapa = function () { for (var i = 0; i < ETAPAS.length; i++) if (telaAtiva(ETAPAS[i])) return i; return -1; };
+  var CAMP_ETAPAS = ['tela-camp', 'tela-camp-dados', 'tela-teste', 'tela-camp-perfil', 'tela-resultado', 'tela-obrigada'];
+  var etapaDe = function (lista) { for (var i = 0; i < lista.length; i++) if (telaAtiva(lista[i])) return i; return -1; };
+  var etapa = function () { return etapaDe(ETAPAS); };
+  var etapaC = function () { return etapaDe(CAMP_ETAPAS); };
+  var rotuloDe = function (id) { var e = $('#' + id), c = e && e.closest('.campo'), l = c && c.querySelector('label'); return l ? l.textContent.replace(/\s+/g, ' ').replace(/\(opcional\)/i, '').trim().replace(/[.:]+$/, '') : ''; };
+  var tourPaciente = function () { return window.CAMP && window.CAMP.ativo ? 'paciente-camp' : 'paciente'; };
   var rotuloCampo = function (cont) { var l = $(cont + ' label, ' + cont + ' .rot'); return l ? l.textContent.replace(/\s+/g, ' ').replace(/\(opcional\)/i, '').trim().replace(/[.:]+$/, '') : ''; };
   var pontua = function (t) { return /[?!]$/.test(t) ? t : t + '.'; };
   var nomeA = function () { return window.T_A || 'a terapeuta'; };
@@ -139,6 +148,7 @@
         texto: 'Toque em <b>Gerar apresentação</b>: o sistema monta a proposta de acompanhamento a partir do resultado dela.' },
       ]);
     if (tour === 'paciente') return PASSOS_PACIENTE();
+    if (tour === 'paciente-camp') return PASSOS_PACIENTE_CAMP();
     if (tour === 'apresform') return PASSOS_APRESFORM();
     return base;
   }
@@ -181,11 +191,44 @@
         } },
       { id: 'p-teste', feito: depois(4), alvo: '#regua', setaBaixo: true,
         texto: 'Responda pensando em <b>HOJE</b>: toque na nota de <b>1 a 10</b> (1 = não representa nada, 10 = representa muito). Não existe resposta certa: vá no primeiro impulso. Para corrigir, use <b>Pergunta anterior</b>.' },
-      { id: 'p-mapa', manual: true, alvo: '#qtd-alta',
+      { id: 'p-mapa', so: function () { return etapa() <= 5; }, manual: true, alvo: '#qtd-alta',
         texto: 'Este é o <b>seu mapa em números</b>: quantas travas estão altas (prioridade), médias (atenção) e baixas (os seus pontos fortes).' },
-      { id: 'p-barras', manual: true, alvo: '#barras',
+      { id: 'p-barras', so: function () { return etapa() <= 5; }, manual: true, alvo: '#barras',
         texto: 'Aqui estão as <b>suas 10 travas</b>, da mais forte para a mais leve. Mais abaixo, o texto explica o que cada uma faz com você.' },
-      { id: 'p-enviar', feito: function () { return S.zap2 || etapa() >= 6; }, alvo: '#btn-zap-resultado',
+      { id: 'p-enviar', so: function () { return etapa() <= 5; }, feito: function () { return S.zap2 || etapa() >= 6; }, alvo: '#btn-zap-resultado',
+        texto: function () { return 'Toque aqui para <b>enviar o seu resultado para ' + nomeA() + '</b> pelo WhatsApp. É a partir dele que vocês vão conversar.'; } }
+    ];
+  }
+
+  /* paciente que entrou por um link de campanha: telas próprias (começar, nome e WhatsApp, perguntas, perfil, resultado) */
+  var CAMPOS_C1 = [['camp-nome'], ['camp-zap']], CAMPOS_C2 = [['camp-idade'], ['camp-genero']];
+  function PASSOS_PACIENTE_CAMP() {
+    var depois = function (n) { return function () { return etapaC() > n; }; };
+    var quando = function () { return etapaC() <= 4; };
+    return [
+      { id: 'c-comecar', feito: depois(0), alvo: '#camp-comecar',
+        texto: function () { return 'Toque em <b>Começar meu teste gratuito</b>. Leva cerca de 7 minutos e só ' + nomeA() + ' vê as suas respostas.'; } },
+      { id: 'c-dados', feito: depois(1),
+        alvo: function () { var f = primeiroVazio(CAMPOS_C1); return f ? '#' + f[0] : '#camp-ir'; },
+        texto: function () {
+          var f = primeiroVazio(CAMPOS_C1), e = ($('#camp-erro') || {}).textContent;
+          if (e && e.trim()) return e.trim();
+          return f ? 'Preencha: <b>' + rotuloDe(f[0]) + '</b> (é para ' + nomeA() + ' saber de quem é o resultado).' : 'Tudo certo! Toque em <b>Começar as perguntas</b>.';
+        } },
+      { id: 'c-teste', feito: depois(2), alvo: '#regua', setaBaixo: true,
+        texto: 'Responda pensando em <b>HOJE</b>: toque na nota de <b>1 a 10</b> (1 = não representa nada, 10 = representa muito). Não existe resposta certa: vá no primeiro impulso. Para corrigir, use <b>Pergunta anterior</b>.' },
+      { id: 'c-perfil', feito: depois(3),
+        alvo: function () { var f = primeiroVazio(CAMPOS_C2); return f ? '#' + f[0] : '#camp-enviar'; },
+        texto: function () {
+          var f = primeiroVazio(CAMPOS_C2);
+          return f ? 'Falta só um passo: <b>' + rotuloDe(f[0]) + '</b>. Os campos de “o que pesa” e e-mail são opcionais.'
+            : 'Pronto! Se quiser, conte o que mais tem pesado (é opcional). Depois toque no botão para ' + (($('#camp-enviar') || {}).textContent || 'enviar').trim().toLowerCase() + '.';
+        } },
+      { id: 'p-mapa', so: quando, manual: true, alvo: '#qtd-alta',
+        texto: 'Este é o <b>seu mapa em números</b>: quantas travas estão altas (prioridade), médias (atenção) e baixas (os seus pontos fortes).' },
+      { id: 'p-barras', so: quando, manual: true, alvo: '#barras',
+        texto: 'Aqui estão as <b>suas 10 travas</b>, da mais forte para a mais leve. Mais abaixo, o texto explica o que cada uma faz com você.' },
+      { id: 'p-enviar', so: quando, feito: function () { return S.zap2 || etapaC() >= 5; }, alvo: '#btn-zap-resultado',
         texto: function () { return 'Toque aqui para <b>enviar o seu resultado para ' + nomeA() + '</b> pelo WhatsApp. É a partir dele que vocês vão conversar.'; } }
     ];
   }
@@ -243,9 +286,10 @@
     whats: { t: 'Link enviado! 🎉 Quando a pessoa terminar, o resultado chega na aba <b>Respostas</b>. De lá você gera a apresentação.', prox: 'apres', proxT: 'Gerar a apresentação' },
     apres: { t: 'Gerador aberto! 🎉', auto: 'apresform' },
     apresform: { t: 'Apresentação pronta! 🎉 Toque nas laterais (ou use as setas do teclado) para avançar, e gire o celular para ver maior. Para refazer esta orientação, use o botão <b>🧭 Orientar a apresentação</b>.', prox: null },
-    paciente: { t: 'Pronto! 🎉 Você chegou ao fim. Obrigado por responder com sinceridade: agora vocês conversam a partir do seu resultado.', prox: null }
+    paciente: { t: 'Pronto! 🎉 Você chegou ao fim. Obrigado por responder com sinceridade: agora vocês conversam a partir do seu resultado.', prox: null },
+    'paciente-camp': { t: 'Pronto! 🎉 Você chegou ao fim. Obrigado por responder com sinceridade: agora vocês conversam a partir do seu resultado.', prox: null }
   };
-  var TELAS = { paciente: ETAPAS, apresform: ['tela-admin'] };
+  var TELAS = { paciente: ETAPAS, 'paciente-camp': CAMP_ETAPAS, apresform: ['tela-admin'] };
   var telasDe = function (t) { return TELAS[t] || ['tela-admin', 'tela-capa']; };
   var MENU_RAIZ = [
     { id: '@terapeuta', i: '🩺', t: 'Sou terapeuta', s: 'Entrar, criar códigos, enviar e gerar a apresentação' },
@@ -265,7 +309,7 @@
   function montar() {
     botao = document.createElement('button');
     botao.id = 'guia-abrir'; botao.type = 'button'; botao.innerHTML = '🧭 Orientação guiada';
-    botao.addEventListener('click', function () { if (apresentacaoAberta()) iniciar('apresform'); else abrirMenu(); });
+    botao.addEventListener('click', function () { if (apresentacaoAberta()) iniciar('apresform'); else if (SO_PACIENTE) iniciar(tourPaciente()); else abrirMenu(); });
     document.body.appendChild(botao);
 
     raiz = document.createElement('div'); raiz.id = 'guia-raiz'; raiz.hidden = true;
@@ -280,7 +324,7 @@
     mw.hidden = true; mw.appendChild(menu); document.body.appendChild(mw);
     menu.addEventListener('click', function (e) {
       var op = e.target.closest && e.target.closest('.guia-op');
-      if (op) { if (op.dataset.tour === '@terapeuta') desenharMenu('terapeuta'); else iniciar(op.dataset.tour); return; }
+      if (op) { if (op.dataset.tour === '@terapeuta') desenharMenu('terapeuta'); else iniciar(op.dataset.tour === 'paciente' ? tourPaciente() : op.dataset.tour); return; }
       if (e.target.closest && e.target.closest('.guia-volta')) { desenharMenu('raiz'); return; }
       if (e.target.closest && e.target.closest('.guia-x')) fecharMenu();
     });
@@ -313,7 +357,7 @@
     if (tour === 'codigo' || tour === 'whats' || tour === 'apres') { var c = $('#caixa-codigo'); if (c) c.innerHTML = ''; }      // cada roteiro de código começa pedindo um código novo
     raiz.hidden = false;
   }
-  function encerrar() { S.tour = null; S.ack = {}; guardar(); raiz.hidden = true; atualizarBotao(); }
+  function encerrar() { S.tour = null; S.ack = {}; guardar(); raiz.hidden = true; if (SO_PACIENTE) guardaSessao('guia_pac_fechado', '1'); atualizarBotao(); }
 
   /* ---------- o passo da vez ---------- */
   function resolver(p) { if (!p) return null; var s = typeof p.alvo === 'function' ? p.alvo() : p.alvo; return s ? (p.dentro ? $f(s) : $(s)) : null; }
@@ -335,11 +379,12 @@
     if (info.p) {
       if (info.p.manual) h += '<button type="button" class="guia-btn" data-g="proximo">' + (info.p.manualT || (info.p.centro ? 'Entendi' : 'Próximo')) + '</button>';
       (info.p.botoes || []).forEach(function (b, i) { h += '<button type="button" class="guia-btn sec" data-g="extra" data-i="' + i + '">' + b.t + '</button>'; });
-      h += '<button type="button" class="guia-btn fraco" data-g="menu">Outro assunto</button>';
+      if (!SO_PACIENTE) h += '<button type="button" class="guia-btn fraco" data-g="menu">Outro assunto</button>';
     } else {
       var f = FIM[S.tour] || {};
       if (f.prox) h += '<button type="button" class="guia-btn" data-g="seguir">' + f.proxT + '</button>';
-      h += '<button type="button" class="guia-btn ' + (f.prox ? 'sec' : '') + '" data-g="menu">Voltar ao menu</button><button type="button" class="guia-btn fraco" data-g="fechar">Fechar</button>';
+      if (!SO_PACIENTE) h += '<button type="button" class="guia-btn ' + (f.prox ? 'sec' : '') + '" data-g="menu">Voltar ao menu</button>';
+      h += '<button type="button" class="guia-btn ' + (SO_PACIENTE ? '' : 'fraco') + '" data-g="fechar">Fechar</button>';
     }
     return h;
   }
@@ -395,6 +440,12 @@
     /* o gerador de apresentação abriu sozinho (por qualquer caminho): oferece a orientação uma vez por abertura */
     if (fr && fr !== S.frameVisto && !S.aberto && (!S.tour || S.tour === 'apres')) { S.frameVisto = fr; iniciar('apresform'); }
     if (S.tour === 'apresform' && !fr) { encerrar(); return; }
+    /* link de campanha: começa sozinho assim que a tela de abertura aparece (uma vez por visita) */
+    if (SO_PACIENTE && !S.autoPac && !S.tour && !S.aberto) {
+      S.t0 = S.t0 || Date.now();
+      var camp = window.CAMP && window.CAMP.ativo && telaAtiva('tela-camp'), normal = telaAtiva('tela-capa') && window.T_A && Date.now() - S.t0 > 6000;
+      if (camp || normal) { S.autoPac = true; if (!guardaSessao('guia_pac_fechado')) iniciar(camp ? 'paciente-camp' : 'paciente'); }
+    }
     var naTela = telasDe(S.tour).some(telaAtiva);
     if (!S.tour) { atualizarBotao(); return; }
     if (!naTela) { raiz.hidden = true; return; }              // fez outra coisa: pausa
@@ -412,7 +463,7 @@
 
   function atualizarBotao() {
     var ap = apresentacaoAberta();
-    var deveVer = !S.aberto && !S.tour && (ap || telaAtiva('tela-admin') || telaAtiva('tela-capa'));
+    var deveVer = !S.aberto && !S.tour && (SO_PACIENTE ? ETAPAS.concat(CAMP_ETAPAS).some(telaAtiva) : (ap || telaAtiva('tela-admin') || telaAtiva('tela-capa')));
     botao.classList.toggle('ver', !!deveVer); botao.classList.toggle('topo', ap);
     var rot = ap ? '🧭 Orientar a apresentação' : '🧭 Orientação guiada';
     if (botao.textContent !== rot) botao.textContent = rot;
