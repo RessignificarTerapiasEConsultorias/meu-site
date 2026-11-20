@@ -101,3 +101,14 @@
 .autora h2{margin:0 0 8px}
 .autora p{margin:0;line-height:1.6}
 @media (max-width:560px){.autora-grade{grid-template-columns:1fr;text-align:center}.autora-foto{width:170px;margin:0 auto}}
+
+/* escolha do plano (testes): Anual, Vitalício, Mensal no cartão */
+.planos{display:grid;gap:8px;margin:12px 0 14px}
+.plano{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;background:#fff;text-align:left}
+.plano:has(input:checked){border-color:var(--gold);background:#FFF8E8}
+.plano input{margin-top:4px;accent-color:var(--gold);flex:none}
+.plano b{display:block;font-size:15.5px;color:var(--navy)}
+.plano em{font-style:normal;font-size:11px;font-weight:700;background:var(--gold);color:var(--navy);border-radius:6px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+.plano small{display:block;font-size:13.5px;color:var(--muted);line-height:1.4}
+.plano small.prazo{color:var(--goldtxt);font-weight:700;margin-top:2px}
+.nota-mensal{margin:-4px 0 12px}

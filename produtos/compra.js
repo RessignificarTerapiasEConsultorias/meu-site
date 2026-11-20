@@ -15,8 +15,15 @@
   var modo = "nova", sessao = null, eu = null;
   var aviso = $("cAviso"), botao = $("cBotao");
   var rotuloBotao = "Assinar agora · " + PRECO;
+  /* planos dos testes (data-planos="1"): Anual, Vitalício e Mensal no cartão. O servidor diz os preços, o prazo da promoção e se o mensal está disponível. */
+  var COM_PLANOS = caixa.getAttribute("data-planos") === "1";
+  var plano = "anual", planosInfo = null, rotuloAnual = rotuloBotao;
+  var planoUrl = (new URLSearchParams(location.search).get("plano") || "").toLowerCase();
+  var resumoEl = document.querySelector("#comprar .resumo-compra span"), resumoAnual = resumoEl ? resumoEl.innerHTML : "";
+  var brl = function (c) { return (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }).replace(/,00$/, ""); };
 
   function chamar(corpo, token) {
+    if (corpo.acao === "iniciar" && COM_PLANOS) corpo.plano = plano;
     var cab = { "Content-Type": "application/json" };
     if (token) cab.Authorization = "Bearer " + token;
     return fetch(FUNCAO, { method: "POST", headers: cab, body: JSON.stringify(corpo) })
@@ -32,8 +39,9 @@
       if (j.precisa_travas) avisar("Esta conta ainda não tem o Teste de Travas. Entre com a conta do seu teste ou fale com o Mauricio pelo WhatsApp.");
       if (!j.especial) return;
       var txt = (j.preco_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) + (j.anual ? "/ano" : "/mês");
-      rotuloBotao = "Assinar agora · " + txt; if (!botao.disabled) botao.textContent = rotuloBotao;
-      var r = document.querySelector("#comprar .resumo-compra span"); if (r) r.innerHTML = "<s>" + r.textContent + "</s> " + txt;
+      rotuloAnual = "Assinar agora · " + txt;
+      if (plano === "anual") { rotuloBotao = rotuloAnual; if (!botao.disabled) botao.textContent = rotuloBotao; }
+      var r = document.querySelector("#comprar .resumo-compra span"); if (r) { resumoAnual = "<s>" + PRECO + "</s> " + txt; if (plano === "anual") r.innerHTML = resumoAnual; }
       var e = $("cEspecial"); if (e) { e.textContent = "Condição especial para você: " + txt + "."; e.hidden = false; }
       /* troca o preço normal pelo especial nos outros lugares da página (topo, oferta e barra do celular) */
       var normal = (PRECO.match(/R\$\s?([\d.]+)(,\d{2})?/) || [])[1], valor = txt.replace(/\/(ano|mês)$/, "");
@@ -48,6 +56,36 @@
         if (e) e.textContent = "Condição especial para você: " + txt + ". Entre com a sua senha para garantir.";
       }
     }).catch(function () {});
+  }
+  function aplicarPlano(p) {
+    var pi = planosInfo || {};
+    plano = (p === "vitalicio" && pi.vitalicio) || (p === "mensal" && pi.mensal) ? p : "anual";
+    if (plano === "vitalicio") { rotuloBotao = "Comprar o vitalício · " + brl(pi.vitalicio.preco); if (resumoEl) resumoEl.textContent = brl(pi.vitalicio.preco) + " · vitalício"; }
+    else if (plano === "mensal") { rotuloBotao = "Assinar o mensal · " + brl(pi.mensal.preco) + "/mês"; if (resumoEl) resumoEl.textContent = brl(pi.mensal.preco) + "/mês"; }
+    else { rotuloBotao = rotuloAnual; if (resumoEl) resumoEl.innerHTML = resumoAnual; }
+    var seguro = document.querySelector("#comprar .seguro");
+    if (seguro) seguro.textContent = plano === "mensal" ? "🔒 Assinatura mensal pela InfinitePay · débito automático no cartão" : "🔒 Pagamento seguro pela InfinitePay · Pix ou cartão";
+    if ($("cNotaMensal")) $("cNotaMensal").hidden = plano !== "mensal";
+    if (!botao.disabled) botao.textContent = rotuloBotao;
+    document.querySelectorAll("#cPlanos input").forEach(function (i) { i.checked = i.value === plano; });
+  }
+  function montarPlanos(pl) {
+    if (!pl || !pl.vitalicio || $("cPlanos") || !resumoEl) return;
+    planosInfo = pl;
+    var v = pl.vitalicio;
+    var h = '<div class="planos" id="cPlanos" role="radiogroup" aria-label="Escolha o plano">' +
+      '<label class="plano"><input type="radio" name="cPlano" value="anual"><span><b>Anual</b><small>' + brl(pl.anual) + ' por ano · Pix ou cartão em até 12x</small></span></label>' +
+      '<label class="plano"><input type="radio" name="cPlano" value="vitalicio"><span><b>Vitalício' + (v.promo ? ' <em>promoção</em>' : '') + '</b><small>' + brl(v.preco) + ' uma vez só, sem renovação · Pix ou cartão em até 12x</small>' +
+        (v.promo && v.ate ? '<small class="prazo">Preço promocional até ' + v.ate + '. Depois, ' + brl(v.cheio) + '.</small>' : '') + '</span></label>' +
+      (pl.mensal ? '<label class="plano"><input type="radio" name="cPlano" value="mensal"><span><b>Mensal no cartão</b><small>' + brl(pl.mensal.preco) + ' por mês · débito automático no cartão</small></span></label>' : '') +
+      '</div><p class="dica nota-mensal" id="cNotaMensal" hidden>No mensal, a assinatura é feita na InfinitePay. Assim que ela aparecer para mim, eu libero o seu acesso e te aviso pelo WhatsApp.</p>';
+    resumoEl.parentNode.insertAdjacentHTML("afterend", h);
+    document.querySelectorAll("#cPlanos input").forEach(function (i) { i.addEventListener("change", function () { aplicarPlano(i.value); }); });
+    aplicarPlano(planoUrl);
+  }
+  function carregarPlanos() {
+    if (!COM_PLANOS) return;
+    chamar({ acao: "preco", produto: PRODUTO }).then(function (j) { if (j && j.ok) montarPlanos(j.planos); }).catch(function () {});
   }
   function trocarModo(m) {
     modo = m;
@@ -171,6 +209,7 @@
   trocarModo(SO_CLIENTE || /[?&]cliente=1/.test(location.search) ? "cliente" : "nova");
   mostrarAbas();
   ocupado(false);
+  carregarPlanos();
 
   /* barra fixa no celular: aparece depois do topo e some quando a caixa de compra está na tela */
   var barra = document.getElementById("barra");

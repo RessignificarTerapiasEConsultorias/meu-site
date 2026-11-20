@@ -201,11 +201,11 @@
   var TESTE = (new URLSearchParams(location.search).get("teste") || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 60);
   var TXT_BOTAO = "Ir para o pagamento · R$ 147";
   var PLANOS = null, PLANO_FUNCAO = FUNCAO.replace("travas-loja", "travas-planos");
-  var reais = function (c) { return "R$ " + (c / 100).toFixed(0).replace(".", ","); };
+  var reais = function (c) { return "R$ " + (c / 100).toFixed(c % 100 ? 2 : 0).replace(".", ","); };
   function planoAtual() { var r = document.querySelector("input[name=plano]:checked"); return r ? r.value : "anual"; }
-  function precoDo(p) { return !PLANOS ? 14700 : p === "anual" ? PLANOS.anual : p === "upgrade" ? PLANOS.upgrade : PLANOS.vitalicio.preco; }
+  function precoDo(p) { return !PLANOS ? 14700 : p === "anual" ? PLANOS.anual : p === "upgrade" ? PLANOS.upgrade : p === "mensal" && PLANOS.mensal ? PLANOS.mensal.preco : PLANOS.vitalicio.preco; }
   function atualizaBotao() {
-    TXT_BOTAO = "Ir para o pagamento · " + reais(precoDo(planoAtual()));
+    TXT_BOTAO = planoAtual() === "mensal" ? "Ir para a assinatura · " + reais(precoDo("mensal")) + "/mês" : "Ir para o pagamento · " + reais(precoDo(planoAtual()));
     var b = document.getElementById("btnPagar"); if (b && !b.disabled) b.textContent = TXT_BOTAO;
   }
   /* preços e prazo da promoção vêm do servidor: o texto "até sexta" vira "até domingo" no sábado e o preço sobe sozinho depois */
@@ -220,6 +220,11 @@
       document.getElementById("heroPreco").innerHTML = "<b>" + reais(v.preco) + "</b><span>vitalício" + (v.promo ? " (promoção até " + v.ate + ")" : "") + " · ou anual por " + reais(j.anual) + " · Pix ou cartão</span>";
       document.querySelector("#planos input[value=upgrade] + span em").textContent = reais(j.upgrade);
       document.querySelector("#planos input[value=anual] + span em").textContent = reais(j.anual);
+      /* mensal no cartão (assinatura feita no app da InfinitePay): só aparece quando o servidor diz que está disponível */
+      if (j.mensal && !document.querySelector("#planos input[value=mensal]")) {
+        document.querySelector("#planos input[value=upgrade]").parentNode.insertAdjacentHTML("beforebegin",
+          '<label class="plano"><input type="radio" name="plano" value="mensal"><span><b>Mensal no cartão <em>' + reais(j.mensal.preco) + '/mês</em></b><small>Débito automático no cartão, todo mês. A assinatura é feita na InfinitePay e eu libero o seu acesso assim que ela aparecer para mim.</small></span></label>');
+      }
       document.getElementById("planos").hidden = false;
       atualizaBotao();
     }).catch(function () { /* sem a lista de planos: segue só com o anual, como antes */ });
