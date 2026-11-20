@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<title>Cadastro no Stripe · Ressignificar</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../teste-de-travas/loja.css?v=202611191300">
+</head><body>
+<header class="topo"><div class="w"><a class="marca" href="../../"><img src="../../img/logo.png" alt="" width="36" height="36"><span><b>Ressignificar</b><small>Terapias &amp; Consultorias</small></span></a></div></header>
+<main style="max-width:560px;margin:0 auto;padding:40px 16px;text-align:center">
+  <h1 id="tit">Cadastro enviado!</h1>
+  <p class="lead" id="txt" style="margin:12px auto">Obrigado! O Stripe vai conferir os seus dados. Assim que a conta estiver aprovada, as vendas do teste pela sua página passam a cair direto na sua conta. Se faltar alguma informação, o próprio Stripe te avisa por e-mail.</p>
+  <p class="lead" style="margin:12px auto">Qualquer dúvida, fale com o Mauricio pelo WhatsApp.</p>
+</main>
+<script>
+if (!new URLSearchParams(location.search).get("ok")) {
+  document.getElementById("tit").textContent = "O link de cadastro expirou";
+  document.getElementById("txt").textContent = "Por segurança, o link do Stripe vale por pouco tempo. Peça um novo link ao Mauricio pelo WhatsApp e continue de onde parou.";
+}
+</script>
+</body></html>

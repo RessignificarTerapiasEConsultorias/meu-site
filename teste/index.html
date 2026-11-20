@@ -649,6 +649,11 @@ html.t-erro .t-girar{display:none}
         <div class="aviso" id="aviso-codigo"></div>
         <button class="btn btn-primario" id="btn-entrar" disabled>Digite o código</button>
       </div>
+      <div class="cartao" id="compra-teste" hidden style="margin-top:14px;text-align:center">
+        <p style="margin:0 0 10px;font-weight:600">Ainda não tem um código?</p>
+        <a class="btn btn-contorno" id="btn-comprar-teste" href="#">Fazer o teste agora</a>
+        <p class="dica" style="margin-top:8px">Pagamento único, no Pix ou no cartão. O teste abre logo depois, com o resultado na hora.</p>
+      </div>
     </div>
   </div>
   <div class="rodape">
@@ -1115,6 +1120,13 @@ html.t-erro .t-girar{display:none}
     var d = T.dados, m = d.genero === "m";
     window.__T = T;
     window.T_SLUG = T.slug;
+    /* venda avulsa do teste na página da terapeuta (Stripe): botão "Fazer o teste agora" na capa */
+    (function () {
+      var v = d.venda, cx = document.getElementById("compra-teste"), bt = document.getElementById("btn-comprar-teste");
+      if (!v || !v.ativo || !cx || !bt || !(v.preco > 0)) return;
+      var vr = v.preco / 100, rs = "R$ " + (vr % 1 ? vr.toFixed(2).replace(".", ",") : vr.toFixed(0));
+      bt.href = "/teste-pago/?t=" + encodeURIComponent(T.slug); bt.textContent = "Fazer o teste agora · " + rs; cx.hidden = false;
+    })();
     window.T_NOME = d.nome;
     window.T_PRIM = d.primeiro || d.nome.split(" ")[0];
     window.T_A = (m ? "o " : "a ") + T_PRIM;

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fazer o teste · Ressignificar</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0B1F3A">
+<link rel="icon" href="../img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../teste-de-travas/loja.css?v=202611191300">
+<style>
+.tp-w{max-width:560px;margin:0 auto;padding:28px 16px 60px}
+.tp-card{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:26px 22px;box-shadow:0 18px 40px -26px rgba(11,31,58,.45)}
+.tp-ter{display:flex;gap:16px;align-items:center;margin-bottom:18px}
+.tp-ter img{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);flex:0 0 auto;background:#ddd}
+.tp-ter small{display:block;color:var(--muted);font-size:14.5px}
+.tp-ter b{font:600 21px/1.2 var(--serif);color:var(--navy)}
+.tp-card h1{font-size:30px;margin:4px 0 8px}
+.tp-preco{display:flex;align-items:baseline;gap:10px;margin:14px 0 4px}
+.tp-preco b{font:600 40px/1 var(--serif);color:var(--navy)}
+.tp-preco span{color:var(--muted);font-size:15px}
+.tp-lista{list-style:none;padding:0;margin:14px 0 20px;display:grid;gap:8px}
+.tp-lista li{padding-left:28px;position:relative;font-size:16px}
+.tp-lista li::before{content:"✓";position:absolute;left:0;top:0;color:#15502E;font-weight:700}
+.tp-aviso{display:none;background:#FBECEA;color:var(--erro);border-radius:10px;padding:10px 12px;margin:10px 0;font-size:15px}
+.tp-aviso.on{display:block}
+.tp-seguro{text-align:center;color:var(--muted);font-size:13.5px;margin-top:12px}
+.tp-centro{text-align:center}
+.tp-gira{width:44px;height:44px;margin:10px auto 16px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--gold);animation:tpg 1s linear infinite}
+@keyframes tpg{to{transform:rotate(360deg)}}
+.tp-codigo{font:700 26px/1 var(--sans);letter-spacing:.08em;background:var(--sand);border:1px dashed var(--gold);border-radius:12px;padding:12px;margin:12px 0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header class="topo"><div class="w">
+  <a class="marca" href="../" aria-label="Ressignificar, ir para o site"><img src="../img/logo.png" alt="" width="36" height="36"><span><b>Ressignificar</b><small>Terapias &amp; Consultorias</small></span></a>
+</div></header>
+
+<main class="tp-w">
+  <!-- compra -->
+  <section class="tp-card" id="eCompra" hidden>
+    <div class="tp-ter"><img id="cFoto" alt=""><div><small id="cTitulo">Terapeuta</small><b id="cNomeTer"></b></div></div>
+    <h1 id="cTitTeste">Teste de Travas Mentais</h1>
+    <p class="lead" style="margin:0">Responda pelo celular, no seu tempo. Assim que terminar, o seu resultado aparece na hora e também chega para <span id="cPrim1"></span>, para vocês conversarem a partir dele.</p>
+    <div class="tp-preco"><b id="cPreco">R$ 29</b><span>pagamento único · Pix ou cartão</span></div>
+    <ul class="tp-lista">
+      <li>A maioria termina em cerca de 7 minutos</li>
+      <li>Resultado na hora, assim que você terminar</li>
+      <li>O teste abre logo depois do pagamento</li>
+    </ul>
+    <form id="fCompra" novalidate>
+      <div class="campo"><label for="cNome">Nome completo</label><input type="text" id="cNome" autocomplete="name" maxlength="80" required></div>
+      <div class="campo"><label for="cEmail">E-mail</label><input type="email" id="cEmail" autocomplete="email" inputmode="email" maxlength="120" required><div class="dica">O link do teste também chega por aqui.</div></div>
+      <div class="campo"><label for="cZap">WhatsApp com DDD</label><input type="tel" id="cZap" autocomplete="tel" inputmode="tel" placeholder="(81) 99999-9999" maxlength="20" required></div>
+      <label class="aceite"><input type="checkbox" id="cAceite"><span>Li e aceito a <a href="../politica-de-privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</span></label>
+      <div class="tp-aviso" id="cAviso" role="alert"></div>
+      <button class="btn" type="submit" id="cPagar">Ir para o pagamento</button>
+      <p class="tp-seguro">🔒 Pagamento seguro pelo Stripe · Ressignificar Terapias &amp; Consultorias · CNPJ 34.891.194/0001-84</p>
+    </form>
+  </section>
+
+  <!-- conferindo o pagamento -->
+  <section class="tp-card tp-centro" id="eConf" hidden>
+    <div class="tp-gira"></div>
+    <h1 style="font-size:26px">Confirmando o seu pagamento…</h1>
+    <p class="lead" style="margin:0 auto">Isso leva só alguns segundos. Não feche esta página.</p>
+  </section>
+
+  <!-- liberado -->
+  <section class="tp-card tp-centro" id="eOk" hidden>
+    <h1 style="font-size:28px">Pagamento confirmado, <span id="oNome"></span>! 🎉</h1>
+    <p class="lead" style="margin:0 auto">O seu teste está liberado. Responda com calma: no final, o seu resultado aparece na hora.</p>
+    <div class="tp-codigo" id="oCodigo"></div>
+    <a class="btn" id="oAbrir" href="#">Fazer o meu teste agora</a>
+    <p class="tp-seguro">Também mandamos o link para o seu e-mail (<span id="oEmail"></span>). O código vale para uma vez.</p>
+  </section>
+
+  <!-- ainda não pago / erro -->
+  <section class="tp-card tp-centro" id="eEspera" hidden>
+    <h1 style="font-size:26px" id="eTit">Ainda não recebemos o pagamento</h1>
+    <p class="lead" style="margin:0 auto" id="eTxt">Se você já pagou, aguarde um minuto e toque em "Conferir de novo".</p>
+    <div style="display:grid;gap:10px;margin-top:18px"><button class="btn" id="eDenovo" type="button">Conferir de novo</button><a class="btn" id="eVoltarPag" href="#" hidden style="background:var(--navy);color:#fff">Voltar para o pagamento</a></div>
+  </section>
+
+  <section class="tp-card tp-centro" id="eIndisp" hidden>
+    <h1 style="font-size:26px">Compra indisponível</h1>
+    <p class="lead" style="margin:0 auto">A compra do teste ainda não está aberta nesta página. Fale com quem te enviou o link.</p>
+  </section>
+</main>
+
+<script src="../teste/ddi.js"></script>
+<script>
+(function () {
+  var FUNCAO = "https://gobjhepmnijoceirwgow.supabase.co/functions/v1/travas-venda";
+  var $ = function (s) { return document.getElementById(s); };
+  var q = new URLSearchParams(location.search), slug = (q.get("t") || "").replace(/[^a-z0-9.-]/gi, ""), token = (q.get("p") || "").replace(/[^0-9a-f-]/gi, "");
+  function mostrar(id) { ["eCompra", "eConf", "eOk", "eEspera", "eIndisp"].forEach(function (x) { $(x).hidden = x !== id; }); window.scrollTo(0, 0); }
+  function chamar(corpo) { return fetch(FUNCAO, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) }).then(function (r) { return r.json(); }); }
+  var reais = function (c) { var v = (c / 100); return "R$ " + (v % 1 ? v.toFixed(2).replace(".", ",") : v.toFixed(0)); };
+
+  if (token) {   // voltou do pagamento
+    var tentativas = 0;
+    var conferir = function () {
+      mostrar("eConf");
+      chamar({ acao: "confirmar", token: token }).then(function (j) {
+        if (!j || !j.ok) { $("eTit").textContent = "Pedido não encontrado"; $("eTxt").textContent = "Confira o link ou fale com quem te enviou o teste."; mostrar("eEspera"); return; }
+        if (j.status === "liberado" && j.link) {
+          $("oNome").textContent = j.nome || ""; $("oCodigo").textContent = j.codigo; $("oAbrir").href = j.link; $("oEmail").textContent = j.email || "";
+          mostrar("eOk"); return;
+        }
+        if (j.status === "cancelado") { $("eTit").textContent = "Este pagamento não foi concluído"; $("eTxt").textContent = "Você pode começar de novo pela página do teste."; mostrar("eEspera"); return; }
+        tentativas++;
+        if (tentativas < 20) { setTimeout(conferir, 3000); return; }
+        if (j.checkout_url) { $("eVoltarPag").href = j.checkout_url; $("eVoltarPag").hidden = false; }
+        mostrar("eEspera");
+      }).catch(function () { tentativas++; if (tentativas < 20) setTimeout(conferir, 4000); else mostrar("eEspera"); });
+    };
+    $("eDenovo").addEventListener("click", function () { tentativas = 0; conferir(); });
+    conferir();
+    return;
+  }
+
+  if (!slug) { mostrar("eIndisp"); return; }
+  chamar({ acao: "info", slug: slug }).then(function (j) {
+    if (!j || !j.ok || !j.ativo) { mostrar("eIndisp"); return; }
+    var t = j.terapeuta || {};
+    if (t.paleta) Object.keys(t.paleta).forEach(function (k) { if (k === "--ardosia") document.documentElement.style.setProperty("--navy", t.paleta[k]); });
+    if (t.foto) $("cFoto").src = t.foto; else $("cFoto").hidden = true;
+    $("cNomeTer").textContent = t.nome || ""; $("cTitulo").textContent = t.titulo || "Terapeuta"; $("cPrim1").textContent = t.primeiro || "a terapeuta";
+    $("cTitTeste").textContent = j.nome_teste || "Teste"; $("cPreco").textContent = reais(j.preco_centavos);
+    document.title = (j.nome_teste || "Teste") + " · " + (t.nome || "Ressignificar");
+    $("cPagar").textContent = "Ir para o pagamento · " + reais(j.preco_centavos);
+    if (q.get("cancelou")) { $("cAviso").textContent = "O pagamento não foi concluído. Se quiser, tente de novo."; $("cAviso").classList.add("on"); }
+    mostrar("eCompra");
+  }).catch(function () { mostrar("eIndisp"); });
+
+  $("cZap").addEventListener("input", function () {
+    if (window.ddiEstrangeiro && window.ddiEstrangeiro(this)) return;
+    var d = this.value.replace(/\D/g, "").slice(0, 11);
+    this.value = d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d.length > 2 ? "(" + d.slice(0, 2) + ") " + d.slice(2) : d;
+  });
+  $("fCompra").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var av = $("cAviso"); av.classList.remove("on");
+    var nome = $("cNome").value.trim().replace(/\s+/g, " "), email = $("cEmail").value.trim().toLowerCase(), zap = $("cZap").value.trim();
+    var erro = function (m, el) { av.textContent = m; av.classList.add("on"); if (el) el.focus(); };
+    if (nome.split(" ").length < 2) return erro("Escreva o seu nome e sobrenome.", $("cNome"));
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return erro("Confira o seu e-mail.", $("cEmail"));
+    if (zap.replace(/\D/g, "").length < 10) return erro("Confira o seu WhatsApp, com DDD.", $("cZap"));
+    if (!$("cAceite").checked) return erro("Para continuar, aceite a Política de Privacidade.", $("cAceite"));
+    var b = $("cPagar"), txt = b.textContent; b.disabled = true; b.textContent = "Abrindo o pagamento…";
+    chamar({ acao: "criar", slug: slug, nome: nome, email: email, whatsapp: zap }).then(function (j) {
+      if (!j || !j.url) throw new Error((j && j.erro) || "Não foi possível abrir o pagamento.");
+      try { localStorage.setItem("teste_pago_token", j.token); } catch (x) {}
+      location.href = j.url;
+    }).catch(function (x) { b.disabled = false; b.textContent = txt; erro(x.message || "Não foi possível abrir o pagamento. Tente de novo."); });
+  });
+})();
+</script>
+</body>
+</html>
