@@ -5,7 +5,9 @@
    em que ponto a pessoa está e aponta o próximo passo que falta. Se ela clicar em outro lugar,
    a seta se acerta sozinha. Nunca lê a senha (só conta quantos caracteres foram digitados).
 
-   Por enquanto só aparece na página do Mauricio (?t=mauricio) ou com ?guia=1 no endereço.
+   Vale para o Teste de Travas de TODAS as terapeutas (a página precisa oferecer o teste "travas").
+   Não aparece nos outros testes (Traços, MPCC, DISC, Ansiedade, Travas em Família).
+   Na capa o botão só aparece na página inicial (sem código no endereço): quem chega por código individual não vê nada.
    Links de campanha (estratégia de tráfego, "mesmo código") saem com &guia=paciente: quem entra por eles
    recebe a orientação do paciente automaticamente, em qualquer página de terapeuta. Código individual e
    página inicial não ganham nada novo.
@@ -19,7 +21,9 @@
   var SLUG = (Q.get('t') || '').toLowerCase();
   var COM_FLAG = Q.get('guia') === '1';
   var SO_PACIENTE = Q.get('guia') === 'paciente' && !COM_FLAG;          // veio por um link de campanha: só o roteiro do paciente
-  if (SLUG !== 'mauricio' && !COM_FLAG && !SO_PACIENTE) return;
+  /* outros testes usam os mesmos arquivos: o endereço deles traz ct, mp, dc, an ou f */
+  if (['ct', 'mp', 'dc', 'an', 'f'].some(function (k) { return Q.get(k); })) return;
+  var COM_CODIGO = !!(Q.get('c') || Q.get('codigo') || Q.get('code'));
 
   var guardaSessao = function (k, v) { try { if (v === undefined) return sessionStorage.getItem(k); if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { /* sem armazenamento: segue sem lembrar */ } return null; };
   if (COM_FLAG) guardaSessao('guia_travas', '1');
@@ -28,6 +32,9 @@
   var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
   var visivel = function (el) { return !!el && el.getClientRects().length > 0; };
   var tem = function (el, c) { return !!el && el.classList.contains(c); };
+
+  /* a página da terapeuta precisa oferecer o Teste de Travas (dados da página vêm de travas_pagina_publica) */
+  var paginaTravas = function () { var T = window.__T; if (!T || !T.dados) return false; var ts = T.dados.testes; return !ts || ts.indexOf('travas') >= 0; };
 
   /* ---------- como está a tela agora ---------- */
   var telaAtiva = function (id) { return tem($('#' + id), 'ativa'); };
@@ -438,10 +445,10 @@
     requestAnimationFrame(laco);
     var fr = document.getElementById('ap-frame');
     /* o gerador de apresentação abriu sozinho (por qualquer caminho): oferece a orientação uma vez por abertura */
-    if (fr && fr !== S.frameVisto && !S.aberto && (!S.tour || S.tour === 'apres')) { S.frameVisto = fr; iniciar('apresform'); }
+    if (fr && fr !== S.frameVisto && !S.aberto && paginaTravas() && (!S.tour || S.tour === 'apres')) { S.frameVisto = fr; iniciar('apresform'); }
     if (S.tour === 'apresform' && !fr) { encerrar(); return; }
     /* link de campanha: começa sozinho assim que a tela de abertura aparece (uma vez por visita) */
-    if (SO_PACIENTE && !S.autoPac && !S.tour && !S.aberto) {
+    if (SO_PACIENTE && !S.autoPac && !S.tour && !S.aberto && paginaTravas()) {
       S.t0 = S.t0 || Date.now();
       var camp = window.CAMP && window.CAMP.ativo && telaAtiva('tela-camp'), normal = telaAtiva('tela-capa') && window.T_A && Date.now() - S.t0 > 6000;
       if (camp || normal) { S.autoPac = true; if (!guardaSessao('guia_pac_fechado')) iniciar(camp ? 'paciente-camp' : 'paciente'); }
@@ -463,7 +470,8 @@
 
   function atualizarBotao() {
     var ap = apresentacaoAberta();
-    var deveVer = !S.aberto && !S.tour && (SO_PACIENTE ? ETAPAS.concat(CAMP_ETAPAS).some(telaAtiva) : (ap || telaAtiva('tela-admin') || telaAtiva('tela-capa')));
+    var capaOk = telaAtiva('tela-capa') && (!COM_CODIGO || COM_FLAG);                // código individual no endereço: sem botão na capa
+    var deveVer = paginaTravas() && !S.aberto && !S.tour && (SO_PACIENTE ? ETAPAS.concat(CAMP_ETAPAS).some(telaAtiva) : (ap || telaAtiva('tela-admin') || capaOk));
     botao.classList.toggle('ver', !!deveVer); botao.classList.toggle('topo', ap);
     var rot = ap ? '🧭 Orientar a apresentação' : '🧭 Orientação guiada';
     if (botao.textContent !== rot) botao.textContent = rot;
