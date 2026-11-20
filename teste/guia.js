@@ -439,10 +439,24 @@
     S.ultimoId = id;
   }
 
+  /* páginas com conteúdo mais largo que a tela fazem o celular reduzir o zoom: o "fixo" passa a ser medido pela janela
+     maior e sai da vista. Medimos a janela realmente visível e empurramos botão e cartão para dentro dela. */
+  var vpAnt = '';
+  function ajustarViewport() {
+    var v = window.visualViewport; if (!v) return;
+    var dy = Math.max(0, window.innerHeight - (v.offsetTop + v.height)), dt = Math.max(0, v.offsetTop), dx = Math.max(0, window.innerWidth - (v.offsetLeft + v.width));
+    var cx = v.offsetLeft + v.width / 2, w = Math.min(520, v.width - 24);
+    var chave = [dy, dt, dx, cx, w].map(Math.round).join('|'); if (chave === vpAnt) return; vpAnt = chave;
+    var st = document.documentElement.style;
+    st.setProperty('--guia-dy', Math.round(dy) + 'px'); st.setProperty('--guia-dt', Math.round(dt) + 'px'); st.setProperty('--guia-dx', Math.round(dx) + 'px');
+    st.setProperty('--guia-cx', Math.round(cx) + 'px'); st.setProperty('--guia-w', Math.round(w) + 'px');
+  }
+
   /* ---------- laço principal ---------- */
   var tNum = 0;
   function laco(ts) {
     requestAnimationFrame(laco);
+    ajustarViewport();
     var fr = document.getElementById('ap-frame');
     /* o gerador de apresentação abriu sozinho (por qualquer caminho): oferece a orientação uma vez por abertura */
     if (fr && fr !== S.frameVisto && !S.aberto && paginaTravas() && (!S.tour || S.tour === 'apres')) { S.frameVisto = fr; iniciar('apresform'); }
