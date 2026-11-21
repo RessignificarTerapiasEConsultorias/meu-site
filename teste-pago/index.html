@@ -23,6 +23,14 @@
 .tp-preco b{font:600 40px/1 var(--serif);color:var(--navy)}
 .tp-preco span{color:var(--muted);font-size:15px}
 .tp-detalhe{color:var(--muted);font-size:14.5px;margin:0 0 4px}
+.tp-formas{border:0;margin:14px 0 18px;padding:0;display:grid;gap:10px}
+.tp-forma{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer}
+.tp-forma:has(input:checked){border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,74,.22)}
+.tp-forma input{margin-top:5px;accent-color:#C9A24A}
+.tp-forma>span{flex:1}
+.tp-forma b{display:flex;justify-content:space-between;gap:10px;font-size:16px;color:var(--navy)}
+.tp-forma em{font-style:normal;color:#15502E}
+.tp-forma small{display:block;color:var(--muted);margin-top:2px;font-size:14px}
 .tp-lista{list-style:none;padding:0;margin:14px 0 20px;display:grid;gap:8px}
 .tp-lista li{padding-left:28px;position:relative;font-size:16px}
 .tp-lista li::before{content:"✓";position:absolute;left:0;top:0;color:#15502E;font-weight:700}
@@ -47,8 +55,13 @@
     <div class="tp-ter"><img id="cFoto" alt=""><div><small id="cTitulo">Terapeuta</small><b id="cNomeTer"></b></div></div>
     <h1 id="cTitTeste">Teste de Travas Mentais</h1>
     <p class="lead" style="margin:0">Responda pelo celular, no seu tempo. Assim que terminar, o seu resultado aparece na hora e também chega para <span id="cPrim1"></span>, para vocês conversarem a partir dele.</p>
-    <div class="tp-preco"><b id="cPreco">R$ 29</b><span>pagamento único · Pix ou cartão</span></div>
+    <div class="tp-preco"><b id="cPreco">R$ 29</b><span id="cPrecoSub">pagamento único</span></div>
     <p class="tp-detalhe" id="cDetalhe" hidden></p>
+    <fieldset class="tp-formas" id="cFormas">
+      <legend class="rotulo">Como você prefere pagar?</legend>
+      <label class="tp-forma"><input type="radio" name="forma" value="pix" checked><span><b>Pix <em id="fPix">R$ 29,00</em></b><small>Aprovação em segundos.</small></span></label>
+      <label class="tp-forma"><input type="radio" name="forma" value="cartao"><span><b>Cartão <em id="fCartao">R$ 30,62</em></b><small id="fCartaoTxt">Inclui a taxa do cartão.</small></span></label>
+    </fieldset>
     <ul class="tp-lista">
       <li>A maioria termina em cerca de 7 minutos</li>
       <li>Resultado na hora, assim que você terminar</li>
@@ -102,7 +115,18 @@
   var q = new URLSearchParams(location.search), slug = (q.get("t") || "").replace(/[^a-z0-9.-]/gi, ""), token = (q.get("p") || "").replace(/[^0-9a-f-]/gi, "");
   function mostrar(id) { ["eCompra", "eConf", "eOk", "eEspera", "eIndisp"].forEach(function (x) { $(x).hidden = x !== id; }); window.scrollTo(0, 0); }
   function chamar(corpo) { return fetch(FUNCAO, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) }).then(function (r) { return r.json(); }); }
-  var reais = function (c) { var v = (c / 100); return "R$ " + (v % 1 ? v.toFixed(2).replace(".", ",") : v.toFixed(0)); };
+  var reais = function (c) { return "R$ " + (c / 100).toFixed(2).replace(".", ","); };
+  var FORMAS = null, PRECO = 0;
+  function formaAtual() { var r = document.querySelector("input[name=forma]:checked"); return r ? r.value : "pix"; }
+  function atualizarForma() {
+    if (!FORMAS) return;
+    var f = FORMAS[formaAtual()] || FORMAS.pix;
+    $("cPreco").textContent = reais(f.total_centavos);
+    $("cPrecoSub").textContent = formaAtual() === "pix" ? "pagamento único · no Pix" : "pagamento único · no cartão";
+    if (f.taxa_centavos > 0) { $("cDetalhe").textContent = "Teste " + reais(PRECO) + " + taxa do cartão " + reais(f.taxa_centavos) + "."; $("cDetalhe").hidden = false; }
+    else $("cDetalhe").hidden = true;
+    var b = $("cPagar"); if (!b.disabled) b.textContent = "Ir para o pagamento · " + reais(f.total_centavos);
+  }
 
   if (token) {   // voltou do pagamento
     var tentativas = 0;
@@ -134,15 +158,19 @@
     if (t.foto) $("cFoto").src = t.foto; else $("cFoto").hidden = true;
     $("cNomeTer").textContent = t.nome || ""; $("cTitulo").textContent = t.titulo || "Terapeuta"; $("cPrim1").textContent = t.primeiro || "a terapeuta";
     $("cTitTeste").textContent = j.nome_teste || "Teste";
-    var total = j.total_centavos || j.preco_centavos;
-    $("cPreco").textContent = reais(total);
-    if (j.taxa_centavos > 0) { $("cDetalhe").textContent = "Teste " + reais(j.preco_centavos) + " + taxa de pagamento " + reais(j.taxa_centavos) + "."; $("cDetalhe").hidden = false; }
+    FORMAS = j.formas || { pix: { total_centavos: j.preco_centavos, taxa_centavos: 0 }, cartao: { total_centavos: j.preco_centavos, taxa_centavos: 0 } };
+    PRECO = j.preco_centavos;
+    $("fPix").textContent = reais(FORMAS.pix.total_centavos);
+    $("fCartao").textContent = reais(FORMAS.cartao.total_centavos);
+    $("fCartaoTxt").textContent = FORMAS.cartao.taxa_centavos > 0 ? "Inclui a taxa do cartão (" + reais(FORMAS.cartao.taxa_centavos) + ")." : "Em até 12x.";
+    atualizarForma();
     document.title = (j.nome_teste || "Teste") + " · " + (t.nome || "Ressignificar");
-    $("cPagar").textContent = "Ir para o pagamento · " + reais(total);
+
     if (q.get("cancelou")) { $("cAviso").textContent = "O pagamento não foi concluído. Se quiser, tente de novo."; $("cAviso").classList.add("on"); }
     mostrar("eCompra");
   }).catch(function () { mostrar("eIndisp"); });
 
+  $("cFormas").addEventListener("change", atualizarForma);
   $("cZap").addEventListener("input", function () {
     if (window.ddiEstrangeiro && window.ddiEstrangeiro(this)) return;
     var d = this.value.replace(/\D/g, "").slice(0, 11);
@@ -158,7 +186,7 @@
     if (zap.replace(/\D/g, "").length < 10) return erro("Confira o seu WhatsApp, com DDD.", $("cZap"));
     if (!$("cAceite").checked) return erro("Para continuar, aceite a Política de Privacidade.", $("cAceite"));
     var b = $("cPagar"), txt = b.textContent; b.disabled = true; b.textContent = "Abrindo o pagamento…";
-    chamar({ acao: "criar", slug: slug, nome: nome, email: email, whatsapp: zap }).then(function (j) {
+    chamar({ acao: "criar", slug: slug, forma: formaAtual(), nome: nome, email: email, whatsapp: zap }).then(function (j) {
       if (!j || !j.url) throw new Error((j && j.erro) || "Não foi possível abrir o pagamento.");
       try { localStorage.setItem("teste_pago_token", j.token); } catch (x) {}
       location.href = j.url;
