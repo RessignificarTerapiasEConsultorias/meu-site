@@ -22,6 +22,7 @@
 .tp-preco{display:flex;align-items:baseline;gap:10px;margin:14px 0 4px}
 .tp-preco b{font:600 40px/1 var(--serif);color:var(--navy)}
 .tp-preco span{color:var(--muted);font-size:15px}
+.tp-detalhe{color:var(--muted);font-size:14.5px;margin:0 0 4px}
 .tp-lista{list-style:none;padding:0;margin:14px 0 20px;display:grid;gap:8px}
 .tp-lista li{padding-left:28px;position:relative;font-size:16px}
 .tp-lista li::before{content:"✓";position:absolute;left:0;top:0;color:#15502E;font-weight:700}
@@ -47,6 +48,7 @@
     <h1 id="cTitTeste">Teste de Travas Mentais</h1>
     <p class="lead" style="margin:0">Responda pelo celular, no seu tempo. Assim que terminar, o seu resultado aparece na hora e também chega para <span id="cPrim1"></span>, para vocês conversarem a partir dele.</p>
     <div class="tp-preco"><b id="cPreco">R$ 29</b><span>pagamento único · Pix ou cartão</span></div>
+    <p class="tp-detalhe" id="cDetalhe" hidden></p>
     <ul class="tp-lista">
       <li>A maioria termina em cerca de 7 minutos</li>
       <li>Resultado na hora, assim que você terminar</li>
@@ -131,9 +133,12 @@
     if (t.paleta) Object.keys(t.paleta).forEach(function (k) { if (k === "--ardosia") document.documentElement.style.setProperty("--navy", t.paleta[k]); });
     if (t.foto) $("cFoto").src = t.foto; else $("cFoto").hidden = true;
     $("cNomeTer").textContent = t.nome || ""; $("cTitulo").textContent = t.titulo || "Terapeuta"; $("cPrim1").textContent = t.primeiro || "a terapeuta";
-    $("cTitTeste").textContent = j.nome_teste || "Teste"; $("cPreco").textContent = reais(j.preco_centavos);
+    $("cTitTeste").textContent = j.nome_teste || "Teste";
+    var total = j.total_centavos || j.preco_centavos;
+    $("cPreco").textContent = reais(total);
+    if (j.taxa_centavos > 0) { $("cDetalhe").textContent = "Teste " + reais(j.preco_centavos) + " + taxa de pagamento " + reais(j.taxa_centavos) + "."; $("cDetalhe").hidden = false; }
     document.title = (j.nome_teste || "Teste") + " · " + (t.nome || "Ressignificar");
-    $("cPagar").textContent = "Ir para o pagamento · " + reais(j.preco_centavos);
+    $("cPagar").textContent = "Ir para o pagamento · " + reais(total);
     if (q.get("cancelou")) { $("cAviso").textContent = "O pagamento não foi concluído. Se quiser, tente de novo."; $("cAviso").classList.add("on"); }
     mostrar("eCompra");
   }).catch(function () { mostrar("eIndisp"); });
