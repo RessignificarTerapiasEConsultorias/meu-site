@@ -1125,9 +1125,15 @@ html.t-erro .t-girar{display:none}
     /* venda avulsa do teste na página da terapeuta (Stripe): botão "Fazer o teste agora" na capa */
     (function () {
       var v = d.venda, cx = document.getElementById("compra-teste"), bt = document.getElementById("btn-comprar-teste");
-      if (!v || !v.ativo || !cx || !bt || !(v.preco > 0)) return;
-      var vr = v.preco / 100, rs = "R$ " + (vr % 1 ? vr.toFixed(2).replace(".", ",") : vr.toFixed(0));
-      bt.href = "/teste-pago/?t=" + encodeURIComponent(T.slug); bt.textContent = "Fazer o teste agora · " + rs; cx.hidden = false;
+      if (!v || !v.ativo || !cx || !bt) return;
+      /* o menor preço entre os formatos (ex.: devolutiva em PDF) ou o preço único do modelo antigo */
+      var precos = Array.isArray(v.formatos) ? v.formatos.map(function (f) { return +f.preco || 0; }).filter(function (n) { return n > 0; }) : [];
+      var menor = precos.length ? Math.min.apply(null, precos) : (+v.preco || 0);
+      if (!(menor > 0)) return;
+      var vr = menor / 100, rs = "R$ " + (vr % 1 ? vr.toFixed(2).replace(".", ",") : vr.toFixed(0));
+      bt.href = "/teste-pago/?t=" + encodeURIComponent(T.slug);
+      bt.textContent = (precos.length > 1 ? "Fazer o teste agora · a partir de " : "Fazer o teste agora · ") + rs;
+      cx.hidden = false;
     })();
     window.T_NOME = d.nome;
     window.T_PRIM = d.primeiro || d.nome.split(" ")[0];

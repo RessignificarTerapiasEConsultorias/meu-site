@@ -23,6 +23,10 @@
 .tp-preco b{font:600 40px/1 var(--serif);color:var(--navy)}
 .tp-preco span{color:var(--muted);font-size:15px}
 .tp-detalhe{color:var(--muted);font-size:14.5px;margin:0 0 4px}
+body.tema-terapeuta .btn{color:var(--btn-txt,#06142A)}
+body.tema-terapeuta .btn:hover{filter:brightness(1.08)}
+body.tema-terapeuta .tp-forma em{color:var(--navy)}
+body.tema-terapeuta .tp-lista li::before{color:var(--navy)}
 .tp-formas{border:0;margin:14px 0 18px;padding:0;display:grid;gap:10px}
 .tp-forma{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer}
 .tp-forma:has(input:checked){border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,74,.22)}
@@ -55,6 +59,12 @@
     <div class="tp-ter"><img id="cFoto" alt=""><div><small id="cTitulo">Terapeuta</small><b id="cNomeTer"></b></div></div>
     <h1 id="cTitTeste">Teste de Travas Mentais</h1>
     <p class="lead" style="margin:0">Responda pelo celular, no seu tempo. Assim que terminar, o seu resultado aparece na hora e também chega para <span id="cPrim1"></span>, para vocês conversarem a partir dele.</p>
+    <fieldset class="tp-formas" id="cTestes" hidden>
+      <legend class="rotulo">Qual teste você quer fazer?</legend>
+    </fieldset>
+    <fieldset class="tp-formas" id="cFormatos" hidden>
+      <legend class="rotulo">Como você quer receber a devolutiva?</legend>
+    </fieldset>
     <div class="tp-preco"><b id="cPreco">R$ 29</b><span id="cPrecoSub">pagamento único</span></div>
     <p class="tp-detalhe" id="cDetalhe" hidden></p>
     <fieldset class="tp-formas" id="cFormas">
@@ -116,11 +126,21 @@
   function mostrar(id) { ["eCompra", "eConf", "eOk", "eEspera", "eIndisp"].forEach(function (x) { $(x).hidden = x !== id; }); window.scrollTo(0, 0); }
   function chamar(corpo) { return fetch(FUNCAO, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) }).then(function (r) { return r.json(); }); }
   var reais = function (c) { return "R$ " + (c / 100).toFixed(2).replace(".", ","); };
-  var FORMAS = null, PRECO = 0;
-  function formaAtual() { var r = document.querySelector("input[name=forma]:checked"); return r ? r.value : "pix"; }
+  var INFO = null, PRECO = 0;
+  function escolhido(nome, padrao) { var r = document.querySelector("input[name=" + nome + "]:checked"); return r ? r.value : padrao; }
+  function formaAtual() { return escolhido("forma", "pix"); }
+  function formatoAtual() {
+    if (!INFO || !INFO.formatos.length) return null;
+    var id = escolhido("formato", INFO.formatos[0].id);
+    return INFO.formatos.filter(function (f) { return f.id === id; })[0] || INFO.formatos[0];
+  }
   function atualizarForma() {
-    if (!FORMAS) return;
-    var f = FORMAS[formaAtual()] || FORMAS.pix;
+    var fmt = formatoAtual(); if (!fmt) return;
+    PRECO = fmt.preco_centavos;
+    $("fPix").textContent = reais(fmt.pix.total_centavos);
+    $("fCartao").textContent = reais(fmt.cartao.total_centavos);
+    $("fCartaoTxt").textContent = fmt.cartao.taxa_centavos > 0 ? "Inclui a taxa do cartão (" + reais(fmt.cartao.taxa_centavos) + ")." : "Em até 12x.";
+    var f = fmt[formaAtual()] || fmt.pix;
     $("cPreco").textContent = reais(f.total_centavos);
     $("cPrecoSub").textContent = formaAtual() === "pix" ? "pagamento único · no Pix" : "pagamento único · no cartão";
     if (f.taxa_centavos > 0) { $("cDetalhe").textContent = "Teste " + reais(PRECO) + " + taxa do cartão " + reais(f.taxa_centavos) + "."; $("cDetalhe").hidden = false; }
@@ -135,7 +155,8 @@
       chamar({ acao: "confirmar", token: token }).then(function (j) {
         if (!j || !j.ok) { $("eTit").textContent = "Pedido não encontrado"; $("eTxt").textContent = "Confira o link ou fale com quem te enviou o teste."; mostrar("eEspera"); return; }
         if (j.status === "liberado" && j.link) {
-          $("oNome").textContent = j.nome || ""; $("oCodigo").textContent = j.codigo; $("oAbrir").href = j.link; $("oEmail").textContent = j.email || "";
+          $("oNome").textContent = j.nome || ""; $("oCodigo").textContent = j.codigo;
+          if (j.nome_teste) $("oAbrir").textContent = "Fazer o meu " + j.nome_teste; $("oAbrir").href = j.link; $("oEmail").textContent = j.email || "";
           mostrar("eOk"); return;
         }
         if (j.status === "cancelado") { $("eTit").textContent = "Este pagamento não foi concluído"; $("eTxt").textContent = "Você pode começar de novo pela página do teste."; mostrar("eEspera"); return; }
@@ -154,23 +175,41 @@
   chamar({ acao: "info", slug: slug }).then(function (j) {
     if (!j || !j.ok || !j.ativo) { mostrar("eIndisp"); return; }
     var t = j.terapeuta || {};
-    if (t.paleta) Object.keys(t.paleta).forEach(function (k) { if (k === "--ardosia") document.documentElement.style.setProperty("--navy", t.paleta[k]); });
+    if (t.paleta) {
+      var r = document.documentElement.style, pal = t.paleta;
+      var usar = function (alvo, de) { if (pal[de]) r.setProperty(alvo, pal[de]); };
+      usar("--navy", "--ardosia"); usar("--navy2", "--argila"); usar("--deep", "--ardosia-escura");
+      usar("--sand", "--areia"); usar("--paper", "--papel"); usar("--line", "--borda");
+      usar("--ink", "--tinta"); usar("--muted", "--tinta-suave");
+      if (pal["--ardosia"]) { r.setProperty("--gold", pal["--ardosia"]); r.setProperty("--gold2", pal["--argila"] || pal["--ardosia"]); r.setProperty("--btn-txt", "#fff"); }
+      document.body.classList.add("tema-terapeuta");
+      var m = document.querySelector('meta[name=theme-color]'); if (m && pal["--ardosia-escura"]) m.content = pal["--ardosia-escura"];
+    }
     if (t.foto) $("cFoto").src = t.foto; else $("cFoto").hidden = true;
     $("cNomeTer").textContent = t.nome || ""; $("cTitulo").textContent = t.titulo || "Terapeuta"; $("cPrim1").textContent = t.primeiro || "a terapeuta";
-    $("cTitTeste").textContent = j.nome_teste || "Teste";
-    FORMAS = j.formas || { pix: { total_centavos: j.preco_centavos, taxa_centavos: 0 }, cartao: { total_centavos: j.preco_centavos, taxa_centavos: 0 } };
-    PRECO = j.preco_centavos;
-    $("fPix").textContent = reais(FORMAS.pix.total_centavos);
-    $("fCartao").textContent = reais(FORMAS.cartao.total_centavos);
-    $("fCartaoTxt").textContent = FORMAS.cartao.taxa_centavos > 0 ? "Inclui a taxa do cartão (" + reais(FORMAS.cartao.taxa_centavos) + ")." : "Em até 12x.";
+    INFO = { testes: j.testes || [], formatos: j.formatos || [] };
+    if (INFO.testes.length > 1) {
+      $("cTestes").insertAdjacentHTML("beforeend", INFO.testes.map(function (t, i) {
+        return '<label class="tp-forma"><input type="radio" name="teste" value="' + t.id + '"' + (i ? "" : " checked") + '><span><b>' + t.nome + "</b>" + (t.resumo ? "<small>" + t.resumo + "</small>" : "") + "</span></label>";
+      }).join(""));
+      $("cTestes").hidden = false;
+    }
+    if (INFO.formatos.length > 1) {
+      $("cFormatos").insertAdjacentHTML("beforeend", INFO.formatos.map(function (f, i) {
+        return '<label class="tp-forma"><input type="radio" name="formato" value="' + f.id + '"' + (i ? "" : " checked") + '><span><b>' + f.nome + " <em>" + reais(f.preco_centavos) + "</em></b></span></label>";
+      }).join(""));
+      $("cFormatos").hidden = false;
+    }
+    if (INFO.testes.length === 1) $("cTitTeste").textContent = INFO.testes[0].nome;
+    else $("cTitTeste").textContent = "Testes de autoconhecimento";
     atualizarForma();
-    document.title = (j.nome_teste || "Teste") + " · " + (t.nome || "Ressignificar");
+    document.title = "Fazer o teste · " + (t.nome || "Ressignificar");
 
     if (q.get("cancelou")) { $("cAviso").textContent = "O pagamento não foi concluído. Se quiser, tente de novo."; $("cAviso").classList.add("on"); }
     mostrar("eCompra");
   }).catch(function () { mostrar("eIndisp"); });
 
-  $("cFormas").addEventListener("change", atualizarForma);
+  ["cFormas", "cTestes", "cFormatos"].forEach(function (id) { $(id).addEventListener("change", atualizarForma); });
   $("cZap").addEventListener("input", function () {
     if (window.ddiEstrangeiro && window.ddiEstrangeiro(this)) return;
     var d = this.value.replace(/\D/g, "").slice(0, 11);
@@ -186,7 +225,8 @@
     if (zap.replace(/\D/g, "").length < 10) return erro("Confira o seu WhatsApp, com DDD.", $("cZap"));
     if (!$("cAceite").checked) return erro("Para continuar, aceite a Política de Privacidade.", $("cAceite"));
     var b = $("cPagar"), txt = b.textContent; b.disabled = true; b.textContent = "Abrindo o pagamento…";
-    chamar({ acao: "criar", slug: slug, forma: formaAtual(), nome: nome, email: email, whatsapp: zap }).then(function (j) {
+    var fmt = formatoAtual();
+    chamar({ acao: "criar", slug: slug, teste: escolhido("teste", (INFO.testes[0] || {}).id || "travas"), formato: fmt ? fmt.id : "", forma: formaAtual(), nome: nome, email: email, whatsapp: zap }).then(function (j) {
       if (!j || !j.url) throw new Error((j && j.erro) || "Não foi possível abrir o pagamento.");
       try { localStorage.setItem("teste_pago_token", j.token); } catch (x) {}
       location.href = j.url;
