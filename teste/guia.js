@@ -245,9 +245,19 @@
   }
   var CAMPOS1 = [['campo-nome', '#c-nome'], ['campo-idade', '#c-idade'], ['campo-genero', '#c-genero'], ['campo-whats', '#c-whats'], ['campo-email', '#c-email'], ['campo-profissao', '#c-profissao'], ['campo-renda', '#c-renda']];
   var CAMPOS2 = [['campo-motivo', '#c-motivo'], ['campo-dor', '#c-dor'], ['campo-olhar', '#c-olhar'], ['campo-consent', '#c-consent']];
+  /* a página oferece comprar o teste? (bloco que só aparece quando a terapeuta liga a venda) */
+  function temCompra() { var c = $('#compra-teste'), b = $('#btn-comprar-teste'); return !!(c && b && !c.hidden && visivel(c)); }
   function PASSOS_PACIENTE() {
     var depois = function (n) { return function () { return etapa() > n; }; };
     return [
+      /* quem chegou sem código: a página oferece a compra do teste */
+      { id: 'p-comprar', feito: function () { return etapa() > 0 || !temCompra(); },
+        alvo: '#btn-comprar-teste', setaBaixo: true,
+        texto: function () {
+          var b = $('#btn-comprar-teste'), rs = ((b && b.textContent) || '').split('·').pop().trim();
+          return 'Se ' + nomeA() + ' já te enviou um <b>código</b>, pule este passo e digite ele logo acima.<br><br>'
+            + 'Se você ainda não tem código, toque em <b>Fazer o teste agora</b>' + (rs ? ' (' + rs + ')' : '') + '. Na próxima tela você escolhe <b>qual teste</b> quer fazer, se vai fazer <b>sozinho ou em casal</b> (quando houver essa opção) e se quer incluir a <b>devolutiva</b>. Depois é só pagar no <b>Pix ou no cartão</b>: o código chega na hora, na tela e no seu e-mail.';
+        } },
       { id: 'p-codigo', feito: depois(0),
         alvo: function () { var b = $('#btn-entrar'); return b && !b.disabled ? '#btn-entrar' : '#campo-codigo'; },
         texto: function () {

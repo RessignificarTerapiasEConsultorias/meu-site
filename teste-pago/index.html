@@ -62,8 +62,14 @@ body.tema-terapeuta .tp-lista li::before{color:var(--navy)}
     <fieldset class="tp-formas" id="cTestes" hidden>
       <legend class="rotulo">Qual teste você quer fazer?</legend>
     </fieldset>
-    <fieldset class="tp-formas" id="cFormatos" hidden>
-      <legend class="rotulo">Como você quer receber a devolutiva?</legend>
+    <fieldset class="tp-formas" id="cModos" hidden>
+      <legend class="rotulo">Você vai fazer sozinho ou em casal?</legend>
+      <label class="tp-forma"><input type="radio" name="modo" value="individual" checked><span><b>Sozinho <em id="mInd"></em></b><small>Você responde e recebe o seu resultado.</small></span></label>
+      <label class="tp-forma"><input type="radio" name="modo" value="casal"><span><b>Em casal <em id="mCasal"></em></b><small>Cada um responde no próprio celular, com o mesmo código. No final, sai o resultado de cada um e o do casal.</small></span></label>
+    </fieldset>
+    <fieldset class="tp-formas" id="cDevol" hidden>
+      <legend class="rotulo">Quer incluir a devolutiva?</legend>
+      <label class="tp-forma"><input type="checkbox" id="dChk"><span><b><span id="dNome"></span> <em id="dPreco"></em></b><small>Sem isso, você recebe o resultado na tela e por e-mail. Com a devolutiva, a terapeuta explica o seu resultado com você.</small></span></label>
     </fieldset>
     <div class="tp-preco"><b id="cPreco">R$ 29</b><span id="cPrecoSub">pagamento único</span></div>
     <p class="tp-detalhe" id="cDetalhe" hidden></p>
@@ -126,21 +132,38 @@ body.tema-terapeuta .tp-lista li::before{color:var(--navy)}
   function mostrar(id) { ["eCompra", "eConf", "eOk", "eEspera", "eIndisp"].forEach(function (x) { $(x).hidden = x !== id; }); window.scrollTo(0, 0); }
   function chamar(corpo) { return fetch(FUNCAO, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) }).then(function (r) { return r.json(); }); }
   var reais = function (c) { return "R$ " + (c / 100).toFixed(2).replace(".", ","); };
+  var TAXA_PCT = 3.99, TAXA_FIXA = 39;   /* mesma conta do servidor, só para mostrar o total na tela */
   var INFO = null, PRECO = 0;
   function escolhido(nome, padrao) { var r = document.querySelector("input[name=" + nome + "]:checked"); return r ? r.value : padrao; }
   function formaAtual() { return escolhido("forma", "pix"); }
-  function formatoAtual() {
-    if (!INFO || !INFO.formatos.length) return null;
-    var id = escolhido("formato", INFO.formatos[0].id);
-    return INFO.formatos.filter(function (f) { return f.id === id; })[0] || INFO.formatos[0];
+  function testeAtual() {
+    if (!INFO || !INFO.testes.length) return null;
+    var id = escolhido("teste", INFO.testes[0].id);
+    return INFO.testes.filter(function (t) { return t.id === id; })[0] || INFO.testes[0];
+  }
+  function casalAtual() { var t = testeAtual(); return !!(t && t.casal && escolhido("modo", "individual") === "casal"); }
+  function devolutivaAtual() { return !!(INFO && INFO.devolutiva && $("dChk").checked); }
+  /* o preço vem do servidor por teste e modalidade; a devolutiva é somada aqui, com a mesma regra de taxa */
+  function precos() {
+    var t = testeAtual(); if (!t) return null;
+    var base = casalAtual() && t.dupla ? t.dupla : t.individual;
+    var extra = devolutivaAtual() ? INFO.devolutiva.preco_centavos : 0;
+    if (!extra) return base;
+    var somar = function (b, taxa) { var p = base[b].total_centavos - (base[b].taxa_centavos || 0) + extra;
+      var tot = taxa ? Math.ceil((p + TAXA_FIXA) / (1 - TAXA_PCT / 100)) : p;
+      return { total_centavos: tot, taxa_centavos: tot - p }; };
+    return { preco_centavos: base.preco_centavos + extra, pix: somar("pix", false), cartao: somar("cartao", true) };
   }
   function atualizarForma() {
-    var fmt = formatoAtual(); if (!fmt) return;
-    PRECO = fmt.preco_centavos;
-    $("fPix").textContent = reais(fmt.pix.total_centavos);
-    $("fCartao").textContent = reais(fmt.cartao.total_centavos);
-    $("fCartaoTxt").textContent = fmt.cartao.taxa_centavos > 0 ? "Inclui a taxa do cartão (" + reais(fmt.cartao.taxa_centavos) + ")." : "Em até 12x.";
-    var f = fmt[formaAtual()] || fmt.pix;
+    var t = testeAtual(); if (!t) return;
+    $("cModos").hidden = !t.casal;
+    if (t.casal) { $("mInd").textContent = reais(t.individual.pix.total_centavos); $("mCasal").textContent = reais((t.dupla || t.individual).pix.total_centavos); }
+    var pr = precos(); if (!pr) return;
+    PRECO = pr.preco_centavos;
+    $("fPix").textContent = reais(pr.pix.total_centavos);
+    $("fCartao").textContent = reais(pr.cartao.total_centavos);
+    $("fCartaoTxt").textContent = pr.cartao.taxa_centavos > 0 ? "Inclui a taxa do cartão (" + reais(pr.cartao.taxa_centavos) + ")." : "Em até 12x.";
+    var f = pr[formaAtual()] || pr.pix;
     $("cPreco").textContent = reais(f.total_centavos);
     $("cPrecoSub").textContent = formaAtual() === "pix" ? "pagamento único · no Pix" : "pagamento único · no cartão";
     if (f.taxa_centavos > 0) { $("cDetalhe").textContent = "Teste " + reais(PRECO) + " + taxa do cartão " + reais(f.taxa_centavos) + "."; $("cDetalhe").hidden = false; }
@@ -187,18 +210,17 @@ body.tema-terapeuta .tp-lista li::before{color:var(--navy)}
     }
     if (t.foto) $("cFoto").src = t.foto; else $("cFoto").hidden = true;
     $("cNomeTer").textContent = t.nome || ""; $("cTitulo").textContent = t.titulo || "Terapeuta"; $("cPrim1").textContent = t.primeiro || "a terapeuta";
-    INFO = { testes: j.testes || [], formatos: j.formatos || [] };
+    INFO = { testes: j.testes || [], devolutiva: j.devolutiva || null };
     if (INFO.testes.length > 1) {
       $("cTestes").insertAdjacentHTML("beforeend", INFO.testes.map(function (t, i) {
-        return '<label class="tp-forma"><input type="radio" name="teste" value="' + t.id + '"' + (i ? "" : " checked") + '><span><b>' + t.nome + "</b>" + (t.resumo ? "<small>" + t.resumo + "</small>" : "") + "</span></label>";
+        return '<label class="tp-forma"><input type="radio" name="teste" value="' + t.id + '"' + (i ? "" : " checked") + '><span><b>' + t.nome + " <em>" + reais(t.individual.pix.total_centavos) + "</em></b>" + (t.resumo ? "<small>" + t.resumo + "</small>" : "") + "</span></label>";
       }).join(""));
       $("cTestes").hidden = false;
     }
-    if (INFO.formatos.length > 1) {
-      $("cFormatos").insertAdjacentHTML("beforeend", INFO.formatos.map(function (f, i) {
-        return '<label class="tp-forma"><input type="radio" name="formato" value="' + f.id + '"' + (i ? "" : " checked") + '><span><b>' + f.nome + " <em>" + reais(f.preco_centavos) + "</em></b></span></label>";
-      }).join(""));
-      $("cFormatos").hidden = false;
+    if (INFO.devolutiva && INFO.devolutiva.preco_centavos > 0) {
+      $("dNome").textContent = INFO.devolutiva.nome;
+      $("dPreco").textContent = "+ " + reais(INFO.devolutiva.preco_centavos);
+      $("cDevol").hidden = false;
     }
     if (INFO.testes.length === 1) $("cTitTeste").textContent = INFO.testes[0].nome;
     else $("cTitTeste").textContent = "Testes de autoconhecimento";
@@ -209,7 +231,7 @@ body.tema-terapeuta .tp-lista li::before{color:var(--navy)}
     mostrar("eCompra");
   }).catch(function () { mostrar("eIndisp"); });
 
-  ["cFormas", "cTestes", "cFormatos"].forEach(function (id) { $(id).addEventListener("change", atualizarForma); });
+  ["cFormas", "cTestes", "cModos", "cDevol"].forEach(function (id) { $(id).addEventListener("change", atualizarForma); });
   $("cZap").addEventListener("input", function () {
     if (window.ddiEstrangeiro && window.ddiEstrangeiro(this)) return;
     var d = this.value.replace(/\D/g, "").slice(0, 11);
@@ -225,8 +247,7 @@ body.tema-terapeuta .tp-lista li::before{color:var(--navy)}
     if (zap.replace(/\D/g, "").length < 10) return erro("Confira o seu WhatsApp, com DDD.", $("cZap"));
     if (!$("cAceite").checked) return erro("Para continuar, aceite a Política de Privacidade.", $("cAceite"));
     var b = $("cPagar"), txt = b.textContent; b.disabled = true; b.textContent = "Abrindo o pagamento…";
-    var fmt = formatoAtual();
-    chamar({ acao: "criar", slug: slug, teste: escolhido("teste", (INFO.testes[0] || {}).id || "travas"), formato: fmt ? fmt.id : "", forma: formaAtual(), nome: nome, email: email, whatsapp: zap }).then(function (j) {
+    chamar({ acao: "criar", slug: slug, teste: (testeAtual() || {}).id || "travas", casal: casalAtual(), devolutiva: devolutivaAtual(), forma: formaAtual(), nome: nome, email: email, whatsapp: zap }).then(function (j) {
       if (!j || !j.url) throw new Error((j && j.erro) || "Não foi possível abrir o pagamento.");
       try { localStorage.setItem("teste_pago_token", j.token); } catch (x) {}
       location.href = j.url;
