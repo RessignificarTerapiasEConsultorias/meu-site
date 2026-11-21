@@ -31,11 +31,12 @@
   }
   function avisar(msg, ok) { aviso.textContent = msg || ""; aviso.classList.toggle("on", !!msg); aviso.classList.toggle("ok", !!ok); }
   function ocupado(sim, txt) { botao.disabled = sim; botao.textContent = sim ? (txt || "Aguarde…") : rotuloBotao; }
-  function mostrarAbas() { $("cAbas").hidden = SO_CLIENTE; }
+  function mostrarAbas() { $("cAbas").hidden = SO_CLIENTE || plano === "upgrade" || !!sessao; }
   /* preço desta pessoa: se houver condição especial, mostra na caixa e no botão */
   function precoDaPessoa(token) {
     chamar({ acao: "preco", produto: PRODUTO, oferta: token ? "" : OFERTA }, token).then(function (j) {
       if (!j || !j.ok) return;
+      if (token) { quemUpgrade = j.pode_upgrade ? "pode" : j.ja_vitalicio ? "ja" : "nao"; ajustarUpgrade(); }
       if (j.precisa_travas) avisar("Esta conta ainda não tem o Teste de Travas. Entre com a conta do seu teste ou fale com o Mauricio pelo WhatsApp.");
       if (!j.especial) return;
       var txt = (j.preco_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) + (j.anual ? "/ano" : "/mês");
@@ -57,15 +58,33 @@
       }
     }).catch(function () {});
   }
+  /* [upgrade] quem já tem o anual deste teste vira vitalício pagando só a diferença fixa (R$ 97), entrando com a própria conta */
+  var quemUpgrade = "";   /* "" = não sabe (não entrou), "pode" = tem o anual, "ja" = já é vitalício, "nao" = não tem o anual */
+  function ajustarUpgrade() {
+    var op = document.querySelector('#cPlanos input[value="upgrade"]'); if (!op) return;
+    op.closest("label").hidden = quemUpgrade === "nao" || quemUpgrade === "ja";
+    if (quemUpgrade === "pode" && !/^(anual|vitalicio|mensal)$/.test(planoUrl)) aplicarPlano("upgrade");
+    else if (op.closest("label").hidden && plano === "upgrade") aplicarPlano("anual");
+  }
   function aplicarPlano(p) {
     var pi = planosInfo || {};
-    plano = (p === "vitalicio" && pi.vitalicio) || (p === "mensal" && pi.mensal) ? p : "anual";
-    if (plano === "vitalicio") { rotuloBotao = "Comprar o vitalício · " + brl(pi.vitalicio.preco); if (resumoEl) resumoEl.textContent = brl(pi.vitalicio.preco) + " · vitalício"; }
+    var antes = plano;
+    plano = (p === "vitalicio" && pi.vitalicio) || (p === "mensal" && pi.mensal) || (p === "upgrade" && pi.upgrade) ? p : "anual";
+    if (plano === "upgrade") { rotuloBotao = "Virar vitalício · +\u00a0" + brl(pi.upgrade); if (resumoEl) resumoEl.textContent = "+\u00a0" + brl(pi.upgrade) + " · do anual para vitalício"; }
+    else if (plano === "vitalicio") { rotuloBotao = "Comprar o vitalício · " + brl(pi.vitalicio.preco); if (resumoEl) resumoEl.textContent = brl(pi.vitalicio.preco) + " · vitalício"; }
     else if (plano === "mensal") { rotuloBotao = "Assinar o mensal · " + brl(pi.mensal.preco) + "/mês"; if (resumoEl) resumoEl.textContent = brl(pi.mensal.preco) + "/mês"; }
     else { rotuloBotao = rotuloAnual; if (resumoEl) resumoEl.innerHTML = resumoAnual; }
     var seguro = document.querySelector("#comprar .seguro");
     if (seguro) seguro.textContent = plano === "mensal" ? "🔒 Assinatura mensal pela InfinitePay · débito automático no cartão" : "🔒 Pagamento seguro pela InfinitePay · Pix ou cartão";
     if ($("cNotaMensal")) $("cNotaMensal").hidden = plano !== "mensal";
+    if ($("cNotaVit")) $("cNotaVit").hidden = plano !== "vitalicio";
+    if ($("cNotaUp")) $("cNotaUp").hidden = plano !== "upgrade" || !!sessao;
+    /* o upgrade só existe para quem já tem conta: abre "Já sou cliente" e esconde o cadastro novo */
+    /* no upgrade, as dicas gerais da compra (montar a página, o teste novo entrar na página) não se aplicam */
+    document.querySelectorAll('#cForm > p.dica, #cForm [data-so="cliente"] > p.dica').forEach(function (d) { d.hidden = plano === "upgrade"; });
+    if (plano === "upgrade" && !sessao) trocarModo("cliente");
+    else if (antes === "upgrade" && !sessao && !SO_CLIENTE) trocarModo("nova");
+    mostrarAbas();
     if (!botao.disabled) botao.textContent = rotuloBotao;
     document.querySelectorAll("#cPlanos input").forEach(function (i) { i.checked = i.value === plano; });
   }
@@ -77,11 +96,16 @@
       '<label class="plano"><input type="radio" name="cPlano" value="anual"><span><b>Anual</b><small>' + brl(pl.anual) + ' por ano · Pix ou cartão em até 12x</small></span></label>' +
       '<label class="plano"><input type="radio" name="cPlano" value="vitalicio"><span><b>Vitalício' + (v.promo ? ' <em>promoção</em>' : '') + '</b><small>' + brl(v.preco) + ' uma vez só, sem renovação · Pix ou cartão em até 12x</small>' +
         (v.promo && v.ate ? '<small class="prazo">Preço promocional até ' + v.ate + '. Depois, ' + brl(v.cheio) + '.</small>' : '') + '</span></label>' +
+      (pl.upgrade ? '<label class="plano"><input type="radio" name="cPlano" value="upgrade"><span><b>Já tenho o anual · virar vitalício</b><small>+&nbsp;' + brl(pl.upgrade) + ' uma vez só · a renovação anual é encerrada · Pix ou cartão</small></span></label>' : '') +
       (pl.mensal ? '<label class="plano"><input type="radio" name="cPlano" value="mensal"><span><b>Mensal no cartão</b><small>' + brl(pl.mensal.preco) + ' por mês · débito automático no cartão</small></span></label>' : '') +
-      '</div><p class="dica nota-mensal" id="cNotaMensal" hidden>No mensal, a assinatura é feita na InfinitePay. Assim que ela aparecer para mim, eu libero o seu acesso e te aviso pelo WhatsApp.</p>';
+      '</div><p class="dica nota-mensal" id="cNotaMensal" hidden>No mensal, a assinatura é feita na InfinitePay. Assim que ela aparecer para mim, eu libero o seu acesso e te aviso pelo WhatsApp.</p>' +
+      '<p class="dica nota-mensal" id="cNotaVit" hidden>' + (v.promo && v.ate ? 'O vitalício sai por ' + brl(v.preco) + ' até ' + v.ate + '; depois, ' + brl(v.cheio) + '. ' : 'O vitalício sai por ' + brl(v.preco) + '. ') +
+        (pl.upgrade ? 'Já tem o plano anual deste teste? Não precisa pagar o vitalício inteiro: escolha <b>Já tenho o anual</b> e pague só +&nbsp;' + brl(pl.upgrade) + ', em qualquer data.' : '') + '</p>' +
+      (pl.upgrade ? '<p class="dica nota-mensal" id="cNotaUp" hidden>Entre com o e-mail e a senha da conta onde está o seu plano anual. O valor do upgrade é fixo (+&nbsp;' + brl(pl.upgrade) + '), não muda com a promoção.</p>' : '');
     resumoEl.parentNode.insertAdjacentHTML("afterend", h);
     document.querySelectorAll("#cPlanos input").forEach(function (i) { i.addEventListener("change", function () { aplicarPlano(i.value); }); });
     aplicarPlano(planoUrl);
+    if (quemUpgrade) ajustarUpgrade();
   }
   function carregarPlanos() {
     if (!COM_PLANOS) return;
@@ -114,6 +138,7 @@
     if (j.ja_tem) {
       ocupado(false);
       $("cJaTem").hidden = false; $("cJaTemLink").href = j.destino; $("cForm").hidden = true; $("cAbas").hidden = true;
+      if (j.ja_vitalicio) { var h3 = document.querySelector("#cJaTem h3"); if (h3) h3.textContent = "O seu acesso já é vitalício"; }
       return false;
     }
     if (!j.ok || !j.url) { ocupado(false); avisar(j.erro || "Não foi possível abrir o pagamento. Tente de novo."); return false; }
@@ -168,7 +193,7 @@
   }).catch(function () {});
   $("cSair").addEventListener("click", function (ev) {
     ev.preventDefault();
-    supa().auth.signOut().then(function () { sessao = null; $("cLogada").hidden = true; mostrarAbas(); trocarModo("cliente"); });
+    supa().auth.signOut().then(function () { sessao = null; quemUpgrade = ""; $("cLogada").hidden = true; trocarModo("cliente"); ajustarUpgrade(); aplicarPlano(plano); });
   });
 
   $("cForm").addEventListener("submit", function (ev) {
