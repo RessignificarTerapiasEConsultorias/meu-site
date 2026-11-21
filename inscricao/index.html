@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inscrição · Ressignificar</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#06142A">
+<link rel="icon" href="../img/favicon.png">
+<style>
+  :root{--noite:#06142A;--ouro:#B8862B;--ouro-claro:#E3C477;--texto:#16203A;--suave:#4C5670;--fundo:#F4EFE5;--caixa:#FFFDF8;--linha:#E3DCCD;--erro:#B3261E}
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--fundo);color:var(--texto);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;line-height:1.5}
+  main{max-width:480px;margin:0 auto;padding:16px 14px 40px}
+  header{display:flex;align-items:center;gap:12px;background:var(--noite);color:#fff;border-radius:14px 14px 0 0;padding:14px 16px}
+  header img{width:44px;height:44px;border-radius:50%;flex:none}
+  header p{margin:0;font-weight:700;font-size:17px;line-height:1.25}
+  header span{color:var(--ouro-claro);font-weight:400;font-size:13px}
+  .cx{background:var(--caixa);border:1px solid var(--linha);border-top:0;border-radius:0 0 14px 14px;padding:18px 16px 22px}
+  h1{font-size:1.35rem;line-height:1.25;margin:0 0 10px;color:var(--noite);overflow-wrap:anywhere}
+  #texto,#sucessoTexto,#avisoTexto{white-space:pre-line;margin:0 0 14px;overflow-wrap:anywhere}
+  #imagem{display:block;max-width:100%;height:auto;border-radius:10px;margin:0 0 14px}
+  .campo{margin:0 0 14px}
+  label{display:block;font-weight:600;margin:0 0 5px}
+  input[type=text],input[type=tel],input[type=email]{width:100%;font:inherit;font-size:16px;color:inherit;background:#fff;border:1.5px solid #B9B2A2;border-radius:10px;padding:13px 12px;min-height:50px}
+  input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--ouro);outline-offset:2px}
+  input[aria-invalid=true]{border-color:var(--erro)}
+  .dica{font-size:13.5px;color:var(--suave);margin:5px 0 0;overflow-wrap:anywhere}
+  .aceite{display:flex;gap:10px;align-items:flex-start;background:#F8F3E6;border:1px solid var(--linha);border-radius:10px;padding:12px;margin:4px 0 6px}
+  .aceite input{flex:none;width:24px;height:24px;margin:1px 0 0;accent-color:var(--noite)}
+  .aceite label{font-weight:400;margin:0;font-size:14.5px;overflow-wrap:anywhere}
+  .isca{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+  .erro{color:var(--erro);font-weight:600;margin:12px 0 0}
+  button,.botao{display:block;width:100%;font:inherit;font-weight:700;font-size:17px;text-align:center;text-decoration:none;cursor:pointer;border:0;border-radius:12px;padding:15px 16px;min-height:54px;margin-top:16px;background:var(--noite);color:#fff}
+  button[disabled]{opacity:.6;cursor:default}
+  .botao.zap{background:#128C7E}
+  button.leve{background:#fff;color:var(--noite);border:1.5px solid var(--noite)}
+  a{color:#0B4A8F}
+  #frase{display:block;margin-top:6px;padding:10px;background:#fff;border:1px dashed #B9B2A2;border-radius:8px;font-size:14px;user-select:all;overflow-wrap:anywhere}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <header><img src="../img/logo.png" alt="" width="44" height="44"><p>Ressignificar<br><span>Terapias &amp; Consultorias</span></p></header>
+  <div class="cx">
+    <section id="carregando" aria-live="polite"><p>Carregando…</p></section>
+    <section id="aviso" hidden aria-live="polite"><h1 id="avisoTitulo" tabindex="-1"></h1><p id="avisoTexto"></p><button type="button" class="leve" id="tentar" hidden>Tentar de novo</button></section>
+    <form id="form" hidden novalidate>
+      <h1 id="titulo"></h1>
+      <img id="imagem" alt="" hidden>
+      <p id="texto" hidden></p>
+      <div class="campo"><label for="nome">Seu nome</label><input id="nome" name="nome" type="text" autocomplete="name" maxlength="80" required></div>
+      <div class="campo"><label for="telefone">Seu WhatsApp, com DDD</label><input id="telefone" name="telefone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(81) 99999-0000" maxlength="20" required aria-describedby="dicaTel"><p class="dica" id="dicaTel">Só celular do Brasil.</p></div>
+      <div class="campo" id="campoEmail" hidden><label for="email" id="rotEmail">Seu e-mail</label><input id="email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" aria-describedby="dicaEmail"><p class="dica" id="dicaEmail"></p></div>
+      <div class="isca" aria-hidden="true"><label for="site">Não preencha este campo</label><input id="site" name="site" type="text" tabindex="-1" autocomplete="off"></div>
+      <div class="aceite"><input type="checkbox" id="aceite" name="aceite"><label for="aceite" id="aceiteTexto"></label></div>
+      <p class="dica">Veja a nossa <a href="../politica-de-privacidade.html" target="_blank" rel="noopener">política de privacidade</a>.</p>
+      <p id="erro" class="erro" role="alert" hidden></p>
+      <button type="submit" id="enviar">Quero me inscrever</button>
+    </form>
+    <section id="sucesso" hidden aria-live="polite">
+      <h1 id="sucessoTitulo" tabindex="-1">Falta só confirmar</h1>
+      <p id="sucessoTexto"></p>
+      <a class="botao zap" id="confirmar" href="#" rel="noopener">Confirmar pelo WhatsApp</a>
+      <p class="dica">Vai abrir o WhatsApp com uma mensagem pronta. É só enviar, sem apagar o código. Assim temos certeza de que o número é seu.</p>
+      <p class="dica">Se o botão não abrir, envie esta mensagem para <b id="numero"></b>:<span id="frase"></span></p>
+    </section>
+  </div>
+</main>
+<script src="../areademembros/js/config.js"></script>
+<script src="inscricao.js"></script>
+</body>
+</html>

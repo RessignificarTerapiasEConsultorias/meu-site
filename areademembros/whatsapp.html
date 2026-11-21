@@ -243,6 +243,8 @@ dialog#jAutomacao,dialog#jAutPessoas{max-width:900px;width:calc(100% - 16px);max
 .au-frase{font-size:13px;color:var(--muted);margin:2px 0 0;overflow-wrap:anywhere}
 .au-prev{margin-top:8px}
 .au-sim li{margin:3px 0}
+/* inscrições (Fase 9) */
+.in-prova{white-space:pre-line;background:#F8F3E6;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0;overflow-wrap:anywhere}
 /* e-mail (Fase 8) */
 .em-sub{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .em-sub .wa-chip b{margin-left:5px;background:#B3261E;color:#fff;border-radius:999px;padding:0 6px;font-size:11px}
@@ -353,6 +355,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
       <button class="aba" type="button" data-aba="robo" aria-selected="false">Robô</button>
       <button class="aba" type="button" data-aba="fluxos" aria-selected="false">Fluxos</button>
       <button class="aba" type="button" data-aba="automacoes" aria-selected="false">Automações</button>
+      <button class="aba" type="button" data-aba="inscricoes" aria-selected="false">Inscrições</button>
       <button class="aba" type="button" data-aba="email" aria-selected="false">E-mail</button>
       <button class="aba" type="button" data-aba="config" aria-selected="false">Configuração</button>
     </div>
@@ -668,6 +671,57 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
       </div>
     </section>
 
+    <section data-painel="inscricoes" hidden>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>Inscrições</h2><button class="btn peq contorno" type="button" id="inAtualizar">Atualizar</button></div>
+        <p class="ajuda" style="margin-top:8px">Páginas públicas onde a pessoa entra na sua lista com autorização clara. Ela preenche, confirma pelo próprio WhatsApp e só então passa a poder receber. Cada autorização fica guardada com o texto que a pessoa leu.</p>
+        <div class="em-sub" id="inSub" role="group" aria-label="Partes da aba Inscrições">
+          <button type="button" class="wa-chip" data-in-sub="paginas" aria-pressed="true">Páginas</button>
+          <button type="button" class="wa-chip" data-in-sub="inscritos" aria-pressed="false">Inscritos</button>
+          <button type="button" class="wa-chip" data-in-sub="revisao" aria-pressed="false">Revisão<b id="inNFila"></b></button>
+          <button type="button" class="wa-chip" data-in-sub="relatorio" aria-pressed="false">Relatório</button>
+        </div>
+        <div class="aviso" id="inAlerta" hidden></div>
+        <div data-in-painel="paginas">
+          <div class="acoes" style="margin-top:0"><button class="btn peq" type="button" id="inNova">Nova página</button><label class="wa-fn-chk"><input type="checkbox" id="inArq"> Mostrar arquivadas</label></div>
+          <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Página</th><th>Situação</th><th>Inscritos</th><th>Confirmados</th><th>Taxa</th><th>Origem principal</th><th></th></tr></thead><tbody id="inPaginas"><tr><td colspan="7" class="vazio">Carregando...</td></tr></tbody></table></div>
+        </div>
+        <div data-in-painel="inscritos" hidden>
+          <div class="wa-fn-filtros">
+            <select id="inFPagina" aria-label="Página"></select>
+            <select id="inFSituacao" aria-label="Situação"><option value="todas">Todas as situações</option><option value="aguardando">Aguardando confirmar</option><option value="confirmadas">Confirmadas</option><option value="revisao">Esperando a sua decisão</option><option value="outras">Recusadas, inválidas e expiradas</option></select>
+            <select id="inFDias" aria-label="Período"><option value="">Todo o período</option><option value="1">Hoje</option><option value="7">7 dias</option><option value="30">30 dias</option></select>
+            <input id="inFOrigem" type="search" placeholder="Origem (ex.: instagram)" aria-label="Origem" maxlength="60">
+            <input id="inFBusca" type="search" placeholder="Buscar por nome, telefone ou e-mail" aria-label="Buscar inscrição">
+            <button class="btn peq contorno" type="button" id="inExportar">Exportar planilha</button>
+          </div>
+          <div class="tabela-wrap" style="margin-top:10px"><table class="tabela"><thead><tr><th>Pessoa</th><th>Página</th><th>Situação</th><th>Origem</th><th>Quando</th><th></th></tr></thead><tbody id="inLista"></tbody></table></div>
+          <p class="vazio" id="inContagem"></p>
+        </div>
+        <div data-in-painel="revisao" hidden>
+          <p class="ajuda">Aqui ficam as inscrições que precisam de você: quem tinha saído da lista, quem está em "Não enviar" ou com o robô pausado para sempre, e cadastros com cara de falsos. Ninguém daqui recebe nada até você decidir.</p>
+          <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Pessoa</th><th>Página</th><th>Situação</th><th>Origem</th><th>Quando</th><th></th></tr></thead><tbody id="inFila"></tbody></table></div>
+        </div>
+        <div data-in-painel="relatorio" hidden>
+          <div class="wa-fn-filtros"><select id="inRPagina" aria-label="Página do relatório"></select><select id="inRDias" aria-label="Período do relatório"><option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="90">90 dias</option></select></div>
+          <div class="vd-indic" id="inRCards" style="margin-top:10px"></div>
+          <div class="vd-blocos" style="margin-top:12px">
+            <div class="vd-bloco"><h3 class="cp-tit">Por origem do link</h3><div class="tabela-wrap"><table class="tabela"><thead><tr><th>Origem</th><th>Inscritos</th><th>Confirmaram</th><th>Taxa</th></tr></thead><tbody id="inROrigens"></tbody></table></div></div>
+            <div class="vd-bloco"><h3 class="cp-tit">Por dia</h3><div class="tabela-wrap"><table class="tabela"><thead><tr><th>Dia</th><th>Inscritos</th><th>Confirmaram</th><th>Taxa</th></tr></thead><tbody id="inRDiasLista"></tbody></table></div></div>
+          </div>
+          <div class="vd-bloco" style="margin-top:12px"><h3 class="cp-tit">Limites contra robôs</h3>
+            <p class="ajuda">Passou do limite, a página responde igual, mas a inscrição não é gravada. Em dia de aula ao vivo, muita gente usa a mesma rede de celular: aumente o limite por aparelho ou rede antes.</p>
+            <div class="em-cfg">
+              <div><label for="inLNumero">Mesmo número, por dia</label><input id="inLNumero" type="number" min="1" max="50"></div>
+              <div><label for="inLIp">Mesmo aparelho ou rede, por hora</label><input id="inLIp" type="number" min="1" max="5000"></div>
+              <div><label for="inLGlobal">Total de inscrições, por hora</label><input id="inLGlobal" type="number" min="10" max="100000"></div>
+            </div>
+            <div class="acoes"><button class="btn peq" type="button" id="inLSalvar">Salvar limites</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section data-painel="email" hidden>
       <div class="cartao">
         <div class="empresa-titulo"><h2>E-mail</h2><button class="btn peq contorno" type="button" id="emAtualizar">Atualizar</button></div>
@@ -958,6 +1012,40 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
   <p class="ajuda" style="margin-top:10px">É uma mensagem de verdade: conta no limite do dia e tem o custo normal da Meta. Não entra nos números de nenhuma campanha. No máximo 10 testes por dia.</p>
   <div id="tsResultado" aria-live="polite"></div>
   <div class="acoes"><button class="btn auto" type="button" id="tsEnviar" disabled>Enviar teste</button><button class="btn auto contorno" type="button" data-fechar="jTeste">Fechar</button></div>
+</dialog>
+
+<dialog class="janela janela-larga" id="jInscPagina" aria-labelledby="ipTitulo2">
+  <h2 id="ipTitulo2">Página de inscrição</h2>
+  <div class="grade g2">
+    <div><label for="ipNome">Nome da página <span class="vazio">(só você vê)</span></label><input id="ipNome" maxlength="80" placeholder="Ex.: Aula gratuita de dezembro"></div>
+    <div><label for="ipSlug">Endereço <span class="vazio">(/inscricao/?p=...)</span></label><input id="ipSlug" maxlength="60" placeholder="aula-gratuita"></div>
+    <div><label for="ipTituloPag">Título que a pessoa lê</label><input id="ipTituloPag" maxlength="120"></div>
+    <div><label for="ipEmail">Pedir e-mail?</label><select id="ipEmail"><option value="opcional">Sim, opcional</option><option value="obrigatorio">Sim, obrigatório</option><option value="nao">Não pedir</option></select></div>
+  </div>
+  <div class="f"><label for="ipTexto">Texto da página <span class="vazio">(opcional)</span></label><textarea id="ipTexto" rows="3" maxlength="2000"></textarea></div>
+  <div class="f"><label for="ipImagem">Imagem <span class="vazio">(opcional; endereço começando com https://)</span></label><input id="ipImagem" maxlength="500" placeholder="https://"></div>
+  <div class="f"><label for="ipAceite">Texto da autorização <span class="vazio">(na página, a caixa nunca vem marcada)</span></label><textarea id="ipAceite" rows="3" maxlength="1000"></textarea>
+    <ul class="em-avisos" id="ipAceiteAvisos"></ul><p class="vazio" id="ipVersao"></p>
+    <div class="acoes" style="margin:4px 0 0"><button type="button" class="btn peq contorno" id="ipAceitePadrao">Usar o texto padrão</button></div></div>
+  <div class="f"><label for="ipEtiquetas">Etiquetas que a pessoa recebe ao confirmar <span class="vazio">(separe por vírgula)</span></label><input id="ipEtiquetas" maxlength="300" placeholder="inscrito-aula-dezembro"><p class="vazio">Os Disparos escolhem o público pela etiqueta. Uma automação com o gatilho "etiqueta" também pode começar por ela.</p></div>
+  <div class="f"><label for="ipSucesso">Mensagem na tela depois de preencher <span class="vazio">(opcional)</span></label><textarea id="ipSucesso" rows="2" maxlength="600" placeholder="Recebemos a sua inscrição. Para concluir, confirme pelo WhatsApp..."></textarea></div>
+  <div class="f"><label for="ipBoasVindas">Boas-vindas pelo WhatsApp, depois que a pessoa confirma <span class="vazio">(opcional)</span></label><textarea id="ipBoasVindas" rows="3" maxlength="1000" placeholder="Que bom ter você aqui, {primeiro_nome}!"></textarea><p class="vazio">Sai uma vez, como resposta à confirmação. Use {primeiro_nome} para o nome. Não sai para quem está em "Não enviar".</p></div>
+  <div class="acoes"><button class="btn auto" type="button" id="ipSalvar">Salvar página</button><button class="btn auto contorno" type="button" data-fechar="jInscPagina">Fechar</button></div>
+</dialog>
+
+<dialog class="janela" id="jInscLink" aria-labelledby="ilTitulo">
+  <h2 id="ilTitulo">Link da página</h2>
+  <p class="ajuda" id="ilNome"></p>
+  <div class="f"><label for="ilOrigem">De onde vem quem clicar? <span class="vazio">(opcional)</span></label><input id="ilOrigem" maxlength="60" placeholder="Ex.: instagram, anuncio-novembro, indicacao-ana"></div>
+  <div class="f"><label for="ilLink">Link para divulgar</label><input id="ilLink" readonly></div>
+  <p class="vazio">Use um link para cada lugar de divulgação. Assim o relatório mostra de onde vieram as inscrições. Sem origem, aparece como "Não informada".</p>
+  <div class="acoes"><button class="btn auto" type="button" id="ilCopiar">Copiar link</button><button class="btn auto contorno" type="button" id="ilAbrir">Abrir a página</button><button class="btn auto contorno" type="button" data-fechar="jInscLink">Fechar</button></div>
+</dialog>
+
+<dialog class="janela janela-larga" id="jInscProva" aria-labelledby="ivTitulo">
+  <h2 id="ivTitulo">Prova da autorização</h2>
+  <div id="ivCorpo"></div>
+  <div class="acoes"><button class="btn auto contorno" type="button" data-fechar="jInscProva">Fechar</button></div>
 </dialog>
 
 <dialog class="janela janela-larga" id="jEmailModelo" aria-labelledby="emMTitulo">
@@ -1256,15 +1344,17 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
-<script src="js/whatsapp-tpl.js?v=20261119d"></script>
-<script src="js/whatsapp-lista.js?v=20261119d"></script>
-<script src="js/whatsapp-video.js?v=20261119d"></script>
-<script src="js/whatsapp-camp.js?v=20261119d"></script>
-<script src="js/whatsapp-funil.js?v=20261119d"></script>
-<script src="js/whatsapp-vendas.js?v=20261119d"></script>
-<script src="js/whatsapp-email.js?v=20261119d"></script>
-<script src="js/whatsapp-auto.js?v=20261119d"></script>
-<script src="js/whatsapp.js?v=20261119d"></script>
-<script src="js/whatsapp-email-tela.js?v=20261119d"></script>
+<script src="js/whatsapp-tpl.js?v=20261120a"></script>
+<script src="js/whatsapp-lista.js?v=20261120a"></script>
+<script src="js/whatsapp-video.js?v=20261120a"></script>
+<script src="js/whatsapp-camp.js?v=20261120a"></script>
+<script src="js/whatsapp-funil.js?v=20261120a"></script>
+<script src="js/whatsapp-vendas.js?v=20261120a"></script>
+<script src="js/whatsapp-email.js?v=20261120a"></script>
+<script src="js/whatsapp-inscricao.js?v=20261120a"></script>
+<script src="js/whatsapp-auto.js?v=20261120a"></script>
+<script src="js/whatsapp.js?v=20261120a"></script>
+<script src="js/whatsapp-email-tela.js?v=20261120a"></script>
+<script src="js/whatsapp-inscricao-tela.js?v=20261120a"></script>
 </body>
 </html>

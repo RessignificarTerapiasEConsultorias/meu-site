@@ -3560,7 +3560,8 @@
   window.WaPainel = { $: $, esc: esc, ler: ler, supa: supa, aviso: aviso, falha: falha, horaCurta: horaCurta, dataBR: dataBR, etapas: ETAPAS,
     etiquetas: function () { return Array.from(new Set(contatos.reduce(function (a, c) { return a.concat(c.etiquetas || []); }, []))).sort(); },
     recarregarEmailDaFicha: function () { if (conversaId) emFicha(conversaId, true).catch(function () {}); },
-    recarregarVisao: function () { return telaEmail(); } };
+    recarregarVisao: function () { return telaEmail(); },
+    abrirConversaDe: function (id) { conversaId = id; ancora = null; abrirAba("conversas"); abrirConversa(); } };
   $("emAtualizar").addEventListener("click", function () { telaEmail().catch(function (e) { falha(e, "Não consegui atualizar."); }); });
   $("emLojaAplicar").addEventListener("click", async function () {
     if (!confirm("Guardar na ficha o e-mail de quem comprou?\n\nIsso não autoriza marketing: esses e-mails ficam só para assuntos do pedido.")) return;
@@ -4225,7 +4226,7 @@
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
     abaAtual = nome;
-    const f = { conversas: telaConversas, funil: telaFunil, vendas: telaVendas, email: telaEmail, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, automacoes: telaAutomacoes, fluxos: function () { auAtualizar().catch(function () {}); return telaFluxos(); }, config: telaConfig }[nome];
+    const f = { conversas: telaConversas, funil: telaFunil, vendas: telaVendas, email: telaEmail, inscricoes: function () { return window.WaInscricaoTela ? window.WaInscricaoTela.abrir() : Promise.resolve(); }, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, automacoes: telaAutomacoes, fluxos: function () { auAtualizar().catch(function () {}); return telaFluxos(); }, config: telaConfig }[nome];
     f().catch(function (e) { falha(e); });
   });
   setInterval(function () {
