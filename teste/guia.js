@@ -1,29 +1,31 @@
 /* ============================================================================
-   ORIENTAÇÃO GUIADA da Área da terapeuta (Teste de Travas).
+   ORIENTAÇÃO GUIADA (Teste de Travas, Traços de Caráter e Ansiedade).
    Um botão abre um menu de roteiros; cada roteiro mostra uma seta e um cartão em cada passo.
    O módulo só OBSERVA a tela (DOM) e nunca mexe na lógica do teste: a cada instante ele olha
    em que ponto a pessoa está e aponta o próximo passo que falta. Se ela clicar em outro lugar,
    a seta se acerta sozinha. Nunca lê a senha (só conta quantos caracteres foram digitados).
 
-   Vale para o Teste de Travas de TODAS as terapeutas (a página precisa oferecer o teste "travas").
-   Não aparece nos outros testes (Traços, MPCC, DISC, Ansiedade, Travas em Família).
+   Vale para TODAS as terapeutas cuja página oferece o Teste de Travas, o de Traços de Caráter
+   ou o de Ansiedade. Não aparece nos outros testes (MPCC, DISC, Travas em Família).
    Na capa o botão só aparece na página inicial (sem código no endereço): quem chega por código individual não vê nada.
-   Links de campanha (estratégia de tráfego, "mesmo código") saem com &guia=paciente: quem entra por eles
-   recebe a orientação do paciente automaticamente, em qualquer página de terapeuta. Código individual e
-   página inicial não ganham nada novo.
+   Links com &guia=paciente (campanha do Travas ou links enviados pelo robô, de qualquer um dos 3 testes):
+   quem entra por eles recebe a orientação do paciente automaticamente, já na primeira tela do teste,
+   com a opção "Não preciso" no primeiro cartão. Código individual e página inicial não ganham nada novo.
    O botão fica já na capa, antes do login: a primeira pergunta é "terapeuta ou paciente?".
    Roteiros do terapeuta: entrar, criar código, mandar pelo WhatsApp, gerar a apresentação
-   (e, dentro do gerador, uma orientação campo a campo). Roteiro do paciente: fazer o teste.
+   (e, dentro do gerador, uma orientação campo a campo); criar e enviar um código do Traços de
+   Caráter e do Teste de Ansiedade. Roteiros do paciente: fazer o teste (o roteiro certo é escolhido
+   pela tela em que a pessoa está: Travas, campanha, Traços ou Ansiedade).
    ============================================================================ */
 (function () {
   'use strict';
   var Q = new URLSearchParams(location.search);
   var SLUG = (Q.get('t') || '').toLowerCase();
   var COM_FLAG = Q.get('guia') === '1';
-  var SO_PACIENTE = Q.get('guia') === 'paciente' && !COM_FLAG;          // veio por um link de campanha: só o roteiro do paciente
-  /* outros testes usam os mesmos arquivos: o endereço deles traz ct, mp, dc, an ou f */
-  if (['ct', 'mp', 'dc', 'an', 'f'].some(function (k) { return Q.get(k); })) return;
-  var COM_CODIGO = !!(Q.get('c') || Q.get('codigo') || Q.get('code'));
+  var SO_PACIENTE = Q.get('guia') === 'paciente' && !COM_FLAG;          // link de campanha ou do robô: só o roteiro do paciente
+  /* MPCC, DISC e Travas em Família usam os mesmos arquivos (o endereço traz mp, dc ou f): lá não há orientação */
+  if (['mp', 'dc', 'f'].some(function (k) { return Q.get(k); })) return;
+  var COM_CODIGO = !!(Q.get('c') || Q.get('codigo') || Q.get('code') || Q.get('ct') || Q.get('an'));
 
   var guardaSessao = function (k, v) { try { if (v === undefined) return sessionStorage.getItem(k); if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { /* sem armazenamento: segue sem lembrar */ } return null; };
   if (COM_FLAG) guardaSessao('guia_travas', '1');
@@ -33,8 +35,10 @@
   var visivel = function (el) { return !!el && el.getClientRects().length > 0; };
   var tem = function (el, c) { return !!el && el.classList.contains(c); };
 
-  /* a página da terapeuta precisa oferecer o Teste de Travas (dados da página vêm de travas_pagina_publica) */
-  var paginaTravas = function () { var T = window.__T; if (!T || !T.dados) return false; var ts = T.dados.testes; return !ts || ts.indexOf('travas') >= 0; };
+  /* a página da terapeuta precisa oferecer o teste (dados da página vêm de travas_pagina_publica; sem lista = só Travas) */
+  var paginaTem = function (k) { var T = window.__T; if (!T || !T.dados) return false; var ts = T.dados.testes; return ts ? ts.indexOf(k) >= 0 : k === 'travas'; };
+  var paginaTravas = function () { return paginaTem('travas'); };
+  var paginaOk = function () { return paginaTem('travas') || paginaTem('tracos') || paginaTem('ansiedade'); };
 
   /* ---------- como está a tela agora ---------- */
   var telaAtiva = function (id) { return tem($('#' + id), 'ativa'); };
@@ -65,15 +69,33 @@
   var etapaDe = function (lista) { for (var i = 0; i < lista.length; i++) if (telaAtiva(lista[i])) return i; return -1; };
   var etapa = function () { return etapaDe(ETAPAS); };
   var etapaC = function () { return etapaDe(CAMP_ETAPAS); };
+  var TC_ETAPAS = ['tela-tc-capa', 'tela-tc', 'tela-tc-teste', 'tela-tc-resultado'];          // Traços de Caráter (paciente)
+  var AN_ETAPAS = ['tela-an-capa', 'tela-an', 'tela-an-teste', 'tela-an-resultado'];          // Teste de Ansiedade (paciente)
   var rotuloDe = function (id) { var e = $('#' + id), c = e && e.closest('.campo'), l = c && c.querySelector('label'); return l ? l.textContent.replace(/\s+/g, ' ').replace(/\(opcional\)/i, '').trim().replace(/[.:]+$/, '') : ''; };
-  var tourPaciente = function () { return window.CAMP && window.CAMP.ativo ? 'paciente-camp' : 'paciente'; };
+  /* o roteiro do paciente certo para a tela em que a pessoa está (ou para o endereço, enquanto a página abre) */
+  var tourPaciente = function () {
+    if (TC_ETAPAS.some(telaAtiva)) return 'paciente-tc';
+    if (AN_ETAPAS.some(telaAtiva)) return 'paciente-an';
+    if (window.CAMP && window.CAMP.ativo) return 'paciente-camp';
+    if (Q.get('ct')) return 'paciente-tc';
+    if (Q.get('an')) return 'paciente-an';
+    return 'paciente';
+  };
+  /* texto de um botão sem a linha pequena (<small>) e sem setas */
+  var rotuloBotao = function (el) {
+    if (!el) return '';
+    var c = el.cloneNode(true); Array.prototype.forEach.call(c.querySelectorAll('small, svg'), function (s) { s.remove(); });
+    return c.textContent.replace(/[←→]/g, '').replace(/\s+/g, ' ').trim();
+  };
+  var textoVisivel = function (sel) { var e = $(sel); return e && visivel(e) ? e.textContent.replace(/\s+/g, ' ').trim() : ''; };
+  var primeiroVisivel = function (sel) { var l = $$(sel); for (var i = 0; i < l.length; i++) if (visivel(l[i])) return l[i]; return null; };
   var rotuloCampo = function (cont) { var l = $(cont + ' label, ' + cont + ' .rot'); return l ? l.textContent.replace(/\s+/g, ' ').replace(/\(opcional\)/i, '').trim().replace(/[.:]+$/, '') : ''; };
   var pontua = function (t) { return /[?!]$/.test(t) ? t : t + '.'; };
   var nomeA = function () { return window.T_A || 'a terapeuta'; };
   var rotuloAdmin = function () { var a = $('#link-admin'); return a ? a.textContent.replace(/\s+/g, ' ').trim() : 'Área da terapeuta'; };
 
   /* ---------- estado ---------- */
-  var S = { tour: null, ack: {}, zap: false, zap2: false, semCodigo: undefined, ultimoId: null, ultimoScroll: 0, aberto: false, frameVisto: null, vista: 'raiz', aviso: null };
+  var S = { tour: null, ack: {}, zap: false, zap2: false, semCodigo: undefined, ultimoId: null, ultimoScroll: 0, aberto: false, frameVisto: null, vista: 'raiz', aviso: null, auto: false, autoId: null };
   var guardar = function () { guardaSessao('guia_estado', S.tour ? JSON.stringify({ tour: S.tour, ack: S.ack, zap: S.zap, semCodigo: S.semCodigo }) : null); };
 
   /* quem ainda não tem nenhum código precisa criar um antes de seguir (decidido uma vez e mantido durante o roteiro) */
@@ -137,6 +159,55 @@
       texto: 'Pronto, o código foi criado! Toque no <b>botão verde</b>: o WhatsApp abre com o link e a mensagem acolhedora já escritos. É só enviar. Se preferir, use os botões de copiar logo abaixo.' };
   }
 
+  /* ---------- terapeuta: criar e enviar um código do Traços de Caráter ou do Teste de Ansiedade ----------
+     Cada teste tem a sua própria área de códigos (#painel-tc e #painel-an), aberta pelo seletor "Qual teste?". */
+  var CFG_TESTE = {
+    tc: { v: 'tracos', modo: 'modo-tc', abas: '#tc-abas', aba: 'data-tc-aba', caixaCod: '#tc-aba-codigos', nome: '#tc-cod-nome', whats: '#tc-cod-whats', gerar: '#tc-gerar', caixa: '#tc-caixa-codigo', nomeTeste: 'Traços de Caráter' },
+    an: { v: 'ansiedade', modo: 'modo-an', abas: '#an-abas', aba: 'data-an-aba', caixaCod: '#an-aba-codigos', nome: '#an-cod-nome', whats: '#an-cod-whats', gerar: '#an-gerar', caixa: '#an-caixa-codigo', nomeTeste: 'Teste de Ansiedade' }
+  };
+  var botaoTeste = function (k) { return $('#alt-teste button[data-v="' + CFG_TESTE[k].v + '"]'); };
+  var testeEscolhido = function (k) { return tem($('#painel-admin'), CFG_TESTE[k].modo); };
+  var rotuloAba = function (k, aba, padrao) { return rotuloBotao($(CFG_TESTE[k].abas + ' button[' + CFG_TESTE[k].aba + '="' + aba + '"]')) || padrao; };
+  var caixaErro = function (k) { return textoVisivel(CFG_TESTE[k].caixa + ' .aviso'); };
+  function PASSOS_CODIGO_TESTE(k) {
+    var C = CFG_TESTE[k];
+    /* o cronômetro só existe em algumas versões da página: conta o passo até a aba de códigos mostrar se ele está lá */
+    var temUrg = function (sel) { return function () { return !(testeEscolhido(k) && visivel($(C.caixaCod))) || visivel($(sel)); }; };
+    var lista = [
+      { id: k + '-teste', feito: function () { return testeEscolhido(k); }, alvo: function () { var b = botaoTeste(k); return b && visivel(b) ? b : null; },
+        texto: function () { return 'Toque em <b>' + (rotuloBotao(botaoTeste(k)) || C.nomeTeste) + '</b>, no seletor “Qual teste?”. Cada teste tem os seus próprios códigos e respostas.'; } },
+      { id: k + '-aba-codigos', fixo: true, feito: function () { return testeEscolhido(k) && visivel($(C.caixaCod)); }, alvo: C.abas + ' button[' + C.aba + '="codigos"]',
+        texto: function () { return 'Toque em <b>' + rotuloAba(k, 'codigos', 'Códigos de acesso') + '</b>. É aqui que cada pessoa' + (k === 'tc' ? ' (ou casal)' : '') + ' ganha o código para fazer o teste.'; } },
+      { id: k + '-nome', manual: true, alvo: C.nome,
+        texto: function () { return 'Escreva aqui: <b>' + (rotuloDe(C.nome.slice(1)) || 'Nome da pessoa') + '</b>. É opcional, mas ajuda a reconhecer o resultado depois. Escreveu? Toque em <b>Próximo</b>.'; } },
+      { id: k + '-whats', manual: true, alvo: C.whats,
+        texto: 'Coloque o <b>WhatsApp</b> de quem vai receber o link, com DDD. Com o número, o botão de envio já abre a conversa certa, com o link e a mensagem prontos. Toque em <b>Próximo</b> quando terminar.' }
+    ];
+    if (k === 'tc') lista.push(
+      { id: 'tc-tipo', manual: true, alvo: '#tc-alt-tipo',
+        texto: '<b>Individual</b>: um código para uma pessoa. <b>Casal</b>: um link para os dois; cada um responde a sua parte e, no fim, sai também o resultado do casal. Escolha e toque em <b>Próximo</b>.' },
+      { id: 'tc-mostrar', manual: true, alvo: '#tc-alt-mostrar',
+        texto: 'Aqui você decide se quem responde <b>vê o resultado</b> no final (os traços em porcentagem e o gráfico) ou se só você vê. Se só você vê, a pessoa recebe um agradecimento.' },
+      { id: 'tc-urg', so: temUrg('#tc-alt-urg'), manual: true, alvo: '#tc-alt-urg',
+        texto: 'O <b>cronômetro de 60 segundos</b> no final convida a pessoa a falar com você no WhatsApp assim que termina. Vale para o código individual. Pode deixar ligado.' });
+    else lista.push(
+      { id: 'an-int', manual: true, alvo: '#an-cod-int',
+        texto: 'Escolha <b>de quanto em quanto tempo</b> a pessoa refaz o teste. O mesmo código vale para todo o acompanhamento, e a cada aplicação ela vê a própria evolução. A cada 15 dias é o recomendado.' },
+      { id: 'an-mostrar', manual: true, alvo: '#an-alt-mostrar',
+        texto: 'Aqui você decide se a pessoa <b>vê o resultado</b> no final (nível, mapa das 6 áreas, evolução e PDF) ou se só você vê.' },
+      { id: 'an-urg', so: temUrg('#an-alt-urg'), manual: true, alvo: '#an-alt-urg',
+        texto: 'O <b>cronômetro de 60 segundos</b> no final convida a pessoa a falar com você no WhatsApp assim que termina. Pode deixar ligado.' });
+    lista.push(
+      { id: k + '-gerar', fixo: true, feito: function () { return !!$(C.caixa + ' .codigo-gerado'); }, alvo: C.gerar,
+        texto: function () {
+          var e = caixaErro(k);
+          return e ? 'Não deu certo: ' + e : 'Agora toque em <b>' + (rotuloBotao($(C.gerar)) || 'Gerar código') + '</b>.';
+        } },
+      { id: k + '-zap', feito: function () { return S.zap; }, alvo: C.caixa + ' .btn-zap',
+        texto: 'Pronto, o código foi criado! Toque no <b>botão verde</b>: o WhatsApp abre com o link e a mensagem já escritos. É só enviar. Se preferir, use <b>Copiar o link com o código</b>, logo abaixo.' });
+    return lista;
+  }
+
   function montarPassos(tour) {
     var base = [PASSO_IR_ADMIN(), PASSO_SENHA()];
     if (tour === 'entrar') return base.concat([
@@ -154,8 +225,12 @@
       { id: 'apres', feito: apresentacaoAberta, alvo: '#btn-apresentacao',
         texto: 'Toque em <b>Gerar apresentação</b>: o sistema monta a proposta de acompanhamento a partir do resultado dela.' },
       ]);
+    if (tour === 'tc-codigo') return base.concat(PASSOS_CODIGO_TESTE('tc'));
+    if (tour === 'an-codigo') return base.concat(PASSOS_CODIGO_TESTE('an'));
     if (tour === 'paciente') return PASSOS_PACIENTE();
     if (tour === 'paciente-camp') return PASSOS_PACIENTE_CAMP();
+    if (tour === 'paciente-tc') return PASSOS_PACIENTE_TC();
+    if (tour === 'paciente-an') return PASSOS_PACIENTE_AN();
     if (tour === 'apresform') return PASSOS_APRESFORM();
     return base;
   }
@@ -178,7 +253,7 @@
         texto: function () {
           var b = $('#btn-entrar'), aviso = (($('#aviso-codigo') || {}).textContent || '').trim();
           if (aviso) return aviso + ' Confira o código com ' + nomeA() + ' e tente de novo.';
-          return b && !b.disabled ? 'Ótimo! Agora toque em <b>Entrar</b>.'
+          return b && !b.disabled ? 'Ótimo! Agora toque em <b>' + (rotuloBotao(b) || 'Entrar') + '</b>.'
             : 'Digite aqui o <b>código</b> que ' + nomeA() + ' te enviou (algo como <b>AB-0000</b>). Cada código abre o teste uma única vez.';
         } },
       { id: 'p-orient', feito: depois(1), alvo: '#btn-orient',
@@ -240,6 +315,139 @@
     ];
   }
 
+  /* ---------- peças comuns aos roteiros do paciente do Traços e da Ansiedade ---------- */
+  /* capa com o código: aponta o campo e, quando o código está completo, o botão de começar */
+  function PASSO_CODIGO_PAC(id, tela, campo, botao, aviso) {
+    return { id: id, feito: function () { return !telaAtiva(tela); },
+      alvo: function () { var b = $(botao); return b && !b.disabled ? botao : campo; },
+      texto: function () {
+        var b = $(botao), av = textoVisivel(aviso), digitou = valor(campo).length >= 5, ex = (($(campo) || {}).placeholder || 'AB-0000');
+        if (av) return av + ' Confira o código com ' + nomeA() + ' e tente de novo.';
+        if (b && !b.disabled) return 'O seu código já está no campo. Agora toque em <b>' + rotuloBotao(b) + '</b>.';
+        if (digitou) return 'Estou conferindo o seu código, só um instante.';
+        return 'Digite aqui o <b>código</b> que ' + nomeA() + ' te enviou (algo como <b>' + ex + '</b>).';
+      } };
+  }
+  /* aviso de erro que o próprio teste mostra no formulário; se a pessoa já mexeu nos campos depois dele, ele é antigo e não é repetido */
+  function avisoAtual(sel, ids) {
+    var av = textoVisivel(sel);
+    if (!av) { S.avisoChave = null; return ''; }
+    var chave = ids.map(function (id) { var e = $('#' + id); return !e ? '' : e.type === 'checkbox' ? String(e.checked) : e.classList.contains('alternar') ? rotuloBotao(e.querySelector('button.ativa')) : String(e.value || ''); }).join('|');
+    if (S.avisoChave == null) S.avisoChave = chave;
+    return chave === S.avisoChave ? av : '';
+  }
+  /* primeiro campo obrigatório ainda vazio de um formulário (ids na ordem da tela) */
+  function campoVazio(ids) {
+    for (var i = 0; i < ids.length; i++) {
+      var e = $('#' + ids[i]); if (!e || !visivel(e)) continue;
+      if (e.classList.contains('alternar') ? !e.querySelector('button.ativa') : e.type === 'checkbox' ? !e.checked : !String(e.value || '').trim()) return e;
+    }
+    return null;
+  }
+  /* o envio falhou (sem internet): aponta o botão de tentar de novo, que a própria tela oferece */
+  function PASSO_REENVIAR(id, sel) {
+    return { id: id, so: function () { return !!primeiroVisivel(sel); }, alvo: function () { return primeiroVisivel(sel); },
+      texto: function () { return 'Não deu para enviar agora. Confira a sua internet e toque em <b>' + (rotuloBotao(primeiroVisivel(sel)) || 'Tentar de novo') + '</b>. As suas respostas continuam guardadas neste aparelho.'; } };
+  }
+  /* "Um instante..." enquanto o teste envia ou abre algo (o texto vem da própria tela) */
+  function PASSO_ESPERA(id, sel) {
+    return { id: id, so: function () { return !!primeiroVisivel(sel); }, centro: true,
+      texto: function () { return 'Um instante: ' + (textoVisivel(sel) || 'estou preparando a próxima tela.').replace(/^./, function (c) { return c.toLowerCase(); }); } };
+  }
+
+  /* ---------- roteiro do paciente: Traços de Caráter (individual; no casal, segue as mesmas telas) ---------- */
+  var TC_CAMPOS = ['td-nome', 'td-tel', 'td-email', 'td-consent', 'ts-nome1', 'ts-tel1', 'ts-email1', 'ts-nome2', 'ts-modo', 'ts-consent', 'ta-contato'];
+  var TC_BOTOES = '#td-ir, #ts-ir, #ta-ir, #tcc-ir, #tc-conteudo [data-tc-slot], #tq-recarregar';
+  var tcFormulario = function () { return telaAtiva('tela-tc') && !!primeiroVisivel(TC_BOTOES); };
+  var tcResultado = function () { return telaAtiva('tela-tc-resultado') && !!$('#tc-resultado .dv-teia'); };
+  function PASSOS_PACIENTE_TC() {
+    var naCapa = function () { return telaAtiva('tela-tc-capa'); };
+    var antes = function () { return naCapa() || tcFormulario(); };
+    var aindaVem = function () { return antes() || telaAtiva('tela-tc-teste'); };          // o resultado ainda vai chegar: os passos dele já contam
+    var zap = function () { return primeiroVisivel('#tr-zap, #tf-zap, #te-zap'); };
+    return [
+      PASSO_CODIGO_PAC('tc-p-codigo', 'tela-tc-capa', '#tc-codigo', '#tc-entrar', '#tc-aviso-codigo'),
+      { id: 'tc-p-dados', feito: function () { return !antes(); },
+        alvo: function () { return campoVazio(TC_CAMPOS) || primeiroVisivel(TC_BOTOES); },
+        texto: function () {
+          var av = avisoAtual('#td-aviso, #ts-aviso', TC_CAMPOS);
+          if (av) return '<b>' + av + '</b> Depois toque de novo em <b>' + (rotuloBotao(primeiroVisivel(TC_BOTOES)) || 'Continuar') + '</b>.';
+          var f = campoVazio(TC_CAMPOS);
+          if (f && /consent/.test(f.id)) return 'Leia e marque a <b>autorização</b> para ' + nomeA() + ' receber as suas respostas e mantê-las em sigilo.';
+          if (f && f.id === 'ts-modo') return 'Escolha <b>como vocês vão responder</b>: juntos, no mesmo aparelho, ou cada um no seu.';
+          if (f) return 'Preencha: <b>' + rotuloDe(f.id) + '</b> (obrigatório).';
+          var b = primeiroVisivel(TC_BOTOES);
+          if (b && b.hasAttribute('data-tc-slot')) return 'Toque no botão com <b>o seu nome</b> para começar a sua parte.';
+          return (b && b.id === 'tcc-ir' ? 'Leia com calma como responder. Depois toque em' : 'Tudo preenchido! Toque em') + ' <b>' + (rotuloBotao(b) || 'Continuar') + '</b>.';
+        } },
+      { id: 'tc-p-teste', feito: function () { return !antes() && !telaAtiva('tela-tc-teste'); }, alvo: '#tc-opcoes', setaBaixo: true,
+        texto: function () {
+          var ops = $$('#tc-opcoes .tc-op'), nome = function (b) { return b ? b.textContent.replace(/^\s*\d+/, '').trim() : ''; };
+          var de = nome(ops[0]) || 'Nunca', ate = nome(ops[ops.length - 1]) || 'Sempre';
+          return 'Leia a frase e toque na opção que mais combina com você no dia a dia, de <b>' + de + '</b> a <b>' + ate + '</b>. Não existe resposta certa: vá no primeiro impulso. Para corrigir, use <b>' + (rotuloBotao($('#tc-voltar')) || 'Afirmação anterior') + '</b>.';
+        } },
+      PASSO_ESPERA('tc-p-espera', '#tc-conteudo .carregando'),
+      PASSO_REENVIAR('tc-p-reenviar', '#tf-de-novo, #tp-de-novo'),
+      { id: 'tc-p-teia', so: function () { return aindaVem() || tcResultado(); }, manual: true, alvo: '#tc-resultado .dv-teia',
+        texto: 'Este gráfico é o <b>seu mapa dos traços de caráter</b>, em porcentagem: quanto mais longe do centro, mais aquele traço aparece em você. Logo acima estão os números de cada traço.' },
+      { id: 'tc-p-picos', so: function () { return aindaVem() || (tcResultado() && !!$('#tc-resultado .dv-pico')); }, manual: true, alvo: '#tc-resultado .dv-pico',
+        texto: 'Aqui começa a leitura do <b>seu traço mais forte</b> (o pico): a dor central, como ele se formou, como aparece no dia a dia e a virada de chave. Mais abaixo vêm o segundo pico, um plano de ação e perguntas para refletir.' },
+      { id: 'tc-p-enviar', so: function () { return aindaVem() || !!zap(); }, feito: function () { return S.zap2; }, alvo: zap,
+        texto: function () {
+          var z = zap();
+          if (z && z.id === 'te-zap') return 'A sua parte está salva! Agora falta a outra pessoa: toque aqui para <b>enviar o link pelo WhatsApp</b>. Se ela estiver com você, ela pode responder agora, neste aparelho.';
+          if (z && z.id === 'tf-zap') return 'Pronto, as suas respostas foram enviadas! Toque aqui para <b>falar com ' + nomeA() + '</b> pelo WhatsApp: a mensagem já vai pronta.';
+          return 'Toque aqui para <b>enviar o seu resultado para ' + nomeA() + '</b> pelo WhatsApp. É a partir dele que vocês vão conversar.';
+        } }
+    ];
+  }
+
+  /* ---------- roteiro do paciente: Teste de Ansiedade (capa, cadastro, GAD-7, notas de 1 a 10, perguntas abertas, resultado) ---------- */
+  var AN_CAMPOS = ['ak-nome', 'ak-email', 'ak-tel', 'ak-idade', 'ak-lgpd'];
+  var anFormulario = function () { return telaAtiva('tela-an') && !!primeiroVisivel('#ak-ir'); };
+  var anResultado = function () { return telaAtiva('tela-an-resultado') && !!$('#an-resultado .an-gadbox'); };
+  function PASSOS_PACIENTE_AN() {
+    var antes = function () { return telaAtiva('tela-an-capa') || anFormulario(); };
+    var noTeste = function () { return telaAtiva('tela-an-teste'); };
+    var passou = function () { return !antes() && !noTeste(); };
+    var aindaVem = function () { return antes() || noTeste(); };          // o resultado ainda vai chegar: os passos dele já contam
+    var zap = function () { return primeiroVisivel('#an-resultado .an-zap, #an-conteudo .an-zap'); };
+    var proxTxt = function () { return rotuloBotao($('#an-prox')) || 'Próxima'; };
+    return [
+      PASSO_CODIGO_PAC('an-p-codigo', 'tela-an-capa', '#an-codigo', '#an-entrar', '#an-aviso-codigo'),
+      { id: 'an-p-dados', feito: function () { return !antes(); },
+        alvo: function () { return campoVazio(AN_CAMPOS) || '#ak-ir'; },
+        texto: function () {
+          var av = avisoAtual('#ak-aviso', AN_CAMPOS);
+          if (av) return '<b>' + av + '</b> Depois toque de novo em <b>' + (rotuloBotao($('#ak-ir')) || 'Começar') + '</b>.';
+          var f = campoVazio(AN_CAMPOS);
+          if (f && f.id === 'ak-lgpd') return 'Leia e marque que você <b>concorda com os termos</b> de utilização e privacidade. O lembrete por e-mail, logo abaixo, é opcional.';
+          if (f) return 'Preencha: <b>' + rotuloDe(f.id) + '</b> (obrigatório).';
+          return 'Tudo preenchido! Toque em <b>' + (rotuloBotao($('#ak-ir')) || 'Começar') + '</b>.';
+        } },
+      { id: 'an-p-gad', feito: function () { return passou() || (noTeste() && !$('#an-pergunta-box .an-gad')); }, alvo: '#an-pergunta-box .an-gad', setaBaixo: true,
+        texto: function () {
+          var ops = $$('#an-pergunta-box .an-gad button'), nome = function (b) { return b ? b.textContent.replace(/^\s*\d+/, '').trim() : ''; };
+          return 'Primeiro, <b>7 perguntas sobre as últimas 2 semanas</b>. Toque na opção que mais combina com você, de <b>' + (nome(ops[0]) || 'Nenhuma vez') + '</b> a <b>' + (nome(ops[ops.length - 1]) || 'Quase todos os dias') + '</b>. A próxima pergunta aparece sozinha.';
+        } },
+      { id: 'an-p-regua', feito: function () { return passou() || (noTeste() && !$('#an-pergunta-box .an-regua') && !!$('#an-pergunta-box textarea')); }, alvo: '#an-pergunta-box .an-regua', setaBaixo: true,
+        texto: function () { return 'Agora, notas de <b>1 a 10</b>: 1 é o lado tranquilo e 10, o lado de mais peso. O que cada ponta quer dizer aparece logo abaixo dos números. Vá no primeiro impulso; para corrigir, use <b>' + (rotuloBotao($('#an-voltar')) || 'Anterior') + '</b>.'; } },
+      { id: 'an-p-abertas', feito: passou, alvo: '#an-prox',
+        texto: function () { return 'Para fechar, três perguntas <b>opcionais</b>: se quiser, escreva com as suas palavras. Depois toque em <b>' + proxTxt() + '</b>.'; } },
+      PASSO_ESPERA('an-p-espera', '#an-conteudo .carregando'),
+      PASSO_REENVIAR('an-p-reenviar', '#ak-de-novo'),
+      { id: 'an-p-nivel', so: function () { return aindaVem() || anResultado(); }, manual: true, alvo: '#an-resultado .an-gadbox',
+        texto: 'Este é o seu <b>nível de ansiedade</b> nas últimas 2 semanas (escala GAD-7, de 0 a 21). A faixa colorida logo abaixo mostra onde você está hoje.' },
+      { id: 'an-p-mapa', so: function () { return aindaVem() || (anResultado() && !!$('#an-resultado .an-areas')); }, manual: true, alvo: '#an-resultado .an-areas',
+        texto: 'Aqui estão as <b>6 áreas</b> da sua ansiedade, de 0 a 100: quanto maior o número, mais peso ela tem hoje. Logo abaixo, o que cada área mostra e ideias para começar a cuidar.' },
+      { id: 'an-p-enviar', so: function () { return aindaVem() || !!zap(); }, feito: function () { return S.zap2; }, alvo: zap,
+        texto: function () {
+          if (telaAtiva('tela-an-resultado')) return 'Toque aqui para <b>conversar com ' + nomeA() + ' sobre o seu resultado</b> pelo WhatsApp: a mensagem já vai pronta. Mais abaixo, você também baixa o relatório em PDF.';
+          return 'Toque aqui para <b>falar com ' + nomeA() + '</b> pelo WhatsApp: a mensagem já vai pronta.' + (textoVisivel('#an-conteudo .an-proxima') ? ' A data da sua próxima aplicação está logo acima.' : '');
+        } }
+    ];
+  }
+
   /* ---------- orientação DENTRO do gerador de apresentação (campo a campo) ---------- */
   var numF = function (sel) { var e = $f(sel); return e ? parseFloat(String(e.value).replace(',', '.')) || 0 : 0; };
   var checadoF = function (sel) { var e = $f(sel); return !!e && e.checked; };
@@ -294,19 +502,29 @@
     apres: { t: 'Gerador aberto! 🎉', auto: 'apresform' },
     apresform: { t: 'Apresentação pronta! 🎉 Toque nas laterais (ou use as setas do teclado) para avançar, e gire o celular para ver maior. Para refazer esta orientação, use o botão <b>🧭 Orientar a apresentação</b>.', prox: null },
     paciente: { t: 'Pronto! 🎉 Você chegou ao fim. Obrigado por responder com sinceridade: agora vocês conversam a partir do seu resultado.', prox: null },
-    'paciente-camp': { t: 'Pronto! 🎉 Você chegou ao fim. Obrigado por responder com sinceridade: agora vocês conversam a partir do seu resultado.', prox: null }
+    'paciente-camp': { t: 'Pronto! 🎉 Você chegou ao fim. Obrigado por responder com sinceridade: agora vocês conversam a partir do seu resultado.', prox: null },
+    'paciente-tc': { t: 'Pronto! 🎉 Você chegou ao fim. Que bom que você respondeu com sinceridade: agora vocês conversam a partir do seu resultado.', prox: null },
+    'paciente-an': { t: 'Pronto! 🎉 Você chegou ao fim. Na próxima aplicação, é só abrir o mesmo link: assim você acompanha a sua evolução.', prox: null },
+    'tc-codigo': { t: 'Link enviado! 🎉 Quando a pessoa terminar, o resultado aparece na aba <b>Respostas</b> do Traços de Caráter (no casal, quando os dois concluírem). O código fica salvo em <b>Códigos criados</b>.', prox: null },
+    'an-codigo': { t: 'Link enviado! 🎉 Cada vez que a pessoa responder, a aplicação aparece na aba <b>Acompanhamentos</b> do Teste de Ansiedade, com a evolução dela. O mesmo link vale para as próximas aplicações.', prox: null }
   };
-  var TELAS = { paciente: ETAPAS, 'paciente-camp': CAMP_ETAPAS, apresform: ['tela-admin'] };
+  var TELAS = { paciente: ETAPAS, 'paciente-camp': CAMP_ETAPAS, 'paciente-tc': TC_ETAPAS, 'paciente-an': AN_ETAPAS, apresform: ['tela-admin'] };
   var telasDe = function (t) { return TELAS[t] || ['tela-admin', 'tela-capa']; };
+  var PACIENTES = ['paciente', 'paciente-camp', 'paciente-tc', 'paciente-an'];
+  var TELAS_PACIENTE = ETAPAS.concat(CAMP_ETAPAS, TC_ETAPAS, AN_ETAPAS);
+  var CAPAS = ['tela-capa', 'tela-tc-capa', 'tela-an-capa'];
   var MENU_RAIZ = [
     { id: '@terapeuta', i: '🩺', t: 'Sou terapeuta', s: 'Entrar, criar códigos, enviar e gerar a apresentação' },
     { id: 'paciente', i: '🙋', t: 'Sou paciente', s: 'Como fazer o teste, passo a passo' }
   ];
+  /* "teste": o item só aparece se a página oferece aquele teste */
   var MENU = [
     { id: 'entrar', i: '🔑', t: 'Entrar na minha área', s: 'Abrir a área e fazer o login' },
-    { id: 'codigo', i: '🆕', t: 'Criar um código de acesso', s: 'O código que a pessoa usa para fazer o teste' },
-    { id: 'whats', i: '💬', t: 'Mandar o código pelo WhatsApp', s: 'Enviar o link com a mensagem pronta' },
-    { id: 'apres', i: '📊', t: 'Ver o resultado e gerar a apresentação', s: 'Transformar a resposta em proposta de acompanhamento' }
+    { id: 'codigo', teste: 'travas', i: '🆕', t: 'Criar um código de acesso', s: 'O código que a pessoa usa para fazer o teste' },
+    { id: 'whats', teste: 'travas', i: '💬', t: 'Mandar o código pelo WhatsApp', s: 'Enviar o link com a mensagem pronta' },
+    { id: 'apres', teste: 'travas', i: '📊', t: 'Ver o resultado e gerar a apresentação', s: 'Transformar a resposta em proposta de acompanhamento' },
+    { id: 'tc-codigo', teste: 'tracos', i: '🧩', t: 'Traços de Caráter: criar e enviar um código', s: 'Individual ou casal, com o link pronto no WhatsApp' },
+    { id: 'an-codigo', teste: 'ansiedade', i: '🌿', t: 'Ansiedade: criar e enviar um código', s: 'O código do acompanhamento, com o link pronto no WhatsApp' }
   ];
 
   /* ---------- peças da tela ---------- */
@@ -316,7 +534,11 @@
   function montar() {
     botao = document.createElement('button');
     botao.id = 'guia-abrir'; botao.type = 'button'; botao.innerHTML = '🧭 Orientação guiada';
-    botao.addEventListener('click', function () { if (apresentacaoAberta()) iniciar('apresform'); else if (SO_PACIENTE) iniciar(tourPaciente()); else abrirMenu(); });
+    botao.addEventListener('click', function () {
+      if (apresentacaoAberta()) iniciar('apresform');
+      else if (SO_PACIENTE || TC_ETAPAS.concat(AN_ETAPAS).some(telaAtiva)) iniciar(tourPaciente());      // nas telas do Traços e da Ansiedade só existe o roteiro do paciente
+      else abrirMenu();
+    });
     document.body.appendChild(botao);
 
     raiz = document.createElement('div'); raiz.id = 'guia-raiz'; raiz.hidden = true;
@@ -342,14 +564,15 @@
     document.addEventListener('click', function (e) {
       if (!e.target.closest) return;
       if (e.target.closest('.btn-zap')) { S.zap = true; guardar(); }
-      if (e.target.closest('#btn-zap-resultado, #btn-zap-obrigada')) S.zap2 = true;          // paciente: enviou o resultado
+      if (e.target.closest('#btn-zap-resultado, #btn-zap-obrigada, #tr-zap, #tf-zap, #te-zap, .an-zap')) S.zap2 = true;          // paciente: enviou o resultado
+      if (e.target.closest('#td-ir, #ts-ir, #ta-ir, #ak-ir')) S.avisoChave = null;          // tocou em continuar: o aviso que vier agora é novo
     }, true);
     /* o botão da aba "Códigos de acesso" não tem id: marca para a seta achar */
     var ab = $('.abas button[data-aba="codigos"]'); if (ab) ab.id = 'aba-codigos-btn';
   }
 
   function desenharMenu(vista) {
-    var terap = vista === 'terapeuta', lista = terap ? MENU : MENU_RAIZ;
+    var terap = vista === 'terapeuta', lista = terap ? MENU.filter(function (m) { return !m.teste || paginaTem(m.teste); }) : MENU_RAIZ;
     menu.innerHTML = '<div class="guia-topo"><h2>' + (terap ? 'Orientação para terapeutas' : 'Orientação guiada') + '</h2><button type="button" class="guia-x" aria-label="Fechar">×</button></div>' +
       '<p class="sub">' + (terap ? 'O que você quer aprender agora? Eu te mostro passo a passo, com uma seta.' : 'Para te orientar melhor: você é terapeuta ou paciente?') + '</p>' +
       lista.map(function (m) { return '<button type="button" class="guia-op" data-tour="' + m.id + '"><span class="i">' + m.i + '</span><span><b>' + m.t + '</b><small>' + m.s + '</small></span></button>'; }).join('') +
@@ -360,14 +583,23 @@
 
   function iniciar(tour) {
     fecharMenu(); botao.classList.remove('ver');
-    S.tour = tour; S.ack = {}; S.zap = false; S.zap2 = false; S.semCodigo = undefined; S.ultimoId = null; ultimoHTML = ''; guardar();
-    if (tour === 'codigo' || tour === 'whats' || tour === 'apres') { var c = $('#caixa-codigo'); if (c) c.innerHTML = ''; }      // cada roteiro de código começa pedindo um código novo
+    S.tour = tour; S.ack = {}; S.zap = false; S.zap2 = false; S.semCodigo = undefined; S.ultimoId = null; S.auto = false; ultimoHTML = ''; guardar();
+    var caixa = { codigo: '#caixa-codigo', whats: '#caixa-codigo', apres: '#caixa-codigo', 'tc-codigo': '#tc-caixa-codigo', 'an-codigo': '#an-caixa-codigo' }[tour];
+    if (caixa) { var c = $(caixa); if (c) c.innerHTML = ''; }      // cada roteiro de código começa pedindo um código novo
     raiz.hidden = false;
   }
-  function encerrar() { S.tour = null; S.ack = {}; guardar(); raiz.hidden = true; if (SO_PACIENTE) guardaSessao('guia_pac_fechado', '1'); atualizarBotao(); }
+  /* roteiro do paciente que abriu sozinho (link com &guia=paciente): o primeiro cartão oferece "Não preciso" */
+  function iniciarSozinho(tour) { iniciar(tour); S.auto = true; S.autoId = null; }
+  /* a pessoa mudou de teste no meio do caminho (ex.: digitou na capa um código do Traços): segue no roteiro do teste novo */
+  function trocarPaciente(tour) { S.tour = tour; S.ack = {}; S.zap2 = false; S.ultimoId = null; S.auto = false; ultimoHTML = ''; guardar(); }
+  function encerrar() { S.tour = null; S.ack = {}; S.auto = false; guardar(); raiz.hidden = true; if (SO_PACIENTE) guardaSessao('guia_pac_fechado', '1'); atualizarBotao(); }
 
   /* ---------- o passo da vez ---------- */
-  function resolver(p) { if (!p) return null; var s = typeof p.alvo === 'function' ? p.alvo() : p.alvo; return s ? (p.dentro ? $f(s) : $(s)) : null; }
+  function resolver(p) {
+    if (!p) return null; var s = typeof p.alvo === 'function' ? p.alvo() : p.alvo;
+    if (s && typeof s !== 'string') return s;                     // o passo já entregou o próprio elemento
+    return s ? (p.dentro ? $f(s) : $(s)) : null;
+  }
   function textoDe(p) { return typeof p.texto === 'function' ? p.texto() : p.texto; }
 
   function passoAtual() {
@@ -381,11 +613,20 @@
     return { p: null, n: todos.length, total: todos.length };
   }
 
-  function botoesHTML(info) {
+  /* o primeiro cartão de um roteiro que abriu sozinho (some quando a pessoa passa para o próximo passo) */
+  function primeiroAuto(info) {
+    if (!S.auto || !info.p) return false;
+    if (S.autoId === null) S.autoId = info.p.id;
+    if (info.p.id !== S.autoId) { S.auto = false; return false; }
+    return true;
+  }
+
+  function botoesHTML(info, auto) {
     var h = '';
     if (info.p) {
       if (info.p.manual) h += '<button type="button" class="guia-btn" data-g="proximo">' + (info.p.manualT || (info.p.centro ? 'Entendi' : 'Próximo')) + '</button>';
       (info.p.botoes || []).forEach(function (b, i) { h += '<button type="button" class="guia-btn sec" data-g="extra" data-i="' + i + '">' + b.t + '</button>'; });
+      if (auto) h += '<button type="button" class="guia-btn sec" data-g="nao-preciso">Não preciso</button>';
       if (!SO_PACIENTE) h += '<button type="button" class="guia-btn fraco" data-g="menu">Outro assunto</button>';
     } else {
       var f = FIM[S.tour] || {};
@@ -401,8 +642,11 @@
     var topo = info.p ? 'Passo ' + info.n + ' de ' + info.total : 'Concluído';
     var txt = info.p ? textoDe(info.p) : (FIM[S.tour] || {}).t;
     if (info.p && info.p.exige && S.aviso === info.p.id && !info.p.exige()) txt += '<br><span class="guia-erro">⚠ ' + info.p.exigeMsg + '</span>';
+    var auto = primeiroAuto(info);
     var html = '<div class="guia-topo"><span class="guia-passo">' + topo + '</span><button type="button" class="guia-x" data-g="fechar" aria-label="Fechar a orientação">×</button></div>' +
-      '<p class="guia-txt">' + txt + '</p><div class="guia-acoes">' + botoesHTML(info) + '</div>';
+      '<p class="guia-txt">' + txt + '</p>' +
+      (auto ? '<p class="guia-auto">A orientação abriu sozinha para te ajudar. Se não precisar, toque em <b>Não preciso</b>.</p>' : '') +
+      '<div class="guia-acoes">' + botoesHTML(info, auto) + '</div>';
     if (html !== ultimoHTML) { card.innerHTML = html; ultimoHTML = html; }
   }
 
@@ -461,11 +705,21 @@
     /* o gerador de apresentação abriu sozinho (por qualquer caminho): oferece a orientação uma vez por abertura */
     if (fr && fr !== S.frameVisto && !S.aberto && paginaTravas() && (!S.tour || S.tour === 'apres')) { S.frameVisto = fr; iniciar('apresform'); }
     if (S.tour === 'apresform' && !fr) { encerrar(); return; }
-    /* link de campanha: começa sozinho assim que a tela de abertura aparece (uma vez por visita) */
-    if (SO_PACIENTE && !S.autoPac && !S.tour && !S.aberto && paginaTravas()) {
+    /* link com &guia=paciente (campanha ou robô): começa sozinho assim que a primeira tela do teste aparece (uma vez por visita) */
+    if (SO_PACIENTE && !S.autoPac && !S.tour && !S.aberto && paginaOk()) {
       S.t0 = S.t0 || Date.now();
-      var camp = window.CAMP && window.CAMP.ativo && telaAtiva('tela-camp'), normal = telaAtiva('tela-capa') && window.T_A && Date.now() - S.t0 > 6000;
-      if (camp || normal) { S.autoPac = true; if (!guardaSessao('guia_pac_fechado')) iniciar(camp ? 'paciente-camp' : 'paciente'); }
+      var espera = Date.now() - S.t0, outroTeste = Q.get('ct') || Q.get('an');
+      var camp = paginaTravas() && window.CAMP && window.CAMP.ativo && telaAtiva('tela-camp');
+      var tcCapa = paginaTem('tracos') && telaAtiva('tela-tc-capa') && espera > 1200;
+      var anCapa = paginaTem('ansiedade') && telaAtiva('tela-an-capa') && espera > 1200;
+      var normal = paginaTravas() && !outroTeste && telaAtiva('tela-capa') && window.T_A && espera > 6000;
+      var qual = camp ? 'paciente-camp' : tcCapa ? 'paciente-tc' : anCapa ? 'paciente-an' : normal ? 'paciente' : null;
+      if (qual) { S.autoPac = true; if (!guardaSessao('guia_pac_fechado')) iniciarSozinho(qual); }
+    }
+    /* roteiro do paciente e a pessoa foi parar nas telas de outro teste (o código era de outro teste): troca de roteiro */
+    if (S.tour && PACIENTES.indexOf(S.tour) >= 0 && !telasDe(S.tour).some(telaAtiva)) {
+      var certo = tourPaciente();
+      if (certo !== S.tour && telasDe(certo).some(telaAtiva)) trocarPaciente(certo);
     }
     var naTela = telasDe(S.tour).some(telaAtiva);
     if (!S.tour) { atualizarBotao(); return; }
@@ -484,8 +738,8 @@
 
   function atualizarBotao() {
     var ap = apresentacaoAberta();
-    var capaOk = telaAtiva('tela-capa') && (!COM_CODIGO || COM_FLAG);                // código individual no endereço: sem botão na capa
-    var deveVer = paginaTravas() && !S.aberto && !S.tour && (SO_PACIENTE ? ETAPAS.concat(CAMP_ETAPAS).some(telaAtiva) : (ap || telaAtiva('tela-admin') || capaOk));
+    var capaOk = CAPAS.some(telaAtiva) && (!COM_CODIGO || COM_FLAG);                // código individual no endereço: sem botão na capa
+    var deveVer = paginaOk() && !S.aberto && !S.tour && (SO_PACIENTE ? TELAS_PACIENTE.some(telaAtiva) : (ap || telaAtiva('tela-admin') || capaOk));
     botao.classList.toggle('ver', !!deveVer); botao.classList.toggle('topo', ap);
     var rot = ap ? '🧭 Orientar a apresentação' : '🧭 Orientação guiada';
     if (botao.textContent !== rot) botao.textContent = rot;
@@ -505,6 +759,7 @@
       else if (g === 'menu') { encerrar(); abrirMenu(); }
       else if (g === 'seguir') { iniciar((FIM[S.tour] || {}).prox); }
       else if (g === 'fechar') { encerrar(); }
+      else if (g === 'nao-preciso') { encerrar(); guardaSessao('guia_pac_fechado', '1'); }      // não abre sozinha de novo nesta visita
     });
     /* depois de recarregar a página no meio de um roteiro, continua de onde estava */
     try { var salvo = JSON.parse(guardaSessao('guia_estado') || 'null'); if (salvo && salvo.tour && FIM[salvo.tour]) { S.tour = salvo.tour; S.ack = salvo.ack || {}; S.zap = !!salvo.zap; S.semCodigo = salvo.semCodigo; } } catch (e) { /* estado ilegível: ignora */ }

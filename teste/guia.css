@@ -1,4 +1,4 @@
-/* Orientação guiada da Área da terapeuta (Teste de Travas): botão, menu, seta, foco e cartão de passo. */
+/* Orientação guiada (Teste de Travas, Traços de Caráter e Ansiedade): botão, menu, seta, foco e cartão de passo. */
 #guia-abrir{position:fixed;right:calc(14px + var(--guia-dx,0px));bottom:calc(14px + var(--guia-dy,0px) + env(safe-area-inset-bottom,0px));z-index:2147482000;display:none;align-items:center;gap:8px;padding:12px 18px;border:0;border-radius:999px;background:#152D2E;color:#fff;font:600 15px/1 system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 10px 26px -8px rgba(13,31,32,.65);cursor:pointer}
 #guia-abrir.ver{display:inline-flex}
 #guia-abrir.topo{bottom:auto;top:calc(10px + var(--guia-dt,0px) + env(safe-area-inset-top,0px));right:calc(10px + var(--guia-dx,0px));padding:9px 14px;font-size:13px}
@@ -30,6 +30,8 @@
 .guia-txt b{color:#0D1F20}
 .guia-req{display:inline-block;background:#B23A2F;color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:6px;vertical-align:1px}
 .guia-erro{display:inline-block;margin-top:6px;color:#B23A2F;font-weight:600}
+#guia-card .guia-auto{margin:-4px 0 12px;padding:8px 10px;border-radius:10px;background:#F3F8F6;color:#3D5A55;font-size:14px;line-height:1.45}
+#guia-card .guia-auto b{color:#152D2E}
 .guia-acoes{display:flex;flex-wrap:wrap;gap:8px}
 .guia-btn{border:0;border-radius:12px;padding:11px 16px;font:600 15px/1.1 inherit;font-family:inherit;cursor:pointer;background:#4E756D;color:#fff}
 .guia-btn.sec{background:#E4EEEB;color:#152D2E}
@@ -37,6 +39,7 @@
 
 /* menu */
 #guia-menu h2,#guia-card p{font-family:inherit;color:#152D2E;letter-spacing:0;text-transform:none}
+#guia-menu{max-height:calc(100vh - 24px - var(--guia-dy,0px) - var(--guia-dt,0px));overflow-y:auto;overscroll-behavior:contain}
 #guia-menu h2{margin:2px 0 4px;font-size:20px;font-weight:700}
 #guia-menu p.sub{margin:0 0 12px;font-size:14px;color:#55706C}
 .guia-op{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:1.5px solid #D5DEDB;border-radius:14px;background:#fff;padding:12px 14px;margin-bottom:8px;cursor:pointer;font-family:inherit;color:#152D2E}
