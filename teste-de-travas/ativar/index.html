@@ -213,6 +213,19 @@
     mostrar("ePronto");
   }
 
+  /* vitalício combinado (convite): lembra o que já foi pago e quando vence o restante */
+  function mostrarConvite() {
+    if (!token) return;
+    fetch(FUNCAO.replace("travas-loja", "travas-planos"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ acao: "plano", token: token }) })
+      .then(function (r) { return r.json(); }).then(function (j) {
+        var c = j && j.convite; if (!c) return;
+        var r = function (v) { return "R$ " + (v / 100).toFixed(2).replace(".", ","); }, d = String(c.resto_data || "").slice(0, 10).split("-").reverse().join("/");
+        var html = '<div style="background:#EEF6EE;border:1px solid #BFD9C2;border-radius:14px;padding:14px 16px;margin:0 0 18px;font-size:16px;line-height:1.5"><b style="color:#15502E">O que está combinado</b><br>Acesso <b>vitalício</b> (valor total ' + r(c.total_centavos) + '). Você já pagou <b>' + r(c.entrada_centavos) + '</b>. O restante, <b>' + r(c.resto_centavos) + '</b>, será pago em <b>' + d + '</b>. Antes do vencimento você recebe um aviso por e-mail.</div>';
+        ["eForm", "ePronto"].forEach(function (id) { var el = document.getElementById(id); if (el && !el.querySelector("[data-convite]")) { var w = document.createElement("div"); w.setAttribute("data-convite", "1"); w.innerHTML = html; el.insertBefore(w, el.firstChild); } });
+      }).catch(function () {});
+  }
+  mostrarConvite();
+
   function conferir() {
     chamar({ acao: "confirmar", token: token, transaction_nsu: retorno.transaction_nsu, slug: retorno.slug }).then(function (j) {
       if (j.__status === 404 || !j.ok) { mostrar("eInvalido"); return; }
