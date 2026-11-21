@@ -4226,7 +4226,7 @@
   /* ---------- abas e atualização automática ---------- */
   const abrirAba = ligarAbas($("abas"), function (nome) {
     abaAtual = nome;
-    const f = { conversas: telaConversas, funil: telaFunil, vendas: telaVendas, email: telaEmail, inscricoes: function () { return window.WaInscricaoTela ? window.WaInscricaoTela.abrir() : Promise.resolve(); }, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, automacoes: telaAutomacoes, fluxos: function () { auAtualizar().catch(function () {}); return telaFluxos(); }, config: telaConfig }[nome];
+    const f = { visao: function () { return window.WaVisaoTela ? window.WaVisaoTela.abrir() : Promise.resolve(); }, conversas: telaConversas, funil: telaFunil, vendas: telaVendas, email: telaEmail, inscricoes: function () { return window.WaInscricaoTela ? window.WaInscricaoTela.abrir() : Promise.resolve(); }, contatos: telaContatos, disparos: telaDisparos, bloqueio: telaBloqueio, templates: telaTemplates, robo: telaRobo, automacoes: telaAutomacoes, fluxos: function () { auAtualizar().catch(function () {}); return telaFluxos(); }, config: telaConfig }[nome];
     f().catch(function (e) { falha(e); });
   });
   setInterval(function () {
@@ -4240,5 +4240,16 @@
 
   try { await carregarConfig(); } catch (e) { falha(e, "Não consegui ler a configuração. Atualize a página."); }
   avisarNovidadesTemplates();
-  abrirAba("conversas");
+  /* aba que abre ao entrar: ?aba=nome no endereço; depois a preferência deste aparelho; depois a Visão geral.
+     Só decide depois que a página terminou de ler todos os scripts: a configuração pode chegar antes de as telas das outras abas existirem. */
+  const abrirAbaInicial = function () {
+    const existe = function (n) { return !!n && /^[a-z_]+$/.test(n) && !!document.querySelector('#abas .aba[data-aba="' + n + '"]'); };
+    let pedida = "", guardada = "";
+    try { pedida = new URLSearchParams(location.search).get("aba") || ""; } catch (e) { pedida = ""; }
+    try { guardada = localStorage.getItem("wa_aba_inicial") || ""; } catch (e) { guardada = ""; }
+    const inicial = existe(pedida) ? pedida : existe(guardada) ? guardada : (window.WaVisaoTela ? "visao" : "conversas");
+    if (inicial !== "conversas") carregarLista().catch(function () {});   // mantém o selo de não lidas atualizado
+    abrirAba(inicial);
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", abrirAbaInicial); else abrirAbaInicial();
 })();

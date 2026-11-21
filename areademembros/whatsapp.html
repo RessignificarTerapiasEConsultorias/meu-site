@@ -243,6 +243,27 @@ dialog#jAutomacao,dialog#jAutPessoas{max-width:900px;width:calc(100% - 16px);max
 .au-frase{font-size:13px;color:var(--muted);margin:2px 0 0;overflow-wrap:anywhere}
 .au-prev{margin-top:8px}
 .au-sim li{margin:3px 0}
+/* visão geral (Fase 10) */
+.vg-hoje{display:grid;gap:8px;margin:0 0 6px}
+.vg-item{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--line);border-left:5px solid #9AA3B5;border-radius:10px;padding:10px 12px;background:#fff}
+.vg-item.alerta{border-left-color:#B3261E}.vg-item.atencao{border-left-color:#B8862B}
+.vg-item-txt{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}.vg-item-txt small{display:block;color:#4C5670;margin-top:2px}
+.vg-n{font-size:1.25rem}
+.vg-ok{margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#F1F8F2}
+.vg-var{display:block;margin-top:2px}
+.vg-grande{font-size:1.5rem;font-weight:700;margin:0 0 6px}.vg-grande small{font-size:.8rem;font-weight:400;color:#4C5670}
+.vg-linha{display:flex;justify-content:space-between;gap:12px;margin:0;padding:5px 0;border-bottom:1px dashed var(--line)}.vg-linha span{min-width:0;overflow-wrap:anywhere}.vg-linha b{white-space:nowrap}
+.vg-sub{font-weight:700;margin:10px 0 2px}
+.vg-barra{height:14px;border-radius:8px;background:#E8E2D4;overflow:hidden;margin:4px 0 8px}.vg-barra i{display:block;height:100%;background:#06142A}.vg-barra.cheia i{background:#B3261E}
+.vg-grafico{display:flex;align-items:flex-end;gap:3px;height:150px;padding:6px 0;border-bottom:2px solid #06142A;overflow-x:auto}
+.vg-dia{flex:1 0 12px;min-width:12px;height:100%;display:flex;align-items:flex-end;gap:1px}
+.vg-b{display:block;flex:1;min-width:4px;border-radius:2px 2px 0 0}
+.vg-b.env{background:#06142A}.vg-b.rec{background:repeating-linear-gradient(45deg,#B8862B,#B8862B 3px,#F3E6C4 3px,#F3E6C4 6px)}
+.vg-legenda{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#4C5670;margin:6px 0}.vg-legenda .vg-b{display:inline-block;width:14px;height:12px;flex:none;vertical-align:middle}
+.vg-det{margin-top:10px}.vg-det summary{cursor:pointer;font-weight:600;padding:6px 0}
+#vgImpressao{display:none}
+@media print{body.vg-imprimindo>*:not(#vgImpressao){display:none!important}body.vg-imprimindo #vgImpressao{display:block!important;font-family:Arial,Helvetica,sans-serif;color:#000;padding:0 8px}
+#vgImpressao h1{font-size:18pt;margin:0 0 4pt}#vgImpressao h2{font-size:13pt;margin:14pt 0 4pt}#vgImpressao table{width:100%;border-collapse:collapse;font-size:10.5pt}#vgImpressao th,#vgImpressao td{border:1px solid #999;padding:3pt 6pt;text-align:left}#vgImpressao .vg-imp-nota{white-space:pre-line}}
 /* inscrições (Fase 9) */
 .in-prova{white-space:pre-line;background:#F8F3E6;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0;overflow-wrap:anywhere}
 /* e-mail (Fase 8) */
@@ -345,6 +366,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 
     <div class="aviso erro" id="auSelo" hidden role="status"><b>Automações pausadas (emergência).</b> Nenhuma sequência automática está enviando. Para religar, abra a aba Fluxos.</div>
     <div class="abas" id="abas" role="tablist">
+      <button class="aba" type="button" data-aba="visao" aria-selected="false">Visão geral</button>
       <button class="aba" type="button" data-aba="conversas" aria-selected="true">Conversas <span class="selo ouro" id="bdNaoLidas" hidden></span></button>
       <button class="aba" type="button" data-aba="funil" aria-selected="false">Funil</button>
       <button class="aba" type="button" data-aba="vendas" aria-selected="false">Vendas</button>
@@ -361,6 +383,69 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
     </div>
 
     <!-- ===== CONVERSAS ===== -->
+    <section data-painel="visao" hidden>
+      <div class="cartao">
+        <div class="empresa-titulo"><h2>Visão geral</h2>
+          <div class="acoes" style="margin:0"><select id="vgPeriodo" aria-label="Período da visão geral"><option value="mes" selected>Este mês</option><option value="hoje">Hoje</option><option value="7d">Últimos 7 dias</option><option value="30d">Últimos 30 dias</option><option value="mes_anterior">Mês anterior</option></select>
+          <button class="btn peq contorno" type="button" id="vgAtualizar">Atualizar</button></div></div>
+        <p class="vazio" id="vgQuando"></p>
+        <div class="aviso" id="vgErro" role="alert" hidden></div>
+        <p class="vazio" id="vgCarregando">Carregando os números...</p>
+        <div id="vgCorpo" hidden>
+          <h3 class="cp-tit">Precisa de você</h3>
+          <div class="vg-hoje" id="vgHoje"></div>
+          <h3 class="cp-tit">WhatsApp no período</h3>
+          <div class="vd-indic" id="vgCartoes"></div>
+          <p class="vazio" id="vgVazio" hidden>Nenhuma mensagem neste período. Os cartões mostram um travessão em vez de zero, para não enganar.</p>
+          <div class="vg-hoje" id="vgAlertas" style="margin-top:10px" hidden></div>
+          <div class="vd-blocos" style="margin-top:12px">
+            <div class="vd-bloco"><h3 class="cp-tit">Custo estimado do WhatsApp</h3><div id="vgCusto"></div></div>
+            <div class="vd-bloco"><h3 class="cp-tit">Limite das últimas 24 horas</h3><div id="vgLimite"></div><h3 class="cp-tit">Saídas da lista</h3><div id="vgSaidas"></div></div>
+          </div>
+          <h3 class="cp-tit">Disparos do período</h3>
+          <p class="vazio" id="vgDisparosVazio" hidden>Nenhum disparo neste período. Quando fizer o primeiro, os resultados aparecem aqui.</p>
+          <div class="vd-indic" id="vgDisparosResumo"></div>
+          <div id="vgDisparosTabela">
+            <div class="tabela-wrap" style="margin-top:10px"><table class="tabela"><thead><tr><th>Disparo</th><th>Enviados</th><th>Entregues</th><th>Lidos</th><th>Responderam</th><th>Saíram</th><th>Falhas</th><th>Custo estimado</th></tr></thead><tbody id="vgDisparos"></tbody></table></div>
+            <p class="vazio">Os números de cada disparo são os mesmos do painel dele na aba Disparos, e contam o disparo inteiro.</p>
+            <div id="vgMotivos"></div>
+          </div>
+          <div class="vd-blocos" style="margin-top:12px">
+            <div class="vd-bloco"><h3 class="cp-tit">Vendas do mês</h3><div id="vgVendas"></div></div>
+            <div class="vd-bloco"><h3 class="cp-tit">Funil</h3><div id="vgFunil"></div></div>
+            <div class="vd-bloco"><h3 class="cp-tit">Automações</h3><div id="vgAuto"></div></div>
+            <div class="vd-bloco"><h3 class="cp-tit">E-mail e inscrições</h3><div id="vgEmail"></div></div>
+          </div>
+          <h3 class="cp-tit">Dia a dia</h3>
+          <p class="vazio" id="vgGraficoVazio" hidden>Nenhuma mensagem neste período.</p>
+          <div id="vgGraficoCaixa">
+            <div class="vg-grafico" id="vgGrafico" role="img"></div>
+            <p class="vazio" id="vgGraficoLongo" hidden>Período longo demais para o gráfico. Veja os números na tabela.</p>
+            <p class="vg-legenda"><span><i class="vg-b env"></i> Enviadas (barra cheia)</span><span><i class="vg-b rec"></i> Recebidas (barra listrada)</span><span id="vgEixo"></span></p>
+            <details class="vg-det"><summary>Ver os números do gráfico em tabela</summary>
+              <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Dia</th><th>Enviadas</th><th>Recebidas</th><th>Custo estimado</th></tr></thead><tbody id="vgSerie"></tbody></table></div></details>
+          </div>
+          <div class="vd-bloco" style="margin-top:12px"><h3 class="cp-tit">Anotações de <span id="vgNotaMes"></span></h3>
+            <p class="vazio">Ficam guardadas por mês e saem no resumo impresso. Não escreva dados de pessoas aqui.</p>
+            <textarea id="vgNota" rows="3" maxlength="4000" aria-label="Anotações do mês"></textarea>
+            <div class="acoes"><button class="btn peq" type="button" id="vgNotaSalvar">Salvar anotação</button><button class="btn peq contorno" type="button" id="vgRelatorio">Gerar resumo para imprimir ou salvar em PDF</button><button class="btn peq contorno" type="button" id="vgExportar">Exportar planilha</button></div>
+          </div>
+          <details class="vg-det" id="vgAjustes"><summary>Ajustes da Visão geral</summary>
+            <p class="ajuda">Quando um disparo passa destes limites, aparece um alerta em "Precisa de você". Só vale para disparos com 20 envios ou mais.</p>
+            <div class="em-cfg">
+              <div><label for="vgASaida">Saídas da lista acima de (%)</label><input id="vgASaida" inputmode="decimal"></div>
+              <div><label for="vgABloqueio">Mensagens seguradas pelo Meta acima de (%)</label><input id="vgABloqueio" inputmode="decimal"></div>
+              <div><label for="vgAFalha">Falhas acima de (%)</label><input id="vgAFalha" inputmode="decimal"></div>
+              <div><label for="vgALimite">Avisar do limite diário a partir de (%)</label><input id="vgALimite" type="number" min="10" max="100"></div>
+              <div><label for="vgAJanela">Contar como resposta até quantos dias depois</label><input id="vgAJanela" type="number" min="1" max="14"></div>
+            </div>
+            <div class="acoes"><button class="btn peq" type="button" id="vgASalvar">Salvar limites</button></div>
+            <label class="wa-fn-chk"><input type="checkbox" id="vgInicial"> Abrir o CRM nesta aba (neste aparelho)</label>
+          </details>
+        </div>
+      </div>
+    </section>
+
     <section data-painel="conversas">
       <div class="wa-conv" id="cvGrade">
         <aside class="cartao">
@@ -1344,17 +1429,19 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
-<script src="js/whatsapp-tpl.js?v=20261120a"></script>
-<script src="js/whatsapp-lista.js?v=20261120a"></script>
-<script src="js/whatsapp-video.js?v=20261120a"></script>
-<script src="js/whatsapp-camp.js?v=20261120a"></script>
-<script src="js/whatsapp-funil.js?v=20261120a"></script>
-<script src="js/whatsapp-vendas.js?v=20261120a"></script>
-<script src="js/whatsapp-email.js?v=20261120a"></script>
-<script src="js/whatsapp-inscricao.js?v=20261120a"></script>
-<script src="js/whatsapp-auto.js?v=20261120a"></script>
-<script src="js/whatsapp.js?v=20261120a"></script>
-<script src="js/whatsapp-email-tela.js?v=20261120a"></script>
-<script src="js/whatsapp-inscricao-tela.js?v=20261120a"></script>
+<script src="js/whatsapp-tpl.js?v=20261120b"></script>
+<script src="js/whatsapp-lista.js?v=20261120b"></script>
+<script src="js/whatsapp-video.js?v=20261120b"></script>
+<script src="js/whatsapp-camp.js?v=20261120b"></script>
+<script src="js/whatsapp-funil.js?v=20261120b"></script>
+<script src="js/whatsapp-vendas.js?v=20261120b"></script>
+<script src="js/whatsapp-email.js?v=20261120b"></script>
+<script src="js/whatsapp-inscricao.js?v=20261120b"></script>
+<script src="js/whatsapp-visao.js?v=20261120b"></script>
+<script src="js/whatsapp-auto.js?v=20261120b"></script>
+<script src="js/whatsapp.js?v=20261120b"></script>
+<script src="js/whatsapp-email-tela.js?v=20261120b"></script>
+<script src="js/whatsapp-inscricao-tela.js?v=20261120b"></script>
+<script src="js/whatsapp-visao-tela.js?v=20261120b"></script>
 </body>
 </html>
