@@ -730,9 +730,10 @@ function dvVideoLigar(fig){
 }
 function dvVideosCapa(lista){
   try{
-    /* padrão: o vídeo do Teste de Travas aparece em toda página com o Travas; dados.videos = [] desliga, ['travas', ...] escolhe */
-    const dd = dvCad(), lig = dd && Array.isArray(dd.videos) ? dd.videos : ['travas'];
-    const ks = (lista || []).filter(k => lig.indexOf(k) > -1 && DV_VIDEOS[k]);
+    /* padrão: cada teste da página mostra o seu próprio vídeo, assim que esse vídeo existir (DV_VIDEOS).
+       dados.videos = [] desliga todos; ['travas', ...] escolhe quais aparecem. */
+    const dd = dvCad(), lig = dd && Array.isArray(dd.videos) ? dd.videos : null;
+    const ks = (lista || []).filter(k => (lig ? lig.indexOf(k) > -1 : true) && DV_VIDEOS[k]);
     if(!ks.length) return;
     const capa = document.getElementById('tela-capa'), lt = capa && capa.querySelector('.lado-texto');
     const sobra = [];
