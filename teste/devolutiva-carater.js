@@ -783,10 +783,26 @@ function dvCapaVendas(modo){
     travas:zap('quero fazer o Teste de Travas Mentais. Como recebo o meu código?'), tracos:zap('quero fazer o Teste de Traços de Caráter. Como recebo o meu código?'),
     mpcc:zap('quero fazer o MPCC, o Mapa de Perfil Comportamental e Competências. Como recebo o meu código?') };
   extras.forEach(k => { Z[k] = zap(EX[k].zap); });
+  /* quando a terapeuta vende o teste pela própria página (Stripe), os botões levam ao pagamento
+     em vez do WhatsApp, já com o teste (e o casal) escolhidos. Quem não vende continua no WhatsApp. */
+  const VD = (typeof window !== 'undefined' && window.__T && window.__T.dados && window.__T.dados.venda) || null;
+  const slugV = (typeof T_SLUG !== 'undefined' && T_SLUG) ? String(T_SLUG) : '';
+  const vendidos = (VD && Array.isArray(VD.testes) && VD.testes.length) ? VD.testes : ['travas'];
+  const vende = k => !!(VD && VD.ativo && slugV) && vendidos.indexOf(k) > -1 && lista.indexOf(k) > -1;
+  const pag = (k, emCasal) => '/teste-pago/?t=' + encodeURIComponent(slugV) + (k ? '&teste=' + encodeURIComponent(k) : '') + (emCasal ? '&casal=1' : '');
+  const vendeAlgum = lista.some(vende);
+  if (vendeAlgum) {
+    Z.ind = pag(lista.length === 1 && vende(lista[0]) ? lista[0] : '');
+    lista.forEach(k => { if (vende(k)) Z[k] = pag(k); });
+    if (vende('tracos')) Z.casal = pag('tracos', true);
+  }
   const ext = 'target="_blank" rel="noopener"';
-  const bt = (cls, href, tit, sub, icone) => `<a class="btn ${cls} cv-btn" href="${href}" ${ext}>${icone ? CV_ZAP_SVG : ''}<span class="duas">${tit}<small>${sub}</small></span></a>`;
-  const ctas = id => `<div class="cv-ctas" id="${id}">${bt('btn-primario', Z.ind, 'Quero fazer o meu teste', 'fale com ' + escV(comQuem) + ' e receba o seu código', true)}` +
-    (casal ? bt('btn-contorno', Z.casal, 'Quero fazer em casal', 'cada um no seu tempo, com o mesmo código') : bt('btn-contorno', Z.duvida, 'Tirar uma dúvida', 'pelo WhatsApp, sem compromisso')) + '</div>';
+  const interno = h => String(h || '').charAt(0) === '/';
+  const alvo = h => interno(h) ? '' : ext;
+  const sub = (h, padrao) => interno(h) ? 'pague e receba o seu código na hora' : padrao;
+  const bt = (cls, href, tit, s, icone) => `<a class="btn ${cls} cv-btn" href="${href}" ${alvo(href)}>${icone && !interno(href) ? CV_ZAP_SVG : ''}<span class="duas">${tit}<small>${s}</small></span></a>`;
+  const ctas = id => `<div class="cv-ctas" id="${id}">${bt('btn-primario', Z.ind, 'Quero fazer o meu teste', sub(Z.ind, 'fale com ' + escV(comQuem) + ' e receba o seu código'), true)}` +
+    (casal ? bt('btn-contorno', Z.casal, 'Quero fazer em casal', interno(Z.casal) ? 'pague uma vez; os dois usam o mesmo código' : 'cada um no seu tempo, com o mesmo código') : bt('btn-contorno', Z.duvida, 'Tirar uma dúvida', 'pelo WhatsApp, sem compromisso')) + '</div>';
 
   /* topo: promessa curta, provas rápidas e as chamadas; o código fica logo abaixo */
   const h1 = lt.querySelector('h1');
@@ -852,7 +868,7 @@ function dvCapaVendas(modo){
         <p class="cv-pergunta">O que está travando você hoje?</p>
         <p>Mapeia 10 travas mentais e mostra, em números, quais estão mais ativas em você agora: as que pesam no trabalho, nas relações e nas decisões.</p>
         <p class="cv-meta">Cerca de 7 minutos</p>
-        <a class="cv-link" href="${Z.travas}" ${ext}>Quero fazer este teste →</a>
+        <a class="cv-link" href="${Z.travas}" ${alvo(Z.travas)}>Quero fazer este teste →</a>
       </article>`,
     tracos:`<article class="cv-teste cv-teste-destaque">
         <span class="cv-tag">Individual ou em casal</span>
@@ -860,7 +876,7 @@ function dvCapaVendas(modo){
         <p class="cv-pergunta">Como a sua história moldou o seu jeito de ser?</p>
         <p>Identifica os 5 traços de caráter que se formaram na sua história e mostra, em porcentagem, como eles aparecem no seu dia a dia, junto com os talentos que cada um traz.</p>
         <p class="cv-meta">Individual ou casal · cerca de 7 minutos</p>
-        <a class="cv-link" href="${Z.tracos}" ${ext}>Quero fazer este teste →</a>
+        <a class="cv-link" href="${Z.tracos}" ${alvo(Z.tracos)}>Quero fazer este teste →</a>
       </article>`,
     mpcc:`<article class="cv-teste cv-teste-destaque">
         <span class="cv-tag">Individual · Mapa em 8 dimensões</span>
@@ -868,7 +884,7 @@ function dvCapaVendas(modo){
         <p class="cv-pergunta">Onde você já é forte e onde pode crescer?</p>
         <p>Mostra, em um gráfico radar, 8 dimensões do seu comportamento: iniciativa, comunicação, relacionamento, decisão, adaptação, organização, autoconfiança e equilíbrio emocional.</p>
         <p class="cv-meta">8 dimensões · cerca de 7 minutos</p>
-        <a class="cv-link" href="${Z.mpcc}" ${ext}>Quero fazer este teste →</a>
+        <a class="cv-link" href="${Z.mpcc}" ${alvo(Z.mpcc)}>Quero fazer este teste →</a>
       </article>`
   };
   extras.forEach(k => { const e = EX[k]; CARTOES[k] = `<article class="cv-teste">
@@ -877,7 +893,7 @@ function dvCapaVendas(modo){
         <p class="cv-pergunta">${escV(e.pergunta)}</p>
         <p>${escV(e.texto)}</p>
         <p class="cv-meta">${escV(e.meta)}</p>
-        <a class="cv-link" href="${Z[k]}" ${ext}>Quero fazer este teste →</a>
+        <a class="cv-link" href="${Z[k]}" ${alvo(Z[k])}>Quero fazer este teste →</a>
       </article>`; });
   if(comExtras){
     const listaTravas = (typeof TRAVAS !== 'undefined' && Array.isArray(TRAVAS)) ? TRAVAS : [];
@@ -907,7 +923,7 @@ function dvCapaVendas(modo){
       </div>
       ${e.itens && e.itens.length ? `<h3 class="cv-det-mapa">${escV(e.mapaTitulo || 'O que o teste mapeia')}</h3>
       <div class="cv-itens">${e.itens.map((t, j) => `<div class="cv-item"><span class="cv-item-n">${j + 1}</span><b>${escV(t.nome)}</b>${t.desc ? '<small>' + escV(t.desc) + '</small>' : ''}</div>`).join('')}</div>` : ''}
-      <div class="cv-det-cta">${bt('btn-primario', Z[k], 'Quero fazer este teste', 'fale com ' + escV(comQuem) + ' e receba o seu código', true)}</div>
+      <div class="cv-det-cta">${bt('btn-primario', Z[k], 'Quero fazer este teste', sub(Z[k], 'fale com ' + escV(comQuem) + ' e receba o seu código'), true)}</div>
     </div></section>`; };
     meio = `<section class="cv-faixa"><div class="cv-in cv-centro"><span class="cv-olho">Aqui você encontra ${NUM[lista.length] || lista.length} testes</span>
       <h2>${maius(NUM[lista.length] || String(lista.length))} olhares que mudam o jeito como você se enxerga</h2>
@@ -970,7 +986,7 @@ function dvCapaVendas(modo){
     <blockquote class="cv-citacao">“No fundo, um relacionamento é o encontro de duas histórias, e de duas armaduras. Quando você entende a sua e a do outro, para de lutar contra a pessoa e começa a entender o padrão que está ali. É aí que a mudança se torna possível.”</blockquote>
     <div class="cv-como-casal">
       <p><b>Como funciona:</b> cada um responde no próprio celular, quando puder, com o mesmo código (ou juntos, no mesmo aparelho). <b>Cada um recebe a sua devolutiva individual, e vocês recebem a devolutiva do casal</b>, com um acordo para os dois assinarem.</p>
-      ${bt('btn-argila', Z.casal, 'Quero fazer em casal', 'fale com ' + escV(comQuem) + ' pelo WhatsApp', true)}
+      ${bt('btn-argila', Z.casal, 'Quero fazer em casal', interno(Z.casal) ? 'pague uma vez; os dois usam o mesmo código' : 'fale com ' + escV(comQuem) + ' pelo WhatsApp', true)}
     </div>
   </div></section>`;
 
@@ -1081,7 +1097,7 @@ function dvCapaVendas(modo){
     ${faq.join('')}
   </div></section>
   </div>
-  <div class="cv-barra" id="cv-barra">${bt('btn-primario', Z.ind, 'Quero fazer o meu teste', 'receba o seu código pelo WhatsApp', true)}</div>`);
+  <div class="cv-barra" id="cv-barra">${bt('btn-primario', Z.ind, 'Quero fazer o meu teste', sub(Z.ind, 'receba o seu código pelo WhatsApp'), true)}</div>`);
 
   dvVideosCapa(lista);   // vídeos de apresentação de cada teste (só para quem tem dados.videos)
   /* barra fixa no celular: aparece depois do topo e some quando há outra chamada na tela */

@@ -129,6 +129,8 @@ body.tema-terapeuta .tp-lista li::before{color:var(--navy)}
   var FUNCAO = "https://gobjhepmnijoceirwgow.supabase.co/functions/v1/travas-venda";
   var $ = function (s) { return document.getElementById(s); };
   var q = new URLSearchParams(location.search), slug = (q.get("t") || "").replace(/[^a-z0-9.-]/gi, ""), token = (q.get("p") || "").replace(/[^0-9a-f-]/gi, "");
+  /* o botão da página da terapeuta já diz qual teste e se é em casal */
+  var preTeste = (q.get("teste") || "").replace(/[^a-z]/gi, ""), preCasal = q.get("casal") === "1";
   function mostrar(id) { ["eCompra", "eConf", "eOk", "eEspera", "eIndisp"].forEach(function (x) { $(x).hidden = x !== id; }); window.scrollTo(0, 0); }
   function chamar(corpo) { return fetch(FUNCAO, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) }).then(function (r) { return r.json(); }); }
   var reais = function (c) { return "R$ " + (c / 100).toFixed(2).replace(".", ","); };
@@ -224,6 +226,9 @@ body.tema-terapeuta .tp-lista li::before{color:var(--navy)}
     }
     if (INFO.testes.length === 1) $("cTitTeste").textContent = INFO.testes[0].nome;
     else $("cTitTeste").textContent = "Testes de autoconhecimento";
+    /* veio da página da terapeuta com o teste (e o casal) já escolhidos */
+    if (preTeste) { var rt = document.querySelector('input[name=teste][value="' + preTeste + '"]'); if (rt) rt.checked = true; }
+    if (preCasal) { var ta = testeAtual(); if (ta && ta.casal) { var rc = document.querySelector('input[name=modo][value="casal"]'); if (rc) rc.checked = true; } }
     atualizarForma();
     document.title = "Fazer o teste · " + (t.nome || "Ressignificar");
 
