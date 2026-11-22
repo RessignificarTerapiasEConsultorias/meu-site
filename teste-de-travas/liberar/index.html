@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Liberar o seu Teste de Travas Mentais · Ressignificar</title>
+<title>Liberar o seu acesso · Ressignificar</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0B1F3A">
 <link rel="icon" href="../../img/favicon.png">
@@ -28,16 +28,11 @@
 <header class="topo"><div class="w"><a class="marca" href="../../" aria-label="Ressignificar"><img src="../../img/logo.png" alt="" width="36" height="36"><span><b>Ressignificar</b><small>Terapias &amp; Consultorias</small></span></a></div></header>
 <main class="lb-w">
   <section class="lb-card" id="eForm" hidden>
-    <h1>Libere o seu Teste de Travas Mentais</h1>
-    <p class="lead" style="margin:0">Preencha os seus dados para liberar o acesso. Em seguida você monta a sua página, com o seu nome, a sua foto e as suas cores, em cerca de 2 minutos.</p>
+    <h1 id="lbTitulo">Libere o seu acesso</h1>
+    <p class="lead" style="margin:0">Preencha os seus dados para liberar o acesso. <b>Nada é cobrado aqui.</b> Em seguida você monta a sua página, com o seu nome, a sua foto e as suas cores, em cerca de 2 minutos.</p>
     <div class="lb-caixa" id="caixa">
-      <b>O que está combinado</b>
-      <ul>
-        <li>Acesso <b>vitalício</b>: você paga uma vez só, sem renovação.</li>
-        <li>Valor total: <b id="vTotal"></b>.</li>
-        <li>Você já pagou <b id="vEntrada"></b> na liberação.</li>
-        <li>O restante, <b id="vResto"></b>, será pago em <b id="vData"></b>.</li>
-      </ul>
+      <b id="cTit">O que está combinado</b>
+      <ul id="cLista"></ul>
     </div>
     <form id="fDados" novalidate>
       <div class="campo"><label for="dNome">Nome completo</label><input type="text" id="dNome" autocomplete="name" maxlength="80" required></div>
@@ -71,8 +66,29 @@
   chamar({ acao: "convite_info", token: token }).then(function (j) {
     if (!j || !j.ok) { mostrar("eInvalido"); return; }
     if (j.preenchido) { seguir(); return; }   // já preencheu antes: continua de onde parou
-    $("vTotal").textContent = reais(j.total_centavos); $("vEntrada").textContent = reais(j.entrada_centavos);
-    $("vResto").textContent = reais(j.resto_centavos); $("vData").textContent = dataBR(j.resto_data);
+    var NOMES = { travas: "Teste de Travas Mentais", disc: "Análise Comportamental DISC", tracos: "Teste de Traços de Caráter",
+                  mpcc: "MPCC · Mapa de Perfil Comportamental e Competências", ansiedade: "Teste de Ansiedade" };
+    var testes = (j.testes && j.testes.length ? j.testes : ["travas"]).map(function (k) { return NOMES[k] || k; });
+    var itens = [];
+    if (testes.length > 1) {
+      $("lbTitulo").textContent = "Libere os seus testes";
+      itens.push("Você recebe <b>" + testes.length + " testes</b>: " + testes.join(" e ") + ".");
+    } else {
+      $("lbTitulo").textContent = "Libere o seu " + testes[0];
+      itens.push("Você recebe o <b>" + testes[0] + "</b>.");
+    }
+    itens.push("Acesso <b>vitalício</b>: você paga uma vez só, sem renovação.");
+    if (j.quitado) {
+      $("cTit").textContent = "Já está pago";
+      itens.push("Valor total: <b>" + reais(j.total_centavos) + "</b>, <b>já pago</b>" + (j.forma === "pix" ? " no Pix" : "") + ".");
+      itens.push("<b>Não há nada a pagar nesta página.</b> É só preencher os seus dados.");
+    } else {
+      itens.push("Valor total: <b>" + reais(j.total_centavos) + "</b>.");
+      itens.push("Você já pagou <b>" + reais(j.entrada_centavos) + "</b> na liberação.");
+      itens.push("O restante, <b>" + reais(j.resto_centavos) + "</b>, será pago em <b>" + dataBR(j.resto_data) + "</b>.");
+    }
+    $("cLista").innerHTML = itens.map(function (t) { return "<li>" + t + "</li>"; }).join("");
+    $("dBtn").textContent = testes.length > 1 ? "Liberar os meus testes" : "Liberar o meu teste";
     mostrar("eForm");
   }).catch(function () { mostrar("eInvalido"); });
 
