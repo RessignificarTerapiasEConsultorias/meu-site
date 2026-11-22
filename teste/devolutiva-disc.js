@@ -69,7 +69,15 @@ async function dcImprimir(r){
   setTimeout(() => { window.print(); setTimeout(() => { if(document.getElementById('dc-impressao')) fim(); }, 1500); }, 250);
 }
 /* baixa o relatório direto como arquivo PDF (sem abrir a janela de impressão); se não der, abre a impressão */
-function dcCarregarLib(src){ return new Promise((ok, falha) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => falha(new Error('lib')); document.head.appendChild(s); }); }
+function dcCarregarLib(src, ms){ return new Promise((ok, falha) => {
+  const s = document.createElement('script'); s.src = src;
+  const t = setTimeout(() => falha(new Error('demorou')), ms || 15000);     // sem isto, uma conexão lenta deixa o botão preso para sempre
+  s.onload = () => { clearTimeout(t); ok(); };
+  s.onerror = () => { clearTimeout(t); falha(new Error('lib')); };
+  document.head.appendChild(s);
+}); }
+/* nenhuma espera pode ser eterna: passou do prazo, seguimos (ou caímos na impressão) */
+function dcPrazo(promessa, ms, motivo){ return Promise.race([promessa, new Promise((_, f) => setTimeout(() => f(new Error(motivo || 'demorou')), ms))]); }
 async function dcBaixarPDF(r, botao){
   const rotulo = botao ? botao.innerHTML : '';
   if(botao){ botao.disabled = true; botao.innerHTML = '<span class="duas">Gerando o PDF...<small>só um instante</small></span>'; }
@@ -77,13 +85,14 @@ async function dcBaixarPDF(r, botao){
   try{
     if(!window.html2canvas) await dcCarregarLib('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
     if(!(window.jspdf && window.jspdf.jsPDF)) await dcCarregarLib('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-    let img = {}; try{ img = await DISC.imagens(r.calc); }catch(e){}
+    let img = {}; try{ img = await dcPrazo(DISC.imagens(r.calc), 15000, 'graficos'); }catch(e){ console.log('graficos do PDF', e); }
     caixa = document.createElement('div'); caixa.id = 'dc-pdf-box'; caixa.innerHTML = dcHtmlRelatorio(r, img); document.body.appendChild(caixa);
-    await Promise.all([...caixa.querySelectorAll('img')].map(i => i.complete ? 1 : new Promise(ok => { i.onload = i.onerror = ok; })));
+    /* imagem que não carrega nem dá erro travava tudo: espera no máximo 8 segundos e segue */
+    await dcPrazo(Promise.all([...caixa.querySelectorAll('img')].map(i => i.complete ? 1 : new Promise(ok => { i.onload = i.onerror = ok; }))), 8000).catch(() => {});
     const pdf = new window.jspdf.jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
     const L = 210, A = 297; let primeira = true;
     for(const pag of caixa.querySelectorAll('.dc-pag')){
-      const cv = await window.html2canvas(pag, { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false });
+      const cv = await dcPrazo(window.html2canvas(pag, { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false }), 25000, 'html2canvas');
       const altura = cv.height * L / cv.width;
       for(let y = 0; y < altura - 0.5; y += A){
         const fatia = document.createElement('canvas'); fatia.width = cv.width; fatia.height = Math.min(cv.height - Math.round(y * cv.width / L), Math.round(A * cv.width / L));
