@@ -264,7 +264,7 @@
       if (tituloT) {
         const nomesT = [temTravasPg ? "Travas Mentais" : "", temTracosPg ? "Traços de Caráter" : "", temMpccPg ? "MPCC" : "", temDiscPg ? "DISC" : ""].filter(Boolean);
         tituloT.textContent = nomesT.length > 1 ? "Seus testes: " + nomesT.slice(0, -1).join(", ") + " e " + nomesT[nomesT.length - 1]
-          : temTravasPg ? "Seu Teste de Travas Mentais" : temMpccPg ? "Seu MPCC · Mapa de Perfil Comportamental e Competências" : "Seu Teste de Traços de Caráter";
+          : temTravasPg ? "Seu Teste de Travas Mentais" : temMpccPg ? "Seu MPCC · Mapa de Perfil Comportamental e Competências" : temDiscPg ? "Sua Análise Comportamental DISC" : "Seu Teste de Traços de Caráter";
       }
       const linkTeste = "https://ressignificarterapiaseconsultorias.com/teste/?t=" + encodeURIComponent(rpg.data.slug);
       document.getElementById("travasLink").value = linkTeste;
