@@ -3411,6 +3411,11 @@
     $("vdLista").innerHTML = lista.length ? lista.map(function (p) {
       const pessoa = p.contato_nome || p.nome || "(sem nome)";
       const valor = p.status === "ativado" || p.status === "pago" || p.status === "ativando" ? (p.valor_pago_centavos || p.valor_centavos) : p.valor_centavos;
+      if (p.origem === "financeiro") {
+        return "<tr><td><b>" + esc(pessoa) + '</b><br><small class="vazio">lançada no financeiro</small></td>'
+          + "<td>" + esc(p.produto) + "</td><td>" + esc(vdReais(p.valor_centavos)) + "</td><td>" + esc(WV.rotuloForma(p.forma)) + "</td>"
+          + "<td>Pago</td><td>" + esc(String(p.criado_em || "").slice(0, 10).split("-").reverse().slice(0, 2).join("/")) + '</td><td><small class="vazio" title="' + esc(p.descricao || "") + '">' + esc(p.descricao || "") + "</small></td></tr>";
+      }
       const bt = (p.contato_id ? '<button class="btn peq" type="button" data-vd-conversa="' + esc(p.id) + '">Conversa</button>' : '<button class="btn peq contorno" type="button" data-vd-criar="' + esc(p.id) + '">Criar contato</button>');
       return "<tr><td><b>" + esc(pessoa) + "</b>" + (p.contato_id ? "" : '<br><small class="vd-aviso">sem contato no CRM</small>') + "</td>"
         + "<td>" + esc(p.produto) + "</td><td>" + esc(vdReais(valor)) + "</td><td>" + esc(WV.rotuloForma(p.forma)) + "</td>"
