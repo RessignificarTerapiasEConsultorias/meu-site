@@ -64,10 +64,19 @@
   renderPainelGeral($("painelGeral"), eu.id);
 
   // plano de ação (ações da meta geral deste mês + sugestões do sistema)
-  const [rm, ra] = await Promise.all([
-    supa().from("metas_receita").select("valor_meta").eq("perfil_id", eu.id).is("empresa_id", null).eq("mes_referencia", mesIni).maybeSingle(),
-    supa().from("acoes_meta").select("id,acao,problema,prazo,status,dono").eq("perfil_id", eu.id).is("empresa_id", null).eq("mes_referencia", mesIni).order("criado_em")
-  ]);
+  /* A meta é cadastrada no Fluxo 30 dias da empresa pessoal, então ela fica gravada com o empresa_id dela.
+     Procuramos primeiro ali; só se não houver é que caímos na meta antiga, gravada sem empresa. */
+  const metaDe = function (emp) {
+    const q = supa().from("metas_receita").select("valor_meta").eq("perfil_id", eu.id).eq("mes_referencia", mesIni);
+    return (emp ? q.eq("empresa_id", emp) : q.is("empresa_id", null)).maybeSingle();
+  };
+  const acoesDe = function (emp) {
+    const q = supa().from("acoes_meta").select("id,acao,problema,prazo,status,dono").eq("perfil_id", eu.id).eq("mes_referencia", mesIni);
+    return (emp ? q.eq("empresa_id", emp) : q.is("empresa_id", null)).order("criado_em");
+  };
+  let [rm, ra] = await Promise.all([metaDe(empPessoal), acoesDe(empPessoal)]);
+  if (empPessoal && !(rm.data && rm.data.valor_meta)) rm = await metaDe(null);
+  if (empPessoal && !(ra.data && ra.data.length)) ra = await acoesDe(null);
   const acoes = ra.data || [], planoBox = $("planoBox"); planoBox.innerHTML = "";
   const lista = document.createElement("ul"); lista.className = "res-lista";
   const rot = { a_fazer: ["A fazer", "selo"], em_andamento: ["Em andamento", "selo pendente"], concluida: ["Concluída", "selo ok"], atrasada: ["Atrasada", "selo off"] };
