@@ -6,7 +6,7 @@
    a seta se acerta sozinha. Nunca lê a senha (só conta quantos caracteres foram digitados).
 
    Vale para TODAS as terapeutas cuja página oferece o Teste de Travas, o de Traços de Caráter
-   ou o de Ansiedade. Não aparece nos outros testes (MPCC, DISC, Travas em Família).
+   ou o de Ansiedade. Não aparece nos outros testes (MPCC, DISC, Raízes em Família).
    Na capa o botão só aparece na página inicial (sem código no endereço): quem chega por código individual não vê nada.
    Links com &guia=paciente (campanha do Travas ou links enviados pelo robô, de qualquer um dos 3 testes):
    quem entra por eles recebe a orientação do paciente automaticamente, já na primeira tela do teste,
@@ -23,7 +23,7 @@
   var SLUG = (Q.get('t') || '').toLowerCase();
   var COM_FLAG = Q.get('guia') === '1';
   var SO_PACIENTE = Q.get('guia') === 'paciente' && !COM_FLAG;          // link de campanha ou do robô: só o roteiro do paciente
-  /* MPCC, DISC e Travas em Família usam os mesmos arquivos (o endereço traz mp, dc ou f): lá não há orientação */
+  /* MPCC, DISC e Raízes em Família usam os mesmos arquivos (o endereço traz mp, dc ou f): lá não há orientação */
   if (['mp', 'dc', 'f'].some(function (k) { return Q.get(k); })) return;
   var COM_CODIGO = !!(Q.get('c') || Q.get('codigo') || Q.get('code') || Q.get('ct') || Q.get('an'));
 

@@ -18,12 +18,12 @@ const AN = {
        'Dificuldade para relaxar', 'Ficar tão agitado(a) que se torna difícil permanecer sentado(a)', 'Ficar facilmente aborrecido(a) ou irritado(a)', 'Sentir medo como se algo horrível fosse acontecer'],
   GAD_OP:['Nenhuma vez', 'Vários dias', 'Mais da metade dos dias', 'Quase todos os dias'],
   CLASSE:{
-    minima:{ rot:'Ansiedade mínima', cor:'#3F8A62', faixa:'0 a 4', txt:'Os sinais de ansiedade das últimas 2 semanas estão baixos. É um bom momento para cuidar do que já está funcionando.' },
-    leve:{ rot:'Ansiedade leve', cor:'#B8901F', faixa:'5 a 9', txt:'Há sinais de ansiedade que merecem atenção. Cuidar agora evita que eles cresçam e passem a comandar o seu dia a dia.' },
-    moderada:{ rot:'Ansiedade moderada', cor:'#C9702F', faixa:'10 a 14', txt:'A ansiedade já está interferindo na sua rotina, no seu corpo ou no seu sono. Um acompanhamento faz muita diferença nesse ponto.' },
-    grave:{ rot:'Ansiedade grave', cor:'#B5432E', faixa:'15 a 21', txt:'A ansiedade está muito presente na sua vida. Converse com quem te atende o quanto antes e, se precisar, procure também um médico ou psicólogo.' }
+    minima:{ rot:'Poucos sinais no momento', cor:'#3F8A62', faixa:'0 a 4', txt:'Os sinais de ansiedade das últimas 2 semanas estão baixos. É um bom momento para cuidar do que já está funcionando.' },
+    leve:{ rot:'Alguns sinais de atenção', cor:'#B8901F', faixa:'5 a 9', txt:'Há sinais de ansiedade que merecem atenção. Cuidar agora evita que eles cresçam e passem a comandar o seu dia a dia.' },
+    moderada:{ rot:'Sinais que pedem cuidado', cor:'#C9702F', faixa:'10 a 14', txt:'A ansiedade já está interferindo na sua rotina, no seu corpo ou no seu sono. Um acompanhamento faz muita diferença nesse ponto.' },
+    grave:{ rot:'Muitos sinais: cuide disso agora', cor:'#B5432E', faixa:'15 a 21', txt:'A ansiedade está muito presente na sua vida. Converse com quem te atende o quanto antes e, se precisar, procure também um médico ou psicólogo.' }
   },
-  NIVEL:{ baixo:{ rot:'Baixo', cor:'#5E9E7A' }, moderado:{ rot:'Moderado', cor:'#D9A93A' }, alto:{ rot:'Alto', cor:'#C8553D' } },
+  NIVEL:{ baixo:{ rot:'Tranquilo', cor:'#5E9E7A' }, moderado:{ rot:'Atenção', cor:'#D9A93A' }, alto:{ rot:'Prioridade', cor:'#C8553D' } },
   AREAS:[
     { k:'intensidade', nome:'Intensidade e controle', curto:'Intensidade',
       itens:[['Como está o seu nível de ansiedade hoje?', 'Muito calmo(a)', 'Muito ansioso(a)'],
@@ -138,7 +138,7 @@ function anSecoes(calc, hist){
       <div class="an-gadtxt"><h3>${cl.rot}</h3><p style="margin:0">${escV(cl.txt)}</p>
       ${ant ? `<p style="margin:6px 0 0;font-size:14px">Na aplicação anterior: <b>${ant.gad_total}</b> ${anSeta(calc.gad_total - ant.gad_total, 'pontos')}</p>` : ''}</div></div>
     <div class="an-faixa"><i></i><i></i><i></i><i></i><span class="an-marca" style="left:${marca}%"></span></div>
-    <div class="an-faixa-rot"><span>Mínima 0-4</span><span>Leve 5-9</span><span>Moderada 10-14</span><span>Grave 15-21</span></div>
+    <div class="an-faixa-rot"><span>Poucos 0-4</span><span>Alguns 5-9</span><span>Pedem cuidado 10-14</span><span>Muitos 15-21</span></div>
     <p class="an-nota-peq">GAD-7: escala de ansiedade validada no Brasil, sobre as últimas 2 semanas.</p>`;
   const mapa = `<h2>As 6 áreas da sua ansiedade</h2>
     <p style="margin:0 0 8px">Índice geral: <b style="font-size:20px">${calc.geral}</b> de 100 <span class="an-nivel ${anNivel(calc.geral)}">${AN.NIVEL[anNivel(calc.geral)].rot}</span>${ant ? ' · antes: ' + ant.geral + ' ' + anSeta(calc.geral - ant.geral) : ''}</p>

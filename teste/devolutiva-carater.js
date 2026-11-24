@@ -33,6 +33,31 @@ window.TX_INC = function(el, i, total, chave){
    (travas_paginas.dados: nome_curto e assinatura, ou nome e título). */
 const DV_TERAPEUTA_PADRAO = 'Tati Barbosa';
 const DV_ASSINATURA_PADRAO = 'Tati Barbosa — Análise Corporal & Terapeuta';
+/* "Isto não é um diagnóstico": os nomes dos traços (Esquizoide, Oral, Psicopata, Masoquista, Rígido) são do modelo de
+   caráter de Reich e Lowen e continuam; o que muda é a explicação, em destaque, para o cliente e para a terapeuta. */
+const TC_PROTECAO = { esquizoide:'Proteção pelo recolhimento', oral:'Proteção pela conexão', psicopata:'Proteção pelo controle', masoquista:'Proteção pela contenção', rigido:'Proteção pela busca de reconhecimento e excelência' };
+const TC_SIGNIFICA = {
+  esquizoide:'Aqui, Esquizoide descreve quem se protege indo para dentro: mais reservado(a), mais no pensamento, com muita criatividade. Não tem relação com esquizofrenia nem com nenhum transtorno.',
+  oral:'Aqui, Oral descreve quem se protege buscando vínculo e afeto: mais comunicativo(a), sensível e ligado(a) às pessoas.',
+  psicopata:'Aqui, Psicopata descreve quem se protege pelo controle: uma pessoa mais ativa, que toma a frente, lidera e negocia. Não quer dizer que a pessoa seja psicopata: não tem relação com psicopatia nem com nenhum transtorno.',
+  masoquista:'Aqui, Masoquista descreve quem se protege contendo e sustentando: aguenta firme, é leal, carrega muito e guarda o que sente. Não tem relação com gostar de sofrer nem com nenhum transtorno.',
+  rigido:'Aqui, Rígido descreve quem se protege pela busca de excelência e de reconhecimento: focado(a), exigente e muito executor(a).'
+};
+const TC_EQUILIBRIO = 'Todo mundo tem um pouco de cada um dos 5 traços. É como o quente e o frio, o seco e o molhado: ninguém vive só de um lado, e a saúde está no equilíbrio. Os percentuais mostram quanto de cada jeito de se proteger aparece hoje, e não quem a pessoa é.';
+function tcAlertaHtml(terapeuta){
+  return terapeuta
+    ? '<div class="tc-alerta" role="note"><b class="tc-alerta-tit">⚠️ Atenção, terapeuta: isto não é um diagnóstico</b><p>Os nomes dos traços (Esquizoide, Oral, Psicopata, Masoquista e Rígido) descrevem estruturas de caráter do modelo de Reich e Lowen, e não transtornos. Antes de mostrar o resultado, explique ao cliente o que cada nome quer dizer e que todo mundo tem um pouco de cada traço.</p><p>Não use este resultado como diagnóstico, laudo ou avaliação psicológica. Diagnóstico clínico só pode ser feito por um médico ou por um psicólogo (como o neuropsicólogo): se perceber sofrimento importante, encaminhe.</p></div>'
+    : '<div class="tc-alerta" role="note"><b class="tc-alerta-tit">⚠️ Isto não é um diagnóstico</b><p>Este resultado mostra traços de caráter: jeitos de se proteger que todo mundo tem, em proporções diferentes. Nenhum nome aqui, nem Psicopata, Esquizoide ou Masoquista, quer dizer doença, transtorno ou diagnóstico.</p><p>' + escV(TC_EQUILIBRIO) + '</p><p><b>Ficou com alguma dúvida? Peça ao seu terapeuta para explicar cada ponto.</b> Diagnóstico clínico só pode ser feito por um médico ou por um psicólogo (como o neuropsicólogo).</p></div>';
+}
+(function tcAlertaEstilo(){
+  if(typeof document === 'undefined' || document.getElementById('tc-alerta-css')) return;
+  const st = document.createElement('style'); st.id = 'tc-alerta-css';
+  st.textContent = '.tc-alerta{position:relative;margin:0 0 22px;padding:18px 20px 16px;border-radius:16px;border:2px solid #E2483A;background:linear-gradient(180deg,#FFF3F1,#FFE3DE);color:#5A1C14;font-size:15.5px;line-height:1.5;box-shadow:0 2px 0 #B5321F,0 8px 22px -6px rgba(226,72,58,.55),inset 0 1px 0 rgba(255,255,255,.8);transform:translateZ(0);animation:tcPulso 2.2s ease-in-out infinite}'
+    + '.tc-alerta-tit{display:block;font-size:18px;color:#B5321F;margin-bottom:6px;letter-spacing:.2px}.tc-alerta p{margin:6px 0 0}'
+    + '@keyframes tcPulso{0%,100%{box-shadow:0 2px 0 #B5321F,0 8px 22px -6px rgba(226,72,58,.55),inset 0 1px 0 rgba(255,255,255,.8)}50%{box-shadow:0 2px 0 #B5321F,0 10px 34px 0 rgba(226,72,58,.85),inset 0 1px 0 rgba(255,255,255,.8)}}'
+    + '@media (prefers-reduced-motion:reduce){.tc-alerta{animation:none}}@media print{.tc-alerta{animation:none;box-shadow:none}}';
+  document.head.appendChild(st);
+})();
 function dvCad(){ return (window.__T && window.__T.dados) || null; }
 function dvTerapeuta(){ const d = dvCad(); return d ? (d.nome_curto || d.nome) : DV_TERAPEUTA_PADRAO; }
 function dvAssinatura(){ const d = dvCad(); return d ? (d.assinatura || (d.nome + (d.titulo ? ' — ' + d.titulo : ''))) : DV_ASSINATURA_PADRAO; }
@@ -265,17 +290,19 @@ function dvData(iso){ const s = String(iso || '').slice(0, 10); const p = s.spli
 function dvQuerido(g){ return g === 'f' ? 'Querida' : g === 'm' ? 'Querido' : 'Querido(a)'; }
 function dvAcao(n, a, V){
   return `<div class="dv-acao"><h4>${n}. ${V(a.t)}</h4>
-    <p><b>Diagnóstico (por quê):</b> ${V(a.p)}</p><p><b>Passo a passo (como fazer):</b> ${V(a.c)}</p><p><b>Ganho direto:</b> ${V(a.g)}</p></div>`;
+    <p><b>Por que isso acontece:</b> ${V(a.p)}</p><p><b>Passo a passo (como fazer):</b> ${V(a.c)}</p><p><b>Ganho direto:</b> ${V(a.g)}</p></div>`;
 }
 function dvPico(id, pct, pos, V, nomeQuem){
   const t = tcTraco(id), d = DV[id];
   return `<div class="dv-pico"><div class="dv-pico-topo"><b>${nomeQuem ? escV(nomeQuem) + ' · ' : ''}${pos === 1 ? 'PICO PRIMÁRIO' : 'PICO SECUNDÁRIO'}: ${escV(t.nome).toUpperCase()} (${tcPct(pct)})</b><span>${escV(d.tag)}</span></div>
+    <p><b>${escV(TC_PROTECAO[id] || '')}.</b> ${escV(TC_SIGNIFICA[id] || '')}</p>
     <p><b>A dor central:</b> ${V(t.dor)}</p><p><b>Formação na infância:</b> ${V(d.formacao)}</p>
     <p><b>No dia a dia:</b> ${V(t.dia)}</p><p><b>Virada de chave:</b> ${V(t.virada)}</p></div>`;
 }
 function dvAlinhamento(prim){
   return `<div class="dv-caixa"><h3>O que são traços de caráter? (alinhamento inicial)</h3>
     <p>${prim ? escV(prim) + ', antes' : 'Antes'} de apresentar o resultado e os percentuais, quero fazer um alinhamento muito importante. Os nomes dos traços de caráter que usamos aqui (<i>Esquizoide, Oral, Psicopata, Masoquista e Rígido</i>) foram criados no século passado pelos cientistas e médicos da psicanálise que mapearam a relação entre a mente e o corpo. <b>Eles não têm qualquer relação com doenças mentais, diagnósticos psiquiátricos ou desvios de conduta.</b> Na nossa terapia, encare cada um desses nomes como estilos de funcionamento do sistema nervoso.</p>
+    <p>${escV(TC_EQUILIBRIO)}</p>
     <p>Outro ponto fundamental: quando falarmos da infância, lembre-se de que estamos lidando com a <b>percepção do sistema nervoso quando bebê ou criança</b>, e não com a intenção dos pais. Eles deram o melhor que podiam com os recursos que tinham. O nosso foco aqui não é julgar o passado, mas libertar o presente.</p>
     <p>Os traços de caráter são mapas de como a mente e o corpo se moldaram para responder às experiências da infância. Eles não representam defeitos, mas sim mecanismos de defesa inteligentes que geraram os maiores talentos de cada pessoa. Compreender o perfil é o primeiro passo para relaxar a "armadura" e viver com mais leveza, equilíbrio e autenticidade.</p></div>`;
 }
@@ -308,7 +335,8 @@ function dvLeituraClinica(resps, nome, calc){
 
 /* ---------------------------------------------------------------------------- */
 /* DEVOLUTIVA INDIVIDUAL. o = { nome, genero, data, calc, respostas, terapeuta:true|false } */
-function dvIndividual(o){
+function dvIndividual(o){ return _dvIndividual(o).replace(/(<article[^>]*>)/, '$1' + tcAlertaHtml(!!(o && o.terapeuta))); }
+function _dvIndividual(o){
   const g = o.genero, prim = tcPrim(o.nome), c = o.calc, ord = c.ordem, p1 = ord[0], p2 = ord[1];
   const d1 = DV[p1.id], d2 = DV[p2.id], par = DV_PARES[dvPar(p1.id, p2.id)];
   const vars = { P1:p1.nome, P2:p2.nome, nome:prim };
@@ -352,7 +380,8 @@ function dvIndividual(o){
 }
 
 /* DEVOLUTIVA DE CASAL. o = { a:{nome,genero,calc,respostas}, b:{...}, k, data, terapeuta } */
-function dvCasal(o){
+function dvCasal(o){ return _dvCasal(o).replace(/(<article[^>]*>)/, '$1' + tcAlertaHtml(!!(o && o.terapeuta))); }
+function _dvCasal(o){
   const A = o.a, B = o.b, k = o.k, nA = tcPrim(A.nome), nB = tcPrim(B.nome);
   const pa = A.calc.ordem[0], pb = B.calc.ordem[0], da = DV[pa.id], db = DV[pb.id], ca = da.casal, cb = db.casal;
   const VA = s => escV(dvGen(dvT(s, { outro:nB, nome:nA }), A.genero));
@@ -378,13 +407,13 @@ function dvCasal(o){
   const dif = `<p><b>Onde vocês mais se diferenciam:</b> ${k.diferencas.map(l => `${escV(l.nome)} (${escV(nA)} ${tcPct(l.p1)}, ${escV(nB)} ${tcPct(l.p2)})`).join('; ')}.</p>`;
   return `<article class="dv dv-casal" data-dv>
   <header class="dv-topo">
-    <div><span class="dv-olho">Relatório de avaliação &amp; diagnóstico sistemático</span><h1>Devolutiva Terapêutica de Casal</h1></div>
+    <div><span class="dv-olho">Mapa do casal</span><h1>Devolutiva Terapêutica de Casal</h1></div>
     <dl><dt>Casal:</dt><dd>${escV(A.nome)} &amp; ${escV(B.nome)}</dd><dt>Data:</dt><dd>${escV(dvData(o.data))} · Terapeuta: ${escV(dvTerapeuta())}</dd>
       <dt>Modalidade:</dt><dd>Terapia Sistêmica de Casal</dd><dt>Metodologia:</dt><dd>${escV(TC_NOME)} (40 perguntas, cada um)</dd></dl>
   </header>
   <h2 class="dv-h2">1. Panorama geral e propósito da devolutiva</h2>
   <p>Esta devolutiva terapêutica sintetiza o mapeamento dos traços de caráter de <b>${escV(A.nome)}</b> e <b>${escV(B.nome)}</b>, a partir do ${escV(TC_NOME)} respondido por cada um. O objetivo central é oferecer uma leitura clara e objetiva sobre a estrutura do relacionamento, identificando as dinâmicas inconscientes que sustentam os conflitos, as dores individuais refletidas no vínculo e as fortalezas que o casal possui para reestruturar a convivência com mais sabedoria, empatia e cumplicidade.</p>
-  <div class="dv-destaque"><h3>Síntese do diagnóstico relacional</h3><p>${sintese}</p></div>
+  <div class="dv-destaque"><h3>Síntese da relação</h3><p>${sintese}</p></div>
   <h2 class="dv-h2">2. Os traços de caráter</h2>
   ${dvAlinhamento('')}
   <div class="dv-tabela"><table><thead><tr><th>Traço</th><th>A dor central</th><th>O recurso que ele traz</th></tr></thead><tbody>
@@ -416,7 +445,7 @@ function dvCasal(o){
   </tbody></table></div>
   <h2 class="dv-h2">7. Plano de direcionamento terapêutico de casal</h2>
   <p>Para os próximos meses do processo terapêutico, o plano de trabalho estará focado na consolidação de novos hábitos relacionais e no fortalecimento da segurança emocional do casal. Estabelecemos três pilares prioritários:</p>
-  <div class="dv-caixa"><h3>Pilares do tratamento terapêutico</h3><ol>
+  <div class="dv-caixa"><h3>Pilares do acompanhamento</h3><ol>
     <li><b>Construção do "Lugar Seguro":</b> desenvolver um espaço em que ${escV(nA)} possa ${VA(ca.necessidadeCurta)} e ${escV(nB)} possa ${VB(cb.necessidadeCurta)}, sem receio de retaliação, julgamento ou invalidação.</li>
     <li><b>Desmontagem dos gatilhos de defesa:</b> treinar o reconhecimento precoce dos sinais físicos e emocionais do estresse (em ${escV(nA)}, ${VA(ca.gatilhoCurto)}; em ${escV(nB)}, ${VB(cb.gatilhoCurto)}) para interromper o ciclo de reação automática.</li>
     <li><b>Reconstrução da cumplicidade:</b> cultivar o interesse genuíno pelo mundo interno do outro, valorizando ${VA(ca.forca)} de ${escV(nA)} e ${VB(cb.forca)} de ${escV(nB)}.</li>

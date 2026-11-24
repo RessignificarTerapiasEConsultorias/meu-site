@@ -10,7 +10,7 @@
    3. LAUDO      DISC.laudo(fator) -> { resumo, areas, lideranca, ... }
    4. GRÁFICOS   DISC.graficos(caixa, calc) -> 3 gráficos de barras com a linha de 50% + radar (Chart.js)
 
-   Ferramenta de análise comportamental para o ambiente corporativo (seleção, desenvolvimento de equipes,
+   Ferramenta de análise comportamental para o ambiente corporativo (desenvolvimento de equipes,
    liderança e vendas). NÃO é instrumento terapêutico, teste psicológico nem diagnóstico.
 
    Formato de uma resposta (um item por bloco, na ordem dos blocos):
