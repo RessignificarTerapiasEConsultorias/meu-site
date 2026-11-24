@@ -18,8 +18,10 @@
 
   /* ---------- utilidades ---------- */
   async function ler(p) { const r = await p; if (r.error) throw r.error; return r.data; }
-  async function wa(corpo) {
-    const { data, error } = await supa().functions.invoke("whatsapp", { body: corpo });
+  /* o carrossel é criado pela versão nova da função, em teste; quando ela substituir a principal, isto volta a ser "whatsapp" */
+  const WA_FN_CARROSSEL = "whatsapp-teste";
+  async function wa(corpo, fn) {
+    const { data, error } = await supa().functions.invoke(fn || "whatsapp", { body: corpo });
     if (error) {
       let msg = "Não foi possível falar com o servidor. Tente de novo.";
       try { const j = await error.context.json(); if (j && j.erro) msg = j.erro; } catch (e) {}
@@ -483,7 +485,8 @@
     try { amostra = !!(cabArq && cabArq.handle); midiaUrl = cabArq && cabArq.tipo !== "DOCUMENT" ? cabArq.url : ""; } catch (e) {}
     return { nome: $("tcNome").value.trim(), existentes: (templates || []).filter(function (t) { return t.idioma === "pt_BR"; }).map(function (t) { return t.nome; }),
       cat: $("tcCat").value, corpo: $("tcCorpo").value, exemplos: exemplosAtuais(), rodape: $("tcRodape").value, botoes: botoesTc,
-      cabTipo: $("tcCabTipo").value, cabTexto: $("tcTitulo").value, cabAmostra: amostra, midiaUrl: midiaUrl };
+      cabTipo: $("tcCabTipo").value, cabTexto: $("tcTitulo").value, cabAmostra: amostra, midiaUrl: midiaUrl,
+      cards: (cardsCar || []).map(function (cd) { return { handle: cd.arq ? cd.arq.handle : "", url: cd.arq ? cd.arq.url : "", corpo: cd.corpo, botoes: botoesDoCard(cd) }; }) };
   }
   function atualizarEditor() {
     if (!window.WaTpl || !$("tcCheck")) return;
@@ -492,7 +495,7 @@
       const cls = i.ok ? "ok" : i.obrigatorio ? "falta" : "aviso-s", mk = i.ok ? "✓" : i.obrigatorio ? "✗" : "!";
       return '<li class="' + cls + '"><span class="m" aria-hidden="true">' + mk + "</span><span>" + esc(i.rotulo) + (i.ok ? "" : "<small>" + esc(i.dica) + "</small>") + (i.obrigatorio || i.ok ? "" : ' <small>(aviso, não bloqueia)</small>') + "</span></li>";
     }).join("");
-    $("tcPrevia").innerHTML = WaTpl.previaHtml(WaTpl.compsDoForm(e), { vars: e.exemplos, midiaUrl: e.midiaUrl });
+    $("tcPrevia").innerHTML = WaTpl.previaHtml(WaTpl.compsDoForm(e), { vars: e.exemplos, midiaUrl: e.midiaUrl, cardsUrls: (e.cards || []).map(function (cd) { return cd.url; }) });
     const c = e.corpo.length;
     $("tcContador").textContent = "Texto: " + c + " de 1.024 · Rodapé: " + e.rodape.length + " de 60";
     const pronto = WaTpl.checklistPronto(itens), primeiro = itens.find(function (i) { return i.obrigatorio && !i.ok; });
@@ -580,10 +583,67 @@
   $("tcCabTipo").addEventListener("change", function () {
     const t = this.value;
     $("tcCabTexto").hidden = t !== "TEXT"; $("tcCabArq").hidden = !CAB_TIPO[t];
+    const car = t.indexOf("CAROUSEL") === 0;
+    $("tcCarrossel").hidden = !car; $("tcRodapeBloco").hidden = car; $("tcBotoesBloco").hidden = car;
+    if (car) {
+      $("tcCat").value = "MARKETING";
+      cardsCar.forEach(function (cd) { cd.arq = null; });   // imagem e vídeo não se misturam: troca o tipo, envia de novo
+      while (cardsCar.length < 2) cardsCar.push(novoCard());
+      desenharCards();
+    }
     cabArq = null; $("tcCabNome").textContent = "nenhum arquivo"; $("tcCabPrev").innerHTML = "";
     if (CAB_TIPO[t]) $("tcCabArquivo").accept = ACEITA[CAB_TIPO[t]];
   });
   $("tcCabEscolher").addEventListener("click", function () { $("tcCabArquivo").click(); });
+
+  /* ---------- carrossel: de 2 a 10 cards, cada um com arquivo, texto e botões ---------- */
+  function novoCard() { return { arq: null, corpo: "", b1: "", b2: "", b2url: "", st: "" }; }
+  function botoesDoCard(cd) {
+    const b = [{ tipo: "QUICK_REPLY", texto: String(cd.b1 || "").trim() }];
+    if ($("tcCarLink") && $("tcCarLink").checked) b.push({ tipo: "URL", texto: String(cd.b2 || "").trim(), url: String(cd.b2url || "").trim() });
+    return b;
+  }
+  var cardsCar = [], cardAlvo = -1;   // var: o editor pode pedir o estado antes desta linha rodar
+  function desenharCards() {
+    const link = $("tcCarLink").checked;
+    $("tcCards").innerHTML = cardsCar.map(function (cd, i) {
+      return '<div class="wa-card-ed" data-i="' + i + '"><div class="lin"><b>Card ' + (i + 1) + '</b>' +
+        '<button class="btn peq contorno" type="button" data-acao="arq">' + (cd.arq ? "Trocar arquivo" : "Escolher arquivo") + '</button>' +
+        '<span class="vazio">' + esc(cd.st || (cd.arq ? "Pronto: " + cd.arq.nome + " (exemplo aceito pelo Meta)" : "nenhum arquivo")) + '</span>' +
+        (cardsCar.length > 2 ? '<button class="btn peq contorno" type="button" data-acao="tirar" style="margin-left:auto">Remover</button>' : "") + "</div>" +
+        '<textarea rows="2" maxlength="160" data-campo="corpo" placeholder="Texto do card (até 160 caracteres)">' + esc(cd.corpo) + "</textarea>" +
+        '<div class="lin" style="margin-top:6px"><input type="text" maxlength="25" data-campo="b1" placeholder="Botão de resposta, ex.: Quero ver o meu" value="' + esc(cd.b1) + '">' +
+        (link ? '<input type="text" maxlength="25" data-campo="b2" placeholder="Texto do link" value="' + esc(cd.b2) + '"><input type="text" data-campo="b2url" placeholder="https://..." value="' + esc(cd.b2url) + '">' : "") + "</div></div>";
+    }).join("");
+    $("tcCardAdd").disabled = cardsCar.length >= 10;
+    atualizarEditor();
+  }
+  $("tcCarLink").addEventListener("change", desenharCards);
+  $("tcCardAdd").addEventListener("click", function () { if (cardsCar.length < 10) { cardsCar.push(novoCard()); desenharCards(); } });
+  $("tcCards").addEventListener("input", function (ev) {
+    const el = ev.target, box = el.closest(".wa-card-ed"); if (!box || !el.dataset.campo) return;
+    cardsCar[Number(box.dataset.i)][el.dataset.campo] = el.value; atualizarEditor();
+  });
+  $("tcCards").addEventListener("click", function (ev) {
+    const bt = ev.target.closest("button[data-acao]"); if (!bt) return;
+    const i = Number(bt.closest(".wa-card-ed").dataset.i);
+    if (bt.dataset.acao === "tirar") { cardsCar.splice(i, 1); desenharCards(); return; }
+    cardAlvo = i; const tp = $("tcCabTipo").value === "CAROUSEL_VIDEO" ? "video" : "image";
+    $("tcCardArquivo").accept = ACEITA[tp]; $("tcCardArquivo").click();
+  });
+  $("tcCardArquivo").addEventListener("change", async function () {
+    const f = this.files[0]; this.value = ""; const i = cardAlvo; if (!f || i < 0 || !cardsCar[i]) return;
+    const fmt = $("tcCabTipo").value === "CAROUSEL_VIDEO" ? "VIDEO" : "IMAGE", cd = cardsCar[i];
+    cd.arq = null; cd.st = "Enviando o arquivo..."; desenharCards();
+    try {
+      const up = await subirMidia(f, fmt === "VIDEO" ? "video" : "image");
+      cd.st = "Mandando o exemplo ao Meta..."; desenharCards();
+      const r = await wa({ acao: "enviar_exemplo_midia", url: up.url, tipo: fmt });
+      if (!r.ok) throw new Error(r.erro || "O Meta não aceitou o arquivo de exemplo.");
+      cd.arq = { url: up.url, handle: r.handle, nome: up.nome }; cd.st = "";
+    } catch (e) { cd.st = ""; aviso("Card " + (i + 1) + ": " + (e.message || String(e)), true); }
+    desenharCards();
+  });
   $("tcCabArquivo").addEventListener("change", async function () {
     const f = this.files[0]; this.value = ""; if (!f) return;
     const tipo = $("tcCabTipo").value, st = $("tcCabNome");
@@ -603,6 +663,18 @@
     if (!/^[a-z0-9_]{1,60}$/.test(nome)) return aviso("Nome só com letras minúsculas, números e _ (sem espaço nem acento).", true);
     const erro = validarCorpo($("tcCorpo").value, $("tcCat").value, exemplosAtuais());
     if (erro) return aviso(erro, true);
+    if ($("tcCabTipo").value.indexOf("CAROUSEL") === 0) {
+      const e = estadoEditor();
+      if (!WaTpl.checklistPronto(WaTpl.checklist(e))) return aviso("Complete os cards antes de enviar.", true);
+      if (!confirm('Enviar o carrossel "' + nome + '" para o Meta analisar? Carrossel é sempre Marketing. Depois de aprovado, não dá para editar (só criar outro).')) return;
+      const btc = this; btc.disabled = true; btc.dataset.ocupado = "1";
+      const rc = await wa({ acao: "criar_template", nome: nome, categoria: "MARKETING", idioma: "pt_BR", corpo: $("tcCorpo").value.trim(), exemplos: exemplosAtuais(),
+        cabecalho_tipo: "CAROUSEL", carrossel: { formato: $("tcCabTipo").value === "CAROUSEL_VIDEO" ? "VIDEO" : "IMAGE", cards: e.cards } }, WA_FN_CARROSSEL);
+      btc.dataset.ocupado = ""; btc.disabled = false; atualizarEditor();
+      if (!rc.ok) return aviso(rc.erro || "O Meta não aceitou.", true);
+      aviso("Carrossel enviado. Situação: " + (rc.status || "em análise") + (rc.categoria ? " · categoria " + rc.categoria : "") + ". Os arquivos de cada card ficam guardados para os disparos.");
+      return telaTemplates();
+    }
     const botoes = [], robos = [], usados = {};
     for (let i = 0; i < botoesTc.length; i++) {
       const b = botoesTc[i], tx = String(b.texto || "").trim(), vl = String(b.valor || "").trim();

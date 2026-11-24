@@ -153,6 +153,17 @@ table.t td.quebra.tpl-texto{white-space:pre-wrap;overflow-wrap:anywhere;min-widt
 .wa-zap-rod{padding:2px;color:#7a7a7a;font-size:12.5px}
 .wa-zap-hora{text-align:right;font-size:11px;color:#8a8a8a;padding:0 2px}
 .wa-zap-botoes{display:grid;gap:4px;margin-top:4px}
+.wa-zap-carrossel{display:flex;gap:6px;overflow-x:auto;margin-top:6px;padding-bottom:4px;scroll-snap-type:x mandatory}
+.wa-zap-card{flex:0 0 78%;background:#fff;border-radius:8px;padding:4px;box-shadow:0 1px 1px rgba(0,0,0,.15);scroll-snap-align:start}
+.wa-zap-card-midia{border-radius:6px;overflow:hidden;background:#D6DCE3;aspect-ratio:1.6;display:flex;align-items:center;justify-content:center}
+.wa-zap-card-midia img,.wa-zap-card-midia video{width:100%;height:100%;object-fit:cover;display:block}
+.wa-zap-card-txt{font-size:14px;line-height:1.35;padding:6px 4px;white-space:pre-wrap}
+.wa-zap-card .wa-zap-botao{box-shadow:none;border-top:1px solid #E9EDF0;border-radius:0}
+.wa-card-ed{border:1px solid var(--borda, #ddd);border-radius:10px;padding:10px;margin-top:8px}
+.wa-card-ed .lin{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.wa-card-ed .lin > *{min-width:0}
+.wa-card-ed textarea{width:100%;margin-top:6px}
+.wa-card-ed input[type=text]{flex:1 1 140px}
 .wa-zap-botao{background:#fff;border-radius:8px;text-align:center;padding:9px 6px;color:#0A7CFF;font-weight:600;font-size:14px;box-shadow:0 1px 1px rgba(0,0,0,.15);overflow-wrap:anywhere}
 .wa-tp-edit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:18px;align-items:start}
 .wa-tp-lado{position:sticky;top:78px;display:grid;gap:12px}
@@ -663,18 +674,26 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
             <div><label for="tcCat">Categoria</label><select id="tcCat"><option value="UTILITY">Utilidade (aviso sobre algo que a pessoa já contratou)</option><option value="MARKETING">Marketing (convite, oferta, divulgação)</option></select></div>
           </div>
           <div class="grade g2" style="margin-top:12px">
-            <div><label for="tcCabTipo">Cabeçalho <span class="vazio">(opcional)</span></label><select id="tcCabTipo"><option value="">Sem cabeçalho</option><option value="TEXT">Título em texto</option><option value="VIDEO">Vídeo</option><option value="IMAGE">Imagem</option><option value="DOCUMENT">Documento (PDF)</option></select></div>
+            <div><label for="tcCabTipo">Cabeçalho <span class="vazio">(opcional)</span></label><select id="tcCabTipo"><option value="">Sem cabeçalho</option><option value="TEXT">Título em texto</option><option value="VIDEO">Vídeo</option><option value="IMAGE">Imagem</option><option value="DOCUMENT">Documento (PDF)</option><option value="CAROUSEL_IMAGE">Carrossel de imagens</option><option value="CAROUSEL_VIDEO">Carrossel de vídeos</option></select></div>
             <div id="tcCabTexto" hidden><label for="tcTitulo">Título <span class="vazio">(até 60 caracteres)</span></label><input id="tcTitulo" maxlength="60"></div>
             <div id="tcCabArq" hidden><label>Arquivo de exemplo <span class="vazio">(o Meta analisa este arquivo; no disparo você escolhe o arquivo de cada campanha)</span></label>
               <div class="wa-copia"><button class="btn peq contorno" type="button" id="tcCabEscolher">Escolher arquivo</button><span id="tcCabNome" class="vazio">nenhum arquivo</span></div>
               <input type="file" id="tcCabArquivo" hidden><div id="tcCabPrev" style="margin-top:8px"></div>
               <small class="vazio">Vídeo MP4 até 16 MB · imagem JPG ou PNG até 5 MB · PDF até 16 MB.</small></div>
           </div>
+          <div id="tcCarrossel" hidden style="margin-top:12px">
+            <label>Cards do carrossel <span class="vazio">(de 2 a 10 · a pessoa arrasta para o lado · o texto de cima é a mensagem que acompanha os cards)</span></label>
+            <label class="wa-linha-check" style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="tcCarLink"> Cada card também tem um botão de link</label>
+            <div id="tcCards"></div>
+            <div class="acoes" style="margin-top:8px"><button class="btn peq contorno" type="button" id="tcCardAdd">+ Adicionar card</button></div>
+            <input type="file" id="tcCardArquivo" hidden>
+            <small class="vazio">Todos os cards usam o mesmo tipo de arquivo e os mesmos botões. Texto do card até 160 caracteres, sem variável. Carrossel é sempre Marketing no Meta.</small>
+          </div>
           <div style="margin-top:12px"><label for="tcCorpo">Texto <span class="vazio">(use {{1}}, {{2}} para as partes que mudam)</span></label><textarea id="tcCorpo" rows="6" maxlength="1024" placeholder="Oi, {{1}}! Sua aula é na {{2}}. Te espero lá!"></textarea>
             <small id="tcAviso" class="vazio"></small></div>
           <div id="tcExemplos" style="margin-top:12px"></div>
-          <div style="margin-top:12px"><label for="tcRodape">Rodapé <span class="vazio">(opcional)</span></label><input id="tcRodape" maxlength="60" placeholder="Ressignificar Terapias e Consultorias"></div>
-          <div style="margin-top:14px">
+          <div id="tcRodapeBloco" style="margin-top:12px"><label for="tcRodape">Rodapé <span class="vazio">(opcional)</span></label><input id="tcRodape" maxlength="60" placeholder="Ressignificar Terapias e Consultorias"></div>
+          <div id="tcBotoesBloco" style="margin-top:14px">
             <label>Botões <span class="vazio">(opcional, até 3)</span></label>
             <div id="tcBotoes"></div>
             <div class="acoes" style="margin-top:8px">
