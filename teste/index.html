@@ -2815,7 +2815,7 @@ async function apresAbrir(lead, extra){
   const css = getComputedStyle(document.documentElement);
   const foto = (document.querySelector('.moldura img') || {}).src || null;
   const insta = ((document.querySelector('a[href*="instagram.com/"]') || {}).href || '').replace(/^.*instagram\.com\//, '').replace(/[\/?#].*$/, '');
-  const papel = (((document.querySelector('.assinatura') || {}).textContent || '').match(/convite d[ao] (\S+)/i) || [])[1] || 'terapeuta';
+  const papel = String((((document.querySelector('.assinatura') || {}).textContent || '').match(/convite d[ao] (\S+)/i) || [])[1] || 'terapeuta').toLowerCase();
   const cfg = {
     lead, padrao,
     cores: { principal: css.getPropertyValue('--ardosia').trim() || '#1F2F5A', destaque: css.getPropertyValue('--argila').trim() || '#9A5A38' },
