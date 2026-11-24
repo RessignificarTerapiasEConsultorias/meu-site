@@ -97,7 +97,7 @@ const fmEsc = t => (typeof escV === 'function' ? escV(t) : String(t == null ? ''
 const fmPrim = n => String(n || '').trim().split(/\s+/)[0] || '';
 const fmDig = v => String(v || '').replace(/\D/g, '');
 const fmCfg = () => ((window.__T && __T.dados && __T.dados.familia) || {});
-const fmNome = () => fmCfg().nome || 'Travas em Família';
+const fmNome = () => fmCfg().nome || 'Raízes em Família';
 const fmEspaco = () => fmCfg().espaco || ('Espaço Terapêutico ' + (window.T_NOME || ''));
 const fmServ = k => ((fmCfg().servicos || {})[k]) || ({ pedagogica:'Intervenção Pedagógica e Acolhimento Avaliativo', orientacao:'Orientação para pais', adulto:'Atendimento individual do adulto' })[k] || k;
 const fmZap = texto => 'https://wa.me/' + ((typeof CONFIG !== 'undefined' && CONFIG.whatsappNumero) || '') + (texto ? '?text=' + encodeURIComponent(texto) : '');
@@ -130,7 +130,7 @@ function fmPassos(){
 function fmGuardar(){ fmLS.set(fmChave(fm.codigo, 'prog'), { cad:fm.cad, r:fm.r, parte2:fm.parte2, texto:fm.texto, i:fm.i, outro:fm.outro }); }
 const FM_PIX = { chegou:['track', 'ViewContent'], comecar:['trackCustom', 'ComecouTeste'], contato:['track', 'Lead'], concluiu:['track', 'CompleteRegistration'], whatsapp:['track', 'Contact'] };
 function fmPix(e){
-  try{ const m = FM_PIX[e]; if(m && fm.link && fm.link.campanha && window.PIX && PIX.track) PIX.track(m[0], m[1], { content_name:'Travas em Família (campanha)' }); }catch(err){}
+  try{ const m = FM_PIX[e]; if(m && fm.link && fm.link.campanha && window.PIX && PIX.track) PIX.track(m[0], m[1], { content_name:'Raízes em Família (campanha)' }); }catch(err){}
 }
 function fmEvento(e, p, dados){
   fmPix(e);
@@ -735,7 +735,7 @@ function fmDesenharAjustes(){
   const cfg = fmCfg(), s = cfg.servicos || {}, pub = (cfg.adulto_publico || []).join(', ');
   const box = document.getElementById('fm-ajustes');
   box.innerHTML = `<h3>Ajustes do teste</h3>
-    <div class="campo"><label for="fm-cfg-nome">Nome do teste</label><input id="fm-cfg-nome" type="text" maxlength="60" value="${fmEsc(cfg.nome || 'Travas em Família')}"></div>
+    <div class="campo"><label for="fm-cfg-nome">Nome do teste</label><input id="fm-cfg-nome" type="text" maxlength="60" value="${fmEsc(cfg.nome || 'Raízes em Família')}"></div>
     <div class="campo"><label for="fm-cfg-ped">Serviço: aprendizagem e rotina</label><input id="fm-cfg-ped" type="text" maxlength="80" value="${fmEsc(s.pedagogica || 'Intervenção Pedagógica e Acolhimento Avaliativo')}"></div>
     <div class="campo"><label for="fm-cfg-ori">Serviço: pais</label><input id="fm-cfg-ori" type="text" maxlength="80" value="${fmEsc(s.orientacao || 'Orientação para pais')}"></div>
     <div class="campo"><label for="fm-cfg-adu">Serviço: adulto</label><input id="fm-cfg-adu" type="text" maxlength="80" value="${fmEsc(s.adulto || 'Atendimento individual do adulto')}"></div>
@@ -745,7 +745,7 @@ function fmDesenharAjustes(){
     <button class="btn btn-argila" id="fm-cfg-salvar" type="button">Salvar ajustes</button>`;
   document.getElementById('fm-cfg-salvar').addEventListener('click', async e => {
     const v = id => document.getElementById(id).value.trim();
-    const novo = { nome:v('fm-cfg-nome') || 'Travas em Família', servicos:{ pedagogica:v('fm-cfg-ped'), orientacao:v('fm-cfg-ori'), adulto:v('fm-cfg-adu') },
+    const novo = { nome:v('fm-cfg-nome') || 'Raízes em Família', servicos:{ pedagogica:v('fm-cfg-ped'), orientacao:v('fm-cfg-ori'), adulto:v('fm-cfg-adu') },
       adulto_publico:v('fm-cfg-pub').split(',').map(x => x.trim().toLowerCase()).filter(Boolean) };
     e.target.disabled = true;
     const { data, error } = await clienteMembros().rpc('familia_config', { p_cfg:novo });

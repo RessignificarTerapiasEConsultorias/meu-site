@@ -7,7 +7,7 @@
    Área do dono: avaliações, códigos, detalhe com gráficos e laudo, PDF, apresentação comercial, e-mail.
    O modelo da página chama dcAjustarTestes(ativos) quando o dono tem o DISC.
    ============================================================================ */
-const DC = { SIGLA:'DISC', NOME:'Análise Comportamental DISC', AVISO:'O DISC é uma ferramenta de análise comportamental para o ambiente de trabalho. Não é teste psicológico, avaliação clínica nem ferramenta terapêutica, e não deve ser usado como único critério de decisão.' };
+const DC = { SIGLA:'DISC', NOME:'Análise Comportamental DISC', AVISO:'O DISC é uma ferramenta de análise comportamental para o ambiente de trabalho. Não é teste psicológico, avaliação clínica nem ferramenta terapêutica, e não deve ser usado para contratar, promover ou demitir pessoas: serve para desenvolver pessoas e equipes.' };
 const dcPrim = n => String(n || '').trim().split(/\s+/)[0] || '';
 const dcEmail = v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v || '').trim());
 const dcDig = v => String(v || '').replace(/\D/g, '');
@@ -134,6 +134,7 @@ function dcMontarTelas(){
         <li>Em cada bloco você marca a palavra que MAIS e a que MENOS descreve você</li>
         <li>No final, 3 perfis (Adaptado, Natural e Resultante), gráficos e laudo</li>
         <li>Análise comportamental para o trabalho, não é avaliação psicológica nem terapia</li>
+        <li>Não serve para contratar, promover ou demitir: é para desenvolver pessoas e equipes</li>
       </ul>
       <div class="cartao">
         <div class="campo" style="margin-bottom:10px">
@@ -537,7 +538,7 @@ function dcSeletor(ativos){
 window.CV_EXTRA = Object.assign(window.CV_EXTRA || {}, { disc:{
   rot:'Análise Comportamental DISC', curto:'DISC', tag:'Individual · Ambiente corporativo', titulo:'Análise Comportamental DISC',
   objetivo:'Mostrar como você age no trabalho: como decide, se comunica, lida com ritmo e mudanças e com regras e detalhes. É análise comportamental para a vida profissional, não é terapia nem avaliação psicológica.',
-  como:['A maioria termina em cerca de 7 minutos', 'Em cada bloco, você marca a palavra que MAIS e a que MENOS descreve você', 'Feito para o ambiente de trabalho: seleção, equipes, liderança e vendas'],
+  como:['A maioria termina em cerca de 7 minutos', 'Em cada bloco, você marca a palavra que MAIS e a que MENOS descreve você', 'Feito para o ambiente de trabalho: desenvolvimento, equipes, liderança e vendas', 'Não serve para contratar, promover ou demitir: é para desenvolver pessoas e equipes'],
   resultado:q => 'Os seus 3 perfis (Adaptado, Natural e Resultante) em gráficos, o perfil predominante e um laudo com áreas recomendadas e estilo de liderança. Depois, a devolutiva com ' + q + '.',
   mapaTitulo:'Os 4 fatores que a análise mede',
   itens:['D', 'I', 'S', 'C'].map(f => ({ nome:DISC.FATORES[f].nome + ' (' + f + ')', desc:DISC.FATORES[f].eixo + ': ' + DISC.FATORES[f].palavras + '.' })),

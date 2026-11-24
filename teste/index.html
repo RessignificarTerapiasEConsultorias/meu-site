@@ -900,7 +900,7 @@ html.t-erro .t-girar{display:none}
       <h1>Como a sua história moldou o seu jeito de ser?</h1>
       <p class="assinatura" id="tc-assinatura"></p>
       <p class="texto-capa">Desde a gestação até os primeiros anos de vida, o corpo e a mente aprendem a se proteger. Esses jeitos de se proteger viram traços que aparecem até hoje na sua postura, nas suas relações e nas suas decisões.</p>
-      <p class="texto-capa">Este teste identifica cinco traços de caráter (Esquizoide, Oral, Psicopata, Masoquista e Rígido) e mostra, em porcentagem, quais predominam em você. Os nomes vêm da psicanálise do século passado e não têm relação com doenças nem diagnósticos: são estilos de funcionamento, e cada um traz talentos próprios.</p>
+      <p class="texto-capa">Este teste identifica cinco traços de caráter (Observador, Conector, Estrategista, Sustentador e Realizador) e mostra, em porcentagem, quais predominam em você. Cada nome descreve uma forma de se proteger que se formou na sua história. Não são doenças nem diagnósticos: são estilos de funcionamento, e cada um traz talentos próprios.</p>
       <ul class="lista-leve">
         <li>A maioria termina em cerca de 7 minutos</li>
         <li>Você responde de “Nunca” a “Sempre”, no seu tempo</li>
@@ -3082,7 +3082,7 @@ const TC_PERGUNTAS = [
 ];
 
 const TC_LUGAR = ['Pico primário', 'Pico secundário', 'Suporte', 'Suporte', 'Suporte'];
-const TC_ALINHAMENTO = 'Os nomes dos traços (Esquizoide, Oral, Psicopata, Masoquista e Rígido) foram criados no século passado por médicos e estudiosos da psicanálise que mapearam a relação entre a mente e o corpo. Eles não têm relação com doenças mentais, diagnósticos ou desvios de conduta: são estilos de funcionamento do sistema nervoso. Quando o teste fala da infância, fala da percepção da criança, e não da intenção dos pais.';
+const TC_ALINHAMENTO = 'Os nomes dos traços (Observador, Conector, Estrategista, Sustentador e Realizador) descrevem a forma como cada pessoa aprendeu a se proteger, com base nos estudos da psicanálise sobre a relação entre a mente e o corpo. Eles não têm relação com doenças mentais, diagnósticos ou desvios de conduta: são estilos de funcionamento do sistema nervoso. Quando o teste fala da infância, fala da percepção da criança, e não da intenção dos pais.';
 const TC_CHAVE = CHAVE_CODIGOS + '_tracos_';
 const TC_COR = [null, { linha:'#A8542B', fundo:'rgba(168,84,43,.20)' }, { linha:'#2C6E8A', fundo:'rgba(44,110,138,.20)' }];
 const tc = { codigo:'', tipo:'individual', mostrar:true, estado:null, slot:0, modo:'', nomes:{ 1:'', 2:'' }, respostas:[], indice:0, inicio:0, onFim:null, salvarProg:null, dados:null, teia:null };
@@ -3139,7 +3139,7 @@ function tcRadar(canvas, series){
   const maior = Math.max(...series.flatMap(s => s.valores)), topo = Math.max(30, Math.ceil((maior + 3) / 5) * 5);
   const fonte = '700 ' + Math.max(11, Math.round(lado * 0.03)) + 'px Karla, sans-serif', fonteV = '700 ' + Math.max(10, Math.round(lado * 0.027)) + 'px Karla, sans-serif';
   c.font = fonte;
-  const largura = Math.max(...TC_TRACOS.map(t => c.measureText(t.nome).width), c.measureText('00,00% · 00,00%').width * (series.length > 1 ? 0.95 : 0.5));
+  const largura = Math.max(...TC_TRACOS.map(t => c.measureText(tcNomesNovos(t.nome)).width), c.measureText('00,00% · 00,00%').width * (series.length > 1 ? 0.95 : 0.5));
   const cx = lado / 2, cy = lado / 2 + 6, folga = 14, n = TC_TRACOS.length;
   const raio = Math.max(lado * 0.2, Math.min(lado * 0.32, lado / 2 - folga - largura - 6));
   const ponto = (i, f) => { const a = (Math.PI * 2 * i / n) - Math.PI / 2; return [cx + Math.cos(a) * raio * f, cy + Math.sin(a) * raio * f]; };
@@ -3160,7 +3160,7 @@ function tcRadar(canvas, series){
     const a = (Math.PI * 2 * i / n) - Math.PI / 2, x = cx + Math.cos(a) * (raio + folga), y = cy + Math.sin(a) * (raio + folga);
     const alinh = Math.abs(Math.cos(a)) < 0.3 ? 'center' : (Math.cos(a) > 0 ? 'left' : 'right');
     const yb = Math.sin(a) < -0.9 ? y - 18 : y;
-    c.textBaseline = 'middle'; c.textAlign = alinh; c.font = fonte; c.fillStyle = '#401F0D'; c.fillText(t.nome, x, yb);
+    c.textBaseline = 'middle'; c.textAlign = alinh; c.font = fonte; c.fillStyle = '#401F0D'; c.fillText(tcNomesNovos(t.nome), x, yb);
     c.font = fonteV;
     const partes = series.map(s => ({ txt:tcPct(s.valores[i]), cor:s.linha }));
     const sep = ' · ', ws = c.measureText(sep).width, larg = partes.reduce((s, p) => s + c.measureText(p.txt).width, 0) + ws * (partes.length - 1);

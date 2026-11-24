@@ -64,7 +64,7 @@
 
   /* 1) o código é de campanha? */
   rpc('travas_validar_codigo', { p_codigo:COD }).then(r => r.json()).then(r => {
-    if(r && r.teste === 'familia' && (r.ok === true || r.valido === true)){ window.FM_LINK_VALIDO = r; return; }   // Travas em Família: o módulo dele assume (e solta a tela)
+    if(r && r.teste === 'familia' && (r.ok === true || r.valido === true)){ window.FM_LINK_VALIDO = r; return; }   // Raízes em Família: o módulo dele assume (e solta a tela)
     if(!r || !r.campanha || !(r.ok === true || r.valido === true)){ clearTimeout(seguranca); soltar(); return; }
     CAMP.info = { mostrar:r.mostrar_resultado !== false, urgencia:r.urgencia !== false, duracao:r.duracao_min || 30, compartilhado:r.compartilhado === true };
     CAMP.ativo = true; H.classList.add('modo-campanha');
@@ -281,7 +281,7 @@
         const resumo = []; let ultimaP = 0;
         ev.forEach(x => { if(x.e === 'pergunta'){ ultimaP = x.p; return; } if(ultimaP){ resumo.push({ e:'pergunta', p:ultimaP, em:x.em }); ultimaP = 0; } resumo.push(x); });
         if(ultimaP) resumo.push({ e:'pergunta', p:ultimaP });
-        const msg = 'Oi, ' + String(s.nome || '').split(' ')[0] + '! Aqui é ' + (prim ? 'a ' + prim : '') + '. Vi que você começou ' + (ehFam(s.codigo) ? 'o ' + ((window.__T && __T.dados && __T.dados.familia && __T.dados.familia.nome) || 'Travas em Família') : 'o Teste de Travas Mentais') + ' e não chegou a terminar. Quer terminar agora? Leva cerca de ' + (ehFam(s.codigo) ? '8' : '7') + ' minutos e eu analiso o seu resultado pessoalmente: ' + link(s.codigo);
+        const msg = 'Oi, ' + String(s.nome || '').split(' ')[0] + '! Aqui é ' + (prim ? 'a ' + prim : '') + '. Vi que você começou ' + (ehFam(s.codigo) ? 'o ' + ((window.__T && __T.dados && __T.dados.familia && __T.dados.familia.nome) || 'Raízes em Família') : 'o Teste de Travas Mentais') + ' e não chegou a terminar. Quer terminar agora? Leva cerca de ' + (ehFam(s.codigo) ? '8' : '7') + ' minutos e eu analiso o seu resultado pessoalmente: ' + link(s.codigo);
         const zapN = window.ddiDigitos ? window.ddiDigitos(s.whatsapp) : (function(){ const z = String(s.whatsapp || '').replace(/\D/g, ''); return z.length === 10 || z.length === 11 ? '55' + z : z; })();
         return `<div class="camp-p"><div class="top"><span class="nm">${s.nome ? esc(s.nome) : 'Visitante sem contato'}</span><span class="st ${st[1]}">${esc(st[0])}</span></div>
           <div class="sub">${hora(s.chegou_em)} · ${esc(s.origem || 'origem desconhecida')}${s.aparelho ? ' · ' + esc(s.aparelho) : ''}${s.whatsapp ? ' · ' + esc(s.whatsapp) : ''}${s.exibicao ? ' · ' + esc(s.exibicao) : ''}</div>

@@ -33,6 +33,13 @@ window.TX_INC = function(el, i, total, chave){
    (travas_paginas.dados: nome_curto e assinatura, ou nome e título). */
 const DV_TERAPEUTA_PADRAO = 'Tati Barbosa';
 const DV_ASSINATURA_PADRAO = 'Tati Barbosa — Análise Corporal & Terapeuta';
+/* Nomes dos traços que o cliente vê. O sistema guarda os nomes técnicos (Esquizoide, Oral, Psicopata, Masoquista, Rígido)
+   para o painel e o robô; tudo o que aparece na tela passa por tcNomesNovos. */
+const TC_NOVOS = { Esquizoide:'Observador', Oral:'Conector', Psicopata:'Estrategista', Masoquista:'Sustentador', 'Rígido':'Realizador' };
+const TC_PROTECAO = { esquizoide:'Proteção pelo recolhimento', oral:'Proteção pela conexão', psicopata:'Proteção pelo controle', masoquista:'Proteção pela contenção', rigido:'Proteção pela busca de reconhecimento e excelência' };
+function tcNomesNovos(s){ return String(s).replace(/(^|[^A-Za-zÀ-ÿ])(Esquizoide|Oral|Psicopata|Masoquista|Rígido)(?![A-Za-zÀ-ÿ])/g, (m, a, b) => a + TC_NOVOS[b]); }
+function tcRotuloTraco(id){ const t = tcTraco(id); return 'O ' + (TC_NOVOS[t.nome] || t.nome); }
+function dvCorrespondencia(){ return '<div class="dv-caixa dv-sem-print"><h3>Correspondência com os nomes clássicos <small>(só você vê)</small></h3><p>Observador = Esquizoide · Conector = Oral · Estrategista = Psicopata · Sustentador = Masoquista · Realizador = Rígido. O cliente só vê os nomes novos.</p></div>'; }
 function dvCad(){ return (window.__T && window.__T.dados) || null; }
 function dvTerapeuta(){ const d = dvCad(); return d ? (d.nome_curto || d.nome) : DV_TERAPEUTA_PADRAO; }
 function dvAssinatura(){ const d = dvCad(); return d ? (d.assinatura || (d.nome + (d.titulo ? ' — ' + d.titulo : ''))) : DV_ASSINATURA_PADRAO; }
@@ -265,17 +272,18 @@ function dvData(iso){ const s = String(iso || '').slice(0, 10); const p = s.spli
 function dvQuerido(g){ return g === 'f' ? 'Querida' : g === 'm' ? 'Querido' : 'Querido(a)'; }
 function dvAcao(n, a, V){
   return `<div class="dv-acao"><h4>${n}. ${V(a.t)}</h4>
-    <p><b>Diagnóstico (por quê):</b> ${V(a.p)}</p><p><b>Passo a passo (como fazer):</b> ${V(a.c)}</p><p><b>Ganho direto:</b> ${V(a.g)}</p></div>`;
+    <p><b>Por que isso acontece:</b> ${V(a.p)}</p><p><b>Passo a passo (como fazer):</b> ${V(a.c)}</p><p><b>Ganho direto:</b> ${V(a.g)}</p></div>`;
 }
 function dvPico(id, pct, pos, V, nomeQuem){
   const t = tcTraco(id), d = DV[id];
-  return `<div class="dv-pico"><div class="dv-pico-topo"><b>${nomeQuem ? escV(nomeQuem) + ' · ' : ''}${pos === 1 ? 'PICO PRIMÁRIO' : 'PICO SECUNDÁRIO'}: ${escV(t.nome).toUpperCase()} (${tcPct(pct)})</b><span>${escV(d.tag)}</span></div>
+  return `<div class="dv-pico"><div class="dv-pico-topo"><b>${nomeQuem ? escV(nomeQuem) + ' · ' : ''}${pos === 1 ? 'PICO PRIMÁRIO' : 'PICO SECUNDÁRIO'}: ${escV(tcRotuloTraco(id)).toUpperCase()} (${tcPct(pct)})</b><span>${escV(d.tag)}</span></div>
+    <p><b>${escV(TC_PROTECAO[id] || '')}.</b></p>
     <p><b>A dor central:</b> ${V(t.dor)}</p><p><b>Formação na infância:</b> ${V(d.formacao)}</p>
     <p><b>No dia a dia:</b> ${V(t.dia)}</p><p><b>Virada de chave:</b> ${V(t.virada)}</p></div>`;
 }
 function dvAlinhamento(prim){
   return `<div class="dv-caixa"><h3>O que são traços de caráter? (alinhamento inicial)</h3>
-    <p>${prim ? escV(prim) + ', antes' : 'Antes'} de apresentar o resultado e os percentuais, quero fazer um alinhamento muito importante. Os nomes dos traços de caráter que usamos aqui (<i>Esquizoide, Oral, Psicopata, Masoquista e Rígido</i>) foram criados no século passado pelos cientistas e médicos da psicanálise que mapearam a relação entre a mente e o corpo. <b>Eles não têm qualquer relação com doenças mentais, diagnósticos psiquiátricos ou desvios de conduta.</b> Na nossa terapia, encare cada um desses nomes como estilos de funcionamento do sistema nervoso.</p>
+    <p>${prim ? escV(prim) + ', antes' : 'Antes'} de apresentar o resultado e os percentuais, quero fazer um alinhamento muito importante. Os nomes dos traços que usamos aqui (<i>Observador, Conector, Estrategista, Sustentador e Realizador</i>) descrevem a forma como cada pessoa aprendeu a se proteger. Eles se apoiam nos estudos da psicanálise sobre a relação entre a mente e o corpo. <b>Eles não têm qualquer relação com doenças mentais, diagnósticos psiquiátricos ou desvios de conduta.</b> Na nossa terapia, encare cada um desses nomes como estilos de funcionamento do sistema nervoso.</p>
     <p>Outro ponto fundamental: quando falarmos da infância, lembre-se de que estamos lidando com a <b>percepção do sistema nervoso quando bebê ou criança</b>, e não com a intenção dos pais. Eles deram o melhor que podiam com os recursos que tinham. O nosso foco aqui não é julgar o passado, mas libertar o presente.</p>
     <p>Os traços de caráter são mapas de como a mente e o corpo se moldaram para responder às experiências da infância. Eles não representam defeitos, mas sim mecanismos de defesa inteligentes que geraram os maiores talentos de cada pessoa. Compreender o perfil é o primeiro passo para relaxar a "armadura" e viver com mais leveza, equilíbrio e autenticidade.</p></div>`;
 }
@@ -308,7 +316,8 @@ function dvLeituraClinica(resps, nome, calc){
 
 /* ---------------------------------------------------------------------------- */
 /* DEVOLUTIVA INDIVIDUAL. o = { nome, genero, data, calc, respostas, terapeuta:true|false } */
-function dvIndividual(o){
+function dvIndividual(o){ const h = tcNomesNovos(_dvIndividual(o)); return o && o.terapeuta ? h.replace('</article>', dvCorrespondencia() + '</article>') : h; }
+function _dvIndividual(o){
   const g = o.genero, prim = tcPrim(o.nome), c = o.calc, ord = c.ordem, p1 = ord[0], p2 = ord[1];
   const d1 = DV[p1.id], d2 = DV[p2.id], par = DV_PARES[dvPar(p1.id, p2.id)];
   const vars = { P1:p1.nome, P2:p2.nome, nome:prim };
@@ -352,7 +361,8 @@ function dvIndividual(o){
 }
 
 /* DEVOLUTIVA DE CASAL. o = { a:{nome,genero,calc,respostas}, b:{...}, k, data, terapeuta } */
-function dvCasal(o){
+function dvCasal(o){ const h = tcNomesNovos(_dvCasal(o)); return o && o.terapeuta ? h.replace('</article>', dvCorrespondencia() + '</article>') : h; }
+function _dvCasal(o){
   const A = o.a, B = o.b, k = o.k, nA = tcPrim(A.nome), nB = tcPrim(B.nome);
   const pa = A.calc.ordem[0], pb = B.calc.ordem[0], da = DV[pa.id], db = DV[pb.id], ca = da.casal, cb = db.casal;
   const VA = s => escV(dvGen(dvT(s, { outro:nB, nome:nA }), A.genero));
@@ -378,13 +388,13 @@ function dvCasal(o){
   const dif = `<p><b>Onde vocês mais se diferenciam:</b> ${k.diferencas.map(l => `${escV(l.nome)} (${escV(nA)} ${tcPct(l.p1)}, ${escV(nB)} ${tcPct(l.p2)})`).join('; ')}.</p>`;
   return `<article class="dv dv-casal" data-dv>
   <header class="dv-topo">
-    <div><span class="dv-olho">Relatório de avaliação &amp; diagnóstico sistemático</span><h1>Devolutiva Terapêutica de Casal</h1></div>
+    <div><span class="dv-olho">Mapa do casal</span><h1>Devolutiva Terapêutica de Casal</h1></div>
     <dl><dt>Casal:</dt><dd>${escV(A.nome)} &amp; ${escV(B.nome)}</dd><dt>Data:</dt><dd>${escV(dvData(o.data))} · Terapeuta: ${escV(dvTerapeuta())}</dd>
       <dt>Modalidade:</dt><dd>Terapia Sistêmica de Casal</dd><dt>Metodologia:</dt><dd>${escV(TC_NOME)} (40 perguntas, cada um)</dd></dl>
   </header>
   <h2 class="dv-h2">1. Panorama geral e propósito da devolutiva</h2>
   <p>Esta devolutiva terapêutica sintetiza o mapeamento dos traços de caráter de <b>${escV(A.nome)}</b> e <b>${escV(B.nome)}</b>, a partir do ${escV(TC_NOME)} respondido por cada um. O objetivo central é oferecer uma leitura clara e objetiva sobre a estrutura do relacionamento, identificando as dinâmicas inconscientes que sustentam os conflitos, as dores individuais refletidas no vínculo e as fortalezas que o casal possui para reestruturar a convivência com mais sabedoria, empatia e cumplicidade.</p>
-  <div class="dv-destaque"><h3>Síntese do diagnóstico relacional</h3><p>${sintese}</p></div>
+  <div class="dv-destaque"><h3>Síntese da relação</h3><p>${sintese}</p></div>
   <h2 class="dv-h2">2. Os traços de caráter</h2>
   ${dvAlinhamento('')}
   <div class="dv-tabela"><table><thead><tr><th>Traço</th><th>A dor central</th><th>O recurso que ele traz</th></tr></thead><tbody>
@@ -416,7 +426,7 @@ function dvCasal(o){
   </tbody></table></div>
   <h2 class="dv-h2">7. Plano de direcionamento terapêutico de casal</h2>
   <p>Para os próximos meses do processo terapêutico, o plano de trabalho estará focado na consolidação de novos hábitos relacionais e no fortalecimento da segurança emocional do casal. Estabelecemos três pilares prioritários:</p>
-  <div class="dv-caixa"><h3>Pilares do tratamento terapêutico</h3><ol>
+  <div class="dv-caixa"><h3>Pilares do acompanhamento</h3><ol>
     <li><b>Construção do "Lugar Seguro":</b> desenvolver um espaço em que ${escV(nA)} possa ${VA(ca.necessidadeCurta)} e ${escV(nB)} possa ${VB(cb.necessidadeCurta)}, sem receio de retaliação, julgamento ou invalidação.</li>
     <li><b>Desmontagem dos gatilhos de defesa:</b> treinar o reconhecimento precoce dos sinais físicos e emocionais do estresse (em ${escV(nA)}, ${VA(ca.gatilhoCurto)}; em ${escV(nB)}, ${VB(cb.gatilhoCurto)}) para interromper o ciclo de reação automática.</li>
     <li><b>Reconstrução da cumplicidade:</b> cultivar o interesse genuíno pelo mundo interno do outro, valorizando ${VA(ca.forca)} de ${escV(nA)} e ${VB(cb.forca)} de ${escV(nB)}.</li>
@@ -966,7 +976,7 @@ function dvCapaVendas(modo){
     meio = `<section class="cv-faixa"><div class="cv-in">
     <div class="cv-centro"><span class="cv-olho">O que o teste mapeia</span>
     <h2>5 traços de caráter. Qual deles comanda o seu jeito de ser?</h2>
-    <p class="cv-sub">Os nomes vêm da psicanálise e descrevem estilos de funcionamento, não doenças. Cada traço traz talentos próprios.</p></div>
+    <p class="cv-sub">Os nomes descrevem como cada pessoa aprendeu a se proteger: são estilos de funcionamento, não doenças. Cada traço traz talentos próprios.</p></div>
     <div class="cv-itens">${lista.map((t, i) => `<div class="cv-item"><span class="cv-item-n">${i + 1}</span><b>${escV(t.nome)}</b><small>${escV(t.recurso || '')}</small></div>`).join('')}</div>
     <p class="cv-sigilo">Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d${escV(quem)}.</p>
   </div></section>`;
@@ -1016,7 +1026,7 @@ function dvCapaVendas(modo){
       pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre o teste.'),
       pq('Como funciona em casal? Precisamos estar juntos?', 'Não precisam. Cada um responde no próprio celular, quando puder, com o mesmo código. Se preferirem, dá para responder juntos, no mesmo aparelho, um de cada vez. Cada um recebe a sua devolutiva individual, e vocês recebem a do casal.'),
       pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. No casal, cada um responde sozinho(a), sem ver as respostas do outro.'),
-      pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.'),
+      pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes descrevem como cada pessoa aprendeu a se proteger. Nenhum deles é doença, e cada um traz talentos próprios.'),
       pq('Quanto tempo leva?', 'A maioria termina em cerca de 7 minutos, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
     ] : soMpcc ? [
       pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre a avaliação.'),
@@ -1030,7 +1040,7 @@ function dvCapaVendas(modo){
       pq('Preciso fazer ' + (lista.length > 2 ? 'todos os testes' : 'os dois testes') + '?', 'Não. Você pode fazer ' + (lista.length > 2 ? 'só um deles, ou todos' : 'um deles ou os dois') + '. ' + (tem('travas') && tem('tracos') ? 'Eles se completam: as travas mostram o que pesa em você hoje, e os traços mostram de onde isso vem.' : 'Eles se completam: cada um olha para o seu jeito de funcionar por um ângulo diferente.')),
       casal ? pq('Como funciona em casal? Precisamos estar juntos?', 'Não precisam. Cada um responde no próprio celular, quando puder, com o mesmo código. Se preferirem, dá para responder juntos, no mesmo aparelho, um de cada vez. Cada um recebe a sua devolutiva individual, e vocês recebem a do casal.') : '',
       pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '.' + (casal ? ' No casal, cada um responde sozinho(a), sem ver as respostas do outro.' : '')),
-      casal ? pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.') : '',
+      casal ? pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes descrevem como cada pessoa aprendeu a se proteger. Nenhum deles é doença, e cada um traz talentos próprios.') : '',
       tem('mpcc') ? pq('O MPCC é um teste psicológico?', 'Não. É uma ferramenta de autoconhecimento e desenvolvimento pessoal, que mostra tendências de comportamento neste momento. Não é diagnóstico.') : ''
     ].concat(extras.map(k => pq.apply(null, EX[k].faq(escV(comQuem)))), [
       comExtras ? pq('Quanto tempo leva?', 'Depende do teste: ' + (tem('travas') ? ['o Teste de Travas, cerca de 7 minutos'] : []).concat(extras.map(k => EX[k].tempo)).join('; ') + '. Escolha um momento tranquilo e responda com sinceridade.')
