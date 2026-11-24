@@ -813,7 +813,8 @@ function dvCapaVendas(modo){
   const selo = lt.querySelector('.selo');
   const ROT = { travas:'Teste de Travas Mentais', tracos:'Teste de Traços de Caráter', mpcc:'MPCC' };
   extras.forEach(k => { ROT[k] = EX[k].rot; });
-  if(selo) selo.textContent = soMpcc ? 'MPCC · Mapa de Perfil Comportamental e Competências' : lista.length > 3 ? maius(NUM[lista.length] || lista.length) + ' testes de autoconhecimento' : lista.map(k => ROT[k]).join(' · ');
+  if(selo && dd && typeof dd.selo === 'string' && dd.selo.trim()) selo.textContent = dd.selo.trim();     /* a terapeuta escolhe o texto do selo (dados.selo) */
+  else if(selo) selo.textContent = soMpcc ? 'MPCC · Mapa de Perfil Comportamental e Competências' : lista.length > 3 ? maius(NUM[lista.length] || lista.length) + ' testes de autoconhecimento' : lista.map(k => ROT[k]).join(' · ');
   /* boas-vindas da terapeuta logo abaixo da foto (travas_paginas.dados.boas_vindas = { titulo, paragrafos: [...] }) */
   const bv = dd && dd.boas_vindas;
   if(bv && selo && Array.isArray(bv.paragrafos) && bv.paragrafos.length && !lt.querySelector('.cv-boasvindas'))
@@ -862,20 +863,22 @@ function dvCapaVendas(modo){
 
   /* o que o teste mapeia */
   let meio = '';
+  /* dados.cartoes = { travas:{pergunta,texto}, tracos:{pergunta,texto} }: a terapeuta troca o texto dos cartões; sem isso, vale o padrão */
+  const cartaoTxt = (k, campo, padrao) => { const o = dd && dd.cartoes && dd.cartoes[k]; const v = o && typeof o[campo] === 'string' ? o[campo].trim() : ''; return escV(v || padrao); };
   const CARTOES = {
     travas:`<article class="cv-teste">
         <span class="cv-tag">Individual</span>
         <h3>Teste de Travas Mentais</h3>
-        <p class="cv-pergunta">O que está travando você hoje?</p>
-        <p>Mapeia 10 travas mentais e mostra, em números, quais estão mais ativas em você agora: as que pesam no trabalho, nas relações e nas decisões.</p>
+        <p class="cv-pergunta">${cartaoTxt('travas', 'pergunta', 'O que está travando você hoje?')}</p>
+        <p>${cartaoTxt('travas', 'texto', 'Mapeia 10 travas mentais e mostra, em números, quais estão mais ativas em você agora: as que pesam no trabalho, nas relações e nas decisões.')}</p>
         <p class="cv-meta">Cerca de 7 minutos</p>
         <a class="cv-link" href="${Z.travas}" ${alvo(Z.travas)}>Quero fazer este teste →</a>
       </article>`,
     tracos:`<article class="cv-teste cv-teste-destaque">
         <span class="cv-tag">Individual ou em casal</span>
         <h3>Teste de Traços de Caráter</h3>
-        <p class="cv-pergunta">Como a sua história moldou o seu jeito de ser?</p>
-        <p>Identifica os 5 traços de caráter que se formaram na sua história e mostra, em porcentagem, como eles aparecem no seu dia a dia, junto com os talentos que cada um traz.</p>
+        <p class="cv-pergunta">${cartaoTxt('tracos', 'pergunta', 'Como a sua história moldou o seu jeito de ser?')}</p>
+        <p>${cartaoTxt('tracos', 'texto', 'Identifica os 5 traços de caráter que se formaram na sua história e mostra, em porcentagem, como eles aparecem no seu dia a dia, junto com os talentos que cada um traz.')}</p>
         <p class="cv-meta">Individual ou casal · cerca de 7 minutos</p>
         <a class="cv-link" href="${Z.tracos}" ${alvo(Z.tracos)}>Quero fazer este teste →</a>
       </article>`,

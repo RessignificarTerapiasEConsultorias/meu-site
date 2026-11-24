@@ -101,9 +101,11 @@
     var raiz = getComputedStyle(document.documentElement), base = hexRgb(raiz.getPropertyValue('--ardosia')) || hexRgb(raiz.getPropertyValue('--ardosia-escura'));
     if (!base) return;
     var alvo = rgbHsl(base[0], base[1], base[2]), H = alvo[0], S = Math.min(.62, Math.max(.18, alvo[1]));
+    /* dados.tema_luz (0 a 0.2): deixa o tom da terapeuta mais claro, sem perder a leitura do texto claro por cima */
+    var dadosPg = (window.__T && window.__T.dados) || {}, LUZ = Math.max(0, Math.min(.2, +dadosPg.tema_luz || 0));
     var troca = function (r, g, b) { var x = rgbHsl(r, g, b), hg = x[0] * 360;
       if (!(b > r && b >= g && x[2] < .4 && hg > 198 && hg < 260)) return null;      // só os azuis-noite do tema
-      return hslRgb(H, Math.min(x[1], S), x[2]); };
+      return hslRgb(H, Math.min(x[1], S), Math.min(.4, x[2] + LUZ)); };
     var mexer = function (txt) {
       return txt.replace(/rgba?\((\d+),\s*(\d+),\s*(\d+)/g, function (t, r, g, b) { var n = troca(+r, +g, +b); return n ? t.slice(0, t.indexOf('(') + 1) + n.join(', ') : t; })
                 .replace(/#([0-9a-f]{6})\b/gi, function (t, h) { var c = hexRgb(h), n = c && troca(c[0], c[1], c[2]); return n ? 'rgb(' + n.join(', ') + ')' : t; });
