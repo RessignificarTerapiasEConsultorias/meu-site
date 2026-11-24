@@ -677,7 +677,10 @@ const mpJuntar = itens => { itens = itens.filter(Boolean); return itens.length >
    ============================================================================ */
 const DV_VIDEOS = {
   travas:{ mp4:'https://ressignificarterapiaseconsultorias.com/teste/video/travas-cliente.mp4', poster:'https://ressignificarterapiaseconsultorias.com/teste/video/travas-cliente.jpg',
-    drive:'1NwcnDkixfrgvrN-CbTGhZ2k2M0LuS8pS', titulo:'Teste de Travas Mentais', legenda:'Assista antes de começar: o que são as travas mentais, como acessar o teste e como responder.' }
+    drive:'1NwcnDkixfrgvrN-CbTGhZ2k2M0LuS8pS', titulo:'Teste de Travas Mentais', legenda:'Assista antes de começar: o que são as travas mentais, como acessar o teste e como responder.' },
+  /* optin:true = só aparece na página que o pede em dados.videos (hoje: Tatiana). Para valer em todas as terapeutas, é só tirar o optin. */
+  tracos:{ optin:true, mp4:'https://ressignificarterapiaseconsultorias.com/teste/video/tracos-cliente.mp4', poster:'https://ressignificarterapiaseconsultorias.com/teste/video/tracos-cliente.jpg',
+    drive:'1hS1UzYhUi7z9VCEw57EPSbkvvr3VaXOy', titulo:'Teste de Traços de Caráter', legenda:'Assista antes de começar: como funciona o teste, como responder e o que você recebe no final.' }
 };
 function dvVideoHtml(k){
   const v = DV_VIDEOS[k];
@@ -733,7 +736,7 @@ function dvVideosCapa(lista){
     /* padrão: cada teste da página mostra o seu próprio vídeo, assim que esse vídeo existir (DV_VIDEOS).
        dados.videos = [] desliga todos; ['travas', ...] escolhe quais aparecem. */
     const dd = dvCad(), lig = dd && Array.isArray(dd.videos) ? dd.videos : null;
-    const ks = (lista || []).filter(k => (lig ? lig.indexOf(k) > -1 : true) && DV_VIDEOS[k]);
+    const ks = (lista || []).filter(k => DV_VIDEOS[k] && (lig ? lig.indexOf(k) > -1 : !DV_VIDEOS[k].optin));
     if(!ks.length) return;
     const capa = document.getElementById('tela-capa'), lt = capa && capa.querySelector('.lado-texto');
     const sobra = [];
