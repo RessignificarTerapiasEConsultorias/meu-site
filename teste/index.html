@@ -900,7 +900,7 @@ html.t-erro .t-girar{display:none}
       <h1>Como a sua história moldou o seu jeito de ser?</h1>
       <p class="assinatura" id="tc-assinatura"></p>
       <p class="texto-capa">Desde a gestação até os primeiros anos de vida, o corpo e a mente aprendem a se proteger. Esses jeitos de se proteger viram traços que aparecem até hoje na sua postura, nas suas relações e nas suas decisões.</p>
-      <p class="texto-capa">Este teste identifica cinco traços de caráter (Observador, Conector, Estrategista, Sustentador e Realizador) e mostra, em porcentagem, quais predominam em você. Cada nome descreve uma forma de se proteger que se formou na sua história. Não são doenças nem diagnósticos: são estilos de funcionamento, e cada um traz talentos próprios.</p>
+      <p class="texto-capa">Este teste identifica cinco traços de caráter (Esquizoide, Oral, Psicopata, Masoquista e Rígido) e mostra, em porcentagem, quais predominam em você. Os nomes vêm do estudo do caráter de Reich e Lowen e não têm relação com doenças nem diagnósticos: Psicopata, por exemplo, descreve uma pessoa mais ativa, que toma a frente. Todo mundo tem um pouco de cada traço, e cada um traz talentos próprios.</p>
       <ul class="lista-leve">
         <li>A maioria termina em cerca de 7 minutos</li>
         <li>Você responde de “Nunca” a “Sempre”, no seu tempo</li>
@@ -3082,7 +3082,7 @@ const TC_PERGUNTAS = [
 ];
 
 const TC_LUGAR = ['Pico primário', 'Pico secundário', 'Suporte', 'Suporte', 'Suporte'];
-const TC_ALINHAMENTO = 'Os nomes dos traços (Observador, Conector, Estrategista, Sustentador e Realizador) descrevem a forma como cada pessoa aprendeu a se proteger, com base nos estudos da psicanálise sobre a relação entre a mente e o corpo. Eles não têm relação com doenças mentais, diagnósticos ou desvios de conduta: são estilos de funcionamento do sistema nervoso. Quando o teste fala da infância, fala da percepção da criança, e não da intenção dos pais.';
+const TC_ALINHAMENTO = 'Os nomes dos traços (Esquizoide, Oral, Psicopata, Masoquista e Rígido) foram criados no século passado por médicos e estudiosos da psicanálise que mapearam a relação entre a mente e o corpo. Eles não têm relação com doenças mentais, diagnósticos ou desvios de conduta: são estilos de funcionamento do sistema nervoso. Quando o teste fala da infância, fala da percepção da criança, e não da intenção dos pais.';
 const TC_CHAVE = CHAVE_CODIGOS + '_tracos_';
 const TC_COR = [null, { linha:'#A8542B', fundo:'rgba(168,84,43,.20)' }, { linha:'#2C6E8A', fundo:'rgba(44,110,138,.20)' }];
 const tc = { codigo:'', tipo:'individual', mostrar:true, estado:null, slot:0, modo:'', nomes:{ 1:'', 2:'' }, respostas:[], indice:0, inicio:0, onFim:null, salvarProg:null, dados:null, teia:null };
@@ -3139,7 +3139,7 @@ function tcRadar(canvas, series){
   const maior = Math.max(...series.flatMap(s => s.valores)), topo = Math.max(30, Math.ceil((maior + 3) / 5) * 5);
   const fonte = '700 ' + Math.max(11, Math.round(lado * 0.03)) + 'px Karla, sans-serif', fonteV = '700 ' + Math.max(10, Math.round(lado * 0.027)) + 'px Karla, sans-serif';
   c.font = fonte;
-  const largura = Math.max(...TC_TRACOS.map(t => c.measureText(tcNomesNovos(t.nome)).width), c.measureText('00,00% · 00,00%').width * (series.length > 1 ? 0.95 : 0.5));
+  const largura = Math.max(...TC_TRACOS.map(t => c.measureText(t.nome).width), c.measureText('00,00% · 00,00%').width * (series.length > 1 ? 0.95 : 0.5));
   const cx = lado / 2, cy = lado / 2 + 6, folga = 14, n = TC_TRACOS.length;
   const raio = Math.max(lado * 0.2, Math.min(lado * 0.32, lado / 2 - folga - largura - 6));
   const ponto = (i, f) => { const a = (Math.PI * 2 * i / n) - Math.PI / 2; return [cx + Math.cos(a) * raio * f, cy + Math.sin(a) * raio * f]; };
@@ -3160,7 +3160,7 @@ function tcRadar(canvas, series){
     const a = (Math.PI * 2 * i / n) - Math.PI / 2, x = cx + Math.cos(a) * (raio + folga), y = cy + Math.sin(a) * (raio + folga);
     const alinh = Math.abs(Math.cos(a)) < 0.3 ? 'center' : (Math.cos(a) > 0 ? 'left' : 'right');
     const yb = Math.sin(a) < -0.9 ? y - 18 : y;
-    c.textBaseline = 'middle'; c.textAlign = alinh; c.font = fonte; c.fillStyle = '#401F0D'; c.fillText(tcNomesNovos(t.nome), x, yb);
+    c.textBaseline = 'middle'; c.textAlign = alinh; c.font = fonte; c.fillStyle = '#401F0D'; c.fillText(t.nome, x, yb);
     c.font = fonteV;
     const partes = series.map(s => ({ txt:tcPct(s.valores[i]), cor:s.linha }));
     const sep = ' · ', ws = c.measureText(sep).width, larg = partes.reduce((s, p) => s + c.measureText(p.txt).width, 0) + ws * (partes.length - 1);
@@ -3202,7 +3202,7 @@ function tcHtmlIndividual(calc){
     ${tcHtmlCard(o[0].id, o[0].pct, 1)}${tcHtmlCard(o[1].id, o[1].pct, 2)}
     <h2 class="secao-titulo">Traços de suporte</h2>
     ${o.slice(2).map((x, i) => `<div class="linha-item" style="cursor:default"><span class="esq"><span class="nome">${i + 3}º ${escV(x.nome)} · ${tcPct(x.pct)}</span><span class="sub" style="white-space:normal">${escV(tcTraco(x.id).recurso)}</span></span></div>`).join('')}
-    <div class="aviso-clinico">${escV(TC_ALINHAMENTO)} Este teste é uma ferramenta de autoconhecimento e não substitui diagnóstico nem acompanhamento profissional.</div>`;
+    <div class="aviso-clinico tc-alerta"><b class="tc-alerta-tit">⚠️ Isto não é um diagnóstico</b>${escV(TC_ALINHAMENTO)} Todo mundo tem um pouco de cada traço. Este teste é uma ferramenta de autoconhecimento e não substitui diagnóstico nem acompanhamento profissional: diagnóstico clínico só com um médico ou um psicólogo. Se tiver dúvida sobre o resultado, peça explicação ao seu terapeuta.</div>`;
 }
 function tcHtmlCasal(n1, n2, k){
   const a = escV(n1), b = escV(n2), topo = Math.max(30, Math.ceil((Math.max(...k.serie1, ...k.serie2) + 3) / 5) * 5);
@@ -3225,7 +3225,7 @@ function tcHtmlCasal(n1, n2, k){
     <h2 class="secao-titulo">O traço mais forte de cada um</h2>
     ${tcHtmlCard(k.p1.ordem[0].id, k.p1.ordem[0].pct, 1).replace('<span class="tc-pos">', `<span class="tc-pos">${a} · `)}
     ${tcHtmlCard(k.p2.ordem[0].id, k.p2.ordem[0].pct, 1).replace('<span class="tc-pos">', `<span class="tc-pos">${b} · `)}
-    <div class="aviso-clinico">${escV(TC_ALINHAMENTO)} Este teste é uma ferramenta de autoconhecimento e não substitui diagnóstico nem acompanhamento profissional. Quem lê e interpreta o resultado de vocês é ${escV(T_A)}, na devolutiva.</div>`;
+    <div class="aviso-clinico tc-alerta"><b class="tc-alerta-tit">⚠️ Isto não é um diagnóstico</b>${escV(TC_ALINHAMENTO)} Todo mundo tem um pouco de cada traço. Este teste é uma ferramenta de autoconhecimento e não substitui diagnóstico nem acompanhamento profissional: diagnóstico clínico só com um médico ou um psicólogo. Quem lê e interpreta o resultado de vocês é ${escV(T_A)}, na devolutiva.</div>`;
 }
 const tcSeries1 = calc => [{ valores:TC_TRACOS.map(t => calc.tracos.find(x => x.id === t.id).pct), linha:'#6B3316', fundo:'rgba(107,51,22,.16)' }];
 const tcSeries2 = k => [{ valores:k.serie1, linha:TC_COR[1].linha, fundo:TC_COR[1].fundo }, { valores:k.serie2, linha:TC_COR[2].linha, fundo:TC_COR[2].fundo, tracejado:true }];

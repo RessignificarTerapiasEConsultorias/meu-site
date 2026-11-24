@@ -33,13 +33,31 @@ window.TX_INC = function(el, i, total, chave){
    (travas_paginas.dados: nome_curto e assinatura, ou nome e título). */
 const DV_TERAPEUTA_PADRAO = 'Tati Barbosa';
 const DV_ASSINATURA_PADRAO = 'Tati Barbosa — Análise Corporal & Terapeuta';
-/* Nomes dos traços que o cliente vê. O sistema guarda os nomes técnicos (Esquizoide, Oral, Psicopata, Masoquista, Rígido)
-   para o painel e o robô; tudo o que aparece na tela passa por tcNomesNovos. */
-const TC_NOVOS = { Esquizoide:'Observador', Oral:'Conector', Psicopata:'Estrategista', Masoquista:'Sustentador', 'Rígido':'Realizador' };
+/* "Isto não é um diagnóstico": os nomes dos traços (Esquizoide, Oral, Psicopata, Masoquista, Rígido) são do modelo de
+   caráter de Reich e Lowen e continuam; o que muda é a explicação, em destaque, para o cliente e para a terapeuta. */
 const TC_PROTECAO = { esquizoide:'Proteção pelo recolhimento', oral:'Proteção pela conexão', psicopata:'Proteção pelo controle', masoquista:'Proteção pela contenção', rigido:'Proteção pela busca de reconhecimento e excelência' };
-function tcNomesNovos(s){ return String(s).replace(/(^|[^A-Za-zÀ-ÿ])(Esquizoide|Oral|Psicopata|Masoquista|Rígido)(?![A-Za-zÀ-ÿ])/g, (m, a, b) => a + TC_NOVOS[b]); }
-function tcRotuloTraco(id){ const t = tcTraco(id); return 'O ' + (TC_NOVOS[t.nome] || t.nome); }
-function dvCorrespondencia(){ return '<div class="dv-caixa dv-sem-print"><h3>Correspondência com os nomes clássicos <small>(só você vê)</small></h3><p>Observador = Esquizoide · Conector = Oral · Estrategista = Psicopata · Sustentador = Masoquista · Realizador = Rígido. O cliente só vê os nomes novos.</p></div>'; }
+const TC_SIGNIFICA = {
+  esquizoide:'Aqui, Esquizoide descreve quem se protege indo para dentro: mais reservado(a), mais no pensamento, com muita criatividade. Não tem relação com esquizofrenia nem com nenhum transtorno.',
+  oral:'Aqui, Oral descreve quem se protege buscando vínculo e afeto: mais comunicativo(a), sensível e ligado(a) às pessoas.',
+  psicopata:'Aqui, Psicopata descreve quem se protege pelo controle: uma pessoa mais ativa, que toma a frente, lidera e negocia. Não quer dizer que a pessoa seja psicopata: não tem relação com psicopatia nem com nenhum transtorno.',
+  masoquista:'Aqui, Masoquista descreve quem se protege contendo e sustentando: aguenta firme, é leal, carrega muito e guarda o que sente. Não tem relação com gostar de sofrer nem com nenhum transtorno.',
+  rigido:'Aqui, Rígido descreve quem se protege pela busca de excelência e de reconhecimento: focado(a), exigente e muito executor(a).'
+};
+const TC_EQUILIBRIO = 'Todo mundo tem um pouco de cada um dos 5 traços. É como o quente e o frio, o seco e o molhado: ninguém vive só de um lado, e a saúde está no equilíbrio. Os percentuais mostram quanto de cada jeito de se proteger aparece hoje, e não quem a pessoa é.';
+function tcAlertaHtml(terapeuta){
+  return terapeuta
+    ? '<div class="tc-alerta" role="note"><b class="tc-alerta-tit">⚠️ Atenção, terapeuta: isto não é um diagnóstico</b><p>Os nomes dos traços (Esquizoide, Oral, Psicopata, Masoquista e Rígido) descrevem estruturas de caráter do modelo de Reich e Lowen, e não transtornos. Antes de mostrar o resultado, explique ao cliente o que cada nome quer dizer e que todo mundo tem um pouco de cada traço.</p><p>Não use este resultado como diagnóstico, laudo ou avaliação psicológica. Diagnóstico clínico só pode ser feito por um médico ou por um psicólogo (como o neuropsicólogo): se perceber sofrimento importante, encaminhe.</p></div>'
+    : '<div class="tc-alerta" role="note"><b class="tc-alerta-tit">⚠️ Isto não é um diagnóstico</b><p>Este resultado mostra traços de caráter: jeitos de se proteger que todo mundo tem, em proporções diferentes. Nenhum nome aqui, nem Psicopata, Esquizoide ou Masoquista, quer dizer doença, transtorno ou diagnóstico.</p><p>' + escV(TC_EQUILIBRIO) + '</p><p><b>Ficou com alguma dúvida? Peça ao seu terapeuta para explicar cada ponto.</b> Diagnóstico clínico só pode ser feito por um médico ou por um psicólogo (como o neuropsicólogo).</p></div>';
+}
+(function tcAlertaEstilo(){
+  if(typeof document === 'undefined' || document.getElementById('tc-alerta-css')) return;
+  const st = document.createElement('style'); st.id = 'tc-alerta-css';
+  st.textContent = '.tc-alerta{position:relative;margin:0 0 22px;padding:18px 20px 16px;border-radius:16px;border:2px solid #E2483A;background:linear-gradient(180deg,#FFF3F1,#FFE3DE);color:#5A1C14;font-size:15.5px;line-height:1.5;box-shadow:0 2px 0 #B5321F,0 8px 22px -6px rgba(226,72,58,.55),inset 0 1px 0 rgba(255,255,255,.8);transform:translateZ(0);animation:tcPulso 2.2s ease-in-out infinite}'
+    + '.tc-alerta-tit{display:block;font-size:18px;color:#B5321F;margin-bottom:6px;letter-spacing:.2px}.tc-alerta p{margin:6px 0 0}'
+    + '@keyframes tcPulso{0%,100%{box-shadow:0 2px 0 #B5321F,0 8px 22px -6px rgba(226,72,58,.55),inset 0 1px 0 rgba(255,255,255,.8)}50%{box-shadow:0 2px 0 #B5321F,0 10px 34px 0 rgba(226,72,58,.85),inset 0 1px 0 rgba(255,255,255,.8)}}'
+    + '@media (prefers-reduced-motion:reduce){.tc-alerta{animation:none}}@media print{.tc-alerta{animation:none;box-shadow:none}}';
+  document.head.appendChild(st);
+})();
 function dvCad(){ return (window.__T && window.__T.dados) || null; }
 function dvTerapeuta(){ const d = dvCad(); return d ? (d.nome_curto || d.nome) : DV_TERAPEUTA_PADRAO; }
 function dvAssinatura(){ const d = dvCad(); return d ? (d.assinatura || (d.nome + (d.titulo ? ' — ' + d.titulo : ''))) : DV_ASSINATURA_PADRAO; }
@@ -276,14 +294,15 @@ function dvAcao(n, a, V){
 }
 function dvPico(id, pct, pos, V, nomeQuem){
   const t = tcTraco(id), d = DV[id];
-  return `<div class="dv-pico"><div class="dv-pico-topo"><b>${nomeQuem ? escV(nomeQuem) + ' · ' : ''}${pos === 1 ? 'PICO PRIMÁRIO' : 'PICO SECUNDÁRIO'}: ${escV(tcRotuloTraco(id)).toUpperCase()} (${tcPct(pct)})</b><span>${escV(d.tag)}</span></div>
-    <p><b>${escV(TC_PROTECAO[id] || '')}.</b></p>
+  return `<div class="dv-pico"><div class="dv-pico-topo"><b>${nomeQuem ? escV(nomeQuem) + ' · ' : ''}${pos === 1 ? 'PICO PRIMÁRIO' : 'PICO SECUNDÁRIO'}: ${escV(t.nome).toUpperCase()} (${tcPct(pct)})</b><span>${escV(d.tag)}</span></div>
+    <p><b>${escV(TC_PROTECAO[id] || '')}.</b> ${escV(TC_SIGNIFICA[id] || '')}</p>
     <p><b>A dor central:</b> ${V(t.dor)}</p><p><b>Formação na infância:</b> ${V(d.formacao)}</p>
     <p><b>No dia a dia:</b> ${V(t.dia)}</p><p><b>Virada de chave:</b> ${V(t.virada)}</p></div>`;
 }
 function dvAlinhamento(prim){
   return `<div class="dv-caixa"><h3>O que são traços de caráter? (alinhamento inicial)</h3>
-    <p>${prim ? escV(prim) + ', antes' : 'Antes'} de apresentar o resultado e os percentuais, quero fazer um alinhamento muito importante. Os nomes dos traços que usamos aqui (<i>Observador, Conector, Estrategista, Sustentador e Realizador</i>) descrevem a forma como cada pessoa aprendeu a se proteger. Eles se apoiam nos estudos da psicanálise sobre a relação entre a mente e o corpo. <b>Eles não têm qualquer relação com doenças mentais, diagnósticos psiquiátricos ou desvios de conduta.</b> Na nossa terapia, encare cada um desses nomes como estilos de funcionamento do sistema nervoso.</p>
+    <p>${prim ? escV(prim) + ', antes' : 'Antes'} de apresentar o resultado e os percentuais, quero fazer um alinhamento muito importante. Os nomes dos traços de caráter que usamos aqui (<i>Esquizoide, Oral, Psicopata, Masoquista e Rígido</i>) foram criados no século passado pelos cientistas e médicos da psicanálise que mapearam a relação entre a mente e o corpo. <b>Eles não têm qualquer relação com doenças mentais, diagnósticos psiquiátricos ou desvios de conduta.</b> Na nossa terapia, encare cada um desses nomes como estilos de funcionamento do sistema nervoso.</p>
+    <p>${escV(TC_EQUILIBRIO)}</p>
     <p>Outro ponto fundamental: quando falarmos da infância, lembre-se de que estamos lidando com a <b>percepção do sistema nervoso quando bebê ou criança</b>, e não com a intenção dos pais. Eles deram o melhor que podiam com os recursos que tinham. O nosso foco aqui não é julgar o passado, mas libertar o presente.</p>
     <p>Os traços de caráter são mapas de como a mente e o corpo se moldaram para responder às experiências da infância. Eles não representam defeitos, mas sim mecanismos de defesa inteligentes que geraram os maiores talentos de cada pessoa. Compreender o perfil é o primeiro passo para relaxar a "armadura" e viver com mais leveza, equilíbrio e autenticidade.</p></div>`;
 }
@@ -316,7 +335,7 @@ function dvLeituraClinica(resps, nome, calc){
 
 /* ---------------------------------------------------------------------------- */
 /* DEVOLUTIVA INDIVIDUAL. o = { nome, genero, data, calc, respostas, terapeuta:true|false } */
-function dvIndividual(o){ const h = tcNomesNovos(_dvIndividual(o)); return o && o.terapeuta ? h.replace('</article>', dvCorrespondencia() + '</article>') : h; }
+function dvIndividual(o){ return _dvIndividual(o).replace(/(<article[^>]*>)/, '$1' + tcAlertaHtml(!!(o && o.terapeuta))); }
 function _dvIndividual(o){
   const g = o.genero, prim = tcPrim(o.nome), c = o.calc, ord = c.ordem, p1 = ord[0], p2 = ord[1];
   const d1 = DV[p1.id], d2 = DV[p2.id], par = DV_PARES[dvPar(p1.id, p2.id)];
@@ -361,7 +380,7 @@ function _dvIndividual(o){
 }
 
 /* DEVOLUTIVA DE CASAL. o = { a:{nome,genero,calc,respostas}, b:{...}, k, data, terapeuta } */
-function dvCasal(o){ const h = tcNomesNovos(_dvCasal(o)); return o && o.terapeuta ? h.replace('</article>', dvCorrespondencia() + '</article>') : h; }
+function dvCasal(o){ return _dvCasal(o).replace(/(<article[^>]*>)/, '$1' + tcAlertaHtml(!!(o && o.terapeuta))); }
 function _dvCasal(o){
   const A = o.a, B = o.b, k = o.k, nA = tcPrim(A.nome), nB = tcPrim(B.nome);
   const pa = A.calc.ordem[0], pb = B.calc.ordem[0], da = DV[pa.id], db = DV[pb.id], ca = da.casal, cb = db.casal;
@@ -976,7 +995,7 @@ function dvCapaVendas(modo){
     meio = `<section class="cv-faixa"><div class="cv-in">
     <div class="cv-centro"><span class="cv-olho">O que o teste mapeia</span>
     <h2>5 traços de caráter. Qual deles comanda o seu jeito de ser?</h2>
-    <p class="cv-sub">Os nomes descrevem como cada pessoa aprendeu a se proteger: são estilos de funcionamento, não doenças. Cada traço traz talentos próprios.</p></div>
+    <p class="cv-sub">Os nomes vêm da psicanálise e descrevem estilos de funcionamento, não doenças. Cada traço traz talentos próprios.</p></div>
     <div class="cv-itens">${lista.map((t, i) => `<div class="cv-item"><span class="cv-item-n">${i + 1}</span><b>${escV(t.nome)}</b><small>${escV(t.recurso || '')}</small></div>`).join('')}</div>
     <p class="cv-sigilo">Responda com sinceridade e no seu tempo: ninguém vê as suas respostas além d${escV(quem)}.</p>
   </div></section>`;
@@ -1026,7 +1045,7 @@ function dvCapaVendas(modo){
       pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre o teste.'),
       pq('Como funciona em casal? Precisamos estar juntos?', 'Não precisam. Cada um responde no próprio celular, quando puder, com o mesmo código. Se preferirem, dá para responder juntos, no mesmo aparelho, um de cada vez. Cada um recebe a sua devolutiva individual, e vocês recebem a do casal.'),
       pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '. No casal, cada um responde sozinho(a), sem ver as respostas do outro.'),
-      pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes descrevem como cada pessoa aprendeu a se proteger. Nenhum deles é doença, e cada um traz talentos próprios.'),
+      pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.'),
       pq('Quanto tempo leva?', 'A maioria termina em cerca de 7 minutos, no celular ou no computador. Escolha um momento tranquilo para responder de uma vez, com sinceridade.')
     ] : soMpcc ? [
       pq('Como consigo o meu código?', 'Toque em “Quero fazer o meu teste” e fale com ' + escV(comQuem) + ' pelo WhatsApp. Você recebe o seu código, e o link já abre a avaliação.'),
@@ -1040,7 +1059,7 @@ function dvCapaVendas(modo){
       pq('Preciso fazer ' + (lista.length > 2 ? 'todos os testes' : 'os dois testes') + '?', 'Não. Você pode fazer ' + (lista.length > 2 ? 'só um deles, ou todos' : 'um deles ou os dois') + '. ' + (tem('travas') && tem('tracos') ? 'Eles se completam: as travas mostram o que pesa em você hoje, e os traços mostram de onde isso vem.' : 'Eles se completam: cada um olha para o seu jeito de funcionar por um ângulo diferente.')),
       casal ? pq('Como funciona em casal? Precisamos estar juntos?', 'Não precisam. Cada um responde no próprio celular, quando puder, com o mesmo código. Se preferirem, dá para responder juntos, no mesmo aparelho, um de cada vez. Cada um recebe a sua devolutiva individual, e vocês recebem a do casal.') : '',
       pq('Quem vê as minhas respostas?', 'Só ' + escV(quem) + '.' + (casal ? ' No casal, cada um responde sozinho(a), sem ver as respostas do outro.' : '')),
-      casal ? pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes descrevem como cada pessoa aprendeu a se proteger. Nenhum deles é doença, e cada um traz talentos próprios.') : '',
+      casal ? pq('Os nomes dos traços são diagnósticos?', 'Não. Os nomes vêm da psicanálise e descrevem estilos de funcionamento. Nenhum deles é doença, e cada um traz talentos próprios.') : '',
       tem('mpcc') ? pq('O MPCC é um teste psicológico?', 'Não. É uma ferramenta de autoconhecimento e desenvolvimento pessoal, que mostra tendências de comportamento neste momento. Não é diagnóstico.') : ''
     ].concat(extras.map(k => pq.apply(null, EX[k].faq(escV(comQuem)))), [
       comExtras ? pq('Quanto tempo leva?', 'Depende do teste: ' + (tem('travas') ? ['o Teste de Travas, cerca de 7 minutos'] : []).concat(extras.map(k => EX[k].tempo)).join('; ') + '. Escolha um momento tranquilo e responda com sinceridade.')
