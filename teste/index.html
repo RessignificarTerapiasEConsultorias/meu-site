@@ -4752,11 +4752,39 @@ function gerar(){
   mostrar(0); requestAnimationFrame(()=>{ $$('#stage .slide').forEach(s=>s.classList.add('ativo')); ajustarTexto(); $$('#stage .slide').forEach(s=>s.classList.remove('ativo')); mostrar(0); });
 }
 function fechar(){ $('#tela-deck').classList.remove('ativo'); document.body.style.overflow=''; if(document.fullscreenElement) document.exitFullscreen(); }
+/* copia os slides para uma aba propria e imprime de la: no celular e o unico jeito de o PDF sair com a apresentacao */
+function imprimirEmAbaPropria(){
+  const janela = window.open('', '_blank');
+  if(!janela){ window.print(); return; }                               /* pop-up bloqueado: tenta do jeito antigo */
+  const estilos = $$('style').map(e=>e.outerHTML).join('');
+  const deck = $('#tela-deck'), tema = deck ? (deck.getAttribute('style')||'') : '';
+  const slides = $$('#stage .slide').map(e=>{ const c=e.cloneNode(true); c.classList.add('ativo'); return c.outerHTML; }).join('');
+  const titulo = esc((($('#ap-quem')||{}).textContent||'Apresentacao'));
+  janela.document.open();
+  janela.document.write('<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>'+titulo+'</title>'
+    + '<meta name="viewport" content="width=1280">' + estilos
+    + '<style>html,body{margin:0;background:#fff}#tela-deck{position:static;display:block;background:none}'
+    + '.stage{position:static;transform:none;width:1280px;height:auto;margin:0 auto}'
+    + '.slide{position:relative!important;visibility:visible!important;break-after:page;page-break-after:always}'
+    + '@media screen{.stage{zoom:calc(100vw / 1280)}}</style>'
+    + '</head><body><div id="tela-deck" class="ativo" style="'+tema+'"><div class="stage" id="stage">'+slides+'</div></div></body></html>');
+  janela.document.close();
+  const imprimir = () => { try{ janela.focus(); janela.print(); }catch(e){} };
+  if(janela.document.readyState === 'complete') setTimeout(imprimir, 400);
+  else janela.addEventListener('load', ()=>setTimeout(imprimir, 400));
+}
 function ligarViz(){
   $('#d-editar').addEventListener('click',fechar);
   $('#d-ant').addEventListener('click',()=>mostrar(V.i-1)); $('#d-prox').addEventListener('click',()=>mostrar(V.i+1));
   $('#d-tela').addEventListener('click',()=>{ const el=$('#tela-deck'); if(document.fullscreenElement) document.exitFullscreen(); else (el.requestFullscreen||el.webkitRequestFullscreen||(()=>{})).call(el); });
-  $('#d-pdf').addEventListener('click',()=>{ const sl=$$('#stage .slide'); sl.forEach(s=>s.classList.add('ativo')); setTimeout(()=>{ window.print(); },80); });
+  $('#d-pdf').addEventListener('click',()=>{
+    const sl=$$('#stage .slide'); sl.forEach(s=>s.classList.add('ativo'));
+    /* No celular, imprimir de dentro do quadro (iframe) imprime a PAGINA DE TRAS (o resultado), nao a apresentacao.
+       Entao abrimos uma aba so com os slides e mandamos imprimir la. No computador o jeito antigo funciona e fica como esta. */
+    const noCelular = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+    if(noCelular && window.parent !== window){ setTimeout(()=>{ imprimirEmAbaPropria(); mostrar(V.i); }, 60); return; }
+    setTimeout(()=>{ window.print(); },80);
+  });
   window.addEventListener('afterprint',()=>mostrar(V.i));
   $('#stage').addEventListener('click',e=>{ if(e.target.closest('a')) return; const r=$('#stage').getBoundingClientRect(); mostrar(V.i + ((e.clientX-r.left) < r.width*0.3 ? -1 : 1)); });
   addEventListener('resize',escala); addEventListener('fullscreenchange',escala);
