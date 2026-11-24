@@ -59,6 +59,18 @@
     h += '<div class="wa-zap-txt">' + (corpo && corpo.text ? zap(trocar(corpo.text, vars)) : '<span class="vazio">Escreva o texto da mensagem.</span>') + "</div>";
     if (rod && rod.text) h += '<div class="wa-zap-rod">' + esc(rod.text) + "</div>";
     h += '<div class="wa-zap-hora">' + esc(opts.hora || "14:32") + "</div></div>";
+    const car = achar(comps, "CAROUSEL");
+    if (car && (car.cards || []).length) {
+      const urls = opts.cardsUrls || [];
+      h += '<div class="wa-zap-carrossel">' + car.cards.map(function (cd, i) {
+        const cc = cd.components || [], ch = achar(cc, "HEADER"), cb = achar(cc, "BODY"), cbt = botoesDe(cc);
+        const f = ch ? String(ch.format || "IMAGE").toUpperCase() : "IMAGE", u = urls[i];
+        let m = u ? (f === "VIDEO" ? '<video src="' + esc(u) + '" muted playsinline></video>' : '<img src="' + esc(u) + '" alt="Card ' + (i + 1) + '">')
+                  : '<div class="wa-zap-vazia"><span aria-hidden="true">' + (ICONE_FORMATO[f] || "▣") + "</span><small>Card " + (i + 1) + "</small></div>";
+        return '<div class="wa-zap-card"><div class="wa-zap-card-midia">' + m + '</div><div class="wa-zap-card-txt">' + (cb && cb.text ? zap(cb.text) : '<span class="vazio">Texto do card</span>') + "</div>" +
+          cbt.map(function (b) { const ic = String(b.type).toUpperCase() === "URL" ? "↗" : "↩"; return '<div class="wa-zap-botao"><span aria-hidden="true">' + ic + "</span> " + esc(b.text || "(sem texto)") + "</div>"; }).join("") + "</div>";
+      }).join("") + "</div>";
+    }
     if (bts.length) {
       h += '<div class="wa-zap-botoes">' + bts.map(function (b) {
         const t = String(b.type).toUpperCase(), ic = t === "URL" ? "↗" : t === "PHONE_NUMBER" ? "✆" : "↩";
@@ -70,13 +82,21 @@
 
   /* componentes no formato da Meta, a partir do que está digitado no editor */
   function compsDoForm(c) {
-    const comps = [], cabT = String(c.cabTipo || "").toUpperCase();
+    const comps = [], cabT = String(c.cabTipo || "").toUpperCase(), ehCar = cabT.indexOf("CAROUSEL") === 0;
     if (cabT === "TEXT") comps.push({ type: "HEADER", format: "TEXT", text: String(c.cabTexto || "") });
-    else if (cabT && cabT !== "TEXT") comps.push({ type: "HEADER", format: cabT });
+    else if (cabT && !ehCar) comps.push({ type: "HEADER", format: cabT });
     const corpo = { type: "BODY", text: String(c.corpo || "") };
     const ex = (c.exemplos || []).map(function (x) { return String(x || ""); });
     if (varsDe(corpo.text).length && ex.length) corpo.example = { body_text: [ex] };
     comps.push(corpo);
+    if (ehCar) {
+      const fmt = cabT === "CAROUSEL_VIDEO" ? "VIDEO" : "IMAGE";
+      comps.push({ type: "CAROUSEL", cards: (c.cards || []).map(function (cd) {
+        return { components: [{ type: "HEADER", format: fmt }, { type: "BODY", text: String(cd.corpo || "") },
+          { type: "BUTTONS", buttons: (cd.botoes || []).map(function (b) { return b.tipo === "URL" ? { type: "URL", text: b.texto || "", url: b.url || "" } : { type: "QUICK_REPLY", text: b.texto || "" }; }) }] };
+      }) });
+      return comps;
+    }
     if (String(c.rodape || "").trim()) comps.push({ type: "FOOTER", text: String(c.rodape).trim() });
     const bs = (c.botoes || []).map(function (b) {
       if (b.tipo === "URL") return { type: "URL", text: b.texto || "", url: b.valor || "" };
@@ -166,7 +186,19 @@
     let cabOk = true, cabDica = "";
     if (cabT === "TEXT" && !String(c.cabTexto || "").trim()) { cabOk = false; cabDica = 'Escreva o título ou escolha "Sem cabeçalho".'; }
     if ((cabT === "IMAGE" || cabT === "VIDEO" || cabT === "DOCUMENT") && !c.cabAmostra) { cabOk = false; cabDica = 'Escolha o arquivo do cabeçalho e espere o aviso "exemplo aceito pelo Meta".'; }
-    add("cabecalho", cabOk, true, "Cabeçalho completo", cabDica);
+    if (cabT.indexOf("CAROUSEL") === 0) {
+      const cards = c.cards || [];
+      const falta = [];
+      if (cards.length < 2 || cards.length > 10) falta.push("de 2 a 10 cards");
+      cards.forEach(function (cd, i) {
+        const n = i + 1, tx = String(cd.corpo || "").trim();
+        if (!cd.handle) falta.push("arquivo do card " + n);
+        if (!tx) falta.push("texto do card " + n); else if (tx.length > 160) falta.push("card " + n + " com até 160 caracteres");
+        (cd.botoes || []).forEach(function (b) { if (!String(b.texto || "").trim()) falta.push("botão do card " + n); if (b.tipo === "URL" && !/^https:\/\//.test(String(b.url || ""))) falta.push("link do card " + n); });
+      });
+      cabOk = !falta.length; cabDica = cabOk ? "" : "Falta: " + falta.slice(0, 4).join(", ") + (falta.length > 4 ? "..." : "") + ".";
+    }
+    add("cabecalho", cabOk, true, cabT.indexOf("CAROUSEL") === 0 ? "Cards do carrossel completos" : "Cabeçalho completo", cabDica);
 
     const mk = contem(corpo, PAL_MKT), ut = contem(corpo, PAL_UTIL);
     let catOk = true, catDica = "";
