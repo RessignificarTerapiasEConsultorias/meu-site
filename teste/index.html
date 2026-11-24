@@ -4752,37 +4752,60 @@ function gerar(){
   mostrar(0); requestAnimationFrame(()=>{ $$('#stage .slide').forEach(s=>s.classList.add('ativo')); ajustarTexto(); $$('#stage .slide').forEach(s=>s.classList.remove('ativo')); mostrar(0); });
 }
 function fechar(){ $('#tela-deck').classList.remove('ativo'); document.body.style.overflow=''; if(document.fullscreenElement) document.exitFullscreen(); }
-/* copia os slides para uma aba propria e imprime de la: no celular e o unico jeito de o PDF sair com a apresentacao */
-function imprimirEmAbaPropria(){
-  const janela = window.open('', '_blank');
-  if(!janela){ window.print(); return; }                               /* pop-up bloqueado: tenta do jeito antigo */
-  const estilos = $$('style').map(e=>e.outerHTML).join('');
-  const deck = $('#tela-deck'), tema = deck ? (deck.getAttribute('style')||'') : '';
-  const slides = $$('#stage .slide').map(e=>{ const c=e.cloneNode(true); c.classList.add('ativo'); return c.outerHTML; }).join('');
-  const titulo = esc((($('#ap-quem')||{}).textContent||'Apresentacao'));
-  janela.document.open();
-  janela.document.write('<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>'+titulo+'</title>'
-    + '<meta name="viewport" content="width=1280">' + estilos
-    + '<style>html,body{margin:0;background:#fff}#tela-deck{position:static;display:block;background:none}'
-    + '.stage{position:static;transform:none;width:1280px;height:auto;margin:0 auto}'
-    + '.slide{position:relative!important;visibility:visible!important;break-after:page;page-break-after:always}'
-    + '@media screen{.stage{zoom:calc(100vw / 1280)}}</style>'
-    + '</head><body><div id="tela-deck" class="ativo" style="'+tema+'"><div class="stage" id="stage">'+slides+'</div></div></body></html>');
-  janela.document.close();
-  const imprimir = () => { try{ janela.focus(); janela.print(); }catch(e){} };
-  if(janela.document.readyState === 'complete') setTimeout(imprimir, 400);
-  else janela.addEventListener('load', ()=>setTimeout(imprimir, 400));
+/* ---- PDF no celular: monta o arquivo aqui mesmo, slide por slide (sem impressao e sem aba nova) ---- */
+function apCarregarLib(src, ms){ return new Promise((ok, falha) => {
+  const e = document.createElement('script'); e.src = src;
+  const t = setTimeout(() => falha(new Error('demorou')), ms || 15000);
+  e.onload = () => { clearTimeout(t); ok(); };
+  e.onerror = () => { clearTimeout(t); falha(new Error('lib')); };
+  document.head.appendChild(e);
+}); }
+const apPrazo = (promessa, ms) => Promise.race([promessa, new Promise((_, f) => setTimeout(() => f(new Error('demorou')), ms))]);
+async function baixarPdfDoCelular(){
+  const bt = $('#d-pdf'), rotulo = bt.innerHTML;
+  const stage = $('#stage'), transformAntes = stage.style.transform;
+  const slides = $$('#stage .slide');
+  if(!slides.length) return;
+  bt.disabled = true; bt.textContent = 'Gerando o PDF...';
+  try{
+    if(!window.html2canvas) await apCarregarLib('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    if(!(window.jspdf && window.jspdf.jsPDF)) await apCarregarLib('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    stage.style.transform = 'none';                                  /* a escala da tela atrapalha a captura */
+    const pdf = new window.jspdf.jsPDF({ unit:'px', format:[1280,720], orientation:'landscape' });
+    for(let i = 0; i < slides.length; i++){
+      slides.forEach(x => x.classList.remove('ativo'));
+      slides[i].classList.add('ativo');
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const cv = await apPrazo(window.html2canvas(slides[i], { scale:1.5, backgroundColor:null, useCORS:true, logging:false,
+        width:1280, height:720, windowWidth:1280, windowHeight:720, scrollX:0, scrollY:0 }), 25000);
+      if(i) pdf.addPage([1280,720], 'landscape');
+      pdf.addImage(cv.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 1280, 720);
+      bt.textContent = 'Gerando o PDF... ' + (i+1) + '/' + slides.length;
+    }
+    const quem = ((LEAD && (LEAD.nome || LEAD.prim)) || 'apresentacao').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    pdf.save('Apresentacao-' + (quem || 'cliente') + '.pdf');
+  }catch(e){
+    console.log('PDF da apresentacao', e);
+    alert('Nao consegui montar o arquivo agora. Vou abrir a tela de impressao: escolha "Salvar em Arquivos".');
+    slides.forEach(x => x.classList.add('ativo'));
+    setTimeout(() => { window.print(); }, 120);
+  }finally{
+    stage.style.transform = transformAntes;
+    bt.disabled = false; bt.innerHTML = rotulo;
+    mostrar(V.i);
+  }
 }
 function ligarViz(){
   $('#d-editar').addEventListener('click',fechar);
   $('#d-ant').addEventListener('click',()=>mostrar(V.i-1)); $('#d-prox').addEventListener('click',()=>mostrar(V.i+1));
   $('#d-tela').addEventListener('click',()=>{ const el=$('#tela-deck'); if(document.fullscreenElement) document.exitFullscreen(); else (el.requestFullscreen||el.webkitRequestFullscreen||(()=>{})).call(el); });
   $('#d-pdf').addEventListener('click',()=>{
-    const sl=$$('#stage .slide'); sl.forEach(s=>s.classList.add('ativo'));
-    /* No celular, imprimir de dentro do quadro (iframe) imprime a PAGINA DE TRAS (o resultado), nao a apresentacao.
-       Entao abrimos uma aba so com os slides e mandamos imprimir la. No computador o jeito antigo funciona e fica como esta. */
+    /* No celular, mandar imprimir daqui de dentro do quadro (iframe) imprime a PAGINA DE TRAS: o PDF saia com o
+       resultado, nao com a apresentacao. Abrir uma aba tambem nao resolve, porque o iPhone bloqueia aba nova.
+       Entao, no celular, montamos o arquivo PDF aqui mesmo, slide por slide. No computador a impressao funciona e fica como esta. */
     const noCelular = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'');
-    if(noCelular && window.parent !== window){ setTimeout(()=>{ imprimirEmAbaPropria(); mostrar(V.i); }, 60); return; }
+    if(noCelular){ baixarPdfDoCelular(); return; }
+    const sl=$$('#stage .slide'); sl.forEach(s=>s.classList.add('ativo'));
     setTimeout(()=>{ window.print(); },80);
   });
   window.addEventListener('afterprint',()=>mostrar(V.i));
