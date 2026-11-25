@@ -4543,7 +4543,7 @@ function montarSlides(d){
   /* 3 · o desafio (o mapa) */
   slide('', `${ey(d.ouvi.length ? 'O que o seu mapa confirma' : 'O que o seu mapa mostrou')}
     <h2>O desafio é de ${esc(lib1.x)}, não de ${esc(lib1.y)}.</h2>
-    <div class="g2 fit" style="max-height:400px">${prio.slice(0,4).map((t,i)=>`<div class="cd ${i===0?'dest':''}"><h3>${esc(t.nome)} · ${NT(t)}</h3><p>${esc(LIB[t.id].resumo)}</p></div>`).join('')}</div>`);
+    <div class="g2 fit" style="max-height:400px">${prio.map((t,i)=>`<div class="cd ${i===0?'dest':''}"><h3>${esc(t.nome)} · ${NT(t)}</h3><p>${esc(LIB[t.id].resumo)}</p></div>`).join('')}</div>`);
 
   /* 4 · palavras da pessoa (opcional) */
   if(d.palavras && (L.motivo||L.dor||L.olhar)){
@@ -4583,12 +4583,12 @@ function montarSlides(d){
 
   /* 8 · o caminho em fases */
   const s1 = Math.max(1, Math.round(pac.sess*.4)), s2 = Math.max(1, Math.round(pac.sess*.35)), s3 = Math.max(1, pac.sess - s1 - s2);
-  const prio2 = prio.slice(1,3);
+  const prio2 = prio.slice(1);   /* todas as travas altas além da primeira entram na Fase 2 (antes só 2) */
   const fase = (num, rot, rng, titulo, texto) => `<div class="cd fit" style="max-height:430px"><div class="peq">${rot} · ${rng}</div><h3>${esc(titulo)}</h3><p>${esc(texto)}</p></div>`;
   slide('', `${ey('O caminho')}<h2>${esc(VOC.caminhoTit)}</h2>
     <div class="g3">
       ${fase(1,'Fase 1',`sessões 1 a ${s1}`, p1.nome, VOC.fase1+(TEC[p1.id]||''))}
-      ${fase(2,'Fase 2',`sessões ${s1+1} a ${s1+s2}`, prio2.length ? prio2.map(t=>t.nome).join(' e ') : 'Aprofundar', prio2.length ? VOC.fase2+(TEC[prio2[0].id]||'') : 'Aprofundamos o que apareceu na primeira fase e consolidamos as mudanças.')}
+      ${fase(2,'Fase 2',`sessões ${s1+1} a ${s1+s2}`, prio2.length ? prio2.map(t=>t.nome).join(', ').replace(/, ([^,]*)$/, ' e $1') : 'Aprofundar', prio2.length ? VOC.fase2+(prio2.length > 2 ? prio2.map(t => t.nome + ': ' + (TEC[t.id]||'')).join(' ') : (TEC[prio2[0].id]||'')) : 'Aprofundamos o que apareceu na primeira fase e consolidamos as mudanças.')}
       ${fase(3,'Fase 3',`sessões ${s1+s2+1} a ${pac.sess}`, 'Consolidar', 'Fixamos o que mudou, revemos o mapa e deixamos um plano para você continuar sozinho.')}
     </div>`);
 
