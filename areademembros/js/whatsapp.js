@@ -162,8 +162,11 @@
   }
 
   /* ---------- configuração ---------- */
+  /* a conta do CRM de quem está usando (a configuração, o número e o webhook são dela) */
+  let minhaConta = null;
   async function carregarConfig() {
-    cfg = await ler(supa().from("wa_config").select("*").eq("id", 1).single());
+    if (!minhaConta) { try { minhaConta = await ler(supa().rpc("crm_conta_minha")); } catch (e) { minhaConta = null; } }
+    cfg = await ler(supa().from("wa_config").select("*").limit(1).single());   // as regras do banco só deixam ver a da própria conta
     const ok = cfg.token_configurado && cfg.phone_number_id;
     const s = $("selStatus");
     if (!ok) { s.textContent = "Não conectado"; s.className = "selo pendente"; }
@@ -184,7 +187,8 @@
     $("cfAppId").value = cfg.app_id || "";
     $("cfToken").placeholder = cfg.token_configurado ? "já salvo (cole outro só para trocar)" : "cole aqui o token (começa com EA...)";
     $("cfSegredo").placeholder = cfg.segredo_app_configurado ? "já salva (cole outra só para trocar)" : "32 letras e números";
-    $("cfUrl").value = SUPABASE_URL + "/functions/v1/whatsapp";
+    // a conta principal usa o endereço de sempre; as outras levam a conta no endereço
+    $("cfUrl").value = SUPABASE_URL + "/functions/v1/whatsapp" + (minhaConta && minhaConta.principal === false ? "?conta=" + encodeURIComponent(cfg.conta_id) : "");
     $("cfVerify").value = cfg.verify_token || "";
     desenharAvisoTpl();
     $("cfLimite").value = cfg.limite_diario; $("cfHi").value = cfg.disparo_hora_inicio; $("cfHf").value = cfg.disparo_hora_fim;
@@ -239,7 +243,7 @@
     if (!(lim >= 1) || !(hi >= 0 && hi <= 23) || !(hf >= 1 && hf <= 24) || hf <= hi || !(pm >= 0) || !(pu >= 0)) return aviso("Confira os números: o horário final precisa ser depois do inicial.", true);
     try {
       await ler(supa().from("wa_config").update({ limite_diario: lim, disparo_hora_inicio: hi, disparo_hora_fim: hf, preco_marketing: pm, preco_utilidade: pu,
-        marketing_dias_entre_envios: (function (v) { return isNaN(v) ? 3 : Math.min(60, Math.max(0, v)); })(parseInt(($("cfDiasMkt") || {}).value, 10)) }).eq("id", 1).select("id"));
+        marketing_dias_entre_envios: (function (v) { return isNaN(v) ? 3 : Math.min(60, Math.max(0, v)); })(parseInt(($("cfDiasMkt") || {}).value, 10)) }).eq("conta_id", cfg.conta_id).select("id"));
       aviso("Limites salvos."); await carregarConfig();
     } catch (e) { falha(e); }
   });
@@ -2802,7 +2806,7 @@
   }
   $("rbSalvar").addEventListener("click", async function () {
     try {
-      await ler(supa().from("wa_config").update({ robo_ativo: $("rbAtivo").checked, robo_resposta_padrao: $("rbPadrao").value.trim() || null }).eq("id", 1).select("id"));
+      await ler(supa().from("wa_config").update({ robo_ativo: $("rbAtivo").checked, robo_resposta_padrao: $("rbPadrao").value.trim() || null }).eq("conta_id", cfg.conta_id).select("id"));
       aviso($("rbAtivo").checked ? "Robô ligado." : "Robô desligado."); carregarConfig();
     } catch (e) { falha(e); }
   });
