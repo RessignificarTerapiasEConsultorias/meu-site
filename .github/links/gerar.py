@@ -61,10 +61,10 @@ e = html.escape
 
 
 def pagina(titulo, desc, img, url):
-    # a pasta fica em site/<terapeuta>/<teste>/, entao o pixel esta dois niveis acima
+    # o pixel fica na raiz do site: caminho absoluto serve para /<terapeuta>/ e /<terapeuta>/<teste>/
     return f'''<!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8">
-<script src="../../px.js"></script>
+<script src="/px.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(titulo)}</title>
 <meta name="description" content="{e(desc)}">
