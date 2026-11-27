@@ -8,8 +8,9 @@
 <link rel="icon" type="image/png" href="img/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/estilo.css">
-<link rel="stylesheet" href="css/crm.css?v=20261127c">
-<link rel="stylesheet" href="css/crm-noite.css?v=20261127c">
+<link rel="stylesheet" href="css/crm.css?v=20261127d">
+<link rel="stylesheet" href="css/crm-noite.css?v=20261127d">
+<link rel="stylesheet" href="css/crm-celular.css?v=20261127d">
 <script>(function(){var t="dia";try{t=localStorage.getItem("crm_tema")||"dia"}catch(e){}document.documentElement.classList.add("crm",t==="noite"?"noite":"dia")})()</script>
 <style>
 .wa-conv{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px;align-items:start}
@@ -503,6 +504,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
       <div class="wa-conv" id="cvGrade">
         <aside class="cartao">
           <div class="f"><input id="cvBusca" type="search" placeholder="Buscar pessoa ou mensagem" aria-label="Buscar conversa ou mensagem"></div>
+          <div class="cv-filtros-linha">
           <div class="wa-filtros" id="cvFiltros" role="group" aria-label="Filtrar conversas">
             <button type="button" class="wa-chip" data-filtro="todas" aria-pressed="true">Todas</button>
             <button type="button" class="wa-chip" data-filtro="nao_lidas" aria-pressed="false">Não lidas<b id="cvNNaoLidas"></b></button>
@@ -514,7 +516,8 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
             <label class="wa-etapa-filtro"><span>Etapa</span><select id="cvEtapa" aria-label="Filtrar conversas pela etapa do funil"><option value="">Todas as etapas</option><option value="novo">Novo</option><option value="em_conversa">Em conversa</option><option value="interessado">Interessado</option><option value="proposta">Proposta</option><option value="cliente">Cliente (fechou)</option><option value="perdido">Perdido</option></select></label>
             <button type="button" class="wa-chip" data-extra="alta" aria-pressed="false" title="Prioridade alta ou urgente">Prioridade alta<b id="cvNAlta"></b></button>
           </div>
-          <div class="checks" style="margin:0 0 8px"><label class="wa-fn-chk"><input type="checkbox" id="cvAutoLida"> Ao abrir uma conversa, tirar de Não respondidas</label></div>
+          </div>
+          <div class="checks cv-auto" style="margin:0 0 8px"><label class="wa-fn-chk"><input type="checkbox" id="cvAutoLida"> Ao abrir uma conversa, tirar de Não respondidas</label></div>
         <div class="acoes" id="cvSemRespAcoes" hidden style="margin:0 0 8px"><small class="vazio">Mais antigas primeiro. Só a sua resposta pelo painel tira a conversa daqui (o robô não conta).</small><button type="button" class="btn peq contorno" id="cvLimparFechadas" title="Tira de Não respondidas as conversas em que a janela de 24 h já fechou (só dá para mandar template)">Tirar as de janela fechada<b id="cvNFechadas"></b></button><button type="button" class="btn peq contorno" id="cvLimparSemResp">Marcar todas como respondidas</button></div>
           <div class="wa-lista" id="cvLista"><p class="vazio">Carregando...</p></div>
         </aside>
@@ -1490,22 +1493,22 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
-<script src="js/whatsapp-casca.js?v=20261127c"></script>
-<script src="js/whatsapp-tpl.js?v=20261127c"></script>
-<script src="js/whatsapp-lista.js?v=20261127c"></script>
-<script src="js/whatsapp-video.js?v=20261127c"></script>
-<script src="js/whatsapp-camp.js?v=20261127c"></script>
-<script src="js/whatsapp-funil.js?v=20261127c"></script>
-<script src="js/whatsapp-vendas.js?v=20261127c"></script>
-<script src="js/whatsapp-email.js?v=20261127c"></script>
-<script src="js/whatsapp-inscricao.js?v=20261127c"></script>
-<script src="js/whatsapp-visao.js?v=20261127c"></script>
-<script src="js/whatsapp-guia.js?v=20261127c"></script>
-<script src="js/whatsapp-auto.js?v=20261127c"></script>
-<script src="js/whatsapp.js?v=20261127c"></script>
-<script src="js/whatsapp-email-tela.js?v=20261127c"></script>
-<script src="js/whatsapp-inscricao-tela.js?v=20261127c"></script>
-<script src="js/whatsapp-visao-tela.js?v=20261127c"></script>
-<script src="js/whatsapp-guia-tela.js?v=20261127c"></script>
+<script src="js/whatsapp-casca.js?v=20261127d"></script>
+<script src="js/whatsapp-tpl.js?v=20261127d"></script>
+<script src="js/whatsapp-lista.js?v=20261127d"></script>
+<script src="js/whatsapp-video.js?v=20261127d"></script>
+<script src="js/whatsapp-camp.js?v=20261127d"></script>
+<script src="js/whatsapp-funil.js?v=20261127d"></script>
+<script src="js/whatsapp-vendas.js?v=20261127d"></script>
+<script src="js/whatsapp-email.js?v=20261127d"></script>
+<script src="js/whatsapp-inscricao.js?v=20261127d"></script>
+<script src="js/whatsapp-visao.js?v=20261127d"></script>
+<script src="js/whatsapp-guia.js?v=20261127d"></script>
+<script src="js/whatsapp-auto.js?v=20261127d"></script>
+<script src="js/whatsapp.js?v=20261127d"></script>
+<script src="js/whatsapp-email-tela.js?v=20261127d"></script>
+<script src="js/whatsapp-inscricao-tela.js?v=20261127d"></script>
+<script src="js/whatsapp-visao-tela.js?v=20261127d"></script>
+<script src="js/whatsapp-guia-tela.js?v=20261127d"></script>
 </body>
 </html>

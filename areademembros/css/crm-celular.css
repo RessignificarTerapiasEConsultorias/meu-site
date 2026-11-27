@@ -1,0 +1,72 @@
+/* CRM no celular (etapa 1: Conversas no formato de aplicativo de mensagens). Entra sozinho em telas de até 760 px; no computador nada muda.
+   Usa só as cores com função da Fase B (tokens), então vale para os temas Dia e Noite. */
+html.crm .wa-av,html.crm .cv-voltar,html.crm .cv-mais,html.crm .cv-acoes-tit{display:none}
+
+@media (max-width:760px){
+  /* ---------- lista ---------- */
+  html.crm [data-painel="conversas"] .wa-conv>aside.cartao:first-child{display:flex;flex-direction:column;margin:0 -14px;padding:0;border:0;border-radius:0;background:var(--c-card);box-shadow:none}
+  html.crm [data-painel="conversas"] .wa-conv>aside:first-child>.f{margin:0;padding:10px 14px 0}
+  html.crm #cvBusca{width:100%;border-radius:999px;min-height:44px;padding-left:16px}
+  html.crm .cv-filtros-linha{display:flex;gap:8px;overflow-x:auto;padding:10px 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--c-borda)}
+  html.crm .cv-filtros-linha::-webkit-scrollbar{display:none}
+  html.crm .cv-filtros-linha .wa-filtros{flex:none;flex-wrap:nowrap;margin:0;gap:8px;align-items:center}
+  html.crm .cv-filtros-linha .wa-chip,html.crm .cv-filtros-linha label{flex:none;white-space:nowrap}
+  html.crm .cv-filtros-linha .wa-etapa-filtro{display:flex;align-items:center;gap:6px}
+  html.crm .cv-filtros-linha select{min-height:40px}
+  html.crm #cvSemRespAcoes{padding:8px 14px 0;margin:0!important}
+  html.crm .cv-auto{order:9;padding:12px 14px 4px;margin:0!important}
+  html.crm .wa-lista{max-height:none;overflow:visible}
+  html.crm .wa-lista .vazio,html.crm .wa-lista .wa-sec{padding:12px 14px;margin:0}
+  html.crm .wa-item{display:grid;grid-template-columns:48px minmax(0,1fr);column-gap:12px;align-items:center;margin:0;padding:11px 14px;border:0;border-bottom:1px solid var(--c-borda);border-radius:0;background:var(--c-card);min-height:72px}
+  html.crm .wa-item.ativa{box-shadow:none;border-color:var(--c-borda)}
+  html.crm .wa-item:active{background:var(--c-neutro-bg)}
+  html.crm .wa-item .wa-av{display:flex;grid-row:1/span 3;align-self:start;width:48px;height:48px;border-radius:50%;align-items:center;justify-content:center;background:var(--c-noite2);color:var(--c-ouro2);font:700 16px var(--sans);letter-spacing:.02em}
+  html.crm .wa-item>:not(.wa-av){grid-column:2;min-width:0}
+  html.crm .wa-item .l1 b{font-size:16.5px}
+  html.crm .wa-item .l1 time{font-size:13px}
+  html.crm .wa-item .l2 small{font-size:15px}
+  html.crm .wa-item .l2 .selo.ouro{min-width:22px;height:22px;padding:0 6px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;background:var(--c-ok);color:#fff;border:0;font-size:12.5px;font-weight:700}
+  html.crm.noite .wa-item .l2 .selo.ouro{color:#04130A}
+  html.crm.noite .wa-item .wa-av{background:var(--c-card2);border:1px solid var(--c-borda)}
+
+  /* ---------- conversa em tela cheia ---------- */
+  html.crm body.cv-aberta{overflow:hidden}
+  html.crm body.cv-aberta #cvThread{position:fixed;left:0;right:0;top:var(--cv-cima,0px);height:var(--cv-alt,100dvh);z-index:80;background:var(--c-card)}
+  html.crm body.cv-aberta #crmBarra{display:none}
+  html.crm body.cv-aberta #cvCaixa{height:100%;border:0;border-radius:0}
+  html.crm body.cv-aberta #cvMsgs{height:auto!important;flex:1;min-height:0;padding:12px 10px}
+  html.crm body:not(.cv-aberta) #cvThread{display:none}
+  html.crm .wa-topo{padding:8px 10px;gap:0;background:var(--c-noite);color:#fff;border:0}
+  html.crm .cv-topo1{flex-wrap:wrap;gap:4px 6px;min-width:0}
+  html.crm .cv-topo1>b{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:600 19px var(--serif);color:#fff}
+  html.crm .cv-topo1>.vazio{display:none}
+  /* no alto fica só o aviso da janela de 24 h, numa faixa; as outras situações estão na ficha */
+  html.crm .cv-topo1>span.selo{display:none}
+  html.crm .cv-topo1>span.selo:last-of-type{display:flex;order:9;flex:1 0 100%;justify-content:center;border-radius:8px;font-size:13.5px;padding:3px 8px;margin:2px 0 0}
+  html.crm .cv-voltar,html.crm .cv-mais{display:flex;flex:none;width:44px;height:44px;align-items:center;justify-content:center;border-radius:12px;border:0;background:none;color:#fff;font:400 32px/1 var(--sans);cursor:pointer;position:relative}
+  html.crm .cv-mais{font-size:24px;font-weight:700}
+  html.crm .cv-mais.tem::after{content:"";position:absolute;top:8px;right:8px;width:9px;height:9px;border-radius:50%;background:var(--c-ouro2)}
+  html.crm #cvFichaBtn{flex:none;margin-left:auto;min-height:40px;color:#fff;border-color:rgba(255,255,255,.4);background:none}
+  html.crm .wa-sr-barra{display:none}
+  /* ações: folha que sobe do rodapé */
+  html.crm .cv-acoes{display:none}
+  html.crm #cvTopo.topo-aberto::before{content:"";position:fixed;inset:0;z-index:94;background:rgba(6,20,42,.55)}
+  html.crm #cvTopo.topo-aberto .cv-acoes{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:10px;position:fixed;left:0;right:0;bottom:0;z-index:95;max-height:80dvh;overflow-y:auto;background:var(--c-card);color:var(--c-tinta);border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -12px 40px rgba(6,20,42,.3)}
+  html.crm .cv-acoes .cv-acoes-tit{display:block;font:600 20px var(--serif);color:var(--c-tinta);margin-bottom:2px}
+  html.crm .cv-acoes .selo{align-self:flex-start}
+  html.crm .cv-acoes .btn,html.crm .cv-acoes summary.btn{width:100%;min-height:48px;justify-content:center;text-align:center;font-size:16px}
+  html.crm .cv-acoes .wa-menu-lista{position:static;box-shadow:none;margin-top:6px;background:var(--c-card2);border-color:var(--c-borda)}
+  html.crm .cv-acoes .wa-menu-lista button{min-height:44px;font-size:16px;color:var(--c-tinta)}
+  /* campo de escrever */
+  html.crm .wa-compor{padding-bottom:env(safe-area-inset-bottom,0px)}
+  html.crm .wa-ferr{padding:6px 6px 0;gap:0;justify-content:space-between}
+  html.crm .wa-ferr>button{width:44px;height:44px}
+  html.crm .wa-compor .chat-form{padding:4px 8px 8px;gap:6px}
+  html.crm .wa-compor .chat-form textarea{min-height:44px;border-radius:22px;padding:10px 14px;font-size:16px}
+  html.crm .wa-compor .chat-form .btn{min-width:0;min-height:44px;border-radius:22px;padding:0 16px}
+  html.crm #cvCaixa>.chat-form{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+  html.crm .wa-msg{max-width:86%;font-size:15.5px}
+  /* ficha por cima da conversa, na tela toda */
+  html.crm .wa-ficha{z-index:96;width:100%;box-shadow:none;padding-top:max(16px,env(safe-area-inset-top,0px))}
+  html.crm .wa-ficha #fcFechar{min-height:44px}
+}

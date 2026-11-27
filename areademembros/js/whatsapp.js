@@ -1313,13 +1313,21 @@
     if (min < 48 * 60) return "há " + Math.round(min / 60) + " h";
     return "há " + Math.round(min / 1440) + " dias";
   }
+  /* iniciais para a bolinha da lista no celular (sem nome: um boneco) */
+  function iniciaisDe(c) {
+    const p = String(c.nome || "").trim().split(/\s+/).filter(function (x) { return /^[A-Za-zÀ-ÿ]/.test(x); });
+    if (!p.length) return "\u{1F464}";
+    return (p[0].charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : "")).toUpperCase();
+  }
+  function avatarCv(c) { return '<span class="wa-av" aria-hidden="true">' + esc(iniciaisDe(c)) + "</span>"; }
+  const celular = function () { return window.matchMedia("(max-width:760px)").matches; };
   function itemCv(c) {
     const espera = c.sem_resposta && c.sem_resposta_desde ? '<span class="l3"><span class="selo pendente" title="A pessoa escreveu e você ainda não respondeu">Sem resposta ' + esc(haEspera(c.sem_resposta_desde)) + "</span></span>" : "";
     const selos = (c.nao_lidas ? '<span class="selo ouro" title="Mensagens não lidas">' + c.nao_lidas + "</span>" : "") +
       (c.precisa_humano ? '<span class="selo off" title="Pediu atendimento">!</span>' : "") +
       (pausado(c) ? '<span class="selo wa-tag" title="Robô pausado nesta conversa">robô pausado</span>' : "");
     const pri = c.prioridade === "urgente" || c.prioridade === "alta" ? '<i class="wa-pri ' + c.prioridade + '" title="Prioridade ' + c.prioridade + '"></i>' : "";
-    return '<button type="button" class="wa-item' + (c.id === conversaId ? " ativa" : "") + '" data-cv="' + c.id + '"><span class="l1"><b>' + pri + esc(nomeDe(c)) + "</b><time>" + esc(horaCurta(c.ultima_msg_em)) +
+    return '<button type="button" class="wa-item' + (c.id === conversaId ? " ativa" : "") + '" data-cv="' + c.id + '">' + avatarCv(c) + '<span class="l1"><b>' + pri + esc(nomeDe(c)) + "</b><time>" + esc(horaCurta(c.ultima_msg_em)) +
       '</time></span><span class="l2"><small>' + esc(c.ultima_msg_texto || "") + "</small>" + selos + "</span>" + espera + "</button>";
   }
   /* pedaço da mensagem em volta do termo buscado, com o termo marcado */
@@ -1341,7 +1349,7 @@
       if (cs.length) h += '<p class="wa-sec">Pessoas</p>' + cs.map(itemCv).join("");
       if (busca.mensagens.length) {
         h += '<p class="wa-sec">Mensagens com "' + esc(busca.termo) + '"</p>' + busca.mensagens.map(function (m) {
-          return '<button type="button" class="wa-item" data-cv="' + m.contato_id + '" data-msg="' + m.id + '"><span class="l1"><b>' + esc(nomeDe(m)) + "</b><time>" + esc(horaCurta(m.criado_em)) +
+          return '<button type="button" class="wa-item" data-cv="' + m.contato_id + '" data-msg="' + m.id + '">' + avatarCv(m) + '<span class="l1"><b>' + esc(nomeDe(m)) + "</b><time>" + esc(horaCurta(m.criado_em)) +
             '</time></span><span class="l2"><small>' + (m.direcao === "saida" ? "Você: " : "") + trecho(m.texto, busca.termo) + "</small></span></button>";
         }).join("");
       }
@@ -1503,10 +1511,11 @@
     const robo = semPrazo(c) ? '<span class="selo pendente">Robô pausado sem prazo</span><span class="selo off" title="Pausado para sempre: a pessoa não recebe disparos nem follow-ups">Sem disparos</span>'
       : pausado(c) ? '<span class="selo pendente">Robô pausado até ' + esc(quando(c.robo_pausado_ate)) + "</span>"
       : cfg.robo_ativo ? '<span class="selo ok">Robô respondendo</span>' : '<span class="selo" title="Ligue na aba Robô">Robô desligado</span>';
-    return '<div class="wa-topo-l"><b>' + esc(nomeDe(c)) + '</b><span class="vazio">' + (c.nome || c.username ? esc(foneDe(c)) : "") + (c.username && c.telefone ? " · @" + esc(c.username) : "") + "</span>" + situacao(c) +
+    return '<div class="wa-topo-l cv-topo1"><button type="button" class="cv-voltar" id="cvVoltar" aria-label="Voltar para a lista de conversas">\u2039</button><b>' + esc(nomeDe(c)) + '</b><span class="vazio">' + (c.nome || c.username ? esc(foneDe(c)) : "") + (c.username && c.telefone ? " · @" + esc(c.username) : "") + "</span>" + situacao(c) +
       '<span class="selo ' + (jm > 0 ? "ok" : "pendente") + '" title="Pelo WhatsApp oficial, você responde livremente até 24 h depois da última mensagem da pessoa">' + (jm > 0 ? "Janela aberta: " + duracao(jm) : "Janela de 24 h fechada") + "</span>" +
-      '<button type="button" class="btn peq contorno wa-direita" id="cvFichaBtn" aria-expanded="' + (fichaAberta ? "true" : "false") + '">Ficha</button></div>' +
-      '<div class="wa-topo-l">' + robo +
+      '<button type="button" class="btn peq contorno wa-direita" id="cvFichaBtn" aria-expanded="' + (fichaAberta ? "true" : "false") + '">Ficha</button>' +
+      '<button type="button" class="cv-mais' + (c.precisa_humano || c.sem_resposta ? " tem" : "") + '" id="cvMaisBtn" aria-label="Mais ações desta conversa" aria-expanded="false">\u22EE</button></div>' +
+      '<div class="wa-topo-l cv-acoes"><b class="cv-acoes-tit">Ações desta conversa</b>' + robo +
       '<details class="wa-menu" id="cvPausaMenu"><summary class="btn peq contorno">Pausar robô</summary><div class="wa-menu-lista">' +
       PAUSAS.map(function (p) { return '<button type="button" data-pausa="' + p[0] + '">' + p[1] + "</button>"; }).join("") + "</div></details>" +
       (pausado(c) ? '<button type="button" class="btn peq" id="cvRoboVoltar">Voltar a responder</button>' : "") +
@@ -1577,11 +1586,27 @@
       ultimaAssinatura = assinaturaDe(msgs);
       if (c.nao_lidas) { await supa().from("wa_contatos").update({ nao_lidas: 0 }).eq("id", id); c.nao_lidas = 0; }
       if (aberta) ligarCompor();
+      /* no celular a conversa ocupa a tela toda; o "voltar" do aparelho fecha a conversa em vez de sair do CRM */
+      document.body.classList.add("cv-aberta");
+      if (celular()) { fichaAberta = false; try { if (!(history.state && history.state.cv)) history.pushState({ cv: 1 }, ""); } catch (e) { /* sem histórico: a seta da tela resolve */ } }
       mostrarFicha();
       carregarLista().catch(function () {});
     } catch (e) { falha(e); }
   }
+  let cvVindoDoVoltar = false;
+  window.addEventListener("popstate", function () {
+    if (!document.body.classList.contains("cv-aberta")) return;
+    if (!$("cvFicha").hidden && celular()) { fichaAberta = false; mostrarFicha(); try { history.pushState({ cv: 1 }, ""); } catch (e) { /* segue */ } return; }
+    cvVindoDoVoltar = true; fecharConversa(); cvVindoDoVoltar = false; carregarLista().catch(function () {});
+  });
+  /* teclado do celular aberto: a conversa encolhe para o campo de escrever ficar sempre à vista */
+  if (window.visualViewport) {
+    const medir = function () { const v = window.visualViewport, r = document.documentElement.style; r.setProperty("--cv-alt", Math.round(v.height) + "px"); r.setProperty("--cv-cima", Math.round(v.offsetTop) + "px"); };
+    window.visualViewport.addEventListener("resize", medir); window.visualViewport.addEventListener("scroll", medir); medir();
+  }
   function fecharConversa() {
+    document.body.classList.remove("cv-aberta");
+    if (!cvVindoDoVoltar) { try { if (history.state && history.state.cv) history.back(); } catch (e) { /* segue */ } }
     gvDescartarSeAberta();
     conversaId = null; conversaCont = null; fichaDados = null; descartarAnexo();
     $("cvThread").innerHTML = '<div class="cartao"><p class="vazio">Escolha uma conversa ao lado.</p></div>';
@@ -2089,6 +2114,11 @@
     }
     if (t.closest("#cvJaVi")) return salvarContato({ sem_resposta: false, sem_resposta_desde: null }, "Tirei esta conversa de Não respondidas.");
     if (t.closest("#cvAtendido")) return salvarContato({ precisa_humano: false, sem_resposta: false, sem_resposta_desde: null }, "Marcado como atendido.");
+    if (t.closest("#cvVoltar")) { fecharConversa(); carregarLista().catch(function () {}); return; }
+    const topoCv = $("cvTopo");
+    if (t.closest("#cvMaisBtn")) { const ab = topoCv.classList.toggle("topo-aberto"); t.closest("#cvMaisBtn").setAttribute("aria-expanded", ab ? "true" : "false"); return; }
+    if (topoCv && topoCv.classList.contains("topo-aberto") && (t === topoCv || (t.closest(".cv-acoes button") && !t.closest("summary")))) topoCv.classList.remove("topo-aberto");
+    if (t === topoCv) return;
     if (t.closest("#cvFichaBtn")) { fichaAberta = !fichaAberta; mostrarFicha(); return; }
     if (t.closest("#cvTemplate")) return abrirEnvioTemplate(conversaCont);
     if (em) { inserirNoCursor($("cvTexto"), em.dataset.emoji); guardarEmoji(em.dataset.emoji); return; }
