@@ -20,6 +20,7 @@
     attr: function (sel, nome) { const e = q(sel); return e ? e.getAttribute(nome) : null; },
     classe: function (sel, nome) { const e = q(sel); return !!e && e.classList.contains(nome); },
     conta: function (sel) { try { return document.querySelectorAll(sel).length; } catch (e) { return 0; } },
+    texto: function (sel) { const e = q(sel); return e ? String(e.textContent || "").trim() : ""; },
     vazios: function (sel) { let n = 0; try { document.querySelectorAll(sel).forEach(function (e) { if (!String(e.value || "").trim()) n += 1; }); } catch (e) { n = 0; } return n; }
   };
 
@@ -61,6 +62,7 @@
         + (p.exemplo ? '<p class="cg-ex"><b>Exemplo:</b> ' + esc(p.exemplo) + "</p>" : "")
         + (p.erro ? '<p class="cg-ex cg-erro"><b>Erro comum:</b> ' + esc(p.erro) + "</p>" : "")
         + (p.aviso ? '<p class="cg-aviso">' + esc(p.aviso) + "</p>" : "")
+        + (info.fechada ? '<p class="cg-aviso">A janela deste passo foi fechada. Abra de novo para continuar, ou saia do guia.</p>' : "")
         + '<div class="cg-acoes">'
         + (p.trocar ? '<button type="button" class="cg-btn" data-cg="trocar" data-para="' + esc(p.trocar) + '">Ir para esse guia</button>' : "")
         + (p.info && !p.trocar ? '<button type="button" class="cg-btn" data-cg="ok">' + esc(p.manual || "Próximo") + "</button>" : "")
@@ -104,15 +106,21 @@
   function laco(ts) {
     if (!S.roteiro) { rodando = false; return; }
     requestAnimationFrame(laco);
-    if (document.querySelector("dialog[open]")) { raiz.hidden = true; return; }   // janela aberta por cima: o guia espera
-    raiz.hidden = false;
-    if (ts - tNum < 150 && card.innerHTML) { if (S.alvoAtual) posicionar(S.alvoAtual); return; }
+    if (ts - tNum < 150 && card.innerHTML) { if (!raiz.hidden && S.alvoAtual) posicionar(S.alvoAtual); return; }
     tNum = ts;
     const info = G.passoAtual(roteiro(), T, { ok: S.ok });
+    /* passos marcados "fica" não voltam atrás (ex.: a janela fechou depois de salvar) */
+    if (!info.fim) { const lista = G.aplicaveis(roteiro(), T); let mudou = false; for (let i = 0; i < info.n - 1; i++) if (lista[i].fica && !S.ok[lista[i].id]) { S.ok[lista[i].id] = true; mudou = true; } if (mudou) guardar(); }
+    /* janela aberta por cima: o guia entra nela se o passo é lá dentro; senão espera ela fechar */
+    const dlg = document.querySelector("dialog[open]"), alvo = info.passo ? q(info.passo.alvo) : null;
+    if (dlg) { if (!alvo || !dlg.contains(alvo)) { raiz.hidden = true; return; } if (raiz.parentNode !== dlg) dlg.appendChild(raiz); }
+    else if (raiz.parentNode !== document.body) document.body.appendChild(raiz);
+    raiz.hidden = false;
+    const dj = alvo && alvo.closest ? alvo.closest("dialog") : null; info.fechada = !!dj && !dj.open;
     if (info.fim && !S.fim) { S.fim = true; registrar("concluiu"); guardar(); }
     S.ultimoId = info.passo ? info.passo.id : null;
     desenharCartao(info);
-    const el = info.passo ? q(info.passo.alvo) : null;
+    const el = alvo;
     S.alvoAtual = el;
     if (info.passo) levarAte(el, info.passo.id);
     posicionar(el);
@@ -124,17 +132,19 @@
     b.click();
     if (!filtro) return;
     setTimeout(function () {
-      const alvo = aba === "conversas" ? q('#cvFiltros [data-filtro="' + filtro + '"]') : aba === "inscricoes" ? q('#inSub [data-in-sub="' + filtro + '"]') : null;
+      const alvo = aba === "conversas" ? q('#cvFiltros [data-filtro="' + filtro + '"]') : aba === "inscricoes" ? q('#inSub [data-in-sub="' + filtro + '"]') : aba === "email" ? q('#emSub [data-em-sub="' + filtro + '"]') : null;
       if (alvo) alvo.click();
     }, 0);
   }
 
   /* ---------- tela "O que você quer fazer?" ---------- */
-  const ICONE = { responder: "conversas", template: "templates", disparo: "disparos", inscricao: "inscricoes", vendas: "vendas", funil: "relogio" };
+  const ICONE = { conectar: "config", contatos: "contatos", robo: "robo", email: "email", avisos: "conversas", automacao: "automacoes", responder: "conversas", template: "templates", disparo: "disparos", inscricao: "inscricoes", vendas: "vendas", funil: "relogio" };
   function desenharTarefas() {
     const cx = $("cgTarefas"); if (!cx) return;
+    let grupo = null;
     cx.innerHTML = G.TAREFAS.map(function (t) {
-      return '<div class="cg-tarefa" role="button" tabindex="0" data-cg-ir="' + esc(t.aba) + '"' + (t.filtro ? ' data-filtro="' + esc(t.filtro) + '"' : "") + ">" + (window.CrmIcone ? window.CrmIcone(ICONE[t.id] || "") : "")
+      const cab = t.grupo && t.grupo !== grupo ? '<p class="cg-grupo">' + esc(t.grupo) + "</p>" : ""; grupo = t.grupo || grupo;
+      return cab + '<div class="cg-tarefa" role="button" tabindex="0" data-cg-ir="' + esc(t.aba) + '"' + (t.filtro ? ' data-filtro="' + esc(t.filtro) + '"' : "") + ">" + (window.CrmIcone ? window.CrmIcone(ICONE[t.id] || "") : "")
         + (t.roteiro ? '<button type="button" class="cg-comguia" data-cg-mostrar="' + esc(t.roteiro) + '" aria-label="Guia passo a passo: ' + esc(t.titulo) + '">Com guia</button>' : "")
         + '<div class="cg-tarefa-txt"><b>' + esc(t.titulo) + "</b><small>" + esc(t.texto) + "</small></div></div>";
     }).join("");

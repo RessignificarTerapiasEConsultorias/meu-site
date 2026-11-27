@@ -160,6 +160,8 @@ html.crm [data-painel="visao"]>.cartao{background:none;border:0;box-shadow:none;
 html.crm .crm-periodo{margin:18px 0 6px;justify-content:flex-end}
 html.crm #cgTarefasBox>summary{font:700 19px var(--sans);color:var(--c-tinta);padding:4px 0 8px}
 html.crm .cg-tarefas{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+html.crm .cg-grupo{grid-column:1/-1;margin:6px 0 -2px;font:700 13px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--c-ouro-txt)}
+html.crm .cg-grupo:first-child{margin-top:0}
 html.crm .cg-tarefa{position:relative;background:var(--c-card);border:1px solid var(--c-borda);border-radius:16px;padding:16px 14px 14px;gap:12px;min-height:108px;justify-content:flex-start;cursor:pointer;box-shadow:0 2px 8px -4px rgba(6,20,42,.12)}
 html.crm .cg-tarefa:hover{border-color:var(--c-campo)}
 html.crm .cg-tarefa .crm-ic{width:26px;height:26px;color:var(--c-tinta)}
