@@ -3,7 +3,8 @@
    A pasta de cada terapeuta e teste é uma página fixa com a prévia do WhatsApp que abre /teste/ com o código certo;
    para terapeuta ou teste novo, o 404.html faz o mesmo caminho até as páginas fixas serem geradas. */
 (function () {
-  var PASTA = { travas:'teste-de-travas', tracos:'tracos-de-carater', mpcc:'mpcc', disc:'disc', ansiedade:'teste-de-ansiedade',
+  var PASTA = { travas:'teste-de-travas', tracos:'tracos-de-carater', mpcc:'mpcc', disc:'disc', ansiedade:'teste-de-ansiedade', vida:'mapa-da-vida', procrastinacao:'mapa-da-procrastinacao',
+    profissional:'mapa-profissional', autoestima:'mapa-da-autoestima', dinheiro:'mapa-do-dinheiro',
     familia:'travas-em-familia', serena:'termometro-emocional-feminino', esquemas:'esquemas-emocionais', tdah:'perfil-cognitivo' };
   window.TESTE_PASTA = PASTA;
   window.linkTeste = function (teste, codigo, extra) {

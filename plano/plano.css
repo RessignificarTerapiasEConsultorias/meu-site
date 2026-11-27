@@ -1,0 +1,41 @@
+/* Página pública do Plano de Ressignificação (/plano/?p=<token>) */
+:root{--areia:#F5F3EE;--papel:#FFFFFF;--tinta:#16203A;--tinta-suave:#4C5670;--ardosia:#1E4A45;--borda:#E3DCCD;--verde-zap:#2F7A52}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--areia);color:var(--tinta);font-family:'Karla',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:600;line-height:1.2}
+main{max-width:760px;margin:0 auto;padding:22px 16px 48px}
+.pl-carregando{text-align:center;color:var(--tinta-suave);padding:30vh 0}
+.pl-topo{display:flex;gap:14px;align-items:center;margin:0 0 18px}
+.pl-topo img,.pl-topo .pl-ini{width:68px;height:68px;border-radius:50%;object-fit:cover;flex:none;background:var(--ardosia);color:#fff;display:grid;place-items:center;font:600 28px Fraunces,serif}
+.pl-topo p{margin:0;font-size:14.5px;color:var(--tinta-suave);line-height:1.4}
+.pl-topo b{color:var(--tinta);font-size:16px}
+.pl-selo{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#7A4A1E;background:#F3E9DA;border-radius:999px;padding:5px 11px}
+.pl-h1{font-size:clamp(26px,7vw,34px);margin:10px 0 6px}
+.pl-sub{margin:0 0 14px;color:var(--tinta-suave);font-size:15px}
+.pl-acoes{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:12px 18px;border-radius:14px;border:1.5px solid var(--ardosia);background:var(--ardosia);color:#fff;font:700 16px 'Karla',sans-serif;cursor:pointer;text-decoration:none}
+.btn-contorno{background:#fff;color:var(--ardosia)}
+.btn[disabled]{opacity:.55;cursor:default}
+.pl-aceite{background:#fff;border:2px solid var(--ardosia);border-radius:18px;padding:18px;margin:18px 0}
+.pl-aceite h2{font-size:21px;margin:0 0 6px}
+.pl-aceite label{display:block;font-weight:700;margin:12px 0 4px}
+.pl-aceite input[type=text]{width:100%;font:inherit;padding:12px 14px;border-radius:12px;border:1.5px solid var(--borda)}
+.pl-aceite .check{display:flex;gap:10px;align-items:flex-start;font-weight:600}
+.pl-aceite .check input{width:22px;height:22px;margin-top:3px;flex:none}
+.pl-aceite .btn{width:100%;margin-top:12px}
+.pl-erro{color:#B03A2E;font-weight:700;margin:8px 0 0;min-height:1em}
+.pl-ok-box{background:#E3F2E9;color:#24613F;border-radius:14px;padding:14px 16px;font-weight:700}
+.pl-nada{text-align:center;padding:22vh 8px}
+.pl-nada h1{font-size:26px}
+.pl-rodape{text-align:center;font-size:13px;color:var(--tinta-suave);margin:26px 0 0}
+@media print{
+  body{background:#fff;font-size:12.5px}
+  main{max-width:none;padding:0}
+  .pl-acoes,.pl-aceite form,.pl-nao-imprimir{display:none!important}
+  .pl-aceite{border:1px solid #DDD;break-inside:avoid}
+  .pl-campo{border-color:#DDD;padding:10px 12px;margin:8px 0}
+  .pl-topo img,.pl-topo .pl-ini{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pl-rodape{position:fixed;bottom:0;left:0;right:0;margin:0;font-size:10.5px;border-top:1px solid #DDD;padding-top:4px;background:#fff}
+  @page{size:A4;margin:12mm 12mm 16mm}
+}

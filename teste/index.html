@@ -610,6 +610,8 @@ html.t-erro .t-girar{display:none}
 <link rel="stylesheet" href="campanha.css">
 <script src="campanha.js"></script>
 <link rel="stylesheet" href="devolutiva-ansiedade.css">
+<link rel="stylesheet" href="mapas-nucleo.css">
+<link rel="stylesheet" href="devolutiva-mapas.css">
 <link rel="stylesheet" href="tema-premium.css">
 <script src="tema-premium.js"></script>
 <link rel="stylesheet" href="painel-3d.css">
@@ -1190,10 +1192,12 @@ html.t-erro .t-girar{display:none}
 
     /* página leve: baixa só os módulos dos testes desta terapeuta (na mesma ordem de antes) */
     var tst = Array.isArray(d.testes) ? d.testes : [], tem = function (k) { return tst.indexOf(k) > -1; }, mods = [];
-    if (tem("mpcc") || tem("disc") || tem("ansiedade")) mods.push("devolutiva-mpcc.js");
+    var temMapa = ["vida", "procrastinacao", "profissional", "autoestima", "dinheiro"].some(tem);   // os Mapas (devolutiva-mapas.js)
+    if (tem("mpcc") || tem("disc") || tem("ansiedade") || temMapa) mods.push("devolutiva-mpcc.js");
     if (tem("serena") || tem("esquemas") || tem("tdah")) mods.push("devolutiva-miralene.js");
     if (tem("disc")) mods.push("disc-nucleo.js", "devolutiva-disc.js");
     if (tem("ansiedade")) mods.push("devolutiva-ansiedade.js");
+    if (temMapa) mods.push("mapas-nucleo.js", "devolutiva-mapas.js", "devolutiva-plano.js");
     if (tem("familia")) mods.push("devolutiva-familia.js");
     var ligar = function () {
       /* liga o teste: roda os scripts principais na ordem, já com os dados prontos */
@@ -1664,6 +1668,7 @@ $('#btn-entrar').addEventListener('click', async () => {
   if(r.teste === 'mpcc' && typeof mpEntrar === 'function'){ b.disabled = false; b.textContent = 'Fazer o teste agora'; return mpEntrar(codigo, r); }
   if(r.teste === 'disc' && typeof dcEntrar === 'function'){ b.disabled = false; b.textContent = 'Fazer o teste agora'; return dcEntrar(codigo, r); }
   if(r.teste === 'ansiedade' && typeof anEntrar === 'function'){ b.disabled = false; b.textContent = 'Fazer o teste agora'; return anEntrar(codigo, r); }
+  if(typeof maEh === 'function' && maEh(r.teste)){ b.disabled = false; b.textContent = 'Fazer o teste agora'; return maEntrar(codigo, r); }
   if(typeof miLista === 'function' && miLista().indexOf(r.teste) > -1){ b.disabled = false; b.textContent = 'Fazer o teste agora'; return miEntrar(codigo, r); }
   estado.codigo = codigo;
   estado.mostrarResultado = r.mostrar !== false;
@@ -3260,6 +3265,7 @@ $('#tc-entrar').addEventListener('click', async () => {
   if(r.teste === 'mpcc' && typeof mpEntrar === 'function'){ mpEntrar(codigo, r); return; }
   if(r.teste === 'disc' && typeof dcEntrar === 'function'){ dcEntrar(codigo, r); return; }
   if(r.teste === 'ansiedade' && typeof anEntrar === 'function'){ anEntrar(codigo, r); return; }
+  if(typeof maEh === 'function' && maEh(r.teste)){ maEntrar(codigo, r); return; }
   if(typeof miLista === 'function' && miLista().indexOf(r.teste) > -1){ miEntrar(codigo, r); return; }
   if(r.teste !== 'tracos'){ location.href = location.pathname + '?t=' + encodeURIComponent(T_SLUG) + '&c=' + encodeURIComponent(codigo); return; }   // é código do Teste de Travas
   tcEntrar(codigo, r);
@@ -3833,23 +3839,26 @@ async function tcDetalheCasal(codigo){
 (function(){
   const d = window.__T && window.__T.dados, lista = d && Array.isArray(d.testes) ? d.testes : null;
   const tracos = !d || (lista && lista.indexOf('tracos') > -1), travas = !lista || lista.indexOf('travas') > -1, mpcc = !!(lista && lista.indexOf('mpcc') > -1), disc = !!(lista && lista.indexOf('disc') > -1), ansi = !!(lista && lista.indexOf('ansiedade') > -1);
-  const ativos = ['travas', 'tracos', 'mpcc', 'disc', 'ansiedade'].filter(k => k === 'travas' ? travas : k === 'tracos' ? tracos : k === 'mpcc' ? mpcc : k === 'disc' ? disc : ansi);
+  const MAPAS = ['vida', 'procrastinacao', 'profissional', 'autoestima', 'dinheiro'], mapas = !!(lista && MAPAS.some(k => lista.indexOf(k) > -1));   // os Mapas (devolutiva-mapas.js)
+  const ativos = ['travas', 'tracos', 'mpcc', 'disc', 'ansiedade'].filter(k => k === 'travas' ? travas : k === 'tracos' ? tracos : k === 'mpcc' ? mpcc : k === 'disc' ? disc : ansi).concat(MAPAS.filter(k => lista && lista.indexOf(k) > -1));
   const extras = typeof miLista === 'function' ? miLista() : [];   // Mente Serena, Esquemas e TDAH (só a página da Miralene)
-  if((mpcc || disc || ansi) && typeof mpAjustarTestes === 'function'){   // com o MPCC, o DISC e/ou a Ansiedade
+  if((mpcc || disc || ansi || mapas) && typeof mpAjustarTestes === 'function'){   // com o MPCC, o DISC, a Ansiedade e/ou os Mapas
     mpAjustarTestes(ativos);
     if(disc && typeof dcAjustarTestes === 'function') dcAjustarTestes(ativos);
     if(ansi && typeof anAjustarTestes === 'function') anAjustarTestes(ativos);
+    if(mapas && typeof maAjustarTestes === 'function') maAjustarTestes(ativos);
   }
+  else if(mapas && typeof maAjustarTestes === 'function') maAjustarTestes(ativos);   // sem o módulo do MPCC: os Mapas montam o próprio seletor
   else{
     if(tracos && travas && !extras.length) dvCapaDoisTestes();
     if(tracos && !travas && !extras.length) dvSoTracos();                // comprou só o Teste de Traços de Caráter
     if(!tracos && !travas && !extras.length) dvSemTeste();               // nenhum teste ativo (ex.: assinatura suspensa)
   }
   if(extras.length) miAjustarTestes(extras, ativos);
-  if((!d || d.capa_vendas !== false) && (ativos.length || extras.length)) dvCapaVendas(extras.length ? ativos.concat(extras) : (ativos.length === 1 && !disc && !ansi ? ativos[0] : (ativos.length === 2 && !mpcc && !disc && !ansi ? 'ambos' : ativos)));   // capa de vendas para todas
+  if((!d || d.capa_vendas !== false) && (ativos.length || extras.length)) dvCapaVendas(extras.length ? ativos.concat(extras) : (ativos.length === 1 && !disc && !ansi && !mapas ? ativos[0] : (ativos.length === 2 && !mpcc && !disc && !ansi && !mapas ? 'ambos' : ativos)));   // capa de vendas para todas
 })();
 /* O Teste de Traços de Caráter só aparece na área de quem tem o teste liberado (travas_paginas.dados.testes) */
-(function(){ const d = window.__T && __T.dados, ok = !!(d && Array.isArray(d.testes) && (d.testes.indexOf('tracos') > -1 || d.testes.indexOf('mpcc') > -1 || d.testes.indexOf('disc') > -1 || d.testes.indexOf('ansiedade') > -1)) || (typeof miLista === 'function' && miLista().length > 0);
+(function(){ const d = window.__T && __T.dados, ok = !!(d && Array.isArray(d.testes) && (d.testes.indexOf('tracos') > -1 || d.testes.indexOf('mpcc') > -1 || d.testes.indexOf('disc') > -1 || d.testes.indexOf('ansiedade') > -1 || ['vida', 'procrastinacao', 'profissional', 'autoestima', 'dinheiro'].some(k => d.testes.indexOf(k) > -1))) || (typeof miLista === 'function' && miLista().length > 0);
   if(!ok){ const c = $('#alt-teste'); if(c && c.closest('.campo')) c.closest('.campo').style.display = 'none'; } })();
 
 </script>

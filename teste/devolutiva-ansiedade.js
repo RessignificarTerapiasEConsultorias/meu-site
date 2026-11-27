@@ -267,6 +267,7 @@ async function anClicarEntrar(){
     return avisar('#an-aviso-codigo', st && st.ok && st.encerrado ? 'Este acompanhamento foi encerrado. Fale com ' + anAp() + '.' : r.msg);
   }
   if(r.teste === 'ansiedade') return anEntrar(codigo, r);
+  if(typeof maEh === 'function' && maEh(r.teste)) return maEntrar(codigo, r);   // um dos Mapas (devolutiva-mapas.js)
   if(r.teste === 'disc' && typeof dcEntrar === 'function') return dcEntrar(codigo, r);
   if(r.teste === 'mpcc' && typeof mpEntrar === 'function') return mpEntrar(codigo, r);
   if(r.teste === 'tracos' && typeof tcEntrar === 'function') return tcEntrar(codigo, r);
