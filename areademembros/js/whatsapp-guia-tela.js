@@ -128,18 +128,20 @@
   }
 
   /* ---------- tela "O que você quer fazer?" ---------- */
+  const ICONE = { responder: "conversas", template: "templates", disparo: "disparos", inscricao: "inscricoes", vendas: "vendas", funil: "relogio" };
   function desenharTarefas() {
     const cx = $("cgTarefas"); if (!cx) return;
     cx.innerHTML = G.TAREFAS.map(function (t) {
-      return '<div class="cg-tarefa"><div class="cg-tarefa-txt"><b>' + esc(t.titulo) + "</b><small>" + esc(t.texto) + '</small></div><div class="acoes" style="margin:0">'
-        + '<button type="button" class="btn peq contorno" data-cg-ir="' + esc(t.aba) + '"' + (t.filtro ? ' data-filtro="' + esc(t.filtro) + '"' : "") + ">Ir para lá</button>"
-        + (t.roteiro ? '<button type="button" class="btn peq" data-cg-mostrar="' + esc(t.roteiro) + '">Me mostre como</button>' : "") + "</div></div>";
+      return '<div class="cg-tarefa" role="button" tabindex="0" data-cg-ir="' + esc(t.aba) + '"' + (t.filtro ? ' data-filtro="' + esc(t.filtro) + '"' : "") + ">" + (window.CrmIcone ? window.CrmIcone(ICONE[t.id] || "") : "")
+        + (t.roteiro ? '<button type="button" class="cg-comguia" data-cg-mostrar="' + esc(t.roteiro) + '" aria-label="Guia passo a passo: ' + esc(t.titulo) + '">Com guia</button>' : "")
+        + '<div class="cg-tarefa-txt"><b>' + esc(t.titulo) + "</b><small>" + esc(t.texto) + "</small></div></div>";
     }).join("");
   }
   document.addEventListener("click", function (ev) {
+    const m = ev.target.closest("[data-cg-mostrar]"); if (m) return iniciar(m.dataset.cgMostrar, false);
     const ir = ev.target.closest("[data-cg-ir]"); if (ir) return irPara(ir.dataset.cgIr, ir.dataset.filtro || "");
-    const m = ev.target.closest("[data-cg-mostrar]"); if (m) iniciar(m.dataset.cgMostrar, false);
   });
+  document.addEventListener("keydown", function (ev) { if ((ev.key === "Enter" || ev.key === " ") && ev.target.matches && ev.target.matches(".cg-tarefa")) { ev.preventDefault(); irPara(ev.target.dataset.cgIr, ev.target.dataset.filtro || ""); } });
   desenharTarefas();
   /* quem já conhece o CRM pode recolher o bloco de tarefas; o aparelho lembra */
   const box = $("cgTarefasBox");

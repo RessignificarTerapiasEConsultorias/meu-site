@@ -1,0 +1,180 @@
+/* CRM · Fase B (design premium). Vale só dentro de html.crm (a página whatsapp.html); o resto da área de membros não muda.
+   Peças: cores com função (tokens), casca (menu lateral, barra do celular, cabeçalho) e componentes (botão, situação, campo, cartão, tabela, janela).
+   O tema escuro (html.crm.noite) redefine os tokens; as correções de cor fixa ficam em crm-noite.css. */
+html.crm{
+  --c-fundo:#F3EEE3; --c-card:#FFFDF8; --c-card2:#FFFFFF; --c-tinta:#141C3A; --c-apoio:#4C5670; --c-noite:#06142A; --c-noite2:#0B1F3A;
+  --c-ouro:#C9A24A; --c-ouro2:#E3C477; --c-ouro-txt:#7A5A12; --c-borda:#E3DCCD; --c-campo:#8E8672;
+  --c-ok:#156B3A; --c-ok-bg:#DDF2E3; --c-at:#8A4B0B; --c-at-bg:#FBEBCF; --c-erro:#A3231C; --c-erro-bg:#FBE4E0; --c-neutro-bg:#EFE9DB;
+  --c-foco:#06142A; --c-menu:#06142A; --c-menu-txt:#E9EDF6; --c-menu-apoio:#A9B4CB;
+  --sand:var(--c-fundo); --paper:var(--c-card); --ink:var(--c-tinta); --muted:var(--c-apoio); --line:var(--c-borda); --goldtxt:var(--c-ouro-txt);
+  --crm-menu-l:260px;
+}
+html.crm.noite{
+  color-scheme:dark;
+  --c-fundo:#050B17; --c-card:#0F1B33; --c-card2:#14233F; --c-tinta:#F1E9DA; --c-apoio:#A7B0C3;
+  --c-ouro-txt:#E8CB7E; --c-borda:rgba(201,162,74,.26); --c-campo:#8591AB;
+  --c-ok:#7BD9A2; --c-ok-bg:rgba(98,204,142,.15); --c-at:#F4BE4F; --c-at-bg:rgba(244,190,79,.15); --c-erro:#FF8A78; --c-erro-bg:rgba(255,106,84,.16); --c-neutro-bg:rgba(255,255,255,.08);
+  --c-foco:#E8CB7E; --c-menu:#040913;
+  --navy:#F1E9DA; --navy2:#D9DFEC; --ok:#62CC8E; --erro:#FF8A78; --alerta:#F4BE4F;
+}
+html.crm body{background:var(--c-fundo);color:var(--c-tinta)}
+html.crm.noite body{background:linear-gradient(180deg,#071226 0%,#050B17 55%,#04080F 100%) fixed}
+html.crm h1,html.crm h2,html.crm h3{color:var(--c-tinta)}
+html.crm a{color:var(--c-tinta)}
+html.crm .carregando{background:var(--c-noite)}
+
+/* ---------- casca: menu lateral ---------- */
+html.crm .topo-painel,html.crm .conteudo-painel>.sub,html.crm .conteudo-painel>.voltar,html.crm .conteudo-painel>.empresa-titulo{display:none}
+html.crm .conteudo-painel.largo{max-width:none;margin:0;padding:28px 32px 80px calc(var(--crm-menu-l) + 32px)}
+html.crm #abas{position:fixed;left:0;top:0;bottom:0;width:var(--crm-menu-l);z-index:60;display:flex;flex-direction:column;gap:2px;margin:0;padding:18px 14px 14px;overflow-y:auto;overflow-x:hidden;
+  background:var(--c-menu);border:0;border-right:1px solid rgba(227,196,119,.14)}
+html.crm #crmMarca{display:flex;align-items:center;gap:12px;padding:4px 8px 12px;color:#fff}
+html.crm #crmMarca img{width:40px;height:40px;border-radius:10px;flex:none}
+html.crm #crmMarca b{display:block;font:600 19px/1.1 var(--serif)}
+html.crm #crmMarca small{display:block;color:var(--c-menu-apoio);font-size:13px;margin-top:2px}
+html.crm .crm-grupo{display:block;padding:14px 10px 6px;font:700 12px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--c-menu-apoio)}
+html.crm #abas .aba{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;flex:none;padding:0 12px;border:0;border-radius:10px;background:none;color:var(--c-menu-txt);font:500 16px/1.2 var(--sans);text-align:left;white-space:normal;cursor:pointer}
+html.crm #abas .aba svg{width:20px;height:20px;flex:none}
+html.crm #abas .aba:hover{background:rgba(255,255,255,.07)}
+html.crm #abas .aba[aria-selected="true"]{background:#13294B;color:#fff;font-weight:700;border-bottom-color:transparent}
+html.crm #abas .aba[aria-selected="true"]::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--c-ouro2);margin-left:auto;flex:none}
+html.crm #abas .aba .selo.ouro{margin-left:auto;background:#B3261E;color:#fff;min-width:24px;text-align:center;padding:3px 7px}
+html.crm #abas .aba .selo.ouro+*,html.crm #abas .aba:has(.selo.ouro:not([hidden]))::after{display:none}
+html.crm #abas .aba .ponto{margin-left:auto;background:var(--c-ouro2)}
+html.crm #crmPe{margin-top:auto;padding:14px 4px 0;border-top:1px solid rgba(255,255,255,.1);display:grid;gap:8px}
+html.crm #crmAuto{display:flex;align-items:center;gap:8px;color:var(--c-menu-txt);font-size:14.5px;padding:0 6px}
+html.crm #crmAuto i{width:10px;height:10px;border-radius:50%;background:#4FD08A;flex:none}
+html.crm #crmAuto.pausadas i{background:#FF7A64}
+html.crm .crm-pe-btn{min-height:44px;border-radius:10px;border:1.5px solid rgba(255,255,255,.4);background:none;color:#fff;font:600 15px var(--sans);cursor:pointer;padding:0 12px;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px}
+html.crm .crm-pe-btn:hover{background:rgba(255,255,255,.08)}
+html.crm #crmConta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;padding:2px 6px;font-size:13.5px;color:var(--c-menu-apoio)}
+html.crm #crmConta a,html.crm #crmConta button{color:var(--c-menu-txt);background:none;border:0;padding:8px 0;font:600 13.5px var(--sans);text-decoration:underline;cursor:pointer;min-height:36px}
+html.crm #crmFecharMenu{display:none}
+
+/* ---------- casca: cabeçalho da tela ---------- */
+html.crm #crmCab{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;margin:0 0 20px}
+html.crm #crmOlho{display:block;font:600 14.5px var(--sans);color:var(--c-ouro-txt);margin-bottom:2px}
+html.crm #crmTitulo{font:600 38px/1.1 var(--serif);letter-spacing:-.01em;margin:0;color:var(--c-tinta)}
+html.crm #crmDesc{margin:8px 0 0;color:var(--c-apoio);font-size:16.5px;max-width:720px}
+html.crm #crmCabAcoes{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+html.crm #crmBuscar{display:none}
+html.crm .crm-oculto{display:none!important}
+html.crm #auSelo{margin:0 0 16px}
+
+/* ---------- casca: barra do celular ---------- */
+html.crm #crmBarra{display:none}
+@media (max-width:1000px){
+  html.crm .conteudo-painel.largo{padding:0 14px calc(92px + env(safe-area-inset-bottom,0px))}
+  html.crm #crmCab{margin:0 -14px 16px;padding:14px 18px 16px;background:var(--c-noite);align-items:center;flex-wrap:nowrap}
+  html.crm #crmOlho{color:#C6CFE0;font-weight:400}
+  html.crm #crmTitulo{color:#fff;font-size:28px}
+  html.crm #crmDesc{display:none}
+  html.crm #crmCabAcoes .selo{display:none}
+  html.crm #crmBuscar{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:14px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.04);color:#fff;cursor:pointer;flex:none}
+  html.crm #crmBuscar svg{width:22px;height:22px}
+  html.crm #abas{display:none;width:auto;right:0;z-index:90;padding-bottom:24px}
+  html.crm body.crm-menu #abas{display:flex}
+  html.crm #crmFecharMenu{display:flex;margin-left:auto;width:44px;height:44px;align-items:center;justify-content:center;border-radius:12px;border:1.5px solid rgba(255,255,255,.3);background:none;color:#fff;font-size:22px;cursor:pointer}
+  html.crm #crmBarra{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:70;background:var(--c-card);border-top:1px solid var(--c-borda);padding:0 4px env(safe-area-inset-bottom,0px);box-shadow:0 -6px 20px rgba(6,20,42,.08)}
+  html.crm #crmBarra button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:64px;border:0;background:none;color:var(--c-apoio);font:500 13.5px var(--sans);cursor:pointer;padding:6px 2px}
+  html.crm #crmBarra button svg{width:24px;height:24px}
+  html.crm #crmBarra button[aria-current="page"]{color:var(--c-tinta);font-weight:700}
+  html.crm #crmBarra button[aria-current="page"]::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:0 0 4px 4px;background:var(--c-ouro)}
+  html.crm #crmBarra .crm-bd{position:absolute;top:8px;left:calc(50% + 4px);min-width:22px;height:22px;border-radius:11px;background:#B3261E;color:#fff;font:700 12.5px/22px var(--sans);text-align:center;padding:0 5px}
+  html.crm .wa-tarefas{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+  html.crm #cgCard.baixo{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+}
+@media print{html.crm #abas,html.crm #crmBarra,html.crm #crmCab{display:none!important}html.crm .conteudo-painel.largo{padding:0}}
+
+/* ---------- componentes: letra e foco ---------- */
+html.crm .cartao h2{font:600 22px/1.2 var(--sans);letter-spacing:0}
+html.crm .cp-tit{color:var(--c-tinta)}
+html.crm .ajuda,html.crm .cartao .ajuda,html.crm .vazio{color:var(--c-apoio)}
+html.crm .vd-card b,html.crm .vg-n,html.crm .vg-grande,html.crm .tabela td,html.crm .t td,html.crm .cp-quadro b{font-variant-numeric:tabular-nums}
+html.crm :focus-visible{outline:3px solid var(--c-foco);outline-offset:2px}
+html.crm #abas :focus-visible,html.crm #crmCab :focus-visible{outline-color:var(--c-ouro2)}
+
+/* ---------- componentes: botões ---------- */
+html.crm .btn{min-height:48px;border-radius:12px;background:var(--c-ouro);color:#1A1405;border:1.5px solid #A8842F;font-weight:700}
+html.crm .btn:hover{background:var(--c-ouro2)}
+html.crm .btn.peq{min-height:40px;border-radius:10px;font-size:14.5px;padding:0 14px}
+html.crm .btn.contorno{background:var(--c-card2);color:var(--c-tinta);border:1.5px solid var(--c-campo)}
+html.crm .btn.contorno:hover{background:var(--c-neutro-bg)}
+html.crm .btn.perigo{background:var(--c-card2);color:var(--c-erro);border:1.5px solid var(--c-erro)}
+html.crm .btn.perigo:hover{background:var(--c-erro-bg)}
+html.crm .wa-chip{min-height:40px;padding:0 14px;border-radius:10px;border:1.5px solid var(--c-campo);background:var(--c-card2);color:var(--c-tinta);font-size:14.5px}
+html.crm .wa-chip[aria-pressed="true"]{background:var(--c-noite);border-color:var(--c-noite);color:#fff}
+@media (pointer:coarse){html.crm .btn.peq,html.crm .wa-chip{min-height:44px}}
+
+/* ---------- componentes: situações (ícone e palavra juntos) ---------- */
+html.crm .selo{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;padding:4px 11px;border-radius:999px;background:var(--c-neutro-bg);color:var(--c-tinta)}
+html.crm .selo.ok{background:var(--c-ok-bg);color:var(--c-ok);border:0}
+html.crm .selo.ok::before{content:"✓";font-weight:700}
+html.crm .selo.off{background:var(--c-erro-bg);color:var(--c-erro);border:0}
+html.crm .selo.off::before{content:"✕";font-weight:700}
+html.crm .selo.pendente{background:var(--c-at-bg);color:var(--c-at);border:0}
+html.crm .selo.pendente::before{content:"◷"}
+html.crm .selo.ouro{background:var(--c-ouro);color:#1A1405}
+html.crm .aviso{border-radius:12px;font-size:15px}
+html.crm .aviso.erro{background:var(--c-erro-bg);color:var(--c-erro);border:1px solid transparent}
+html.crm .aviso.ok{background:var(--c-ok-bg);color:var(--c-ok);border:1px solid transparent}
+
+/* ---------- componentes: campo ---------- */
+html.crm input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),html.crm select,html.crm textarea{
+  min-height:44px;border-radius:10px;border:1.5px solid var(--c-campo);background:var(--c-card2);color:var(--c-tinta);padding:9px 12px;font-size:16px}
+html.crm textarea{min-height:0}
+html.crm input::placeholder,html.crm textarea::placeholder{color:var(--c-apoio);opacity:.85}
+html.crm label{color:var(--c-tinta)}
+html.crm input[type=checkbox],html.crm input[type=radio]{accent-color:var(--c-noite);width:20px;height:20px}
+html.crm.noite input[type=checkbox],html.crm.noite input[type=radio]{accent-color:var(--c-ouro2)}
+
+/* ---------- componentes: cartão, tabela, janela ---------- */
+html.crm .cartao{background:var(--c-card);border:1px solid var(--c-borda);border-radius:18px;padding:20px 22px;box-shadow:0 1px 0 rgba(6,20,42,.02)}
+html.crm .vd-card{background:var(--c-card2);border:1px solid var(--c-borda);border-radius:14px;padding:14px 16px}
+html.crm .vd-card small{color:var(--c-apoio);font-size:14px}
+html.crm .vd-card b{display:block;font:600 26px/1.2 var(--sans);color:var(--c-tinta);margin:2px 0}
+html.crm .tabela-wrap{border:1px solid var(--c-borda);border-radius:14px;background:var(--c-card2)}
+html.crm .tabela th,html.crm .t th{color:var(--c-apoio);font-weight:600}
+html.crm dialog.janela{background:var(--c-card);color:var(--c-tinta);border-radius:20px}
+html.crm dialog.janela::backdrop{background:rgba(4,9,19,.6)}
+@media (max-width:640px){html.crm dialog.janela{width:100%;max-width:100%;max-height:100dvh;height:100dvh;border-radius:0;margin:0;padding:18px 16px}}
+
+/* ---------- tela Hoje: "Precisa de você" ---------- */
+html.crm .crm-precisa{background:linear-gradient(160deg,#0D2244 0%,#06142A 70%);border-radius:20px;padding:16px 18px 6px;margin:0 0 18px;box-shadow:0 14px 30px -14px rgba(6,20,42,.55);border:1px solid rgba(227,196,119,.18)}
+html.crm .crm-precisa>.cp-tit{color:var(--c-ouro2);font:600 15px var(--sans);margin:0 0 4px}
+html.crm .crm-precisa .vg-hoje{gap:0;margin:0}
+html.crm .crm-precisa .vg-item{background:none;border:0;border-bottom:1px solid rgba(255,255,255,.12);border-radius:0;padding:12px 0;color:#fff;align-items:center}
+html.crm .crm-precisa .vg-item:last-child{border-bottom:0}
+html.crm .crm-precisa .vg-item-txt{display:grid;grid-template-columns:auto 1fr;column-gap:14px;align-items:center}
+html.crm .crm-precisa .vg-item-txt .vg-n{grid-row:1 / span 2;font:600 28px/1 var(--sans);color:var(--c-ouro2);min-width:44px}
+html.crm .crm-precisa .vg-item-txt span{font-weight:700;font-size:16.5px;color:#fff;grid-column:2}
+html.crm .crm-precisa .vg-item-txt small{color:#C6CFE0;font-size:14.5px;grid-column:2;margin-top:2px}
+html.crm .crm-precisa .vg-item.alerta .vg-n{color:#FFB3A6}
+html.crm .crm-precisa .btn{background:rgba(255,255,255,.06);color:#fff;border:1.5px solid rgba(255,255,255,.45)}
+html.crm .crm-precisa .btn:hover{background:rgba(255,255,255,.14)}
+html.crm .crm-precisa .vg-ok{background:rgba(98,204,142,.14);border:0;color:#D6F5E2}
+html.crm .crm-precisa .vazio{color:#C6CFE0}
+
+/* ---------- tela Hoje: "O que você quer fazer?" ---------- */
+html.crm [data-painel="visao"]>.cartao{background:none;border:0;box-shadow:none;padding:0}
+html.crm .crm-periodo{margin:18px 0 6px;justify-content:flex-end}
+html.crm #cgTarefasBox>summary{font:700 19px var(--sans);color:var(--c-tinta);padding:4px 0 8px}
+html.crm .cg-tarefas{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+html.crm .cg-tarefa{position:relative;background:var(--c-card);border:1px solid var(--c-borda);border-radius:16px;padding:16px 14px 14px;gap:12px;min-height:108px;justify-content:flex-start;cursor:pointer;box-shadow:0 2px 8px -4px rgba(6,20,42,.12)}
+html.crm .cg-tarefa:hover{border-color:var(--c-campo)}
+html.crm .cg-tarefa .crm-ic{width:26px;height:26px;color:var(--c-tinta)}
+html.crm .cg-tarefa-txt b{font:700 16.5px/1.3 var(--sans);color:var(--c-tinta)}
+html.crm .cg-tarefa-txt small{color:var(--c-apoio);font-size:14px}
+html.crm .cg-comguia{position:absolute;top:8px;right:8px;min-height:36px;background:#F3E3B5;color:#5C430B;font:600 13.5px var(--sans);padding:0 12px;border-radius:999px;border:1px solid #D9BD6E;cursor:pointer}
+html.crm .cg-comguia::after{content:"";position:absolute;inset:-5px}
+html.crm.noite .cg-comguia{background:rgba(232,203,126,.2);color:#F3DC9C;border-color:rgba(232,203,126,.5)}
+@media (max-width:560px){html.crm .cg-tarefas{grid-template-columns:1fr 1fr}html.crm .cg-tarefa-txt small{display:none}}
+
+/* ---------- pequenos ajustes de telas existentes ---------- */
+html.crm .wa-item{background:var(--c-card2);border:1px solid var(--c-borda);border-radius:14px}
+html.crm .vg-item{background:var(--c-card2);border-radius:12px}
+html.crm .vg-barra{background:var(--c-neutro-bg)}
+html.crm .cg-btn{min-height:44px}
+html.crm.dia .wa-vis{color:#155FAE}
+html.crm.dia .wa-cita{color:#4A5260}
+html.crm .wa-zap-hora{color:#666}

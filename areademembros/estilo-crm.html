@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR" class="crm dia">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Componentes do CRM · Ressignificar</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilo.css">
+<link rel="stylesheet" href="css/crm.css">
+<link rel="stylesheet" href="css/crm-noite.css">
+<style>
+  body{padding:28px 20px 60px}
+  .ref{max-width:1240px;margin:0 auto}
+  .ref h1{font:600 38px/1.1 var(--serif);margin:0 0 6px}
+  .ref-grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-top:22px}
+  .ref .cartao{margin:0}
+  .ref .cartao h2{margin-bottom:14px}
+  .ref-linha{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;margin-bottom:12px}
+  .ref-linha p,.ref p{margin:0;color:var(--c-apoio);font-size:15px}
+  .ref-linha p b,.ref p b{color:var(--c-tinta)}
+  .ref-selos{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .ref-cor{display:grid;grid-template-columns:32px 1fr auto;gap:12px;align-items:center;margin-bottom:8px;font-weight:600}
+  .ref-cor i{width:32px;height:32px;border-radius:8px;border:1px solid var(--c-borda)}
+  .ref-cor span{font-weight:400;color:var(--c-apoio);font-variant-numeric:tabular-nums}
+  .ref-esp{display:flex;gap:8px;align-items:flex-end;margin:10px 0}.ref-esp i{height:22px;background:var(--c-tinta);border-radius:3px}
+  .ref-44{display:inline-flex;width:44px;height:44px;align-items:center;justify-content:center;border:1.5px dashed var(--c-campo);border-radius:8px;font-weight:700}
+  .ref-erro{color:var(--c-erro);font-weight:600;font-size:14px;margin:6px 0 10px}
+  .ref-campo-erro{border-color:var(--c-erro)!important}
+  .ref-discreto{background:none;border:0;color:var(--c-tinta);font:600 16px var(--sans);text-decoration:underline;min-height:44px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="ref">
+  <div class="empresa-titulo" style="display:flex;justify-content:space-between;align-items:flex-end">
+    <div><h1>Componentes</h1><p>Toda tela do CRM é montada só com estas peças. Fase B · Design premium.</p></div>
+    <button class="btn contorno auto" type="button" id="tema">Ver no tema Noite</button>
+  </div>
+  <div class="ref-grade">
+    <div class="cartao"><h2>Botões</h2>
+      <div class="ref-linha"><button class="btn" type="button">Novo disparo</button><p><b>Principal.</b> Um por tela: a ação que a pessoa veio fazer.</p></div>
+      <div class="ref-linha"><button class="btn contorno" type="button">Abrir</button><p><b>Secundário.</b> As ações comuns da tela.</p></div>
+      <div class="ref-linha"><button class="ref-discreto" type="button">Mais opções</button><p><b>Discreto.</b> O que se usa pouco fica guardado aqui.</p></div>
+      <div class="ref-linha"><button class="btn perigo" type="button">Cancelar envio</button><p><b>Perigo.</b> Apaga ou envia sem volta. Sempre pede confirmação.</p></div>
+      <div class="ref-selos"><button class="wa-chip" type="button" aria-pressed="true">Todos</button><button class="wa-chip" type="button" aria-pressed="false">Na fila</button><button class="wa-chip" type="button" aria-pressed="false">Concluídos</button></div>
+      <p><b>Filtro.</b> O escolhido fica preenchido.</p>
+    </div>
+    <div class="cartao"><h2>Situações</h2>
+      <div class="ref-selos"><span class="selo ok">Concluído</span><span class="selo pendente">Em análise</span><span class="selo off">Falhou</span><span class="selo">Rascunho</span><span class="selo ouro">Enviando</span></div>
+      <p>Sempre sinal e palavra juntos. A cor nunca fala sozinha, porque uma parte das pessoas não distingue verde de vermelho.</p>
+      <div class="aviso ok" style="margin-top:14px"><b>Aviso na tela.</b> Diz o que aconteceu e o que fazer em seguida, numa frase.</div>
+      <div class="aviso erro"><b>Erro.</b> Diz o que deu errado e como resolver.</div>
+    </div>
+    <div class="cartao"><h2>Campo</h2>
+      <label for="c1"><b>Nome do template</b></label><input id="c1" value="aviso_aula_quinta" style="width:100%;margin:6px 0">
+      <p style="margin-bottom:12px">Só você e a Meta veem este nome.</p>
+      <label for="c2"><b>Nome do template</b></label><input id="c2" class="ref-campo-erro" value="Aviso Aula" style="width:100%;margin:6px 0 0">
+      <p class="ref-erro">Use minúsculas, números e _ no lugar do espaço.</p>
+      <p>Rótulo sempre acima. A borda do campo é escura o bastante para se ver onde tocar.</p>
+    </div>
+    <div class="cartao"><h2>Letra</h2>
+      <p style="font:600 38px/1.1 var(--serif);color:var(--c-tinta);margin-bottom:10px">Título de tela</p>
+      <p style="font:600 22px var(--sans);color:var(--c-tinta);margin-bottom:8px">Título de bloco</p>
+      <p style="font-size:16.5px;color:var(--c-tinta);margin-bottom:8px">Texto do dia a dia, para ler sem esforço.</p>
+      <p style="margin-bottom:8px">Texto de apoio, que explica o que está acima.</p>
+      <p style="font-size:14px;margin-bottom:10px">Legenda e rótulo: o menor tamanho permitido.</p>
+      <p><b style="font:600 30px var(--sans);font-variant-numeric:tabular-nums">1.247</b> Números com algarismos da mesma largura.</p>
+    </div>
+    <div class="cartao"><h2>Cores com função</h2>
+      <div class="ref-cor"><i style="background:var(--c-tinta)"></i>Tinta<span>texto principal</span></div>
+      <div class="ref-cor"><i style="background:var(--c-apoio)"></i>Apoio<span>texto de apoio</span></div>
+      <div class="ref-cor"><i style="background:var(--c-ouro-txt)"></i>Ouro para texto<span>destaque</span></div>
+      <div class="ref-cor"><i style="background:var(--c-ouro)"></i>Ouro<span>ação principal</span></div>
+      <div class="ref-cor"><i style="background:var(--c-campo)"></i>Borda de campo<span>onde tocar</span></div>
+      <div class="ref-cor"><i style="background:var(--c-ok)"></i>Deu certo<span>sucesso</span></div>
+      <div class="ref-cor"><i style="background:var(--c-at)"></i>Atenção<span>cuidado</span></div>
+      <div class="ref-cor"><i style="background:var(--c-erro)"></i>Erro e perigo<span>falha, sem volta</span></div>
+      <p>O contraste de todas as telas é medido por teste automático nos dois temas. Texto pede 4,5 para 1.</p>
+    </div>
+    <div class="cartao"><h2>Foco, toque e espaço</h2>
+      <div class="ref-linha"><button class="btn contorno" type="button" style="outline:3px solid var(--c-foco);outline-offset:2px">Salvar</button><p><b>Foco do teclado.</b> Contorno azul-noite no claro e dourado no escuro.</p></div>
+      <div class="ref-linha"><span class="ref-44">44</span><p><b>Toque.</b> No celular, nada que se toca é menor que 44 px.</p></div>
+      <div class="ref-esp"><i style="width:4px"></i><i style="width:8px"></i><i style="width:12px"></i><i style="width:16px"></i><i style="width:24px"></i><i style="width:32px"></i></div>
+      <p><b>Espaço.</b> Só 4, 8, 12, 16, 24 e 32. Mais espaço entre grupos do que dentro deles.</p>
+    </div>
+  </div>
+</div>
+<script>
+(function(){var H=document.documentElement,b=document.getElementById("tema");
+  b.addEventListener("click",function(){var n=H.classList.contains("noite");H.classList.remove("dia","noite");H.classList.add(n?"dia":"noite");b.textContent=n?"Ver no tema Noite":"Ver no tema Dia";});})();
+</script>
+</body>
+</html>

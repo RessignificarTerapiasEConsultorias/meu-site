@@ -12,9 +12,9 @@
   const ROTEIROS = {
     template: {
       id: "template", aba: "templates", titulo: "Criar uma mensagem modelo (template)",
-      fim: 'Pronto. A Meta analisa em minutos ou horas. Acompanhe no filtro "Em análise", no alto desta aba. Quando for aprovado, o template aparece na aba Disparos.',
+      fim: 'Pronto. A Meta analisa em minutos ou horas. Acompanhe no filtro "Em análise", no alto desta tela. Quando for aprovado, o template aparece em Disparos.',
       passos: [
-        { id: "aba", alvo: '#abas .aba[data-aba="templates"]', texto: 'Toque em "Templates" na faixa de abas. É ali que ficam as mensagens modelo.', feito: function (t) { return abaAberta(t, "templates"); } },
+        { id: "aba", alvo: '#abas .aba[data-aba="templates"]', texto: 'Abra "Mensagens modelo" no menu (no celular, toque em "Mais"). É ali que ficam as mensagens modelo, também chamadas de templates.', feito: function (t) { return abaAberta(t, "templates"); } },
         { id: "oque", alvo: ".wa-tp-edit", info: true, texto: "Template é uma mensagem que a Meta aprova antes. Com ele você pode escrever para alguém a qualquer hora, mesmo que a pessoa não tenha falado com você nas últimas 24 horas. Vamos criar um agora, campo por campo." },
         { id: "modelo", alvo: '[data-modelo="aula"]', info: true, opcional: true, texto: "Se quiser, comece por um modelo pronto: toque em um destes botões e os campos se preenchem sozinhos. Para escrever do zero, toque em Próximo." },
         { id: "nome", alvo: "#tcNome", texto: "Dê um nome ao template. Só você e a Meta veem este nome.", exemplo: "aviso_aula_quinta",
@@ -38,7 +38,7 @@
       id: "disparo", aba: "disparos", titulo: "Mandar para várias pessoas (disparo)",
       fim: 'Pronto. O disparo aparece na lista "Disparos", logo abaixo, com a situação, os entregues, os lidos e as falhas. O resultado também entra na Visão geral.',
       passos: [
-        { id: "aba", alvo: '#abas .aba[data-aba="disparos"]', texto: 'Toque em "Disparos" na faixa de abas. É ali que se manda a mesma mensagem para várias pessoas.', feito: function (t) { return abaAberta(t, "disparos"); } },
+        { id: "aba", alvo: '#abas .aba[data-aba="disparos"]', texto: 'Abra "Disparos" no menu (no celular, toque em "Mais"). É ali que se manda a mesma mensagem para várias pessoas.', feito: function (t) { return abaAberta(t, "disparos"); } },
         { id: "modo", alvo: "#wzModo", texto: 'Você está no modo rápido, com tudo numa tela só. Para ser guiado etapa por etapa, toque em "Passo a passo".',
           quando: function (t) { return t.classe("#dpForm", "rapido"); }, feito: function (t) { return !t.classe("#dpForm", "rapido"); } },
         { id: "nome", alvo: "#dpNome", texto: "Dê um nome ao disparo. É só para você reconhecer depois na lista.", exemplo: "Aviso da aula de quinta",

@@ -1,0 +1,229 @@
+/* CRM · tema Noite: cores equivalentes para as regras de cor fixa. ARQUIVO GERADO (scratchpad/faseb/gerar_noite.py) + ajustes à mão no fim. */
+html.crm.noite .campo input{border:1.5px solid var(--c-campo);background:var(--c-card2)}
+html.crm.noite .aviso.erro{background:var(--c-erro-bg);color:var(--c-erro);border:1px solid rgba(255,138,120,.5)}
+html.crm.noite .aviso.ok{background:var(--c-ok-bg);color:var(--c-ok);border:1px solid rgba(123,217,162,.45)}
+html.crm.noite .sair:hover{border-color:var(--c-borda)}
+html.crm.noite .f input,html.crm.noite .f select,html.crm.noite .f textarea{border:1.5px solid var(--c-campo);background:var(--c-card2)}
+html.crm.noite .btn.perigo{background:var(--c-card2);color:var(--c-erro);border:1.5px solid rgba(255,138,120,.5)}
+html.crm.noite .btn.perigo:hover{background:var(--c-erro-bg)}
+html.crm.noite .tabela-wrap{background:var(--c-card2)}
+html.crm.noite table.t th,html.crm.noite table.t td{border-bottom:1px solid var(--c-borda)}
+html.crm.noite table.t th{background:var(--c-card2)}
+html.crm.noite .selo{background:var(--c-neutro-bg)}
+html.crm.noite .selo.off{background:var(--c-erro-bg);color:var(--c-erro)}
+html.crm.noite .selo.ok{background:var(--c-ok-bg);color:var(--c-ok)}
+html.crm.noite .toast{background:#E3C477;color:#1A1405}
+html.crm.noite .tipo{border:2px solid var(--c-campo);background:var(--c-card2)}
+html.crm.noite .tipo[aria-pressed="true"]{background:var(--c-card2)}
+html.crm.noite .tipo[data-tipo="receita"][aria-pressed="true"]{background:var(--c-ok-bg)}
+html.crm.noite .tipo[data-tipo="despesa"][aria-pressed="true"]{background:var(--c-card2)}
+html.crm.noite .v-receita{color:var(--c-ok)}
+html.crm.noite .v-saida{color:var(--c-erro)}
+html.crm.noite .dre-tab th:first-child{background:var(--c-card2)}
+html.crm.noite .dre-tab tr{background:var(--c-card2)}
+html.crm.noite .dre-tab tr.tot{background:var(--c-card2)}
+html.crm.noite .dre-tab tr.res{background:#E3C477;color:#1A1405}
+html.crm.noite .dre-tab tr.grp td{background:var(--c-card2)}
+html.crm.noite .dre-tab td.neg{color:var(--c-erro)}
+html.crm.noite .sobe{color:var(--c-ok)}
+html.crm.noite .desce{color:var(--c-erro)}
+html.crm.noite .insights li{background:var(--c-card2)}
+html.crm.noite .cartao-empresa{background:var(--c-card2)}
+html.crm.noite .aviso-sigilo{background:rgba(120,160,255,.14);border:1px solid rgba(123,217,162,.45);color:var(--c-tinta)}
+html.crm.noite .acao{background:var(--c-card2)}
+html.crm.noite .acao.atrasada{border-color:rgba(255,138,120,.5);background:var(--c-card2)}
+html.crm.noite .acao select{border:1.5px solid var(--c-campo);background:var(--c-card2)}
+html.crm.noite .sugestoes button{border:1px solid var(--c-campo);background:var(--c-card2)}
+html.crm.noite .sessao{background:var(--c-card2)}
+html.crm.noite .privado{background:var(--c-card2);border:1px dashed rgba(232,203,126,.45)}
+html.crm.noite .produto{background:var(--c-card2)}
+html.crm.noite .inclui li::before{color:var(--c-ok)}
+html.crm.noite .meta-card{background:#E3C477;color:#1A1405}
+html.crm.noite .mini-barra{background:var(--c-neutro-bg)}
+html.crm.noite .meta-input{border:1.5px solid var(--c-campo)}
+html.crm.noite .resumo-live{background:var(--c-card2)}
+html.crm.noite .cal-dia{background:var(--c-card2)}
+html.crm.noite .cal-dia.hoje{background:var(--c-card2)}
+html.crm.noite .cal-item.vermelho{background:var(--c-erro-bg);color:var(--c-erro)}
+html.crm.noite .cal-item.amarelo{background:var(--c-card2);color:var(--c-ouro-txt)}
+html.crm.noite .cal-item.laranja{background:var(--c-card2);color:var(--c-erro)}
+html.crm.noite .cal-item.verde{background:var(--c-ok-bg);color:var(--c-ok)}
+html.crm.noite .badge-status.vermelho{background:var(--c-erro-bg);color:var(--c-erro)}
+html.crm.noite .badge-status.amarelo{background:var(--c-card2);color:var(--c-ouro-txt)}
+html.crm.noite .badge-status.laranja{background:var(--c-card2);color:var(--c-erro)}
+html.crm.noite .badge-status.verde{background:var(--c-ok-bg);color:var(--c-ok)}
+html.crm.noite .proj-positivo{color:var(--c-ok)}
+html.crm.noite .proj-negativo{color:var(--c-erro)}
+html.crm.noite #tabelaProjecao tbody tr.mes-atual{background:var(--c-card2)}
+html.crm.noite .tipo-receita{color:var(--c-ok)}
+html.crm.noite .tipo-custo{color:var(--c-erro)}
+html.crm.noite .tipo-antecipada{color:var(--c-ouro-txt)}
+html.crm.noite .cal-item.roxo{background:var(--c-card2);color:#9CC4FF}
+html.crm.noite .passo-item{background:var(--c-card2)}
+html.crm.noite .pop-card{background:var(--c-card2)}
+html.crm.noite .pdca-trilho .etapa{background:var(--c-card2)}
+html.crm.noite .pdca-trilho .etapa.atual{background:#E3C477;color:#1A1405}
+html.crm.noite .pdca-trilho .etapa.passada{background:var(--c-ok-bg);color:var(--c-ok)}
+html.crm.noite .coluna-ishikawa{background:var(--c-card2)}
+html.crm.noite .coluna-ishikawa li{background:var(--c-card2)}
+html.crm.noite .coluna-ishikawa li.raiz{background:var(--c-erro-bg)}
+html.crm.noite .porque-item{background:var(--c-card2)}
+html.crm.noite .kanban-col{background:var(--c-card2)}
+html.crm.noite .kanban-card{background:var(--c-card2)}
+html.crm.noite .gantt-trilho{background:var(--c-card2)}
+html.crm.noite .eap-no .eap-linha{background:var(--c-card2)}
+html.crm.noite .eap-barra-mini{background:var(--c-neutro-bg)}
+html.crm.noite .a3-folha{background:var(--c-card2)}
+html.crm.noite .resumo-meta-dre{background:#E3C477;color:#1A1405}
+html.crm.noite .rm-dot.amarelo{background:var(--c-at-bg)}
+html.crm.noite .chat-lista{background:var(--c-card2)}
+html.crm.noite .chat-msg{background:var(--c-card2)}
+html.crm.noite .chat-msg.minha{background:var(--c-at-bg);border-color:rgba(255,138,120,.5)}
+html.crm.noite .chat-msg .quem .equipe{background:#E3C477;color:#1A1405}
+html.crm.noite .chat-form textarea{border:1.5px solid var(--c-campo);background:var(--c-card2)}
+html.crm.noite .chat-aovivo{background:#E3C477;color:#1A1405}
+html.crm.noite .chat-conversas select{border:1.5px solid var(--c-campo);background:var(--c-card2)}
+html.crm.noite .chat-conv{background:var(--c-card2)}
+html.crm.noite .res-lista li{background:var(--c-card2)}
+html.crm.noite .res-add textarea{border:1.5px solid var(--c-campo);background:var(--c-card2)}
+html.crm.noite .aulas-ver{background:#E3C477}
+html.crm.noite .aula-conteudo{background:#E3C477;border:1px solid var(--c-campo)}
+html.crm.noite .aula-conteudo .vazio{color:var(--c-apoio)}
+html.crm.noite .aulas-modulo .ajuda{color:var(--c-apoio)}
+html.crm.noite .aula-item{border:2px solid var(--c-campo)}
+html.crm.noite .player-caixa{background:#E3C477}
+html.crm.noite .ger-modulo{background:var(--c-card2)}
+html.crm.noite .selo.pendente{background:var(--c-at-bg);color:var(--c-ouro-txt);border:1px solid rgba(255,138,120,.5)}
+html.crm.noite .selo.ok{background:var(--c-ok-bg);color:var(--c-ok)}
+html.crm.noite .selo.off{background:var(--c-erro-bg);color:var(--c-erro)}
+html.crm.noite .v-pendente{color:var(--c-ouro-txt)}
+html.crm.noite tr.sub>td{background:var(--c-card2)}
+html.crm.noite .alerta-linha{background:var(--c-card2);border:1px solid rgba(255,138,120,.5)}
+html.crm.noite .alerta-linha span.txt{color:var(--c-erro)}
+html.crm.noite .btn-alerta .ponto-pisca{background:var(--c-card2)}
+html.crm.noite .oferta-nome{background:var(--c-card2)}
+html.crm.noite .oferta-card{background:var(--c-card2)}
+html.crm.noite .link-teste input{background:var(--c-card2)}
+html.crm.noite .carrinho-resumo{background:var(--c-card2)}
+html.crm.noite .av-erro{color:var(--c-erro)}
+html.crm.noite .av-resp{background:var(--c-card2)}
+html.crm.noite .av-msg{background:var(--c-card2)}
+html.crm.noite .link-venda{background:var(--c-card2);border:1px dashed rgba(232,203,126,.45)}
+html.crm.noite .pagar-cob.adiantado{color:var(--c-ok)}
+html.crm.noite .ass-area{background:var(--c-card2)}
+html.crm.noite .ass-dica{color:var(--c-apoio)}
+html.crm.noite .ass-x{color:var(--c-apoio)}
+html.crm.noite .ass-linha{border-top:1.5px solid var(--c-campo)}
+html.crm.noite .ass-img{background:var(--c-card2)}
+html.crm.noite .wa-item{background:var(--c-card2)}
+html.crm.noite .wa-item mark{background:var(--c-at-bg)}
+html.crm.noite .wa-tag{background:rgba(120,160,255,.14);color:var(--c-tinta)}
+html.crm.noite .wa-chip{border:1px solid var(--c-campo);background:var(--c-card2)}
+html.crm.noite .wa-chip[aria-pressed="true"]{background:#E3C477;color:#1A1405}
+html.crm.noite .wa-menu-lista{background:var(--c-card2)}
+html.crm.noite .wa-menu-lista button:hover{background:var(--c-card2)}
+html.crm.noite .wa-vis{color:#9CC4FF}
+html.crm.noite .wa-reacao{background:var(--c-card2)}
+html.crm.noite .wa-dia span{background:var(--c-neutro-bg)}
+html.crm.noite .wa-aviso{color:var(--c-tinta);background:rgba(120,160,255,.14);border:1px solid rgba(123,217,162,.45)}
+html.crm.noite .wa-ferr>button:hover{background:var(--c-card2)}
+html.crm.noite .wa-pop{background:var(--c-card2)}
+html.crm.noite .wa-rap.sel,html.crm.noite .wa-rap:hover{background:var(--c-card2)}
+html.crm.noite .wa-emo-grade button:hover{background:var(--c-card2)}
+html.crm.noite .wa-anexo{border:1px dashed rgba(232,203,126,.45);background:var(--c-card2)}
+html.crm.noite .wa-x{background:var(--c-card2)}
+html.crm.noite .wa-avatar{background:#E3C477}
+html.crm.noite .wa-tag-bloq{background:var(--c-erro-bg);color:var(--c-erro)}
+html.crm.noite .wa-fc-bloco .wa-copia input{border:1.5px solid var(--c-campo);background:var(--c-card2)}
+html.crm.noite .wa-prev{background:var(--c-ok-bg);border:1px solid rgba(123,217,162,.45)}
+html.crm.noite .wa-barra{background:var(--c-neutro-bg)}
+html.crm.noite .wa-tp-txt{color:var(--c-tinta)}
+html.crm.noite .wa-tp-alerta.amarelo{background:var(--c-neutro-bg);color:var(--c-erro);border:1px solid rgba(255,138,120,.5)}
+html.crm.noite .wa-tp-alerta.vermelho{background:var(--c-erro-bg);color:var(--c-erro);border:1px solid rgba(255,138,120,.5)}
+html.crm.noite .wa-zap{background:var(--c-neutro-bg)}
+html.crm.noite .wa-zap-balao{background:var(--c-card2);color:var(--c-tinta)}
+html.crm.noite .wa-zap-midia{background:rgba(120,160,255,.14)}
+html.crm.noite .wa-zap-vazia{color:var(--c-tinta)}
+html.crm.noite .wa-zap-rod{color:var(--c-apoio)}
+html.crm.noite .wa-zap-hora{color:var(--c-apoio)}
+html.crm.noite .wa-zap-card{background:var(--c-card2)}
+html.crm.noite .wa-zap-card-midia{background:rgba(120,160,255,.14)}
+html.crm.noite .wa-zap-card .wa-zap-botao{border-top:1px solid var(--c-borda)}
+html.crm.noite .wa-card-ed{border:1px solid var(--borda, var(--c-borda))}
+html.crm.noite .wa-zap-botao{background:var(--c-card2);color:var(--c-apoio)}
+html.crm.noite .wa-check .ok .m{color:var(--c-ok)}
+html.crm.noite .wa-check .falta .m{color:var(--c-erro)}
+html.crm.noite .wa-check .aviso-s .m{color:var(--c-erro)}
+html.crm.noite .wa-check small{color:var(--c-apoio)}
+html.crm.noite .wa-cont{color:var(--c-apoio)}
+html.crm.noite .ts-item{background:var(--c-card2)}
+html.crm.noite .ts-item[aria-pressed="true"]{background:var(--c-neutro-bg)}
+html.crm.noite .cp-nota{background:var(--c-card2)}
+html.crm.noite .cp-nota.alerta{background:var(--c-neutro-bg);border-color:rgba(232,203,126,.45)}
+html.crm.noite .wa-fn-col{background:var(--c-card2)}
+html.crm.noite .wa-fn-col.ganho{background:var(--c-ok-bg)}
+html.crm.noite .wa-fn-col.perdido{background:var(--c-card2)}
+html.crm.noite .wa-fn-cartao{background:var(--c-card2)}
+html.crm.noite .wa-fn-selo{background:var(--c-neutro-bg)}
+html.crm.noite .wa-fn-selo.alta{background:var(--c-neutro-bg);color:var(--c-erro)}
+html.crm.noite .wa-fn-selo.urgente{background:var(--c-erro-bg);color:var(--c-erro)}
+html.crm.noite .wa-fn-parado.am{color:var(--c-erro)}
+html.crm.noite .wa-fn-parado.vm{color:var(--c-erro)}
+html.crm.noite .wa-fn-acao.venc{color:var(--c-erro)}
+html.crm.noite .wa-fn-toast button{border-color:var(--c-borda)}
+html.crm.noite .wa-fn-ativ li{background:var(--c-card2)}
+html.crm.noite .wa-fn-aviso{background:var(--c-card2)}
+html.crm.noite .wa-fn-aviso.erro{background:var(--c-erro-bg);border-color:rgba(255,138,120,.5)}
+html.crm.noite .wz-passos button{border:1px solid var(--c-campo);background:var(--c-card2)}
+html.crm.noite .wz-passos button[aria-current="step"]{background:#E3C477;color:#1A1405}
+html.crm.noite .wz-passos button.feita:not([aria-current="step"]){color:var(--c-ok)}
+html.crm.noite .au-passo{background:var(--c-card2)}
+html.crm.noite .vg-item{background:var(--c-card2)}
+html.crm.noite .vg-item-txt small{color:var(--c-apoio)}
+html.crm.noite .vg-ok{background:var(--c-ok-bg)}
+html.crm.noite .vg-grande small{color:var(--c-apoio)}
+html.crm.noite .vg-barra{background:var(--c-neutro-bg)}
+html.crm.noite .vg-barra i{background:#E3C477}
+html.crm.noite .vg-grafico{border-bottom:2px solid var(--c-campo)}
+html.crm.noite .vg-b.env{background:#E3C477}
+html.crm.noite .vg-legenda{color:var(--c-apoio)}
+html.crm.noite .in-prova{background:var(--c-card2)}
+html.crm.noite .em-prev{background:var(--c-card2)}
+html.crm.noite .em-prev iframe{background:var(--c-card2)}
+html.crm.noite .em-avisos{color:var(--c-erro)}
+html.crm.noite .em-avisos li.ok{color:var(--c-ok)}
+html.crm.noite .em-lista li.feito{color:var(--c-ok)}
+html.crm.noite .wa-tag-corr{background:var(--c-neutro-bg);color:var(--c-apoio)}
+html.crm.noite .wa-cita{color:var(--c-apoio)}
+html.crm.noite .wa-sr-barra{background:var(--c-neutro-bg);border:1px solid rgba(232,203,126,.45)}
+html.crm.noite #cvGravar.gravando{background:var(--c-erro-bg)}
+html.crm.noite .vd-bloco{background:var(--c-card2)}
+html.crm.noite .vd-barra{background:var(--c-neutro-bg)}
+html.crm.noite .vd-card{background:var(--c-card2)}
+html.crm.noite .vd-up{color:var(--c-ok)}
+html.crm.noite .vd-down{color:var(--c-erro)}
+html.crm.noite .vd-aviso{color:var(--c-erro)}
+html.crm.noite .cp-quadro{background:var(--c-card2)}
+html.crm.noite .cp-quadro.ruim{border-color:rgba(255,138,120,.5);background:var(--c-erro-bg)}
+html.crm.noite .cp-quadro.ruim b{color:var(--c-erro)}
+html.crm.noite .cp-quadro.atencao{border-color:rgba(232,203,126,.45);background:var(--c-neutro-bg)}
+html.crm.noite .wa-tf{background:var(--c-card2)}
+html.crm.noite .wa-tf-msg.erro{color:var(--c-erro)}
+/* ---- ajustes à mão ---- */
+html.crm.noite .wa-msg{background:#14233F;color:#F1E9DA;border-color:rgba(201,162,74,.22)}
+html.crm.noite .wa-msg.saida{background:#2A2413;color:#F6EBCB;border-color:rgba(232,203,126,.35)}
+html.crm.noite .wa-msg.wa-nao-entregue{background:rgba(244,190,79,.15);border-color:rgba(244,190,79,.5)}
+html.crm.noite .wa-chip[aria-pressed="true"]{background:#E3C477;border-color:#E3C477;color:#1A1405}
+html.crm.noite #crmBarra{box-shadow:0 -6px 20px rgba(0,0,0,.5)}
+html.crm.noite .crm-precisa{background:linear-gradient(160deg,#16294D 0%,#0C1830 70%);border-color:rgba(232,203,126,.3)}
+html.crm.noite .cartao,html.crm.noite .cg-tarefa{box-shadow:0 0 0 1px rgba(255,255,255,.02) inset,0 18px 40px -26px rgba(0,0,0,.9)}
+html.crm.noite .btn.contorno,html.crm.noite .btn.perigo{background:rgba(255,255,255,.04)}
+html.crm.noite iframe{background:#fff}
+
+html.crm.noite .crm-precisa .vg-item{background:none;border-color:rgba(255,255,255,.12)}
+html.crm.noite .wa-avatar{background:#13294B;color:#E8CB7E}
+html.crm.noite .selo.ouro{background:#E3C477;color:#1A1405}
+html.crm.noite .selo.ok{background:var(--c-ok-bg);color:var(--c-ok)}
+html.crm.noite .selo.off{background:var(--c-erro-bg);color:var(--c-erro)}
+html.crm.noite .selo.pendente{background:var(--c-at-bg);color:var(--c-at)}
+
