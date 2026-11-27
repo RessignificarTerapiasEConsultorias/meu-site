@@ -70,3 +70,37 @@ html.crm .wa-av,html.crm .cv-voltar,html.crm .cv-mais,html.crm .cv-acoes-tit{dis
   html.crm .wa-ficha{z-index:96;width:100%;box-shadow:none;padding-top:max(16px,env(safe-area-inset-top,0px))}
   html.crm .wa-ficha #fcFechar{min-height:44px}
 }
+
+/* ================= etapa 2: as outras telas ================= */
+@media (max-width:760px){
+  /* tabela vira lista de cartões: o primeiro dado é o título, os outros ficam como "rótulo: valor" */
+  html.crm .tabela-wrap{border:0;background:none;overflow:visible;border-radius:0}
+  html.crm table.t,html.crm table.tabela{display:block;width:100%;min-width:0!important;border:0;background:none}
+  html.crm table.t thead,html.crm table.tabela thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  html.crm table.t tbody,html.crm table.tabela tbody{display:grid;gap:10px}
+  html.crm table.t tr,html.crm table.tabela tr{display:block;background:var(--c-card2);border:1px solid var(--c-borda);border-radius:14px;padding:12px 14px}
+  html.crm table.t td,html.crm table.tabela td{display:block;border:0;padding:3px 0;text-align:left!important;white-space:normal;overflow-wrap:anywhere;width:auto!important;min-width:0!important;max-width:none!important}
+  html.crm table.t td[data-rot]:not([data-rot=""]):not([data-tit]),html.crm table.tabela td[data-rot]:not([data-rot=""]):not([data-tit]){position:relative;padding-left:40%;min-height:28px}
+  html.crm table.t td[data-rot]:not([data-rot=""]):not([data-tit])::before,html.crm table.tabela td[data-rot]:not([data-rot=""]):not([data-tit])::before{content:attr(data-rot);position:absolute;left:0;top:4px;width:37%;color:var(--c-apoio);font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  html.crm table.t td[data-tit],html.crm table.tabela td[data-tit]{font-weight:700;font-size:16.5px;padding-bottom:6px}
+  html.crm table.t td[data-rot=""]:first-child,html.crm table.tabela td[data-rot=""]:first-child{float:right;padding:0 0 0 10px}
+  html.crm table.t td:empty,html.crm table.tabela td:empty{display:none!important}
+  html.crm table.t td[data-rot=""],html.crm table.tabela td[data-rot=""]{padding-top:8px}
+  html.crm table.t td .btn,html.crm table.tabela td .btn{min-height:44px}
+  html.crm table.t td .acoes,html.crm table.tabela td .acoes{margin:0;flex-wrap:wrap}
+  /* janelas: os botões de salvar ficam sempre à vista, embaixo */
+  html.crm dialog.janela>.acoes:last-child,html.crm dialog.janela>form>.acoes:last-child{position:sticky;bottom:-18px;z-index:3;margin:14px -16px -18px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--c-card);border-top:1px solid var(--c-borda)}
+  html.crm dialog.janela>.acoes:last-child .btn,html.crm dialog.janela>form>.acoes:last-child .btn{flex:1;min-height:48px}
+  /* tudo o que se toca com 44 px ou mais */
+  html.crm [data-painel] .btn.peq,html.crm [data-painel] summary.btn,html.crm [data-painel] select,html.crm [data-painel] input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=range]):not([type=file]){min-height:44px}
+  /* disparo: as 7 etapas numa linha que desliza; Voltar e Continuar sempre à vista */
+  html.crm .wz-passos{flex-wrap:nowrap;overflow-x:auto;margin:10px -14px;padding:2px 14px;scrollbar-width:none}
+  html.crm .wz-passos::-webkit-scrollbar{display:none}
+  html.crm .wz-passos li{flex:none}
+  html.crm .wz-passos button{min-height:44px;padding:0 14px;font-size:14.5px;white-space:nowrap}
+  html.crm #wzNav{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:5;margin:14px -14px 0;padding:10px 14px;background:var(--c-card);border-top:1px solid var(--c-borda);flex-wrap:wrap}
+  html.crm #wzNav .btn{flex:1;min-height:48px}
+  html.crm #wzNav #wzSalvo{flex:1 0 100%;text-align:center}
+  html.crm [data-painel] summary{min-height:44px;display:flex;align-items:center}
+  html.crm table.t td[data-tit] button,html.crm table.tabela td[data-tit] button,html.crm table.t td[data-tit] a,html.crm table.tabela td[data-tit] a{min-height:44px;display:inline-flex;align-items:center;text-align:left}
+}
