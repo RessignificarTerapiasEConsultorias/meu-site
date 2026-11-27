@@ -795,7 +795,7 @@ function dvCapaVendas(modo){
   if(!lista.length) return;
   const tem = k => lista.indexOf(k) > -1;
   const extras = lista.filter(k => EX[k]), comExtras = extras.length > 0;
-  const NUM = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito'], maius = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const NUM = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze', 'doze', 'treze', 'catorze', 'quinze'], maius = s => String(s).charAt(0).toUpperCase() + String(s).slice(1);
   const ambos = lista.length > 1, soTravas = lista.length === 1 && tem('travas'), soTracos = lista.length === 1 && tem('tracos'), soMpcc = lista.length === 1 && tem('mpcc'), casal = tem('tracos');
   const capa = document.getElementById('tela-capa'); if(!capa || capa.classList.contains('capa-vendas')) return;
   const lt = capa.querySelector('.lado-texto'), cartao = lt && lt.querySelector('.cartao'), rodape = capa.querySelector('.rodape');
@@ -1257,7 +1257,7 @@ if(document.readyState === 'loading') document.addEventListener('DOMContentLoade
    EXCLUIR RESPOSTAS (Travas, Traços individual e MPCC): "Excluir" em cada linha da lista de respostas.
    As linhas vêm marcadas com data-dv-del (tipo do teste) e o id (ou, no Travas, código + nome + data).
    ============================================================================ */
-const DV_TAB_RESP = { travas:'travas_respostas', tracos:'tracos_respostas', mpcc:'mpcc_respostas', disc:'disc_respostas', ansiedade:'ansiedade_respostas' };
+const DV_TAB_RESP = { travas:'travas_respostas', tracos:'tracos_respostas', mpcc:'mpcc_respostas', disc:'disc_respostas', ansiedade:'ansiedade_respostas', vida:'vida_respostas', procrastinacao:'procrastinacao_respostas', profissional:'profissional_respostas', autoestima:'autoestima_respostas', dinheiro:'dinheiro_respostas' };
 function dvExcluirRespostas(){
   if(window.__dvExcR) return; window.__dvExcR = true;
   function marcar(){
@@ -1297,6 +1297,7 @@ async function dvExcluirResposta(linha, botao){
       if(tipo === 'mpcc' && typeof mpCache !== 'undefined') mpCache = mpCache.filter(r => r.id !== linha.dataset.id);
       if(tipo === 'disc' && typeof dcCache !== 'undefined') dcCache = dcCache.filter(r => r.id !== linha.dataset.id);
       if(tipo === 'ansiedade' && typeof anCache !== 'undefined') anCache = anCache.filter(r => r.id !== linha.dataset.id);
+      if(typeof maEh === 'function' && maEh(tipo) && typeof maCache !== 'undefined') maCache = maCache.filter(r => r.id !== linha.dataset.id);
     }catch(e){}
     linha.style.transition = 'opacity .25s'; linha.style.opacity = '0';
     setTimeout(() => { const box = linha.parentNode; linha.remove(); if(box && !box.querySelector('.linha-item')) box.innerHTML = '<div class="vazio">Nenhuma resposta por enquanto.</div>'; }, 260);
@@ -1328,7 +1329,8 @@ function dvCodigoAtual(){
     if(typeof estado !== 'undefined' && estado && estado.codigo) return estado.codigo;
     if(typeof tc !== 'undefined' && tc && tc.codigo) return tc.codigo;
     if(typeof an !== 'undefined' && an && an.codigo) return an.codigo;
-    const q = new URLSearchParams(location.search), c = q.get('c') || q.get('codigo') || q.get('code') || q.get('mp') || q.get('ct') || q.get('dc') || q.get('an');
+    if(typeof ma !== 'undefined' && ma && ma.codigo) return ma.codigo;
+    const q = new URLSearchParams(location.search), c = q.get('c') || q.get('codigo') || q.get('code') || q.get('mp') || q.get('ct') || q.get('dc') || q.get('an') || q.get('vi') || q.get('pc') || q.get('pf') || q.get('ae') || q.get('mf');
     return c || sessionStorage.getItem('dv_ultimo_codigo') || '';
   }catch(e){ return ''; }
 }
@@ -1338,6 +1340,7 @@ function dvTesteAtual(tela){
   if(/^tela-mp/.test(id)) return 'mpcc';
   if(/^tela-dc/.test(id)) return 'disc';
   if(/^tela-an/.test(id)) return 'ansiedade';
+  if(/^tela-ma/.test(id)) return (typeof ma !== 'undefined' && ma && ma.teste) || 'vida';
   if(/^tela-(orientacao|dados|teste|resultado|obrigada|expirou)/.test(id)) return 'travas';
   return '';
 }
@@ -1350,7 +1353,7 @@ function dvWhatsSite(){
     if(a.closest('#tela-admin')) return;                       // botões da área da terapeuta (falar com o cliente) não entram
     const tela = a.closest('.tela'), id = tela ? tela.id : '';
     const momento = /resultado|obrigada/.test(id) || /^(tf|tr|to)-zap$/.test(a.id) || /resultado/i.test(a.id) ? 'resultado'
-      : (!tela || id === 'tela-capa' || id === 'tela-tc-capa' || id === 'tela-mp-capa' || a.closest('.cv-barra, footer, .rodape')) ? 'pagina' : 'durante';
+      : (!tela || id === 'tela-capa' || id === 'tela-tc-capa' || id === 'tela-mp-capa' || id === 'tela-ma-capa' || a.closest('.cv-barra, footer, .rodape')) ? 'pagina' : 'durante';
     /* mensagem: sempre dizendo que veio do site de testes */
     try{
       const u = new URL(a.href, location.href); let t = u.searchParams.get('text') || '';
@@ -1386,10 +1389,10 @@ async function dvQuadroCliques(){
     const cods = Array.from(new Set(data.filter(x => x.codigo).map(x => x.codigo)));
     const nomes = {};
     if(cods.length){
-      const rs = await Promise.all(['travas_respostas', 'tracos_respostas', 'mpcc_respostas', 'disc_respostas', 'ansiedade_respostas'].map(t => c.from(t).select('codigo,nome').eq('terapeuta_id', uid).in('codigo', cods)));
+      const rs = await Promise.all(['travas_respostas', 'tracos_respostas', 'mpcc_respostas', 'disc_respostas', 'ansiedade_respostas', 'vida_respostas', 'procrastinacao_respostas', 'profissional_respostas', 'autoestima_respostas', 'dinheiro_respostas'].map(t => c.from(t).select('codigo,nome').eq('terapeuta_id', uid).in('codigo', cods)));
       rs.forEach(r => (r.data || []).forEach(x => { if(x.nome) nomes[x.codigo] = x.nome; }));
     }
-    const ROT = { travas:'Travas', tracos:'Traços', mpcc:'MPCC', disc:'DISC', ansiedade:'Ansiedade' }, MOM = { pagina:'pela página, sem teste', durante:'durante o teste', resultado:'depois do resultado' };
+    const ROT = { travas:'Travas', tracos:'Traços', mpcc:'MPCC', disc:'DISC', ansiedade:'Ansiedade', vida:'Mapa da Vida', procrastinacao:'Procrastinação', profissional:'Mapa Profissional', autoestima:'Autoestima', dinheiro:'Dinheiro' }, MOM = { pagina:'pela página, sem teste', durante:'durante o teste', resultado:'depois do resultado' };
     const quando = iso => new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
     const pag = data.filter(x => x.momento === 'pagina'), teste = data.filter(x => x.momento !== 'pagina');
     const porOrigem = {}; pag.forEach(x => { porOrigem[x.origem || 'Link direto'] = (porOrigem[x.origem || 'Link direto'] || 0) + 1; });
