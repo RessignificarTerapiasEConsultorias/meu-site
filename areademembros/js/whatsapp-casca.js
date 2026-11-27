@@ -56,7 +56,7 @@
   var botoes = {};
   Array.prototype.forEach.call(abas.querySelectorAll(".aba"), function (b) { botoes[b.dataset.aba] = b; });
   var marca = document.createElement("div"); marca.id = "crmMarca";
-  marca.innerHTML = '<img src="img/logo.png" alt="" width="40" height="40"><div><b>Ressignificar</b><small>CRM</small></div><button type="button" id="crmFecharMenu" aria-label="Fechar o menu">×</button>';
+  marca.innerHTML = '<img src="img/crm-logo.png" alt="" width="40" height="40"><div><b>Ressignificar</b><small>CRM</small></div><button type="button" id="crmFecharMenu" aria-label="Fechar o menu">×</button>';
   abas.appendChild(marca);
   GRUPOS.forEach(function (g) {
     var t = document.createElement("span"); t.className = "crm-grupo"; t.textContent = g[0]; abas.appendChild(t);
