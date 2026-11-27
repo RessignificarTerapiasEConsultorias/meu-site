@@ -37,7 +37,7 @@
     conversas: ["Conversas", "Quem escreveu, quem espera resposta e o histórico de cada pessoa."],
     funil: ["Funil", "Em que etapa cada pessoa está, do primeiro contato à venda."],
     disparos: ["Disparos", "A mesma mensagem para várias pessoas, com conferência antes de enviar."],
-    templates: ["Mensagens modelo", "As mensagens que a Meta aprova para você mandar a qualquer hora (templates)."],
+    templates: ["Mensagens modelo (templates)", "As mensagens que a Meta aprova para você mandar a qualquer hora (templates)."],
     inscricoes: ["Inscrições", "Páginas para as pessoas entrarem na sua lista com autorização."],
     email: ["E-mail", "Modelos, campanhas e quem pode receber e-mail."],
     vendas: ["Vendas", "Quanto entrou, por onde, e quem começou e não pagou."],

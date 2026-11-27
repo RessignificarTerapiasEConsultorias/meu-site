@@ -1,10 +1,12 @@
 /* Inscrições (Fase 9): tela das páginas de inscrição, dos inscritos, da fila de revisão e do relatório.
    Usa as utilidades do painel (window.WaPainel, definidas em whatsapp.js) e as funções puras de whatsapp-inscricao.js.
    Nada aqui dá autorização a ninguém: quem confirma é a própria pessoa, pelo WhatsApp dela. */
-(function () {
+(function waTelaInicio() {
   "use strict";
   const P = window.WaPainel, WI = window.WaInscricao;
-  if (!P || !WI) return;
+  if (!WI) return;
+  /* o painel só fica pronto depois de conferir o login (vai à internet): se ainda não está, espera o aviso dele */
+  if (!P) { document.addEventListener("wa-painel-pronto", waTelaInicio, { once: true }); return; }
   const $ = P.$, esc = P.esc, ler = P.ler, supa = P.supa, aviso = P.aviso, falha = P.falha, horaCurta = P.horaCurta;
   const st = { sub: "paginas", paginas: [], site: "", fila: 0, config: {}, paginaId: null, slugMexido: false, lista: [], linkDe: null };
 

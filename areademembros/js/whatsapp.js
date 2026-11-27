@@ -3144,6 +3144,8 @@
     fn.arrasto.coluna = col.dataset.fnColuna; fn.arrasto.idx = WF().indiceNaSolta(meios, ev.clientY);
     fnMarcarDestino(fn.arrasto.coluna, fn.arrasto.idx);
   }, { passive: false });
+  /* no toque, o cartão deixa rolar para os dois lados; só enquanto arrasta um cartão a tela fica parada */
+  document.addEventListener("touchmove", function (ev) { if (fn.arrasto && ev.cancelable) ev.preventDefault(); }, { passive: false });
   function fnComecarArrasto(x, y) {
     const p = fn.ptr; if (!p || fn.arrasto) return;
     p.moveu = true;
@@ -4315,6 +4317,8 @@
   /* aba Templates aberta: recarrega sozinha a cada minuto (situação e "há quanto tempo") */
   setInterval(function () { if (!document.hidden && abaAtual === "templates") telaTemplates().catch(function () {}); }, 60000);
 
+  /* avisa as telas que dependem do painel (Hoje, E-mail, Inscrições, guia): elas leem os scripts antes de o login terminar */
+  document.dispatchEvent(new Event("wa-painel-pronto"));
   try { await carregarConfig(); } catch (e) { falha(e, "Não consegui ler a configuração. Atualize a página."); }
   avisarNovidadesTemplates();
   /* aba que abre ao entrar: ?aba=nome no endereço; depois a preferência deste aparelho; depois a Visão geral.

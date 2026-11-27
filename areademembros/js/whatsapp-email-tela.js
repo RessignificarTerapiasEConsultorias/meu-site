@@ -1,10 +1,12 @@
 /* E-mail (Fase 8, itens 8.3 a 8.8): tela de configuração, modelos, campanhas, painel da campanha e envio individual.
    Usa as utilidades do painel (window.WaPainel, definidas em whatsapp.js) e as funções puras de whatsapp-email.js.
    Nada aqui envia e-mail sozinho: quem envia é a função de servidor crm-email, e quem decide cada envio é o portão do banco. */
-(function () {
+(function waTelaInicio() {
   "use strict";
   const P = window.WaPainel, WE = window.WaEmail;
-  if (!P || !WE) return;
+  if (!WE) return;
+  /* o painel só fica pronto depois de conferir o login (vai à internet): se ainda não está, espera o aviso dele */
+  if (!P) { document.addEventListener("wa-painel-pronto", waTelaInicio, { once: true }); return; }
   const $ = P.$, esc = P.esc, ler = P.ler, supa = P.supa, aviso = P.aviso, falha = P.falha, horaCurta = P.horaCurta;
   const EXEMPLO = { nome: "Maria Silva", email: "maria@exemplo.com", produto: "Teste de Travas Mentais", link_do_pedido: "https://ressignificarterapiaseconsultorias.com" };
   const em = { sub: "visao", cfg: null, modelos: [], campanhas: [], modeloId: null, painelId: null, pessoas: [], painelNome: "", conferido: null, envio: null, visao: null, ocupado: false };

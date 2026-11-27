@@ -1,10 +1,12 @@
 /* Visão geral (Fase 10): a tela que junta os números das outras abas. Só lê.
    Todo número vem pronto do banco (wa_visao_geral e wa_visao_hoje), que por sua vez chamam as mesmas funções das abas de origem.
    Aqui não há nome, telefone nem e-mail de ninguém: só contagens. */
-(function () {
+(function waTelaInicio() {
   "use strict";
   const P = window.WaPainel, WV = window.WaVisao;
-  if (!P || !WV) return;
+  if (!WV) return;
+  /* o painel só fica pronto depois de conferir o login (vai à internet): se ainda não está, espera o aviso dele */
+  if (!P) { document.addEventListener("wa-painel-pronto", waTelaInicio, { once: true }); return; }
   const $ = P.$, esc = P.esc, ler = P.ler, supa = P.supa, aviso = P.aviso, falha = P.falha;
   const st = { periodo: "mes", dados: null, hoje: null, novTpl: 0, em: 0, cache: {} };
   const AVISO_CUSTO = "Isto é uma estimativa feita com os preços da sua Configuração. A Meta pode cobrar diferente (descontos, conversas de atendimento gratuitas, câmbio).";

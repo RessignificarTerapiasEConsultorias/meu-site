@@ -2,10 +2,12 @@
    Regras: o guia só observa e aponta; quem preenche e quem toca é a pessoa. Ele nunca toca em botão que envia mensagem
    ou custa dinheiro. Os únicos toques que faz são nas abas e nos filtros, quando a pessoa escolhe "Ir para lá".
    A medição guarda só o roteiro, o passo e o que aconteceu: nada do que foi digitado e nada de quem usou. */
-(function () {
+(function waTelaInicio() {
   "use strict";
   const P = window.WaPainel, G = window.WaGuia;
-  if (!P || !G) return;
+  if (!G) return;
+  /* o painel só fica pronto depois de conferir o login (vai à internet): se ainda não está, espera o aviso dele */
+  if (!P) { document.addEventListener("wa-painel-pronto", waTelaInicio, { once: true }); return; }
   const $ = P.$, esc = P.esc, supa = P.supa;
   const CHAVE = "wa_guia", VALIDADE = 12 * 3600 * 1000;
   const S = { roteiro: null, ok: {}, ultimoId: null, ultimoHtml: "", fim: false, perguntou: false };
