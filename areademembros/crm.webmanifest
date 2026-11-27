@@ -1,0 +1,26 @@
+{
+ "name": "Ressignificar CRM",
+ "short_name": "Ressignificar CRM",
+ "description": "Atendimento, disparos e vendas pelo WhatsApp oficial.",
+ "lang": "pt-BR",
+ "start_url": "whatsapp.html",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#06142A",
+ "theme_color": "#06142A",
+ "icons": [
+  {
+   "src": "img/crm-icone-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any maskable"
+  },
+  {
+   "src": "img/crm-icone-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any maskable"
+  }
+ ]
+}

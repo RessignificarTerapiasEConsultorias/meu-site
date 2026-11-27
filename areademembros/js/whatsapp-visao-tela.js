@@ -237,7 +237,8 @@
   }, "Não consegui salvar os limites."));
 
   /* abrir o CRM nesta aba (preferência deste aparelho) */
-  function lerInicial() { try { return localStorage.getItem("wa_aba_inicial") || "visao"; } catch (e) { return "visao"; } }
+  const padraoInicial = window.matchMedia("(max-width:760px)").matches ? "conversas" : "visao";   // celular abre nas conversas; computador, na tela Hoje
+  function lerInicial() { try { return localStorage.getItem("wa_aba_inicial") || padraoInicial; } catch (e) { return padraoInicial; } }
   $("vgInicial").checked = lerInicial() !== "conversas";
   $("vgInicial").addEventListener("change", function () {
     try { localStorage.setItem("wa_aba_inicial", this.checked ? "visao" : "conversas"); } catch (e) { /* aparelho sem armazenamento: fica o padrão */ }

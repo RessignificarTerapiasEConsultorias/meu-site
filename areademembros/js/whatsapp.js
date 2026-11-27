@@ -4358,7 +4358,7 @@
     let pedida = "", guardada = "";
     try { pedida = new URLSearchParams(location.search).get("aba") || ""; } catch (e) { pedida = ""; }
     try { guardada = localStorage.getItem("wa_aba_inicial") || ""; } catch (e) { guardada = ""; }
-    const inicial = existe(pedida) ? pedida : existe(guardada) ? guardada : (window.WaVisaoTela ? "visao" : "conversas");
+    const inicial = existe(pedida) ? pedida : existe(guardada) ? guardada : (window.WaVisaoTela && !celular() ? "visao" : "conversas");   // no celular abre direto nas conversas
     if (inicial !== "conversas") carregarLista().catch(function () {});   // mantém o selo de não lidas atualizado
     abrirAba(inicial);
   };
