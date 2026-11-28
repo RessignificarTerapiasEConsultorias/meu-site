@@ -207,7 +207,7 @@
   function montarImpressao() {
     const d = st.dados; let cx = $("vgImpressao");
     if (!cx) { cx = document.createElement("div"); cx.id = "vgImpressao"; cx.hidden = true; document.body.appendChild(cx); }
-    cx.innerHTML = "<h1>Resumo do CRM · " + esc(WV.rotuloPeriodo(d.periodo)) + "</h1><p>Ressignificar Terapias &amp; Consultorias. Gerado em " + esc(new Date().toLocaleDateString("pt-BR")) + ". Comparado com " + esc(WV.rotuloAnterior(d.periodo)) + ".</p>"
+    cx.innerHTML = "<h1>Resumo do CRM · " + esc(WV.rotuloPeriodo(d.periodo)) + "</h1><p>" + esc((window.CrmConta && window.CrmConta.principal === false && (window.CrmConta.empresa || window.CrmConta.nome)) || "Ressignificar Terapias & Consultorias") + ". Gerado em " + esc(new Date().toLocaleDateString("pt-BR")) + ". Comparado com " + esc(WV.rotuloAnterior(d.periodo)) + ".</p>"
       + "<table><thead><tr><th>Indicador</th><th>No período</th><th>Período anterior</th></tr></thead><tbody>" + WV.linhasResumo(d).map(function (x) { return "<tr><td>" + esc(x.indicador) + "</td><td>" + esc(x.valor) + "</td><td>" + esc(x.anterior) + "</td></tr>"; }).join("") + "</tbody></table>"
       + "<p><small>" + esc(AVISO_CUSTO) + " Testes e mensagens que falharam não entram.</small></p>"
       + "<h2>Anotações de " + esc(WV.nomeDoMes(d.nota && d.nota.mes)) + "</h2><p class=\"vg-imp-nota\">" + esc($("vgNota").value.trim() || "Sem anotações.") + "</p>";

@@ -15,9 +15,9 @@
 <link rel="icon" type="image/png" href="img/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/estilo.css">
-<link rel="stylesheet" href="css/crm.css?v=20261127h">
-<link rel="stylesheet" href="css/crm-noite.css?v=20261127h">
-<link rel="stylesheet" href="css/crm-celular.css?v=20261127h">
+<link rel="stylesheet" href="css/crm.css?v=20261128a">
+<link rel="stylesheet" href="css/crm-noite.css?v=20261128a">
+<link rel="stylesheet" href="css/crm-celular.css?v=20261128a">
 <script>(function(){var t="dia";try{t=localStorage.getItem("crm_tema")||"dia"}catch(e){}document.documentElement.classList.add("crm",t==="noite"?"noite":"dia")})()</script>
 <style>
 .wa-conv{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px;align-items:start}
@@ -417,7 +417,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
   <main class="conteudo-painel largo">
     <a class="voltar" href="painel-master.html">← Voltar ao painel</a>
     <div class="empresa-titulo"><h1>WhatsApp</h1><span class="selo" id="selStatus">Verificando...</span></div>
-    <p class="sub">Conversas, disparos de templates e robô de respostas, pela API oficial do WhatsApp (Meta). Só o master vê esta página.</p>
+    <p class="sub">Conversas, disparos de templates e robô de respostas, pela API oficial do WhatsApp (Meta). Cada conta vê só os próprios dados.</p>
 
     <div class="aviso erro" id="auSelo" hidden role="status"><b>Automações pausadas (emergência).</b> Nenhuma sequência automática está enviando. Para religar, abra a aba Fluxos.</div>
     <div class="abas" id="abas" role="tablist">
@@ -470,7 +470,7 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
             <div id="vgMotivos"></div>
           </div>
           <div class="vd-blocos" style="margin-top:12px">
-            <div class="vd-bloco"><h3 class="cp-tit">Vendas do mês</h3><div id="vgVendas"></div></div>
+            <div class="vd-bloco crm-so-principal"><h3 class="cp-tit">Vendas do mês</h3><div id="vgVendas"></div></div>
             <div class="vd-bloco"><h3 class="cp-tit">Funil</h3><div id="vgFunil"></div></div>
             <div class="vd-bloco"><h3 class="cp-tit">Automações</h3><div id="vgAuto"></div></div>
             <div class="vd-bloco"><h3 class="cp-tit">E-mail e inscrições</h3><div id="vgEmail"></div></div>
@@ -987,6 +987,11 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 
     <!-- ===== CONFIGURAÇÃO ===== -->
     <section data-painel="config" hidden>
+      <div class="cartao crm-boas-vindas" id="crmBoasVindas" hidden>
+        <h2>Bem-vindo ao seu CRM</h2>
+        <p>Falta só ligar o WhatsApp oficial da sua empresa. O passo a passo mostra onde achar cada dado no Meta e onde colar aqui. Leva uns 20 minutos.</p>
+        <div class="acoes" style="margin:0"><button class="btn auto" type="button" id="crmBvGuia">Começar o passo a passo</button><button class="btn auto contorno" type="button" id="crmBvDepois">Agora não</button></div>
+      </div>
       <div class="cartao" id="avCartao">
         <h2>Avisos no celular <span class="selo" id="avSituacao">Conferindo...</span></h2>
         <p class="vazio" style="margin:0 0 12px">O celular toca e mostra um aviso quando alguém escreve para o número do CRM, mesmo com o CRM fechado. A escolha vale para este aparelho; cada aparelho liga o seu.</p>
@@ -1059,6 +1064,16 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
           <li>Na aba Templates, clique em <b>Sincronizar com o Meta</b> e crie os seus templates.</li>
           <li>Mande uma mensagem do seu celular para o número novo. Ela deve aparecer em <b>Conversas</b>.</li>
         </ol>
+      </div>
+      <div class="cartao" id="crmContasCartao" hidden>
+        <h2>Contas de clientes do CRM</h2>
+        <p class="ajuda">Cada cliente tem a própria conta: o número dele, os contatos dele e as conversas dele. Ninguém vê a conta de outro, e você não vê as conversas deles por aqui.</p>
+        <div id="ccLista" aria-live="polite"><p class="vazio">Carregando...</p></div>
+        <h3 style="margin:16px 0 6px;font-size:15px">Criar uma conta nova</h3>
+        <div class="f"><div class="grade g2">
+          <div><label for="ccEmpresa">Empresa do cliente</label><select id="ccEmpresa"><option value="">Carregando...</option></select><small>Os donos desta empresa entram como donos da conta.</small></div>
+          <div><label for="ccNome">Nome da conta (opcional)</label><input id="ccNome" maxlength="120" placeholder="igual ao da empresa"></div>
+        </div><div class="acoes"><button class="btn auto" type="button" id="ccCriar">Criar conta</button></div></div>
       </div>
     </section>
   </main>
@@ -1511,24 +1526,24 @@ dialog.janela.janela-painel{max-width:980px;width:calc(100% - 16px);max-height:9
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
-<script src="js/whatsapp-casca.js?v=20261127h"></script>
-<script src="js/whatsapp-celular.js?v=20261127h"></script>
-<script src="js/whatsapp-tpl.js?v=20261127h"></script>
-<script src="js/whatsapp-lista.js?v=20261127h"></script>
-<script src="js/whatsapp-video.js?v=20261127h"></script>
-<script src="js/whatsapp-camp.js?v=20261127h"></script>
-<script src="js/whatsapp-funil.js?v=20261127h"></script>
-<script src="js/whatsapp-vendas.js?v=20261127h"></script>
-<script src="js/whatsapp-email.js?v=20261127h"></script>
-<script src="js/whatsapp-inscricao.js?v=20261127h"></script>
-<script src="js/whatsapp-visao.js?v=20261127h"></script>
-<script src="js/whatsapp-guia.js?v=20261127h"></script>
-<script src="js/whatsapp-auto.js?v=20261127h"></script>
-<script src="js/whatsapp.js?v=20261127h"></script>
-<script src="js/whatsapp-email-tela.js?v=20261127h"></script>
-<script src="js/whatsapp-inscricao-tela.js?v=20261127h"></script>
-<script src="js/whatsapp-visao-tela.js?v=20261127h"></script>
-<script src="js/whatsapp-guia-tela.js?v=20261127h"></script>
-<script src="js/whatsapp-avisos.js?v=20261127h"></script>
+<script src="js/whatsapp-casca.js?v=20261128a"></script>
+<script src="js/whatsapp-celular.js?v=20261128a"></script>
+<script src="js/whatsapp-tpl.js?v=20261128a"></script>
+<script src="js/whatsapp-lista.js?v=20261128a"></script>
+<script src="js/whatsapp-video.js?v=20261128a"></script>
+<script src="js/whatsapp-camp.js?v=20261128a"></script>
+<script src="js/whatsapp-funil.js?v=20261128a"></script>
+<script src="js/whatsapp-vendas.js?v=20261128a"></script>
+<script src="js/whatsapp-email.js?v=20261128a"></script>
+<script src="js/whatsapp-inscricao.js?v=20261128a"></script>
+<script src="js/whatsapp-visao.js?v=20261128a"></script>
+<script src="js/whatsapp-guia.js?v=20261128a"></script>
+<script src="js/whatsapp-auto.js?v=20261128a"></script>
+<script src="js/whatsapp.js?v=20261128a"></script>
+<script src="js/whatsapp-email-tela.js?v=20261128a"></script>
+<script src="js/whatsapp-inscricao-tela.js?v=20261128a"></script>
+<script src="js/whatsapp-visao-tela.js?v=20261128a"></script>
+<script src="js/whatsapp-guia-tela.js?v=20261128a"></script>
+<script src="js/whatsapp-avisos.js?v=20261128a"></script>
 </body>
 </html>

@@ -1,8 +1,22 @@
-/* CRM WhatsApp: tela do master. Usa as tabelas wa_* (RLS: só master) e a função "whatsapp" do servidor.
+/* CRM WhatsApp. Abre para quem é membro de uma conta do CRM (o master na conta principal; cada cliente na conta dele).
+   Usa as tabelas wa_* (RLS: só a conta de quem entrou) e a função "whatsapp" do servidor.
    Depende de: config.js, auth.js e app.js (esc, aviso, buscarTudo, ligarAbas, foneBR, MOEDA). */
 (async function () {
-  const perfil = await protegerPagina("master");
+  const perfil = await protegerPagina(["master", "cliente", "suporte", "profissional", "vendedor"]);
   if (!perfil) return;
+  /* de qual conta do CRM é quem entrou: sem conta, volta para o painel dele */
+  let minhaConta = null;
+  try { const r = await supa().rpc("crm_conta_minha"); minhaConta = r.data || null; } catch (e) { minhaConta = null; }
+  if (!minhaConta || !minhaConta.tem) { location.replace(PAINEL_DO_PAPEL[perfil.papel] || "index.html"); return; }
+  const CLIENTE = minhaConta.principal !== true, DONO = minhaConta.papel === "dono";
+  document.documentElement.dataset.crmTipo = CLIENTE ? "cliente" : "principal";
+  document.documentElement.dataset.crmPapel = DONO ? "dono" : "atendente";
+  minhaConta.papel_site = perfil.papel;
+  window.CrmConta = minhaConta;
+  document.dispatchEvent(new CustomEvent("crm-conta", { detail: minhaConta }));
+  /* gatilhos e passos que dependem da loja, das inscrições ou do e-mail da Ressignificar (só a conta principal) */
+  const SO_PRINCIPAL = ["pedido_criado", "pedido_pago", "pedido_abandonado", "inscricao", "enviar_email"];
+  const vale = function (k) { return !CLIENTE || SO_PRINCIPAL.indexOf(k) < 0; };
 
   const $ = function (id) { return document.getElementById(id); };
   const BR = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 3 });
@@ -162,8 +176,9 @@
   }
 
   /* ---------- configuração ---------- */
+  /* a conta do CRM de quem está usando (a configuração, o número e o webhook são dela) */
   async function carregarConfig() {
-    cfg = await ler(supa().from("wa_config").select("*").eq("id", 1).single());
+    cfg = await ler(supa().from("wa_config").select("*").limit(1).single());   // as regras do banco só deixam ver a da própria conta
     const ok = cfg.token_configurado && cfg.phone_number_id;
     const s = $("selStatus");
     if (!ok) { s.textContent = "Não conectado"; s.className = "selo pendente"; }
@@ -184,7 +199,8 @@
     $("cfAppId").value = cfg.app_id || "";
     $("cfToken").placeholder = cfg.token_configurado ? "já salvo (cole outro só para trocar)" : "cole aqui o token (começa com EA...)";
     $("cfSegredo").placeholder = cfg.segredo_app_configurado ? "já salva (cole outra só para trocar)" : "32 letras e números";
-    $("cfUrl").value = SUPABASE_URL + "/functions/v1/whatsapp";
+    // a conta principal usa o endereço de sempre; as outras levam a conta no endereço
+    $("cfUrl").value = SUPABASE_URL + "/functions/v1/whatsapp" + (minhaConta && minhaConta.principal === false ? "?conta=" + encodeURIComponent(cfg.conta_id) : "");
     $("cfVerify").value = cfg.verify_token || "";
     desenharAvisoTpl();
     $("cfLimite").value = cfg.limite_diario; $("cfHi").value = cfg.disparo_hora_inicio; $("cfHf").value = cfg.disparo_hora_fim;
@@ -239,7 +255,7 @@
     if (!(lim >= 1) || !(hi >= 0 && hi <= 23) || !(hf >= 1 && hf <= 24) || hf <= hi || !(pm >= 0) || !(pu >= 0)) return aviso("Confira os números: o horário final precisa ser depois do inicial.", true);
     try {
       await ler(supa().from("wa_config").update({ limite_diario: lim, disparo_hora_inicio: hi, disparo_hora_fim: hf, preco_marketing: pm, preco_utilidade: pu,
-        marketing_dias_entre_envios: (function (v) { return isNaN(v) ? 3 : Math.min(60, Math.max(0, v)); })(parseInt(($("cfDiasMkt") || {}).value, 10)) }).eq("id", 1).select("id"));
+        marketing_dias_entre_envios: (function (v) { return isNaN(v) ? 3 : Math.min(60, Math.max(0, v)); })(parseInt(($("cfDiasMkt") || {}).value, 10)) }).eq("conta_id", cfg.conta_id).select("id"));
       aviso("Limites salvos."); await carregarConfig();
     } catch (e) { falha(e); }
   });
@@ -2802,7 +2818,7 @@
   }
   $("rbSalvar").addEventListener("click", async function () {
     try {
-      await ler(supa().from("wa_config").update({ robo_ativo: $("rbAtivo").checked, robo_resposta_padrao: $("rbPadrao").value.trim() || null }).eq("id", 1).select("id"));
+      await ler(supa().from("wa_config").update({ robo_ativo: $("rbAtivo").checked, robo_resposta_padrao: $("rbPadrao").value.trim() || null }).eq("conta_id", cfg.conta_id).select("id"));
       aviso($("rbAtivo").checked ? "Robô ligado." : "Robô desligado."); carregarConfig();
     } catch (e) { falha(e); }
   });
@@ -2955,7 +2971,7 @@
   $("fnAtLimpar").addEventListener("click", function () { fn.filtros = {}; fn.atalhoPrecisa = false; $("fnAtPrecisa").setAttribute("aria-pressed", "false"); fnSalvarFiltros(); fnPreencherFiltros(); fn.limite = 50; telaFunil().catch(function (e) { falha(e); }); });
 
   async function fnListarMasters() {
-    try { return await ler(supa().from("perfis").select("id,nome").eq("papel", "master").eq("ativo", true)); } catch (e) { return []; }
+    try { return (await ler(supa().rpc("crm_conta_equipe"))) || []; } catch (e) { return []; }   // quem está na conta (dono e atendentes)
   }
   async function telaFunil() {
     const seq = ++fn.seq;
@@ -4020,8 +4036,8 @@
     $("aeCOrigem").innerHTML = '<option value="">Qualquer origem</option>' + origens.map(function (o) { return '<option value="' + esc(o) + '">' + esc(ROT_ORIG[o] || o) + "</option>"; }).join("");
     const ets = Array.from(new Set(contatos.reduce(function (a, c) { return a.concat(c.etiquetas || []); }, []))).sort();
     $("auEtiquetas").innerHTML = ets.map(function (e) { return '<option value="' + esc(e) + '">'; }).join("");
-    $("aeGatilho").innerHTML = aeOpcoes(Object.keys(A.GATILHOS).reduce(function (o, k) { o[k] = A.GATILHOS[k].rotulo; return o; }, {}));
-    $("aeAddTipo").innerHTML = Object.keys(A.PASSOS).map(function (k) { return '<option value="' + k + '"' + (A.PASSOS[k].emBreve ? " disabled" : "") + ">" + esc(A.PASSOS[k].rotulo) + "</option>"; }).join("");
+    $("aeGatilho").innerHTML = aeOpcoes(Object.keys(A.GATILHOS).filter(vale).reduce(function (o, k) { o[k] = A.GATILHOS[k].rotulo; return o; }, {}));
+    $("aeAddTipo").innerHTML = Object.keys(A.PASSOS).filter(vale).map(function (k) { return '<option value="' + k + '"' + (A.PASSOS[k].emBreve ? " disabled" : "") + ">" + esc(A.PASSOS[k].rotulo) + "</option>"; }).join("");
     let d = null; au2.id = id || null; au2.dentro = 0;
     if (id) { d = await ler(supa().rpc("wa_automacao_detalhe", { p_id: id })); if (!d) return aviso("Não achei esta automação.", true); }
     const a = d ? d.automacao : { nome: "", descricao: "", gatilho_tipo: "etiqueta", gatilho: {}, condicoes: { parar_ao_responder: true }, modo_entrada: "reentrar", reentrar_dias: 0, limite_dia: 0, link: "" };
@@ -4347,6 +4363,69 @@
   /* aba Templates aberta: recarrega sozinha a cada minuto (situação e "há quanto tempo") */
   setInterval(function () { if (!document.hidden && abaAtual === "templates") telaTemplates().catch(function () {}); }, 60000);
 
+  /* ---------- V4: primeiro acesso do cliente (falta ligar o número) ---------- */
+  const primeiroAcesso = CLIENTE && DONO && !minhaConta.tem_numero;
+  if (primeiroAcesso) {
+    let dispensou = false; try { dispensou = sessionStorage.getItem("crm_bv_depois") === "1"; } catch (e) { dispensou = false; }
+    $("crmBoasVindas").hidden = dispensou;
+    $("crmBvGuia").addEventListener("click", function () { abrirAba("config"); if (window.WaGuiaTela) window.WaGuiaTela.iniciar("conectar"); });
+    $("crmBvDepois").addEventListener("click", function () { $("crmBoasVindas").hidden = true; try { sessionStorage.setItem("crm_bv_depois", "1"); } catch (e) { /* nada */ } });
+  }
+
+  /* ---------- V4: contas de clientes (só o master, na conta principal) ---------- */
+  if (minhaConta.master && !CLIENTE) {
+    $("crmContasCartao").hidden = false;
+    const cc = { contas: [], empresas: [] };
+    const ccRpc = async function (nome, args, okMsg) {
+      try { const r = await ler(supa().rpc(nome, args)); if (r && r.ok === false) { aviso(r.erro || "Não deu certo.", true); return false; } if (okMsg) aviso(okMsg); await ccCarregar(); return true; }
+      catch (e) { falha(e); return false; }
+    };
+    const ccDesenhar = function () {
+      const PAP = { dono: "Dono", atendente: "Atendente" };
+      $("ccLista").innerHTML = cc.contas.map(function (c) {
+        const situ = c.principal ? '<span class="selo">Sua conta</span>' : c.ativa ? '<span class="selo ok">Ligada</span>' : '<span class="selo erro">Desligada</span>';
+        const num = c.tem_numero ? (c.tem_token ? "Número ligado" : "Número sem token") : "Ainda sem número";
+        return '<div class="cc-conta" data-cc="' + esc(c.id) + '"><header><div><b>' + esc(c.nome) + "</b> " + situ + '<br><small class="vazio">' + esc(c.empresa || "sem empresa") + " · " + esc(num) + " · " + Number(c.contatos || 0).toLocaleString("pt-BR") + " contatos</small></div>"
+          + (c.principal ? "" : '<button type="button" class="btn peq contorno" data-cc-ativa="' + (c.ativa ? "0" : "1") + '">' + (c.ativa ? "Desligar" : "Religar") + "</button>") + "</header>"
+          + "<ul>" + (c.membros || []).map(function (m) {
+            return "<li><span>" + esc(m.nome || m.email) + ' <small class="vazio">' + esc(m.email || "") + " · " + esc(PAP[m.papel] || m.papel) + (m.ativo ? "" : " · usuário desativado") + "</small></span>"
+              + (c.principal && m.papel === "dono" ? "" : '<button type="button" class="btn peq contorno" data-cc-tirar="' + esc(m.id) + '" data-cc-nome="' + esc(m.nome || m.email) + '">Tirar</button>') + "</li>";
+          }).join("") + (c.membros && c.membros.length ? "" : '<li><span class="vazio">Ninguém entra nesta conta ainda.</span></li>') + "</ul>"
+          + '<div class="cc-add"><input type="email" placeholder="e-mail de quem já tem login no painel" aria-label="E-mail da pessoa"><select aria-label="Papel"><option value="atendente">Atendente</option><option value="dono">Dono</option></select><button type="button" class="btn peq" data-cc-add>Incluir</button></div></div>';
+      }).join("") || '<p class="vazio">Nenhuma conta.</p>';
+      const livres = cc.empresas.filter(function (e) { return !cc.contas.some(function (c) { return c.empresa_id === e.id; }); });
+      $("ccEmpresa").innerHTML = '<option value="">Escolha a empresa</option>' + livres.map(function (e) { return '<option value="' + esc(e.id) + '">' + esc(e.nome) + "</option>"; }).join("");
+    };
+    const ccCarregar = async function () {
+      const r = await Promise.all([ler(supa().rpc("crm_admin_contas")), ler(supa().from("empresas").select("id,nome").eq("tipo", "empresa").order("nome"))]);
+      cc.contas = r[0] || []; cc.empresas = r[1] || []; ccDesenhar();
+    };
+    $("ccLista").addEventListener("click", async function (ev) {
+      const caixa = ev.target.closest("[data-cc]"); if (!caixa) return;
+      const conta = caixa.dataset.cc, c = cc.contas.find(function (x) { return x.id === conta; }) || {};
+      const at = ev.target.closest("[data-cc-ativa]");
+      if (at) {
+        const ligar = at.dataset.ccAtiva === "1";
+        if (!ligar && !confirm("Desligar a conta \"" + c.nome + "\"? Quem é dessa conta deixa de entrar no CRM e as automações dela param. Os dados ficam guardados.")) return;
+        return ccRpc("crm_admin_conta_ativa", { p_conta: conta, p_ativa: ligar }, ligar ? "Conta religada." : "Conta desligada.");
+      }
+      const ti = ev.target.closest("[data-cc-tirar]");
+      if (ti) { if (!confirm("Tirar " + ti.dataset.ccNome + " da conta \"" + c.nome + "\"? A pessoa deixa de entrar neste CRM.")) return; return ccRpc("crm_admin_membro_remover", { p_conta: conta, p_usuario: ti.dataset.ccTirar }, "Pessoa tirada da conta."); }
+      if (ev.target.closest("[data-cc-add]")) {
+        const em = caixa.querySelector(".cc-add input").value.trim(), pap = caixa.querySelector(".cc-add select").value;
+        if (!/^\S+@\S+\.\S+$/.test(em)) return aviso("Escreva o e-mail da pessoa.", true);
+        return ccRpc("crm_admin_membro", { p_conta: conta, p_email: em, p_papel: pap }, "Pessoa incluída. Ela já pode entrar no CRM.");
+      }
+    });
+    $("ccCriar").addEventListener("click", async function () {
+      const emp = $("ccEmpresa").value; if (!emp) return aviso("Escolha a empresa do cliente.", true);
+      $("ccCriar").disabled = true;
+      try { await ccRpc("crm_admin_conta_criar", { p_empresa: emp, p_nome: $("ccNome").value.trim() || null }, "Conta criada. Os donos da empresa já podem entrar no CRM."); $("ccNome").value = ""; }
+      finally { $("ccCriar").disabled = false; }
+    });
+    ccCarregar().catch(function (e) { $("ccLista").innerHTML = '<p class="aviso">Não consegui ler as contas: ' + esc(e && e.message ? e.message : String(e)) + "</p>"; });
+  }
+
   /* avisa as telas que dependem do painel (Hoje, E-mail, Inscrições, guia): elas leem os scripts antes de o login terminar */
   document.dispatchEvent(new Event("wa-painel-pronto"));
   try { await carregarConfig(); } catch (e) { falha(e, "Não consegui ler a configuração. Atualize a página."); }
@@ -4354,11 +4433,12 @@
   /* aba que abre ao entrar: ?aba=nome no endereço; depois a preferência deste aparelho; depois a Visão geral.
      Só decide depois que a página terminou de ler todos os scripts: a configuração pode chegar antes de as telas das outras abas existirem. */
   const abrirAbaInicial = function () {
-    const existe = function (n) { return !!n && /^[a-z_]+$/.test(n) && !!document.querySelector('#abas .aba[data-aba="' + n + '"]'); };
+    const existe = function (n) { const el = !!n && /^[a-z_]+$/.test(n) && document.querySelector('#abas .aba[data-aba="' + n + '"]'); return !!el && getComputedStyle(el).display !== "none"; };   // aba escondida para esta conta não abre
     let pedida = "", guardada = "";
     try { pedida = new URLSearchParams(location.search).get("aba") || ""; } catch (e) { pedida = ""; }
     try { guardada = localStorage.getItem("wa_aba_inicial") || ""; } catch (e) { guardada = ""; }
     const inicial = existe(pedida) ? pedida : existe(guardada) ? guardada : (window.WaVisaoTela && !celular() ? "visao" : "conversas");   // no celular abre direto nas conversas
+    if (primeiroAcesso) { abrirAba("config"); carregarLista().catch(function () {}); return; }   // cliente novo: começa ligando o número
     if (inicial !== "conversas") carregarLista().catch(function () {});   // mantém o selo de não lidas atualizado
     abrirAba(inicial);
   };
