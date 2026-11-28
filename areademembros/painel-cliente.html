@@ -213,7 +213,8 @@
 
   /* ---------- acesso suspenso por falta de pagamento (volta sozinho quando pagar) ---------- */
   try {
-    const rs = await supa().from("cliente_produtos").select("suspenso_em,suspenso_cobranca_id,catalogo_produtos(nome)").eq("perfil_id", eu.id).not("suspenso_em", "is", null);
+    /* [fase 4] os Mapas liberados pelo pacote (via_pacote) seguem a suspensão do pacote: só o pacote aparece aqui */
+    const rs = await supa().from("cliente_produtos").select("suspenso_em,suspenso_cobranca_id,catalogo_produtos(nome)").eq("perfil_id", eu.id).not("suspenso_em", "is", null).is("via_pacote", null);
     if (rs.data && rs.data.length) {
       const ids = rs.data.map(function (x) { return x.suspenso_cobranca_id; }).filter(Boolean);
       const rcs = ids.length ? await supa().from("cobrancas").select("id,token,descricao,valor").in("id", ids) : { data: [] };
