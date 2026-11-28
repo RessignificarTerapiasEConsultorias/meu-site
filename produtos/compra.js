@@ -75,7 +75,7 @@
     else if (plano === "mensal") { rotuloBotao = "Assinar o mensal · " + brl(pi.mensal.preco) + "/mês"; if (resumoEl) resumoEl.textContent = brl(pi.mensal.preco) + "/mês"; }
     else { rotuloBotao = rotuloAnual; if (resumoEl) resumoEl.innerHTML = resumoAnual; }
     var seguro = document.querySelector("#comprar .seguro");
-    if (seguro) seguro.textContent = plano === "mensal" ? "🔒 Assinatura mensal pela InfinitePay · débito automático no cartão" : "🔒 Pagamento seguro pela InfinitePay · Pix ou cartão";
+    if (seguro) seguro.textContent = plano === "mensal" && !pi.mapas ? "🔒 Assinatura mensal pela InfinitePay · débito automático no cartão" : "🔒 Pagamento seguro pela InfinitePay · Pix ou cartão";
     if ($("cNotaMensal")) $("cNotaMensal").hidden = plano !== "mensal";
     if ($("cNotaVit")) $("cNotaVit").hidden = plano !== "vitalicio";
     if ($("cNotaUp")) $("cNotaUp").hidden = plano !== "upgrade" || !!sessao;
@@ -92,6 +92,8 @@
     if (!pl || !pl.vitalicio || $("cPlanos") || !resumoEl) return;
     planosInfo = pl;
     var v = pl.vitalicio;
+    /* [fase 4] Mapas Ressignificar (pl.mapas): Mensal (1º mês agora, depois link por e-mail), Anual e Vitalício, sem promoção e sem upgrade */
+    if (pl.mapas) return montarPlanosMapas(pl);
     var h = '<div class="planos" id="cPlanos" role="radiogroup" aria-label="Escolha o plano">' +
       '<label class="plano"><input type="radio" name="cPlano" value="anual"><span><b>Anual</b><small>' + brl(pl.anual) + ' por ano · Pix ou cartão em até 12x</small></span></label>' +
       '<label class="plano"><input type="radio" name="cPlano" value="vitalicio"><span><b>Vitalício' + (v.promo ? ' <em>promoção</em>' : '') + '</b><small>' + brl(v.preco) + ' uma vez só, sem renovação · Pix ou cartão em até 12x</small>' +
@@ -106,6 +108,17 @@
     document.querySelectorAll("#cPlanos input").forEach(function (i) { i.addEventListener("change", function () { aplicarPlano(i.value); }); });
     aplicarPlano(planoUrl);
     if (quemUpgrade) ajustarUpgrade();
+  }
+  function montarPlanosMapas(pl) {
+    var h = '<div class="planos" id="cPlanos" role="radiogroup" aria-label="Escolha o plano">' +
+      '<label class="plano"><input type="radio" name="cPlano" value="mensal"><span><b>Mensal</b><small>' + brl(pl.mensal.preco) + ' por mês · o 1º mês agora, no Pix ou no cartão</small></span></label>' +
+      '<label class="plano"><input type="radio" name="cPlano" value="anual"><span><b>Anual</b><small>' + brl(pl.anual) + ' por ano · Pix ou cartão em até 12x</small></span></label>' +
+      '<label class="plano"><input type="radio" name="cPlano" value="vitalicio"><span><b>Vitalício</b><small>' + brl(pl.vitalicio.preco) + ' uma vez só, sem renovação · Pix ou cartão em até 12x</small></span></label>' +
+      '</div><p class="dica nota-mensal" id="cNotaMensal" hidden>Paga o primeiro mês agora; nos meses seguintes você recebe o link de pagamento por e-mail (Pix ou cartão). Se uma mensalidade ficar em atraso, o acesso é pausado até o pagamento.</p>' +
+      '<p class="dica nota-mensal" id="cNotaVit" hidden>O vitalício sai por ' + brl(pl.vitalicio.preco) + ', pago uma vez só: sem mensalidade e sem renovação.</p>';
+    resumoEl.parentNode.insertAdjacentHTML("afterend", h);
+    document.querySelectorAll("#cPlanos input").forEach(function (i) { i.addEventListener("change", function () { aplicarPlano(i.value); }); });
+    aplicarPlano(planoUrl);
   }
   function carregarPlanos() {
     if (!COM_PLANOS) return;
