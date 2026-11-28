@@ -4372,6 +4372,16 @@
     $("crmBvDepois").addEventListener("click", function () { $("crmBoasVindas").hidden = true; try { sessionStorage.setItem("crm_bv_depois", "1"); } catch (e) { /* nada */ } });
   }
 
+  /* ---------- V5: o plano da conta do cliente (o dono vê situação e limites) ---------- */
+  if (CLIENTE && DONO) {
+    const dataBr = function (d) { return d ? String(d).split("-").reverse().join("/") : ""; };
+    $("crmPlano").hidden = false;
+    $("crmPlanoSitu").textContent = minhaConta.motivo === "teste" ? "Teste grátis até " + dataBr(minhaConta.teste_ate) : "Plano ativo";
+    $("crmPlanoTxt").textContent = "Até " + Number(minhaConta.limite_usuarios || 0).toLocaleString("pt-BR") + " pessoas usando o CRM e " + Number(minhaConta.limite_contatos || 0).toLocaleString("pt-BR")
+      + " contatos cadastrados por você (quem escreve no seu WhatsApp entra sempre, mesmo acima do limite)."
+      + (minhaConta.motivo === "teste" ? " Para continuar depois do teste, fale com a Ressignificar." : "");
+  }
+
   /* ---------- V4: contas de clientes (só o master, na conta principal) ---------- */
   if (minhaConta.master && !CLIENTE) {
     $("crmContasCartao").hidden = false;
@@ -4380,18 +4390,31 @@
       try { const r = await ler(supa().rpc(nome, args)); if (r && r.ok === false) { aviso(r.erro || "Não deu certo.", true); return false; } if (okMsg) aviso(okMsg); await ccCarregar(); return true; }
       catch (e) { falha(e); return false; }
     };
+    const SITU_COR = { plano: "ok", teste: "ok", atraso: "erro", teste_acabou: "erro", desligada: "erro", sem_plano: "erro" };
+    const dataBr = function (d) { return d ? String(d).split("-").reverse().join("/") : ""; };
+    const situTexto = function (c) {
+      return ({ principal: "Sua conta", plano: "Ligada pelo plano", teste: "Em teste até " + dataBr(c.teste_ate), atraso: "Pausada: pagamento atrasado",
+        teste_acabou: "Pausada: teste acabou", desligada: "Desligada por você", sem_plano: "Pausada: sem plano" })[c.motivo] || (c.ativa ? "Ligada" : "Pausada");
+    };
     const ccDesenhar = function () {
       const PAP = { dono: "Dono", atendente: "Atendente" };
       $("ccLista").innerHTML = cc.contas.map(function (c) {
-        const situ = c.principal ? '<span class="selo">Sua conta</span>' : c.ativa ? '<span class="selo ok">Ligada</span>' : '<span class="selo erro">Desligada</span>';
+        const situ = '<span class="selo' + (SITU_COR[c.motivo] ? " " + SITU_COR[c.motivo] : "") + '">' + esc(situTexto(c)) + "</span>";
         const num = c.tem_numero ? (c.tem_token ? "Número ligado" : "Número sem token") : "Ainda sem número";
         return '<div class="cc-conta" data-cc="' + esc(c.id) + '"><header><div><b>' + esc(c.nome) + "</b> " + situ + '<br><small class="vazio">' + esc(c.empresa || "sem empresa") + " · " + esc(num) + " · " + Number(c.contatos || 0).toLocaleString("pt-BR") + " contatos</small></div>"
-          + (c.principal ? "" : '<button type="button" class="btn peq contorno" data-cc-ativa="' + (c.ativa ? "0" : "1") + '">' + (c.ativa ? "Desligar" : "Religar") + "</button>") + "</header>"
+          + (c.principal ? "" : '<button type="button" class="btn peq contorno" data-cc-ativa="' + (c.desligada_master ? "1" : "0") + '">' + (c.desligada_master ? "Religar" : "Desligar") + "</button>") + "</header>"
           + "<ul>" + (c.membros || []).map(function (m) {
             return "<li><span>" + esc(m.nome || m.email) + ' <small class="vazio">' + esc(m.email || "") + " · " + esc(PAP[m.papel] || m.papel) + (m.ativo ? "" : " · usuário desativado") + "</small></span>"
               + (c.principal && m.papel === "dono" ? "" : '<button type="button" class="btn peq contorno" data-cc-tirar="' + esc(m.id) + '" data-cc-nome="' + esc(m.nome || m.email) + '">Tirar</button>') + "</li>";
           }).join("") + (c.membros && c.membros.length ? "" : '<li><span class="vazio">Ninguém entra nesta conta ainda.</span></li>') + "</ul>"
-          + '<div class="cc-add"><input type="email" placeholder="e-mail de quem já tem login no painel" aria-label="E-mail da pessoa"><select aria-label="Papel"><option value="atendente">Atendente</option><option value="dono">Dono</option></select><button type="button" class="btn peq" data-cc-add>Incluir</button></div></div>';
+          + '<div class="cc-add"><input type="email" placeholder="e-mail de quem já tem login no painel" aria-label="E-mail da pessoa"><select aria-label="Papel"><option value="atendente">Atendente</option><option value="dono">Dono</option></select><button type="button" class="btn peq" data-cc-add>Incluir</button></div>'
+          + (c.principal ? "" : '<details class="cc-plano"><summary>Plano e limites</summary>'
+            + (c.motivo === "sem_plano" || c.motivo === "teste" || c.motivo === "teste_acabou" ? '<p class="ajuda">Para liberar pela venda: marque o produto <b>Ressignificar CRM</b> como adquirido no catálogo do cliente (dono da conta) e crie o contrato com as cobranças. A conta liga sozinha e pausa sozinha se a cobrança atrasar.</p>' : "")
+            + '<div class="grade g3"><div><label>Teste grátis até</label><input type="date" data-cc-teste value="' + esc(c.teste_ate || "") + '"></div>'
+            + '<div><label>Pessoas na conta</label><input type="number" min="1" max="100" data-cc-lu value="' + esc(c.limite_usuarios) + '"></div>'
+            + '<div><label>Contatos</label><input type="number" min="10" max="1000000" data-cc-lc value="' + esc(c.limite_contatos) + '"></div></div>'
+            + '<div class="acoes"><button type="button" class="btn peq" data-cc-plano>Salvar plano</button></div></details>')
+          + "</div>";
       }).join("") || '<p class="vazio">Nenhuma conta.</p>';
       const livres = cc.empresas.filter(function (e) { return !cc.contas.some(function (c) { return c.empresa_id === e.id; }); });
       $("ccEmpresa").innerHTML = '<option value="">Escolha a empresa</option>' + livres.map(function (e) { return '<option value="' + esc(e.id) + '">' + esc(e.nome) + "</option>"; }).join("");
@@ -4406,8 +4429,14 @@
       const at = ev.target.closest("[data-cc-ativa]");
       if (at) {
         const ligar = at.dataset.ccAtiva === "1";
-        if (!ligar && !confirm("Desligar a conta \"" + c.nome + "\"? Quem é dessa conta deixa de entrar no CRM e as automações dela param. Os dados ficam guardados.")) return;
+        if (!ligar && !confirm("Desligar a conta \"" + c.nome + "\"? Quem é dessa conta deixa de entrar no CRM, o robô e as automações dela param. As mensagens que chegarem continuam guardadas.")) return;
         return ccRpc("crm_admin_conta_ativa", { p_conta: conta, p_ativa: ligar }, ligar ? "Conta religada." : "Conta desligada.");
+      }
+      if (ev.target.closest("[data-cc-plano]")) {
+        const teste = caixa.querySelector("[data-cc-teste]").value || null, lu = parseInt(caixa.querySelector("[data-cc-lu]").value, 10), lc = parseInt(caixa.querySelector("[data-cc-lc]").value, 10);
+        if (!(lu >= 1 && lu <= 100)) return aviso("Pessoas na conta: de 1 a 100.", true);
+        if (!(lc >= 10 && lc <= 1000000)) return aviso("Contatos: de 10 a 1.000.000.", true);
+        return ccRpc("crm_admin_conta_plano", { p_conta: conta, p_teste_ate: teste, p_limite_usuarios: lu, p_limite_contatos: lc }, "Plano salvo.");
       }
       const ti = ev.target.closest("[data-cc-tirar]");
       if (ti) { if (!confirm("Tirar " + ti.dataset.ccNome + " da conta \"" + c.nome + "\"? A pessoa deixa de entrar neste CRM.")) return; return ccRpc("crm_admin_membro_remover", { p_conta: conta, p_usuario: ti.dataset.ccTirar }, "Pessoa tirada da conta."); }

@@ -211,3 +211,5 @@ html[data-crm-papel="atendente"] [data-painel="config"] > .cartao:not(#avCartao)
 .cc-conta li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--c-borda); }
 .cc-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .cc-add input { flex: 1 1 200px; min-width: 0; }
+.cc-plano { margin-top: 10px; }
+.cc-plano summary { cursor: pointer; font-weight: 700; min-height: 32px; display: flex; align-items: center; }

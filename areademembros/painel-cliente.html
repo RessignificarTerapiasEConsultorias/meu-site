@@ -412,8 +412,21 @@
   try {
     const { data: { session } } = await supa().auth.getSession(); if (!session) return;
     const r = await supa().rpc("crm_conta_minha"); const c = r.data;
-    if (!c || !c.tem) return;
+    if (!c || (!c.tem && !c.suspensa)) return;
     document.getElementById("cartaoCrm").hidden = false;
+    if (c.suspensa) {
+      const MSG = {
+        atraso: "Seu CRM está pausado porque há um pagamento em atraso. Assim que o pagamento for confirmado, ele volta sozinho, com tudo guardado. As mensagens que chegarem nesse meio tempo também ficam guardadas.",
+        teste_acabou: "O seu período de teste do CRM terminou. Tudo o que você fez está guardado: fale com a Ressignificar para continuar.",
+        desligada: "Seu CRM está desligado no momento. Tudo continua guardado: fale com a Ressignificar.",
+        sem_plano: "Seu CRM está pausado. Tudo continua guardado: fale com a Ressignificar para liberar."
+      };
+      document.getElementById("crmInfo").textContent = MSG[c.motivo] || MSG.sem_plano;
+      const btn = document.querySelector("#cartaoCrm .acoes a");
+      if (c.motivo === "atraso") { btn.textContent = "Ver pagamentos"; btn.href = "#cartaoPag"; }
+      else { btn.textContent = "Falar com a Ressignificar"; btn.href = "https://wa.me/5581992531561?text=" + encodeURIComponent("Olá! Quero continuar usando o Ressignificar CRM."); btn.target = "_blank"; btn.rel = "noopener"; }
+      return;
+    }
     if (c.papel === "dono" && !c.tem_numero) document.getElementById("crmInfo").textContent = "Sua conta do CRM está pronta. Entre para ligar o WhatsApp oficial da sua empresa: o passo a passo mostra tudo.";
   } catch (e) { /* sem CRM: o cartão fica escondido */ }
 })();
