@@ -127,7 +127,7 @@
     $("crmTitulo").textContent = rotulo(aba);
     $("crmDesc").textContent = (TELAS[aba] || ["", ""])[1];
     Array.prototype.forEach.call(barra.querySelectorAll("[data-crm-ir]"), function (x) { if (x.dataset.crmIr === aba) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current"); });
-    if (["visao", "conversas", "funil", "vendas"].indexOf(aba) < 0) $("crmMais").setAttribute("aria-current", "page"); else $("crmMais").removeAttribute("aria-current");
+    if (!barra.querySelector('[data-crm-ir="' + aba + '"]')) $("crmMais").setAttribute("aria-current", "page"); else $("crmMais").removeAttribute("aria-current");
     /* o título grande já diz o nome da tela: o primeiro título do cartão, quando é igual, fica só para leitor de tela */
     var sec = document.querySelector('[data-painel="' + aba + '"]'), h = sec && sec.querySelector(".cartao .empresa-titulo h2, .cartao > h2");
     if (h && !h.dataset.crmVisto) { h.dataset.crmVisto = "1"; var t = h.textContent.trim().toLowerCase(); if (t === rotulo(aba).toLowerCase() || t === "visão geral" || (aba === "templates" && t === "templates")) h.classList.add("crm-oculto"); }
@@ -151,6 +151,22 @@
   if (selo) { new MutationObserver(estadoAuto).observe(selo, { attributes: true, attributeFilter: ["hidden"] }); }
   estadoAuto();
   $("crmPausar").addEventListener("click", function () { var b = $("auPausar2") || $("auPausar"); if (b) b.click(); });
+
+  /* ---------- conta de cliente: atalho de Contatos no lugar de Vendas e "voltar" para o painel da pessoa ---------- */
+  function aplicarConta(c) {
+    if (!c) return;
+    var pap = c.papel_site || "";
+    var link = $("crmConta") && $("crmConta").querySelector("a[href='painel-master.html']");
+    if (!c.master && link) { link.textContent = "Voltar ao painel"; link.href = (typeof PAINEL_DO_PAPEL !== "undefined" && PAINEL_DO_PAPEL[pap]) || "painel-cliente.html"; }
+    if (c.principal === false) {
+      var v = barra.querySelector('[data-crm-ir="vendas"]');
+      if (v) { v.dataset.crmIr = "contatos"; v.innerHTML = IC.contatos + "<span>" + rotulo("contatos") + "</span>"; }
+      marca.querySelector("small").textContent = c.empresa || c.nome || "CRM";
+    }
+    atualizar();
+  }
+  document.addEventListener("crm-conta", function (ev) { aplicarConta(ev.detail); });
+  if (window.CrmConta) aplicarConta(window.CrmConta);
 
   /* ---------- tema: Dia ou Noite, lembrado neste aparelho ---------- */
   function tema() { return H.classList.contains("noite") ? "noite" : "dia"; }

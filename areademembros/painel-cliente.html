@@ -95,6 +95,12 @@
       <p class="ce-titulo">Aulas da mentoria</p>
       <div class="ce-rodape"><span class="ce-info">Assista às aulas por módulo e baixe os materiais de apoio.</span><a class="ce-btn" href="aulas.html">Ver as aulas →</a></div>
     </div>
+    <div class="cartao cartao-escuro" id="cartaoCrm" hidden>
+      <h2 class="ce-olho">CRM</h2>
+      <p class="ce-titulo">Seu WhatsApp oficial</p>
+      <p class="ce-info" id="crmInfo">Conversas, funil, disparos e automações da sua empresa, em um lugar só.</p>
+      <div class="acoes" style="margin:0"><a class="btn" href="whatsapp.html">Abrir o CRM</a></div>
+    </div>
     <div class="cartao cartao-escuro" id="cartaoEmpresas" hidden>
       <h2 class="ce-olho">DRE</h2>
       <p class="ce-titulo">Suas empresas e finanças</p>
@@ -398,6 +404,18 @@
       (x.tipo === "empresa" && souDono && temVendas ? '<a class="btn contorno" href="vendas.html?e=' + x.id + '">Vendas da equipe</a>' : "") +
       (x.tipo === "empresa" && souDono ? '<a class="btn contorno" href="modulos.html?e=' + x.id + '">Módulos</a>' : "") + "</div>";
   }).join("");
+})();
+</script>
+<script>
+/* CRM: aparece para quem é dono ou atendente de uma conta do CRM */
+(async function () {
+  try {
+    const { data: { session } } = await supa().auth.getSession(); if (!session) return;
+    const r = await supa().rpc("crm_conta_minha"); const c = r.data;
+    if (!c || !c.tem) return;
+    document.getElementById("cartaoCrm").hidden = false;
+    if (c.papel === "dono" && !c.tem_numero) document.getElementById("crmInfo").textContent = "Sua conta do CRM está pronta. Entre para ligar o WhatsApp oficial da sua empresa: o passo a passo mostra tudo.";
+  } catch (e) { /* sem CRM: o cartão fica escondido */ }
 })();
 </script>
 </body>

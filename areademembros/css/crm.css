@@ -180,3 +180,34 @@ html.crm .cg-btn{min-height:44px}
 html.crm.dia .wa-vis{color:#155FAE}
 html.crm.dia .wa-cita{color:#4A5260}
 html.crm .wa-zap-hora{color:#666}
+
+/* ===== V4: contas de clientes ===== */
+/* o que só existe na conta principal (loja, e-mail, inscrições e fluxos antigos da Ressignificar) */
+html[data-crm-tipo="cliente"] .aba[data-aba="email"],
+html[data-crm-tipo="cliente"] .aba[data-aba="inscricoes"],
+html[data-crm-tipo="cliente"] .aba[data-aba="vendas"],
+html[data-crm-tipo="cliente"] .aba[data-aba="fluxos"],
+html[data-crm-tipo="cliente"] .cg-tarefa[data-cg-ir="email"],
+html[data-crm-tipo="cliente"] .cg-tarefa[data-cg-ir="inscricoes"],
+html[data-crm-tipo="cliente"] .cg-tarefa[data-cg-ir="vendas"],
+html[data-crm-tipo="cliente"] .crm-so-principal { display: none !important; }
+/* atendente: atende as conversas; ligar número, templates, disparos e automações ficam com o dono */
+html[data-crm-papel="atendente"] .aba[data-aba="disparos"],
+html[data-crm-papel="atendente"] .aba[data-aba="templates"],
+html[data-crm-papel="atendente"] .aba[data-aba="robo"],
+html[data-crm-papel="atendente"] .aba[data-aba="automacoes"],
+html[data-crm-papel="atendente"] .aba[data-aba="bloqueio"],
+html[data-crm-papel="atendente"] .cg-tarefa[data-cg-ir="disparos"],
+html[data-crm-papel="atendente"] .cg-tarefa[data-cg-ir="templates"],
+html[data-crm-papel="atendente"] .cg-tarefa[data-cg-ir="robo"],
+html[data-crm-papel="atendente"] .cg-tarefa[data-cg-ir="automacoes"],
+html[data-crm-papel="atendente"] .cg-tarefa[data-cg-ir="config"]:not([data-filtro]),
+html[data-crm-papel="atendente"] #crmPausar,
+html[data-crm-papel="atendente"] [data-painel="config"] > .cartao:not(#avCartao) { display: none !important; }
+.crm-boas-vindas { border: 2px solid var(--c-ouro); }
+.cc-conta { border: 1px solid var(--c-borda); border-radius: 12px; padding: 12px 14px; margin: 0 0 10px; }
+.cc-conta header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.cc-conta ul { list-style: none; padding: 0; margin: 8px 0; }
+.cc-conta li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--c-borda); }
+.cc-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.cc-add input { flex: 1 1 200px; min-width: 0; }
